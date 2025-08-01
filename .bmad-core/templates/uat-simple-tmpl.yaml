@@ -1,0 +1,171 @@
+template:
+  id: uat-simple-template-v1
+  name: Simple UAT Plan
+  version: 1.0
+  output:
+    format: markdown
+    filename: docs/testing/uat-plan-{{epic_num}}.{{story_num}}.md
+    title: 'UAT Plan - Story {{epic_num}}.{{story_num}}: {{story_title_short}}'
+
+workflow:
+  mode: interactive
+  elicitation: advanced-elicitation
+
+agent_config:
+  editable_sections:
+    - UAT Test Cases
+    - UAT Results
+
+sections:
+  - id: test-overview
+    title: Test Overview
+    type: template-text
+    template: |
+      **Story:** {{epic_num}}.{{story_num}} - {{story_title_short}}
+      **Status:** Ready for UAT
+      **Tester:** Product Owner / Context Engineer
+      **Environment:** Local Development
+      **Prerequisites:** {{prerequisites}}
+    instruction: Define the basic test overview information
+    elicit: true
+    owner: qa-agent
+    editors: [qa-agent, dev-agent]
+
+  - id: setup-instructions
+    title: Setup Instructions
+    type: template-text
+    template: |
+      ### Prerequisites
+      Before starting UAT, ensure:
+      - Development server is running: `bun run dev`
+      - Application is accessible at: http://localhost:3000
+
+      ### Environment Setup
+      1. Open your web browser
+      2. Navigate to: http://localhost:3000
+      3. Ensure you have a clean browser state (clear cache if needed)
+    instruction: Simple setup instructions focused on user actions
+    owner: qa-agent
+    editors: [qa-agent, dev-agent]
+
+  - id: uat-test-cases
+    title: UAT Test Cases
+    type: structured-list
+    instruction: |
+      Create UAT test cases based on the story's acceptance criteria.
+      Focus ONLY on user actions - no command line operations.
+      Each test case should include:
+      - Navigation steps (URLs to visit)
+      - User actions (clicks, form inputs, etc.)
+      - Expected visual results
+      - Pass/fail criteria
+    template: |
+      ### ✅ **AC{{ac_number}}: {{acceptance_criteria_title}}**
+      **Acceptance Criteria:** {{acceptance_criteria_description}}
+
+      #### Test Steps:
+      1. **Navigate to:** {{url}}
+      2. **Action:** {{user_action}}
+      3. **Verify:** {{expected_result}}
+
+      #### Expected Results:
+      - [ ] {{visual_checkpoint_1}}
+      - [ ] {{visual_checkpoint_2}}
+      - [ ] {{visual_checkpoint_3}}
+
+      #### Pass/Fail Criteria:
+      - ✅ **PASS**: {{pass_criteria}}
+      - ❌ **FAIL**: {{fail_criteria}}
+    elicit: true
+    owner: qa-agent
+    editors: [qa-agent]
+
+  - id: browser-compatibility
+    title: Browser Compatibility Testing
+    type: checklist
+    template: |
+      Test the implemented functionality in:
+      - [ ] Chrome/Chromium
+      - [ ] Firefox
+      - [ ] Safari (if on macOS)
+      - [ ] Mobile browsers (responsive design)
+    instruction: Basic browser compatibility checks
+    owner: qa-agent
+    editors: [qa-agent]
+
+  - id: responsive-design
+    title: Responsive Design Testing
+    type: checklist
+    template: |
+      Test responsive behavior:
+      - [ ] Desktop view (1920x1080)
+      - [ ] Tablet view (768x1024)
+      - [ ] Mobile view (375x667)
+      - [ ] Text remains readable at all sizes
+      - [ ] Layout doesn't break at different screen sizes
+    instruction: Responsive design validation
+    owner: qa-agent
+    editors: [qa-agent]
+
+  - id: uat-completion-checklist
+    title: UAT Completion Checklist
+    type: template-text
+    template: |
+      ### ✅ **Final Acceptance Criteria Review**
+      {{#each acceptance_criteria}}
+      - [ ] **AC{{@index}}**: {{this}}
+      {{/each}}
+
+      ### ✅ **Quality Gates**
+      - [ ] No console errors or warnings in browser
+      - [ ] All user interactions work smoothly
+      - [ ] Visual design matches expectations
+      - [ ] Responsive design works across devices
+      - [ ] Browser compatibility verified
+
+      ### ✅ **User Experience**
+      - [ ] Interface is intuitive and easy to use
+      - [ ] Loading states are appropriate
+      - [ ] Error messages are clear and helpful
+      - [ ] Performance is acceptable
+    instruction: Final completion checklist for UAT
+    owner: qa-agent
+    editors: [qa-agent]
+
+  - id: uat-results
+    title: UAT Results
+    type: template-text
+    template: |
+      ## UAT Results - Story {{epic_num}}.{{story_num}}
+      **Date:** {{test_date}}
+      **Tester:** {{tester_name}}
+      **Environment:** {{test_environment}}
+
+      ### Test Results:
+      {{#each test_results}}
+      - {{ac_name}}: {{result}}
+      {{/each}}
+
+      ### Issues Found:
+      {{issues_found}}
+
+      ### Overall Status:
+      {{overall_status}}
+
+      ### Notes:
+      {{additional_notes}}
+    instruction: Template for recording UAT results
+    owner: qa-agent
+    editors: [qa-agent]
+
+  - id: next-steps
+    title: Next Steps After UAT
+    type: template-text
+    template: |
+      1. **If UAT PASSES:** Story {{epic_num}}.{{story_num}} is ready for the next story
+      2. **If UAT FAILS:** Document issues and return to development for fixes
+      3. **Documentation:** Update any learnings or issues found during UAT
+      4. **Knowledge Capture:** Record any patterns or insights for future reference
+    instruction: Standard next steps after UAT completion
+    owner: qa-agent
+    editors: [qa-agent]

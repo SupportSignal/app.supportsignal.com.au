@@ -1,0 +1,29 @@
+{
+  "functions": ".",
+  "generateCommonJSWrapper": false,
+  "node": {
+    "18": true
+  },
+  "ignoredPaths": [
+    "coverage/**/*",
+    "node_modules/**/*",
+    "*.test.ts",
+    "*.test.js",
+    "*.spec.ts",
+    "*.spec.js",
+    "jest.config.js",
+    "jest.setup.js",
+    "__tests__/**/*",
+    "__tests_backup/**/*",
+    "__tests_disabled/**/*",
+    "__tests_TEMP_DISABLED/**/*",
+    "**/__tests__/**/*",
+    "**/__mocks__/**/*",
+    "**/coverage/**/*",
+    "**/*.test.*",
+    "**/*.spec.*",
+    "__tests__/__mocks__/_generated/**/*",
+    "__tests__/__mocks__/**/*.js",
+    "__tests__/**/*.js"
+  ]
+}

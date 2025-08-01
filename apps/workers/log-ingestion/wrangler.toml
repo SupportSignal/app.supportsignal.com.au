@@ -1,0 +1,48 @@
+# Cloudflare Worker configuration for log ingestion service
+# This file uses environment variables for sensitive values
+
+name = "log-ingestion-worker"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Worker deployment settings
+workers_dev = true
+# Account ID from environment variable CLOUDFLARE_ACCOUNT_ID
+
+# Environment variables (set via wrangler secret or dashboard)
+[vars]
+ENVIRONMENT = "development"
+
+# Durable Objects for rate limiting state
+[[durable_objects.bindings]]
+name = "RATE_LIMIT_STATE"
+class_name = "RateLimiterDO"
+script_name = "log-ingestion-worker"
+
+[build]
+command = "npm run build"
+
+# Development configuration
+[env.development]
+workers_dev = true
+
+[env.development.vars]
+ENVIRONMENT = "development"
+
+# Production configuration  
+[env.production]
+workers_dev = false
+
+[env.production.vars]
+ENVIRONMENT = "production"
+# ALLOWED_ORIGINS set via environment variables in production
+
+# Build configuration
+[[rules]]
+type = "ESModule"
+globs = ["**/*.js", "**/*.ts"]
+
+# Comment: Add these secrets via CLI or dashboard:
+# wrangler secret put UPSTASH_REDIS_REST_URL
+# wrangler secret put UPSTASH_REDIS_REST_TOKEN

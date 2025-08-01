@@ -1,0 +1,47 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"]
+    },
+    "lint": {
+      "dependsOn": ["^build"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "format": {
+      "outputs": []
+    },
+    "clean": {
+      "cache": false
+    },
+    "worker:build": {
+      "outputs": ["dist/**"]
+    },
+    "worker:test": {
+      "dependsOn": ["worker:build"],
+      "outputs": ["coverage/**"]
+    },
+    "worker:lint": {
+      "dependsOn": ["worker:build"]
+    },
+    "worker:typecheck": {
+      "dependsOn": ["worker:build"]
+    },
+    "worker:deploy": {
+      "dependsOn": ["worker:build"],
+      "cache": false
+    }
+  }
+}

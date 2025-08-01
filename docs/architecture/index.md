@@ -1,0 +1,27 @@
+# The Agentic Starter Template Fullstack Architecture Document
+
+## Table of Contents
+
+- [The Agentic Starter Template Fullstack Architecture Document](#table-of-contents)
+  - [Introduction](./introduction.md)
+    - [Starter Template or Existing Project](./introduction.md#starter-template-or-existing-project)
+  - [High Level Architecture](./high-level-architecture.md)
+      - [Technical Summary](./high-level-architecture.md#technical-summary)
+      - [Platform and Infrastructure Choice](./high-level-architecture.md#platform-and-infrastructure-choice)
+      - [Repository Structure](./high-level-architecture.md#repository-structure)
+      - [High Level Architecture Diagram](./high-level-architecture.md#high-level-architecture-diagram)
+      - [Architectural Patterns](./high-level-architecture.md#architectural-patterns)
+  - [Tech Stack](./tech-stack.md)
+  - [Data Models](./data-models.md)
+  - [API Implementation Details](./api-implementation-details.md)
+    - [Cloudflare Worker Endpoints (OpenAPI 3.0)](./api-implementation-details.md#cloudflare-worker-endpoints-openapi-30)
+    - [Convex Backend Functions (Signatures)](./api-implementation-details.md#convex-backend-functions-signatures)
+  - [Components](./components.md)
+      - [Component Interaction Diagram](./components.md#component-interaction-diagram)
+  - [Source Tree](./source-tree.md)
+  - [Infrastructure and Deployment](./infrastructure-and-deployment.md)
+  - [Error Handling Strategy](./error-handling-strategy.md)
+  - [Coding Standards](./coding-standards.md)
+  - [Test Strategy and Standards](./test-strategy-and-standards.md)
+  - [Security](./security.md)
+  - [Architectural Addendum: Final Clarifications](#architectural-addendum-final-clarifications)

@@ -1,0 +1,101 @@
+{
+  "name": "starter-nextjs-convex-ai",
+  "version": "1.0.0",
+  "description": "A Next.js template for building AI-first applications using the BMAD methodology",
+  "type": "module",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "apps/workers/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "web:dev": "cd apps/web && bun dev",
+    "storybook:dev": "cd packages/storybook && bun run storybook",
+    "lint": "turbo lint",
+    "lint:fix": "turbo lint:fix",
+    "format": "turbo format",
+    "format:check": "turbo format:check",
+    "test": "turbo test",
+    "test:watch": "turbo test --watch",
+    "test:convex": "cd apps/convex && bun test",
+    "test:convex:watch": "cd apps/convex && bun test:watch",
+    "test:convex:coverage": "cd apps/convex && bun test:coverage",
+    "test:convex:coverage:watch": "cd apps/convex && bun test:coverage:watch",
+    "test:convex:coverage:watch:all": "cd apps/convex && bun test:coverage:watch:all",
+    "test:web": "cd apps/web && bun test",
+    "test:web:watch": "cd apps/web && bun test:watch",
+    "test:web:coverage": "cd apps/web && bun test:coverage",
+    "test:web:coverage:watch": "cd apps/web && bun test:coverage:watch",
+    "test:web:coverage:watch:all": "cd apps/web && bun test:coverage:watch:all",
+    "test:web:logic": "jest --config jest.config.web.js",
+    "test:web:logic:watch": "jest --config jest.config.web.js --watch",
+    "test:web:logic:coverage": "jest --config jest.config.web.js --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:install": "playwright install",
+    "storybook": "cd packages/storybook && bun run storybook",
+    "build-storybook": "cd packages/storybook && bun run build-storybook",
+    "typecheck": "turbo typecheck",
+    "clean": "turbo clean",
+    "convex:dev": "cd apps/convex && npx convex dev",
+    "convex:deploy": "cd apps/convex && npx convex deploy",
+    "worker:dev": "cd apps/workers/log-ingestion && bun run dev",
+    "worker:deploy": "cd apps/workers/log-ingestion && bun run deploy",
+    "worker:deploy:production": "cd apps/workers/log-ingestion && bun run deploy:production",
+    "worker:test": "jest --config jest.workers.config.js",
+    "worker:test:coverage": "jest --config jest.workers.config.js --coverage",
+    "worker:test:coverage:watch": "jest --config jest.workers.config.js --coverage --watch",
+    "worker:test:coverage:watch:all": "jest --config jest.workers.config.js --coverage --watchAll",
+    "worker:typecheck": "cd apps/workers/log-ingestion && bun run typecheck",
+    "ci:status": "./scripts/ci-status.sh",
+    "ci:watch": "./scripts/ci-monitor.sh",
+    "ci:logs": "gh run list --branch $(git branch --show-current) --limit 1 --json databaseId --jq '.[0].databaseId' | xargs gh run view --log-failed",
+    "push": "./scripts/smart-push.sh",
+    "push:no-ci": "./scripts/smart-push.sh false",
+    "sync-env": "node ./scripts/sync-env.js",
+    "seed:knowledge": "node scripts/seed-knowledge.cjs",
+    "seed:knowledge:dry": "node scripts/seed-knowledge.cjs --dry-run",
+    "migrate:logging-cleanup": "./scripts/migrate-logging-cleanup.sh",
+    "migrate:logging-status": "cd apps/convex && bunx convex run migrations/cleanupLoggingTables:checkLoggingDataStatus",
+    "migrate:logging-verify": "cd apps/convex && bunx convex run migrations/cleanupLoggingTables:verifyCleanupComplete",
+    "deploy:worker": "./scripts/deploy-worker.sh",
+    "prepare": "echo 'Skipping husky in CI' && exit 0"
+  },
+  "dependencies": {
+    "convex": "^1.25.4"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@types/bun": "latest",
+    "@types/minimatch": "^6.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.37.0",
+    "@typescript-eslint/parser": "^8.37.0",
+    "eslint": "^8.57.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.2",
+    "prettier": "^3.6.2",
+    "tsx": "^4.20.3",
+    "turbo": "^2.0.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "packageManager": "bun@1.1.0",
+  "engines": {
+    "node": ">=18.0.0",
+    "bun": ">=1.1.0"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  }
+}

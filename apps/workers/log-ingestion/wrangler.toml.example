@@ -1,0 +1,57 @@
+# Cloudflare Worker configuration template for log ingestion service
+# Copy this file to wrangler.toml and fill in your values
+
+name = "log-ingestion-worker"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Worker deployment settings
+workers_dev = true
+account_id = "your-cloudflare-account-id"
+
+# Production route configuration (uncomment and configure for production)
+# route = { pattern = "log-ingestion.yourdomain.com/*", zone_name = "yourdomain.com" }
+
+# Environment variables (set via wrangler secret or dashboard)
+[vars]
+ENVIRONMENT = "development"
+
+# Durable Objects for rate limiting state
+[[durable_objects.bindings]]
+name = "RATE_LIMIT_STATE"
+class_name = "RateLimiterDO"
+script_name = "log-ingestion-worker"
+
+[build]
+command = "npm run build"
+
+# Development configuration
+[env.development]
+workers_dev = true
+
+[env.development.vars]
+ENVIRONMENT = "development"
+
+# Production configuration  
+[env.production]
+workers_dev = false
+
+[env.production.vars]
+ENVIRONMENT = "production"
+ALLOWED_ORIGINS = "https://your-app-domain.com,https://your-convex-deployment.convex.cloud"
+
+# Build configuration
+[[build.upload.rules]]
+type = "ESModules"
+globs = ["**/*.js", "**/*.ts"]
+
+# SECRETS SETUP INSTRUCTIONS:
+# Run these commands to set up secrets (never commit these values):
+# wrangler secret put UPSTASH_REDIS_REST_URL
+# wrangler secret put UPSTASH_REDIS_REST_TOKEN
+
+# DEVELOPMENT SECRETS:
+# Create a .dev.vars file (gitignored) with:
+# UPSTASH_REDIS_REST_URL=your-dev-redis-url
+# UPSTASH_REDIS_REST_TOKEN=your-dev-redis-token
