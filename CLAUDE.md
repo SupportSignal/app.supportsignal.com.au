@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Cloudflare** Pages/Workers for edge deployment
 - **Bun** as the package manager
 
-**Setup Reference**: Follow the [New Repository Setup Guide](docs/new-repository-setup-guide.md) for complete deployment configuration.
+**Setup Reference**: Follow the [New Repository Setup Guide](docs/template-usage/new-repository-setup-guide.md) for complete deployment configuration.
 
 ## Import Path Guidelines
 

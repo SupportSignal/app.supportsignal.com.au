@@ -142,6 +142,7 @@ Before starting, ensure you have:
    ```
 
 4. **Sync environment variables**:
+
    ```bash
    bun run sync-env --deployment=dev
    ```
@@ -178,6 +179,7 @@ Before starting, ensure you have:
    - **VALUE**: Your actual value
 
 4. **Test the sync system**:
+
    ```bash
    bun run sync-env --deployment=dev --dry-run
    ```
@@ -185,6 +187,7 @@ Before starting, ensure you have:
    **⚠️ WARNING**: This will show placeholder values for services not yet configured. This is expected.
 
 5. **Apply basic configuration** (optional):
+
    ```bash
    bun run sync-env --deployment=dev
    ```
@@ -206,6 +209,7 @@ Before starting, ensure you have:
 **⚠️ Port Configuration Note**: Update your environment file first to avoid port conflicts with template development:
 
 1. **Update ports in `.env.source-of-truth.local`**:
+
    ```
    | NEXTJS              | Local Development           | NEXT_PUBLIC_APP_URL       | http://localhost:3200     |
    | NEXTJS              | Local Development           | PORT                      | 3200                      |
@@ -226,7 +230,7 @@ Before starting, ensure you have:
    - After creation, edit the app to add additional URLs (one per line):
      ```
      http://localhost:3200/auth/github/callback
-     http://localhost:3300/auth/github/callback  
+     http://localhost:3300/auth/github/callback
      https://app.your-domain.com/auth/github/callback
      ```
 
@@ -235,12 +239,14 @@ Before starting, ensure you have:
    - Click **"Generate a new client secret"** and copy immediately (shown only once)
 
 4. **Update environment source file**:
+
    ```
    | CONVEX  | GitHub OAuth      | GITHUB_CLIENT_ID          | your_actual_client_id     |
    | CONVEX  | GitHub OAuth      | GITHUB_CLIENT_SECRET      | your_actual_client_secret |
    ```
 
 5. **Sync and test**:
+
    ```bash
    bun run sync-env --deployment=dev
    bun dev
@@ -389,6 +395,7 @@ Before starting, ensure you have:
 **⚠️ CRITICAL**: Only run this after completing the service setup steps you need.
 
 1. **Review your environment file**:
+
    ```bash
    head -10 .env.source-of-truth.local
    ```
