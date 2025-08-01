@@ -143,8 +143,10 @@ Before starting, ensure you have:
 
 4. **Sync environment variables**:
    ```bash
-   bun run sync-env
+   bun run sync-env --deployment=dev
    ```
+
+   **📝 Note**: The `--deployment=dev` parameter is required.
 
 ✅ **Success Check**: Convex dashboard opens and shows your deployed functions.
 
@@ -155,6 +157,7 @@ Before starting, ensure you have:
 **Goal**: Set up the centralized environment variable management system now that we have Convex values.
 
 1. **Create environment source file**:
+
    ```bash
    cp .env.source-of-truth.example .env.source-of-truth.local
    ```
@@ -176,15 +179,19 @@ Before starting, ensure you have:
 
 4. **Test the sync system**:
    ```bash
-   bun run sync-env --dry-run
+   bun run sync-env --deployment=dev --dry-run
    ```
 
-5. **Apply environment configuration**:
+   **⚠️ WARNING**: This will show placeholder values for services not yet configured. This is expected.
+
+5. **Apply basic configuration** (optional):
    ```bash
-   bun run sync-env
+   bun run sync-env --deployment=dev
    ```
 
-✅ **Success Check**: Command runs without errors and generates environment files for Next.js and Convex.
+   **Note**: This syncs placeholder values. You'll do a final sync after all services are configured.
+
+✅ **Success Check**: Environment file created with real Convex values.
 
 **📖 Detailed Guide**: [Environment Sync Workflow](./technical-guides/environment-sync-workflow.md)
 
@@ -196,38 +203,50 @@ Before starting, ensure you have:
 
 **Goal**: Enable "Continue with GitHub" authentication.
 
-1. **Create GitHub OAuth App**:
+**⚠️ Port Configuration Note**: Update your environment file first to avoid port conflicts with template development:
+
+1. **Update ports in `.env.source-of-truth.local`**:
+   ```
+   | NEXTJS              | Local Development           | NEXT_PUBLIC_APP_URL       | http://localhost:3200     |
+   | NEXTJS              | Local Development           | PORT                      | 3200                      |
+   ```
+
+2. **Create GitHub OAuth App**:
    - Go to [GitHub Developer Settings](https://github.com/settings/developers)
    - Click "OAuth Apps" → "New OAuth App"
    - Fill in:
      ```
      Application name: Your App Name (Dev)
-     Homepage URL: http://localhost:3000
-     Authorization callback URLs:
-     http://localhost:3000/auth/github/callback
-     http://localhost:3100/auth/github/callback
-     https://your-staging-domain.com/auth/github/callback (add later)
-     https://your-production-domain.com/auth/github/callback (add later)
+     Homepage URL: https://your-domain.com (or http://localhost:3200 for dev only)
+     Authorization callback URL: http://localhost:3200/auth/github/callback
      ```
 
-2. **Get OAuth credentials**:
-   - Copy Client ID and Client Secret
+   **📝 Callback URL Notes**:
+   - GitHub's creation form accepts **one callback URL initially**
+   - After creation, edit the app to add additional URLs (one per line):
+     ```
+     http://localhost:3200/auth/github/callback
+     http://localhost:3300/auth/github/callback  
+     https://app.your-domain.com/auth/github/callback
+     ```
 
-3. **Update environment source file**:
+3. **Get OAuth credentials**:
+   - Copy the **Client ID** (starts with `Ov...`)
+   - Click **"Generate a new client secret"** and copy immediately (shown only once)
 
+4. **Update environment source file**:
    ```
-   | false  | true   | GitHub OAuth      | GITHUB_CLIENT_ID          | your_actual_client_id    |
-   | false  | true   | GitHub OAuth      | GITHUB_CLIENT_SECRET      | your_actual_client_secret|
+   | CONVEX  | GitHub OAuth      | GITHUB_CLIENT_ID          | your_actual_client_id     |
+   | CONVEX  | GitHub OAuth      | GITHUB_CLIENT_SECRET      | your_actual_client_secret |
    ```
 
-4. **Sync and test**:
-
+5. **Sync and test**:
    ```bash
-   bun run sync-env
+   bun run sync-env --deployment=dev
    bun dev
    ```
 
-   - Visit `http://localhost:3000/login`
+   - Visit `http://localhost:3200/login`
    - Test GitHub authentication
 
 ✅ **Success Check**: You can log in with GitHub and see user information.
@@ -362,6 +381,27 @@ Before starting, ensure you have:
 - AI responses can include relevant context from your knowledge base
 
 **📖 Detailed Guide**: [Cloudflare Vectorize Setup](./technical-guides/cloudflare-vectorize-setup.md)
+
+### Step 7.5: Final Environment Sync
+
+**Goal**: Sync all real environment values now that services are configured.
+
+**⚠️ CRITICAL**: Only run this after completing the service setup steps you need.
+
+1. **Review your environment file**:
+   ```bash
+   head -10 .env.source-of-truth.local
+   ```
+
+2. **Update any remaining placeholder values** with real values from the services you've set up.
+
+3. **Perform final sync**:
+   ```bash
+   bun run sync-env --deployment=dev --dry-run  # Review changes
+   bun run sync-env --deployment=dev           # Apply changes
+   ```
+
+✅ **Success Check**: All configured services have real values, placeholders only for unused services.
 
 ---
 
