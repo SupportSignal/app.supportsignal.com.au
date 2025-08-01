@@ -4,13 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Next.js template designed for AI-first development using:
+**SupportSignal Application** - A Next.js AI-powered application built from the starter-nextjs-convex-ai template designed for AI-first development using:
 
 - **Next.js** (App Router) with TypeScript
 - **Convex** for backend and real-time features
 - **Tailwind CSS** + **ShadCN UI** for styling
 - **Cloudflare** Pages/Workers for edge deployment
 - **Bun** as the package manager
+
+**Setup Reference**: Follow the [New Repository Setup Guide](docs/new-repository-setup-guide.md) for complete deployment configuration.
 
 ## Import Path Guidelines
 
@@ -563,7 +565,8 @@ This protocol prevents incorrect file placement and maintains project consistenc
 
 ### Common Directory Locations
 
-- **Project Root**: `/Users/.../starter-nextjs-convex-ai/`
+- **Project Root**: `/Users/davidcruwys/dev/clients/supportsignal/app.supportsignal.com.au/`
+- **Template Reference**: `/Users/davidcruwys/dev/ad/appydave/appydave-templates/starter-nextjs-convex-ai/`
 - **Web App**: `apps/web/`
 - **Convex Backend**: `apps/convex/`
 - **Documentation**: `docs/`
@@ -575,7 +578,7 @@ This protocol prevents incorrect file placement and maintains project consistenc
 If you get "file not found" or "script not found" errors:
 
 1. **IMMEDIATELY run `pwd` to check current location**
-2. **Navigate to project root:** `cd /Users/davidcruwys/dev/ad/appydave/appydave-templates/starter-nextjs-convex-ai`
+2. **Navigate to project root:** `cd /Users/davidcruwys/dev/clients/supportsignal/app.supportsignal.com.au`
 3. **Verify you're in the right place:** `pwd` (should show the full project path)
 4. **Test with a known file:** `ls package.json` (should exist at root)
 5. **Then retry your original command**

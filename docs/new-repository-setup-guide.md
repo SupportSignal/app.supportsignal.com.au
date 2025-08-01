@@ -22,37 +22,37 @@ Before starting, ensure you have:
 
 **Phase 1: Foundation** ⏱️ ~30 minutes
 
-- [ ] [Clone and configure repository](#phase-1-foundation)
-- [ ] [Set up environment management system](#step-1-environment-system-setup)
+- [ ] [Clone and configure repository](#step-1-repository-and-dependencies-setup)
 - [ ] [Initialize Convex backend](#step-2-convex-backend-setup)
+- [ ] [Set up environment management system](#step-3-environment-system-setup)
 
 **Phase 2: Authentication** ⏱️ ~45 minutes
 
-- [ ] [Configure GitHub OAuth](#step-3-github-oauth-setup)
-- [ ] [Configure Google OAuth (optional)](#step-4-google-oauth-setup-optional)
+- [ ] [Configure GitHub OAuth](#step-4-github-oauth-setup)
+- [ ] [Configure Google OAuth (optional)](#step-5-google-oauth-setup-optional)
 
 **Phase 3: AI Services** ⏱️ ~30 minutes
 
-- [ ] [Set up OpenRouter or OpenAI](#step-5-ai-services-setup)
-- [ ] [Configure Cloudflare Vectorize for knowledge base](#step-6-vectorize-setup-optional)
+- [ ] [Set up OpenRouter or OpenAI](#step-6-ai-services-setup)
+- [ ] [Configure Cloudflare Vectorize for knowledge base](#step-7-vectorize-setup-optional)
 
 **Phase 4: Deployment** ⏱️ ~45 minutes
 
-- [ ] [Configure Cloudflare Pages](#step-7-cloudflare-pages-deployment)
-- [ ] [Set up Log Ingestion Worker](#step-7b-log-ingestion-worker-setup)
-- [ ] [Set up GitHub Actions CI/CD](#step-8-cicd-pipeline-setup)
+- [ ] [Configure Cloudflare Pages](#step-8-cloudflare-pages-deployment)
+- [ ] [Set up Log Ingestion Worker](#step-8b-log-ingestion-worker-setup)
+- [ ] [Set up GitHub Actions CI/CD](#step-9-cicd-pipeline-setup)
 
 **Phase 5: Verification** ⏱️ ~15 minutes
 
-- [ ] [Verify everything works](#step-9-verification)
+- [ ] [Verify everything works](#step-10-verification)
 
 ---
 
 ## Phase 1: Foundation
 
-### Step 1: Environment System Setup
+### Step 1: Repository and Dependencies Setup
 
-**Goal**: Set up the centralized environment variable management system.
+**Goal**: Set up your repository and install dependencies.
 
 1. **Create your new project**:
 
@@ -94,27 +94,7 @@ Before starting, ensure you have:
    bun install
    ```
 
-2. **Set up required configuration files**:
-
-   ```bash
-   # Create environment source file
-   cp .env.source-of-truth.example .env.source-of-truth.local
-   ```
-
-   **⚠️ Manual File Setup Required**:
-
-   The following files are gitignored and need manual setup:
-
-   ```bash
-   # Required for development
-   cp .env.source-of-truth.example .env.source-of-truth.local
-
-   # Worker environment (if using log ingestion)
-   cp apps/workers/log-ingestion/.dev.vars.example apps/workers/log-ingestion/.dev.vars
-
-   # Optional: Claude Code configuration (if using Claude)
-   # Note: .claude/settings.local.json - will be created when first using Claude Code
-   ```
+2. **Verify project structure**:
 
    **Hidden Files Verification**:
 
@@ -135,24 +115,7 @@ Before starting, ensure you have:
    - [ ] Environment examples exist (`.env.source-of-truth.example`)
    - [ ] Package manager lockfile appropriate for your setup
 
-3. **Understand the table format**:
-   The `.env.source-of-truth.local` file uses a human-readable table:
-
-   ```
-   | NEXTJS | CONVEX | GROUP             | KEY                       | VALUE                    |
-   |--------|--------|-------------------|---------------------------|--------------------------|
-   | true   | false  | Local Development | NEXT_PUBLIC_APP_URL       | http://localhost:3000    |
-   | false  | true   | GitHub OAuth      | GITHUB_CLIENT_ID          | your_actual_id_here      |
-   ```
-
-4. **Test the sync system**:
-   ```bash
-   bun run sync-env --dry-run
-   ```
-
-✅ **Success Check**: Command runs without errors and shows it would generate environment files.
-
-**📖 Detailed Guide**: [Environment Sync Workflow](./technical-guides/environment-sync-workflow.md)
+✅ **Success Check**: All files and directories are present, dependencies installed successfully.
 
 ### Step 2: Convex Backend Setup
 
@@ -187,11 +150,49 @@ Before starting, ensure you have:
 
 **📖 Detailed Guide**: [Convex Components Guide](./technical-guides/convex-components-guide.md)
 
+### Step 3: Environment System Setup
+
+**Goal**: Set up the centralized environment variable management system now that we have Convex values.
+
+1. **Create environment source file**:
+   ```bash
+   cp .env.source-of-truth.example .env.source-of-truth.local
+   ```
+
+2. **Update environment source file**:
+   Edit `.env.source-of-truth.local` and update the Convex section with values from Step 2:
+
+   ```
+   | true   | true   | Convex            | CONVEX_DEPLOYMENT         | dev:your-deployment-name |
+   | true   | true   | Convex            | NEXT_PUBLIC_CONVEX_URL    | https://your-deployment.convex.cloud |
+   ```
+
+3. **Understand the table format**:
+   The `.env.source-of-truth.local` file uses a human-readable table where:
+   - **TARGET**: Which systems need this variable (NEXTJS, CONVEX, LOG_WORKER)
+   - **GROUP**: Logical grouping for organization
+   - **KEY**: Environment variable name
+   - **VALUE**: Your actual value
+
+4. **Test the sync system**:
+   ```bash
+   bun run sync-env --dry-run
+   ```
+
+5. **Apply environment configuration**:
+   ```bash
+   bun run sync-env
+   ```
+
+✅ **Success Check**: Command runs without errors and generates environment files for Next.js and Convex.
+
+**📖 Detailed Guide**: [Environment Sync Workflow](./technical-guides/environment-sync-workflow.md)
+
 ---
 
 ## Phase 2: Authentication
 
-### Step 3: GitHub OAuth Setup
+### Step 4: GitHub OAuth Setup
 
 **Goal**: Enable "Continue with GitHub" authentication.
 
@@ -233,7 +234,7 @@ Before starting, ensure you have:
 
 **📖 Detailed Guide**: [GitHub OAuth Setup](./technical-guides/github-oauth-setup.md)
 
-### Step 4: Google OAuth Setup (Optional)
+### Step 5: Google OAuth Setup (Optional)
 
 **Goal**: Add "Continue with Google" as additional authentication option.
 
@@ -253,7 +254,7 @@ Before starting, ensure you have:
 
 ## Phase 3: AI Services
 
-### Step 5: AI Services Setup
+### Step 6: AI Services Setup
 
 **Goal**: Enable AI chat functionality with OpenRouter (recommended) or OpenAI.
 
@@ -294,7 +295,7 @@ Before starting, ensure you have:
 
 **📖 Detailed Guide**: [LLM API Setup](./technical-guides/llm-api-setup.md)
 
-### Step 6: Vectorize Setup (Optional)
+### Step 7: Vectorize Setup (Optional)
 
 **Goal**: Enable AI knowledge base with vector similarity search for enhanced responses.
 
@@ -366,7 +367,7 @@ Before starting, ensure you have:
 
 ## Phase 4: Deployment
 
-### Step 7: Cloudflare Pages Deployment
+### Step 8: Cloudflare Pages Deployment
 
 **Goal**: Deploy your application to the web with a public URL.
 
@@ -398,7 +399,7 @@ Before starting, ensure you have:
 
 **📖 Detailed Guide**: [Cloudflare Pages Setup](./technical-guides/cloudflare-pages-setup.md)
 
-### Step 7b: Log Ingestion Worker Setup
+### Step 8b: Log Ingestion Worker Setup
 
 **Goal**: Deploy cost-effective logging infrastructure using Cloudflare Workers + Redis.
 
@@ -435,7 +436,7 @@ bun run sync-env              # Apply configuration
 
 **📖 Detailed Guide**: [Worker Deployment Setup](./technical-guides/worker-deployment-setup.md)
 
-### Step 8: CI/CD Pipeline Setup
+### Step 9: CI/CD Pipeline Setup
 
 **Goal**: Automate deployments when you push code to GitHub.
 
@@ -470,7 +471,7 @@ bun run sync-env              # Apply configuration
 
 ## Phase 5: Verification
 
-### Step 9: Verification
+### Step 10: Verification
 
 **Goal**: Confirm everything works together correctly.
 
