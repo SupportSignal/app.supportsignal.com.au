@@ -607,7 +607,7 @@ function applyConvexEnvironmentChanges(diff, deployment) {
     diff.toAdd.forEach(envVar => {
         try {
             console.log(`➕ Adding: ${envVar.key}`);
-            execConvexCommand(`bunx convex env set ${envVar.key} "${envVar.value}"`, { silent: !options.verbose });
+            execConvexCommand(`bunx convex env set ${envVar.key} -- "${envVar.value}"`, { silent: !options.verbose });
             successCount++;
         } catch (error) {
             console.error(`❌ Failed to add ${envVar.key}:`, error.message);
@@ -619,7 +619,7 @@ function applyConvexEnvironmentChanges(diff, deployment) {
     diff.toUpdate.forEach(envVar => {
         try {
             console.log(`🔄 Updating: ${envVar.key}`);
-            execConvexCommand(`bunx convex env set ${envVar.key} "${envVar.newValue}"`, { silent: !options.verbose });
+            execConvexCommand(`bunx convex env set ${envVar.key} -- "${envVar.newValue}"`, { silent: !options.verbose });
             successCount++;
         } catch (error) {
             console.error(`❌ Failed to update ${envVar.key}:`, error.message);
