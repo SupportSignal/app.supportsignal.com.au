@@ -56,8 +56,8 @@ const nextConfig = {
 {
   "scripts": {
     "build": "next build",
-    "pages:build": "npx @cloudflare/next-on-pages",
-    "build:pages": "CI=true next build && npx @cloudflare/next-on-pages",
+    "pages:build": "npx @cloudflare/next-on-pages --outdir=dist",
+    "build:pages": "CI=true next build && npx @cloudflare/next-on-pages --outdir=dist",
     "prepare": "echo 'Skipping husky in CI' && exit 0"
   }
 }
@@ -141,7 +141,7 @@ jobs:
 - Production Branch: `main`
 - Preview Branches: All non-production branches
 - Build Command: `bun run build && bun run pages:build`
-- Output Directory: `.vercel/output/static`
+- Output Directory: `dist`
 - Root Directory: `apps/web`
 - Environment Variables: `HUSKY=0`, `NODE_ENV=production`
 
@@ -167,7 +167,7 @@ jobs:
 ```bash
 cd apps/web
 bun run build:pages
-wrangler pages deploy .vercel/output/static --project-name=project-name
+wrangler pages deploy dist --project-name=project-name
 ```
 
 **Use Cases**:
@@ -192,7 +192,7 @@ wrangler pages deploy .vercel/output/static --project-name=project-name
 
 1. **Build Configuration**:
    - Build Command: `bun run build && bun run pages:build`
-   - Output Directory: `.vercel/output/static`
+   - Output Directory: `dist`
    - Root Directory: `apps/web`
 
 2. **Environment Variables**:
@@ -231,7 +231,7 @@ bun dev
 bun run build:pages
 
 # Local preview with Cloudflare Pages emulation
-npx wrangler pages dev .vercel/output/static
+npx wrangler pages dev dist
 ```
 
 ### CI Build Process
@@ -240,13 +240,13 @@ npx wrangler pages dev .vercel/output/static
 2. **Dependency Installation**: `bun install`
 3. **Next.js Build**: `next build` (static export)
 4. **Cloudflare Adaptation**: `npx @cloudflare/next-on-pages`
-5. **Output Verification**: Validate `.vercel/output/static` contents
+5. **Output Verification**: Validate `dist` contents
 6. **Deployment**: Upload to Cloudflare Pages
 
 ### Build Output Structure
 
 ```
-.vercel/output/static/
+dist/
 ├── index.html              # Homepage
 ├── _next/                  # Next.js build artifacts
 │   ├── static/             # Static assets

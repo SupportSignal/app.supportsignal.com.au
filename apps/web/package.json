@@ -16,9 +16,9 @@
     "test:coverage:watch": "jest --coverage --watch",
     "test:coverage:watch:all": "jest --coverage --watch --all",
     "test:ci": "jest --config jest.config.ci.js --ci --coverage --maxWorkers=2",
-    "pages:build": "npx @cloudflare/next-on-pages",
-    "pages:deploy": "wrangler pages deploy .vercel/output/static --project-name=starter-nextjs-convex-ai",
-    "build:pages": "CI=true next build && npx @cloudflare/next-on-pages",
+    "pages:build": "npx @cloudflare/next-on-pages --outdir=dist",
+    "pages:deploy": "wrangler pages deploy dist --project-name=starter-nextjs-convex-ai",
+    "build:pages": "CI=true next build && npx @cloudflare/next-on-pages --outdir=dist",
     "pages:dev": "npx @cloudflare/next-on-pages --watch"
   },
   "dependencies": {
