@@ -282,7 +282,7 @@ This document outlines established patterns for development processes, tooling, 
 **Core Configuration Requirements**:
 
 - Build Command: `bun run build && bun run pages:build`
-- Output Directory: `.vercel/output/static`
+- Output Directory: `dist`
 - Root Directory: `apps/web`
 - Environment Variables: `HUSKY=0` (disables git hooks in CI)
 - Compatibility Flags: `nodejs_compat` (enables Node.js runtime features)
@@ -305,9 +305,9 @@ const nextConfig = {
 ```json
 {
   "build": "next build",
-  "pages:build": "npx @cloudflare/next-on-pages",
-  "pages:deploy": "wrangler pages deploy .vercel/output/static --project-name=starter-nextjs-convex-ai",
-  "build:pages": "CI=true next build && npx @cloudflare/next-on-pages"
+  "pages:build": "npx @cloudflare/next-on-pages --outdir=dist",
+  "pages:deploy": "wrangler pages deploy dist --project-name=starter-nextjs-convex-ai",
+  "build:pages": "CI=true next build && npx @cloudflare/next-on-pages --outdir=dist"
 }
 ```
 

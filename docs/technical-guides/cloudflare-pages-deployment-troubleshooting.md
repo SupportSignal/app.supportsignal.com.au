@@ -12,7 +12,7 @@ This guide provides systematic troubleshooting approaches for Cloudflare Pages d
 | Runtime Module Errors         | App crashes with Node.js module issues | Enable `nodejs_compat` compatibility flag          |
 | Build Configuration Conflicts | Deployment fails with config errors    | Remove wrangler.toml, use Pages dashboard          |
 | Auto-deployment Not Working   | New commits don't trigger deployment   | Check Git integration settings                     |
-| Build Output Not Found        | "Output directory not found" error     | Verify output directory is `.vercel/output/static` |
+| Build Output Not Found        | "Output directory not found" error     | Verify output directory is `dist` |
 
 ## Systematic Troubleshooting Process
 
@@ -45,7 +45,7 @@ This guide provides systematic troubleshooting approaches for Cloudflare Pages d
 bun run build:pages
 
 # Test manual deployment
-wrangler pages deploy .vercel/output/static --project-name=your-project
+wrangler pages deploy dist --project-name=your-project
 ```
 
 **Environment-Specific Issues**
@@ -169,7 +169,7 @@ pages_build_output_dir = ".vercel/output/static"
 ```bash
 # DO: Use Cloudflare Pages dashboard settings
 Build command: bun run build && bun run pages:build
-Output directory: .vercel/output/static
+Output directory: dist
 Root directory: apps/web
 ```
 
@@ -215,7 +215,7 @@ Deployment contains no files
 
 **Required Configuration**:
 
-- Output Directory: `.vercel/output/static`
+- Output Directory: `dist`
 - This is created by `@cloudflare/next-on-pages`
 
 **Build Process Verification**:
@@ -224,12 +224,12 @@ Deployment contains no files
 # Check build creates correct output
 bun run build
 bun run pages:build
-ls -la .vercel/output/static/
+ls -la dist/
 ```
 
 **Common Mistakes**:
 
-- Using `dist` instead of `.vercel/output/static`
+- Using `.vercel/output/static` instead of `dist`
 - Using `.next` instead of processed output
 - Missing `pages:build` step
 
@@ -274,17 +274,17 @@ const nextConfig = {
 bun run build && bun run pages:build
 
 # Verify output directory
-ls -la .vercel/output/static/
+ls -la dist/
 
 # Test local preview
-npx wrangler pages dev .vercel/output/static
+npx wrangler pages dev dist
 ```
 
 ### Manual Deployment Testing
 
 ```bash
 # Test manual deployment
-wrangler pages deploy .vercel/output/static --project-name=your-project
+wrangler pages deploy dist --project-name=your-project
 
 # Check deployment status
 wrangler pages deployment list --project-name=your-project
@@ -327,7 +327,7 @@ console.log(typeof Buffer);
 - [ ] Compatibility flags enabled (`nodejs_compat`)
 - [ ] No wrangler.toml in root directory
 - [ ] Build command includes both steps: `bun run build && bun run pages:build`
-- [ ] Output directory set to `.vercel/output/static`
+- [ ] Output directory set to `dist`
 - [ ] Next.js config includes `output: 'export'`
 
 ### After Configuration
@@ -361,7 +361,7 @@ console.log(typeof Buffer);
 # Emergency manual deployment
 git checkout last-working-commit
 bun run build && bun run pages:build
-wrangler pages deploy .vercel/output/static --project-name=your-project
+wrangler pages deploy dist --project-name=your-project
 ```
 
 ### Configuration Reset

@@ -69,9 +69,9 @@ module.exports = nextConfig;
     "type-check": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "pages:build": "npx @cloudflare/next-on-pages",
-    "pages:deploy": "wrangler pages deploy .vercel/output/static --project-name=starter-nextjs-convex-ai",
-    "build:pages": "CI=true next build && npx @cloudflare/next-on-pages",
+    "pages:build": "npx @cloudflare/next-on-pages --outdir=dist",
+    "pages:deploy": "wrangler pages deploy dist --project-name=starter-nextjs-convex-ai",
+    "build:pages": "CI=true next build && npx @cloudflare/next-on-pages --outdir=dist",
     "pages:dev": "npx @cloudflare/next-on-pages --watch"
   }
 }
@@ -96,7 +96,7 @@ module.exports = nextConfig;
 bun run build:pages
 ```
 
-This should complete without errors and create `.vercel/output/static/` directory.
+This should complete without errors and create `dist/` directory.
 
 ### Step 5: Set Up Cloudflare Pages Project
 
@@ -109,7 +109,7 @@ This should complete without errors and create `.vercel/output/static/` director
    | ---------------------- | -------------------------------------- |
    | Framework preset       | None                                   |
    | Build command          | `bun run build && bun run pages:build` |
-   | Build output directory | `.vercel/output/static`                |
+   | Build output directory | `dist`                                 |
    | Root directory         | `apps/web`                             |
 
 5. **Add Environment Variables:**
@@ -141,7 +141,7 @@ If auto-deployment fails, use Wrangler CLI:
 
 ```bash
 # From apps/web directory
-npx wrangler pages deploy .vercel/output/static --project-name=your-project-name
+npx wrangler pages deploy dist --project-name=your-project-name
 ```
 
 ## Common Issues and Solutions
@@ -174,7 +174,7 @@ npx wrangler pages deploy .vercel/output/static --project-name=your-project-name
 
 - **Static Site Generation**: Uses Next.js `output: 'export'` for full static generation
 - **Build Process**: Two-step build (Next.js → Cloudflare adapter)
-- **Output**: Static files in `.vercel/output/static/` for Cloudflare Pages
+- **Output**: Static files in `dist/` for Cloudflare Pages
 - **Runtime**: Cloudflare Workers runtime with Node.js compatibility
 
 ## Files Modified

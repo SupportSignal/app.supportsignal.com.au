@@ -145,7 +145,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-files
-          path: apps/web/.vercel/output/static
+          path: apps/web/dist
           retention-days: 1
 
   deploy:
@@ -162,7 +162,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-files
-          path: apps/web/.vercel/output/static
+          path: apps/web/dist
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/pages-action@v1
@@ -170,7 +170,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: ${{ secrets.CLOUDFLARE_PROJECT_NAME }}
-          directory: apps/web/.vercel/output/static
+          directory: apps/web/dist
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
 
       # Note: Required GitHub Secrets for Cloudflare Pages deployment:

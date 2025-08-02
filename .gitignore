@@ -33,6 +33,7 @@ apps/convex/_generated/
 # Production builds
 build/
 dist/
+apps/web/dist/
 
 # Runtime data
 pids
