@@ -323,11 +323,55 @@ bunx convex deploy --prod
 
 📖 **Important**: For first-time deployment setup, see the **[Cloudflare Pages Setup Guide](./docs/technical-guides/cloudflare-pages-setup.md)** for detailed configuration instructions.
 
+## File System Exploration
+
+For AI-assisted development and large codebase analysis, this project includes a comprehensive file exploration system optimized for LLM context management.
+
+### Quick File Commands Reference
+
+```bash
+# Complete project views
+files -i 'apps/**/*' -i 'docs/**/*' -i 'packages/**/*' -i 'scripts/**/*' -i 'tests/**/*' -e '**/node_modules/**/*' -e '**/_generated/**/*' -d -f tree  # All files (no hidden)
+files -i '**/*' -i '.bmad-core/**/*' -i '.claude/**/*' -i '.github/**/*' -i '.husky/**/*' -e '**/node_modules/**/*' -e '**/_generated/**/*' -e '.git/**/*' -e '.turbo/**/*' -d -f tree  # All files (with hidden)
+
+# Code-focused views  
+files -i 'apps/**/*.ts' -i 'apps/**/*.tsx' -i 'packages/**/*.ts' -i 'packages/**/*.tsx' -e '**/node_modules/**/*' -e '**/_generated/**/*' -e '**/__tests__/**/*' -e '**/test*' -d -f tree  # Code only
+files -i 'apps/**/*.ts' -i 'apps/**/*.tsx' -i 'packages/**/*.ts' -i 'packages/**/*.tsx' -i 'tests/**/*.ts' -i 'tests/**/*.tsx' -e '**/node_modules/**/*' -e '**/_generated/**/*' -d -f tree  # Code + tests
+
+# Documentation views
+files -i 'docs/architecture/**/*' -i 'docs/patterns/**/*' -i 'docs/methodology/**/*' -i 'docs/technical-guides/**/*' -i 'docs/template-usage/**/*' -e 'docs/testing/uat/**/*' -d -f tree  # Permanent docs
+files -i 'docs/testing/uat/**/*' -i 'docs/examples/**/*' -i 'docs/**/story-*' -i 'docs/**/*sprint*' -d -f tree  # Transient docs
+
+# Specialized views
+files -i '.bmad-core/**/*' -i '.claude/**/*' -i '.github/**/*' -i '.husky/**/*' -e '.git/**/*' -e '.turbo/**/*' -d -f tree  # Hidden config only
+files -i '**/wrangler*' -i '**/.github/**/*' -i '**/cloudflare*' -i '**/deploy*' -i 'scripts/**/*' -e '**/node_modules/**/*' -d -f tree  # Deployment files
+files -i 'apps/convex/**/*' -i 'apps/workers/**/*' -e '**/node_modules/**/*' -e '**/_generated/**/*' -d -f tree  # Backend only
+files -i 'apps/web/**/*' -i 'packages/ui/**/*' -i 'packages/storybook/**/*' -e '**/node_modules/**/*' -e '**/_generated/**/*' -d -f tree  # Frontend only
+```
+
+**Usage Notes:**
+- Remove `-f tree` to include actual file contents (use carefully with large contexts)
+- Add specific patterns for focused analysis: `-i 'apps/web/components/**/*'`
+- Combine queries for multi-perspective analysis
+- See **[File System Exploration Guide](./docs/technical-guides/file-system-exploration-and-segmentation-kdd.md)** for complete reference
+
+### AI Context Optimization
+
+This system provides **15 specialized queries** designed for different development scenarios:
+- **Complete project views** for comprehensive analysis
+- **Code-focused views** for implementation work  
+- **Documentation views** for architectural understanding
+- **Module-specific views** for targeted development
+- **Maintenance views** for cleanup and deployment
+
+Particularly powerful with **Google Gemini's million-token context window** for whole-codebase analysis.
+
 ## Documentation
 
 Comprehensive documentation is available in the `/docs` directory:
 
 - **[Getting Started Guide](./docs/index.md)** - Overview and quick start
+- **[File System Exploration](./docs/technical-guides/file-system-exploration-and-segmentation-kdd.md)** - LLM context optimization
 - **[Cloudflare Pages Setup](./docs/technical-guides/cloudflare-pages-setup.md)** - Complete deployment setup guide
 - **[Project Brief](./docs/project-brief.md)** - Vision and objectives
 - **[Product Requirements](./docs/prd.md)** - Detailed specifications
