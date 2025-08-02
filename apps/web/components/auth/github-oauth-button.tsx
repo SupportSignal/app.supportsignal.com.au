@@ -15,6 +15,9 @@ export function GitHubOAuthButton({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const { getGitHubOAuthUrl } = useAuth();
+  
+  // Check if we're in development environment
+  const isDevelopment = process.env.NODE_ENV === 'development';
 
   const handleGitHubLogin = async () => {
     setIsLoading(true);
@@ -71,6 +74,12 @@ export function GitHubOAuthButton({
         </svg>
         {isLoading ? 'Connecting...' : 'Continue with GitHub'}
       </button>
+
+      {isDevelopment && (
+        <div className="mt-2 text-sm text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 p-2 rounded-md">
+          <strong>Development Notice:</strong> GitHub OAuth is configured for production only. Use Google OAuth or email/password for local testing.
+        </div>
+      )}
 
       {error && (
         <div className="mt-2 text-sm text-red-600 dark:text-red-400">
