@@ -1,0 +1,204 @@
+#!/bin/bash
+
+# llm-files - Interactive file exploration for LLM context optimization
+# Usage: llm-files [query-name|query-number]
+
+# Function to get query command by name
+get_query() {
+    case "$1" in
+        "all-files-no-hidden")
+            echo "files -i 'apps/**/*' -i 'docs/**/*' -i 'packages/**/*' -i 'scripts/**/*' -i 'tests/**/*' -e '**/node_modules/**/*' -e '**/_generated/**/*' -e '.git/**/*' -e '.turbo/**/*' -d -f tree"
+            ;;
+        "all-files-with-hidden")
+            echo "files -i '**/*' -i '.bmad-core/**/*' -i '.claude/**/*' -i '.github/**/*' -i '.husky/**/*' -e '**/node_modules/**/*' -e '**/_generated/**/*' -e '.git/**/*' -e '.turbo/**/*' -d -f tree"
+            ;;
+        "hidden-only")
+            echo "files -i '.bmad-core/**/*' -i '.claude/**/*' -i '.github/**/*' -i '.husky/**/*' -e '.git/**/*' -e '.turbo/**/*' -d -f tree"
+            ;;
+        "code-only")
+            echo "files -i 'apps/**/*.ts' -i 'apps/**/*.tsx' -i 'packages/ui/**/*.ts' -i 'packages/ui/**/*.tsx' -e '**/node_modules/**/*' -e '**/_generated/**/*' -e '**/__tests__/**/*' -e '**/test*' -e '**/storybook/**/*' -d -f tree"
+            ;;
+        "code-plus-tests")
+            echo "files -i 'apps/**/*.ts' -i 'apps/**/*.tsx' -i 'packages/ui/**/*.ts' -i 'packages/ui/**/*.tsx' -i 'tests/**/*.ts' -i 'tests/**/*.tsx' -e '**/node_modules/**/*' -e '**/_generated/**/*' -e '**/storybook/**/*' -d -f tree"
+            ;;
+        "architecture-context")
+            echo "files -i 'apps/**/*.ts' -i 'apps/**/*.tsx' -i 'packages/ui/**/*.ts' -i 'packages/ui/**/*.tsx' -i 'docs/architecture/**/*' -i 'docs/patterns/**/*' -i 'docs/methodology/**/*' -e '**/node_modules/**/*' -e '**/_generated/**/*' -e '**/storybook/**/*' -d -f tree"
+            ;;
+        "docs-permanent")
+            echo "files -i 'docs/architecture/**/*' -i 'docs/patterns/**/*' -i 'docs/methodology/**/*' -i 'docs/technical-guides/**/*' -i 'docs/template-usage/**/*' -e 'docs/testing/uat/**/*' -d -f tree"
+            ;;
+        "docs-transient")
+            echo "files -i 'docs/testing/uat/**/*' -i 'docs/examples/**/*' -i 'docs/**/story-*' -i 'docs/**/*sprint*' -d -f tree"
+            ;;
+        "test-segmented")
+            echo "files -i 'tests/**/*' -i 'apps/**/test*' -i 'apps/**/__tests__/**/*' -i 'packages/**/__tests__/**/*' -e '**/node_modules/**/*' -e '**/storybook/**/*' -d -f tree"
+            ;;
+        "config-only")
+            echo "files -i '**/*.json' -i '**/*.js' -i '**/*.config.*' -i '**/tsconfig*' -i '**/jest*' -i '**/eslint*' -i '**/playwright*' -e '**/node_modules/**/*' -e '**/package-lock.json' -e '**/bun.lock' -e '**/storybook/**/*' -d -f tree"
+            ;;
+        "deployment-files")
+            echo "files -i '**/wrangler*' -i '**/.github/**/*' -i '**/cloudflare*' -i '**/deploy*' -i 'scripts/**/*' -e '**/node_modules/**/*' -d -f tree"
+            ;;
+        "generated-artifacts")
+            echo "files -i '**/_generated/**/*' -i '**/dist/**/*' -i '**/coverage/**/*' -i '**/test-coverage/**/*' -i '**/.next/**/*' -i '**/.vercel/**/*' -d -f tree"
+            ;;
+        "deprecation-cleanup")
+            echo "files -i '**/*.deprecated.*' -i '**/*.old.*' -i '**/*.backup' -i '**/*.bak' -i '**/*.tmp' -d -f tree"
+            ;;
+        "backend-only")
+            echo "files -i 'apps/convex/**/*' -i 'apps/workers/**/*' -e '**/node_modules/**/*' -e '**/_generated/**/*' -d -f tree"
+            ;;
+        "frontend-only")
+            echo "files -i 'apps/web/**/*' -i 'packages/ui/**/*' -i 'packages/storybook/**/*' -e '**/node_modules/**/*' -e '**/_generated/**/*' -d -f tree"
+            ;;
+        *)
+            echo ""
+            ;;
+    esac
+}
+
+# Function to get query name by number
+get_query_name() {
+    case "$1" in
+        1) echo "all-files-no-hidden" ;;
+        2) echo "all-files-with-hidden" ;;
+        3) echo "hidden-only" ;;
+        4) echo "code-only" ;;
+        5) echo "code-plus-tests" ;;
+        6) echo "architecture-context" ;;
+        7) echo "docs-permanent" ;;
+        8) echo "docs-transient" ;;
+        9) echo "test-segmented" ;;
+        10) echo "config-only" ;;
+        11) echo "deployment-files" ;;
+        12) echo "generated-artifacts" ;;
+        13) echo "deprecation-cleanup" ;;
+        14) echo "backend-only" ;;
+        15) echo "frontend-only" ;;
+        *) echo "" ;;
+    esac
+}
+
+# Function to get query description by number
+get_query_description() {
+    case "$1" in
+        1) echo "Complete project excluding hidden folders" ;;
+        2) echo "Complete project including hidden folders" ;;
+        3) echo "Hidden config folders excluding code" ;;
+        4) echo "Implementation code without tests/docs" ;;
+        5) echo "Implementation and test files only" ;;
+        6) echo "Code plus architectural documentation" ;;
+        7) echo "Architectural/permanent documentation" ;;
+        8) echo "Stories/UAT/time-sensitive docs" ;;
+        9) echo "Tests by location and module type" ;;
+        10) echo "Configuration files across project" ;;
+        11) echo "All deployment-related configurations" ;;
+        12) echo "All generated/build files for debugging" ;;
+        13) echo "Deprecated/backup files for cleanup" ;;
+        14) echo "Convex backend and workers only" ;;
+        15) echo "Next.js web app only" ;;
+        *) echo "" ;;
+    esac
+}
+
+
+# Function to display available queries
+show_menu() {
+    echo "🔍 LLM File Exploration Queries"
+    echo "================================"
+    echo ""
+    echo "Core Project Views:"
+    for i in {1..3}; do
+        printf "%2d. %-25s - %s\n" "$i" "$(get_query_name $i)" "$(get_query_description $i)"
+    done
+    echo ""
+    echo "Code-Focused Views:"
+    for i in {4..6}; do
+        printf "%2d. %-25s - %s\n" "$i" "$(get_query_name $i)" "$(get_query_description $i)"
+    done
+    echo ""
+    echo "Documentation Views:"
+    for i in {7..8}; do
+        printf "%2d. %-25s - %s\n" "$i" "$(get_query_name $i)" "$(get_query_description $i)"
+    done
+    echo ""
+    echo "Specialized Views:"
+    for i in {9..13}; do
+        printf "%2d. %-25s - %s\n" "$i" "$(get_query_name $i)" "$(get_query_description $i)"
+    done
+    echo ""
+    echo "Module-Specific Views:"
+    for i in {14..15}; do
+        printf "%2d. %-25s - %s\n" "$i" "$(get_query_name $i)" "$(get_query_description $i)"
+    done
+    echo ""
+    echo "Usage: llm-files [query-name|query-number]"
+    echo "Tip: Remove '-f tree' from command to include file contents"
+}
+
+# Function to execute query
+execute_query() {
+    local query_key="$1"
+    local command=$(get_query "$query_key")
+    
+    if [[ -z "$command" ]]; then
+        echo "❌ Error: Query '$query_key' not found"
+        exit 1
+    fi
+    
+    echo "🚀 Executing: $query_key"
+    echo "📁 Command: $command"
+    echo ""
+    
+    # Define the actual command path
+    GPT_CONTEXT_CMD="/Users/davidcruwys/dev/ad/appydave/appydave-tools/bin/gpt_context.rb"
+    
+    # Check if gpt_context.rb exists
+    if [[ ! -f "$GPT_CONTEXT_CMD" ]]; then
+        echo "❌ Error: gpt_context.rb not found at $GPT_CONTEXT_CMD"
+        echo "Please ensure the appydave-tools are installed and accessible"
+        exit 1
+    fi
+    
+    # Replace 'files' with the actual gpt_context.rb command
+    command=$(echo "$command" | sed "s|^files |$GPT_CONTEXT_CMD |")
+    
+    # Execute the command
+    eval "$command"
+}
+
+# Main script logic
+if [[ $# -eq 0 ]]; then
+    # No arguments - show interactive menu
+    show_menu
+    echo ""
+    echo -n "Enter query number or name: "
+    read -r selection
+    
+    # Check if selection is a number
+    if [[ "$selection" =~ ^[0-9]+$ ]] && [[ "$selection" -ge 1 ]] && [[ "$selection" -le 15 ]]; then
+        query_key=$(get_query_name "$selection")
+        execute_query "$query_key"
+    elif [[ -n "$(get_query "$selection")" ]]; then
+        execute_query "$selection"
+    else
+        echo "❌ Error: Invalid selection '$selection'"
+        exit 1
+    fi
+else
+    # Argument provided
+    selection="$1"
+    
+    # Check if selection is a number
+    if [[ "$selection" =~ ^[0-9]+$ ]] && [[ "$selection" -ge 1 ]] && [[ "$selection" -le 15 ]]; then
+        query_key=$(get_query_name "$selection")
+        execute_query "$query_key"
+    elif [[ -n "$(get_query "$selection")" ]]; then
+        execute_query "$selection"
+    else
+        echo "❌ Error: Invalid query '$selection'"
+        echo ""
+        show_menu
+        exit 1
+    fi
+fi
