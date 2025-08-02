@@ -9,7 +9,7 @@ Technical implementation guides for setting up, configuring, and maintaining the
 ### 🚀 New Repository Setup
 
 - **[Scripts and Commands Reference](./scripts-and-commands-reference.md)** - Complete guide to all scripts and commands
-- **[Environment Sync Workflow](./environment-sync-workflow.md)** - Master environment variable management
+- **[Environment Management](./environment-management.md)** - Advanced environment variable management workflow
 - **[Setup Verification Checklist](../setup-verification-checklist.md)** - Systematic verification process
 
 ### 🔐 Authentication & APIs
@@ -43,7 +43,7 @@ Technical implementation guides for setting up, configuring, and maintaining the
 
 ### Phase 1: Core Infrastructure
 
-1. **[Environment Setup](./environment-sync-workflow.md)** - Configure environment variable system
+1. **[Environment Setup](./environment-management.md)** - Configure environment variable system
 2. **[Scripts Setup](./scripts-and-commands-reference.md)** - Understand script ecosystem
 3. **[Convex Backend](./convex-components-guide.md)** - Initialize backend services
 
@@ -155,7 +155,7 @@ Technical implementation guides for setting up, configuring, and maintaining the
 **Initial Setup (Required):**
 
 - [Scripts and Commands Reference](./scripts-and-commands-reference.md)
-- [Environment Sync Workflow](./environment-sync-workflow.md)
+- [Environment Management](./environment-management.md)
 - [GitHub OAuth Setup](./github-oauth-setup.md)
 - [LLM API Setup](./llm-api-setup.md)
 
@@ -182,7 +182,7 @@ Technical implementation guides for setting up, configuring, and maintaining the
 **New Developers:**
 
 1. [Scripts and Commands Reference](./scripts-and-commands-reference.md)
-2. [Environment Sync Workflow](./environment-sync-workflow.md)
+2. [Environment Management](./environment-management.md)
 3. [Development workflow guides](../development-guide.md)
 
 **DevOps Engineers:**
