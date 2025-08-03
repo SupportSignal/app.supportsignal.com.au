@@ -17,7 +17,7 @@
     "test:coverage:watch:all": "jest --coverage --watch --all",
     "test:ci": "jest --config jest.config.ci.js --ci --coverage --maxWorkers=2",
     "pages:build": "npx @cloudflare/next-on-pages --outdir=dist",
-    "pages:deploy": "wrangler pages deploy dist --project-name=001-ndis-incident-report",
+    "pages:deploy": "wrangler pages deploy dist --project-name=app-supportsignal",
     "build:pages": "CI=true next build && npx @cloudflare/next-on-pages --outdir=dist",
     "pages:dev": "npx @cloudflare/next-on-pages --watch"
   },
