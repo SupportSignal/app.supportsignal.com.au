@@ -10,6 +10,7 @@ Technical implementation guides for setting up, configuring, and maintaining the
 
 - **[Scripts and Commands Reference](./scripts-and-commands-reference.md)** - Complete guide to all scripts and commands
 - **[Environment Management](./environment-management.md)** - Advanced environment variable management workflow
+- **[Project Environment Variable Management](./project-environment-variable-management.md)** - The Three Environments problem and solutions
 - **[Setup Verification Checklist](../setup-verification-checklist.md)** - Systematic verification process
 
 ### 🔐 Authentication & APIs
@@ -25,6 +26,7 @@ Technical implementation guides for setting up, configuring, and maintaining the
 - **[Cloudflare Pages Troubleshooting](./cloudflare-pages-deployment-troubleshooting.md)** - Deployment issue resolution
 - **[CI/CD Pipeline Setup](./cicd-pipeline-setup.md)** - GitHub Actions automation
 - **[Environment Management](./environment-management.md)** - Centralized environment strategy
+- **[Project Environment Variable Management](./project-environment-variable-management.md)** - Three environments deployment configuration
 
 ### 🛠️ Development & Architecture
 
@@ -134,6 +136,7 @@ Technical implementation guides for setting up, configuring, and maintaining the
 
 - [Cloudflare Pages Setup](./cloudflare-pages-setup.md)
 - [CI/CD Pipeline Setup](./cicd-pipeline-setup.md)
+- [Project Environment Variable Management](./project-environment-variable-management.md)
 - [CI Debugging Methodology](./ci-debugging-methodology.md)
 - [Cloudflare Pages Troubleshooting](./cloudflare-pages-deployment-troubleshooting.md)
 
@@ -156,6 +159,7 @@ Technical implementation guides for setting up, configuring, and maintaining the
 
 - [Scripts and Commands Reference](./scripts-and-commands-reference.md)
 - [Environment Management](./environment-management.md)
+- [Project Environment Variable Management](./project-environment-variable-management.md)
 - [GitHub OAuth Setup](./github-oauth-setup.md)
 - [LLM API Setup](./llm-api-setup.md)
 
@@ -164,6 +168,7 @@ Technical implementation guides for setting up, configuring, and maintaining the
 - [Cloudflare Pages Setup](./cloudflare-pages-setup.md)
 - [CI/CD Pipeline Setup](./cicd-pipeline-setup.md)
 - [Environment Management](./environment-management.md)
+- [Project Environment Variable Management](./project-environment-variable-management.md)
 
 **Optional Enhancements:**
 
@@ -183,13 +188,15 @@ Technical implementation guides for setting up, configuring, and maintaining the
 
 1. [Scripts and Commands Reference](./scripts-and-commands-reference.md)
 2. [Environment Management](./environment-management.md)
-3. [Development workflow guides](../development-guide.md)
+3. [Project Environment Variable Management](./project-environment-variable-management.md)
+4. [Development workflow guides](../development-guide.md)
 
 **DevOps Engineers:**
 
 1. [CI/CD Pipeline Setup](./cicd-pipeline-setup.md)
 2. [Cloudflare Pages Setup](./cloudflare-pages-setup.md)
-3. [CI Debugging Methodology](./ci-debugging-methodology.md)
+3. [Project Environment Variable Management](./project-environment-variable-management.md)
+4. [CI Debugging Methodology](./ci-debugging-methodology.md)
 
 **Security Engineers:**
 
