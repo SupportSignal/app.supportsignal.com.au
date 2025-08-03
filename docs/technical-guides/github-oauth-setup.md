@@ -148,16 +148,40 @@ Check that your GitHub OAuth app includes:
    GITHUB_CLIENT_SECRET=your_client_secret
    ```
 
-### Production Environment
+⚠️ **Critical**: Production OAuth requires **both** GitHub OAuth app configuration **and** Convex environment variable setup.
 
-1. **Option A**: Use same GitHub OAuth app
-   - Add production redirect URI
-   - Use same credentials
+### 1. Update GitHub OAuth App
 
-2. **Option B**: Create separate production OAuth app
-   - Create new OAuth app for production
-   - Use separate credentials
-   - Better security isolation
+Add production redirect URI to your GitHub OAuth app:
+
+1. Go to https://github.com/settings/applications/your-app-id
+2. Add production callback URL:
+   ```
+   https://your-production-domain.pages.dev/auth/github/callback
+   ```
+
+### 2. Configure Convex Production Environment
+
+**Most Critical Step**: Set environment variables in your Convex **production deployment** (not defaults):
+
+1. **Access Convex Dashboard**: Go to [convex.dev](https://convex.dev) → Your Project
+2. **Find Production Deployment**: Look for `production:your-deployment-name`
+3. **Set Environment Variables**:
+
+```
+NEXT_PUBLIC_APP_URL=https://your-production-domain.pages.dev
+GITHUB_CLIENT_ID=your-github-oauth-client-id
+GITHUB_CLIENT_SECRET=your-github-oauth-client-secret
+OAUTH_SECRET=your-generated-oauth-secret
+```
+
+**Common Mistake**: Setting variables in "Default Environment Variables" only affects new deployments, not existing production deployment.
+
+### 3. Verify Production OAuth
+
+1. **Test Authentication**: Visit your production site and try GitHub login
+2. **Check Callback URL**: Should redirect to production domain, not localhost
+3. **No Errors**: Should not see "redirect_uri is not associated" error
 
 ## Security Considerations
 

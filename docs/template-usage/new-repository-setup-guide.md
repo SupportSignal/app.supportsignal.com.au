@@ -221,7 +221,7 @@ Before starting, ensure you have:
    - Fill in:
      ```
      Application name: Your App Name (Dev)
-     Homepage URL: https://your-domain.com (or http://localhost:3200 for dev only)
+     Homepage URL: https://supportsignal.com (or http://localhost:3200 for dev only)
      Authorization callback URL: http://localhost:3200/auth/github/callback
      ```
 
@@ -231,7 +231,7 @@ Before starting, ensure you have:
      ```
      http://localhost:3200/auth/github/callback
      http://localhost:3300/auth/github/callback
-     https://app.your-domain.com/auth/github/callback
+     https://app.supportsignal.com.au/auth/github/callback
      ```
 
 3. **Get OAuth credentials**:
@@ -445,6 +445,74 @@ Before starting, ensure you have:
 ✅ **Success Check**: Your application loads at the Cloudflare Pages URL and basic functionality works.
 
 **📖 Detailed Guide**: [Cloudflare Pages Setup](./technical-guides/cloudflare-pages-setup.md)
+
+### Step 8a: Convex Production Environment Configuration
+
+**Goal**: Configure environment variables for your Convex production deployment to enable OAuth and other services.
+
+⚠️ **Critical**: This step is **MANDATORY** for OAuth authentication to work in production. Skipping this will cause "redirect_uri is not associated" errors.
+
+**The Issue**: Convex has separate environment variables for each deployment (dev vs production). Your production deployment needs production URLs, not localhost values.
+
+#### Quick Setup
+
+1. **Access Convex Dashboard**: Go to [convex.dev](https://convex.dev) → Your Project
+2. **Find Production Deployment**: Look for `production:your-deployment-name`
+3. **Configure Environment Variables**: Click on production deployment → Environment Variables
+
+#### Required Production Environment Variables
+
+**Copy and paste these values** (update URLs to match your deployment):
+
+```
+CLOUDFLARE_ACCOUNT_ID=your-cloudflare-account-id
+CLOUDFLARE_API_TOKEN=your-cloudflare-api-token
+CONVEX_DEPLOYMENT=production:your-deployment-name
+GITHUB_CLIENT_ID=your-github-oauth-client-id
+GITHUB_CLIENT_SECRET=your-github-oauth-client-secret
+GOOGLE_CLIENT_ID=your-google-oauth-client-id
+GOOGLE_CLIENT_SECRET=your-google-oauth-client-secret
+LLM_FALLBACK_MODEL=openai/gpt-4o-mini
+LLM_MODEL=openai/gpt-4o-mini
+LOG_WORKER_URL=https://your-worker.workers.dev
+NEXT_PUBLIC_APP_URL=https://your-site.pages.dev
+NEXT_PUBLIC_CONVEX_URL=https://your-deployment.convex.cloud
+NEXT_PUBLIC_LOG_WORKER_URL=https://your-worker.workers.dev
+OAUTH_SECRET=your-generated-oauth-secret
+OPENAI_API_KEY=your-openai-api-key
+OPENROUTER_API_KEY=your-openrouter-api-key
+UPSTASH_REDIS_REST_TOKEN=your-upstash-token
+UPSTASH_REDIS_REST_URL=https://your-redis.upstash.io
+VECTORIZE_DATABASE_ID=your-vectorize-database-id
+```
+
+#### Critical Variables for OAuth
+
+**Minimum required for authentication**:
+
+- `NEXT_PUBLIC_APP_URL` = `https://your-site.pages.dev` (your production URL)
+- `GITHUB_CLIENT_ID` = Your GitHub OAuth app client ID
+- `GITHUB_CLIENT_SECRET` = Your GitHub OAuth app client secret
+
+#### Common Mistakes
+
+❌ **DON'T**: Set variables in "Default Environment Variables" only  
+✅ **DO**: Set variables on the specific production deployment
+
+❌ **DON'T**: Use localhost URLs in production environment variables  
+✅ **DO**: Use your actual production domain URLs
+
+#### Verification
+
+1. **Test OAuth**: Try signing in with GitHub on your production site
+2. **Check Callback URL**: Should redirect to `https://your-site.pages.dev/auth/github/callback`
+3. **No Errors**: Should not see "redirect_uri is not associated" error
+
+⚠️ **Environment Variable Scope**: Setting these variables only affects your production deployment. Your local development will continue using the dev deployment with localhost values.
+
+✅ **Success Check**: OAuth authentication works correctly on your production site.
+
+**📖 Detailed Guide**: [OAuth Environment Variable Configuration KDD](../lessons-learned/oauth-environment-variable-configuration-kdd.md)
 
 ### Step 8b: Log Ingestion Worker Setup
 
