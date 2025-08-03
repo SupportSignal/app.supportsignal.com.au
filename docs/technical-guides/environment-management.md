@@ -489,6 +489,118 @@ curl -H "Authorization: Bearer $(grep OPENROUTER apps/convex/.env.local | cut -d
   "https://openrouter.ai/api/v1/models"
 ```
 
+## Troubleshooting Environment Variables
+
+### Issue: Environment Variables Show Wrong Values in Production
+
+**Problem**: Production deployment shows localhost URLs or development values instead of production values.
+
+**Common Symptoms**:
+
+```javascript
+// Production site showing:
+{
+  "NEXT_PUBLIC_APP_URL": "http://localhost:3000",
+  "NEXT_PUBLIC_LOG_WORKER_URL": "http://localhost:8787"
+}
+```
+
+**Root Causes & Solutions**:
+
+#### 1. GitHub Repository Secrets Misconfigured
+
+**Diagnosis**: GitHub Actions secrets exist but contain wrong values
+
+**Solution**:
+
+1. Go to GitHub Repository → Settings → Security → Secrets and variables → Actions
+2. Check Repository secrets for production values:
+   - `NEXT_PUBLIC_APP_URL` should be `https://your-site.pages.dev`
+   - `NEXT_PUBLIC_LOG_WORKER_URL` should be `https://your-worker.workers.dev`
+3. Update any secrets that contain localhost values
+
+**Debug Method**: Add to CI workflow:
+
+```yaml
+- name: Debug Environment Variables
+  run: |
+    [ -n "${{ secrets.NEXT_PUBLIC_APP_URL }}" ] && echo "✅ SECRET exists" || echo "❌ SECRET missing"
+    [ -n "$NEXT_PUBLIC_APP_URL" ] && echo "✅ ENV set (length: ${#NEXT_PUBLIC_APP_URL})" || echo "❌ ENV empty"
+```
+
+#### 2. Missing GitHub Repository Secrets
+
+**Diagnosis**: Environment variables are undefined or empty in CI
+
+**Solution**:
+
+1. Create missing GitHub repository secrets
+2. Ensure secret names match exactly what's used in CI workflow
+3. Verify secrets are in Repository scope, not Environment scope
+
+#### 3. CI Workflow Configuration Issues
+
+**Diagnosis**: Secrets not properly injected into build environment
+
+**Solution**: Verify CI workflow has proper env section:
+
+```yaml
+build:
+  env:
+    NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+    NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
+    NEXT_PUBLIC_LOG_WORKER_URL: ${{ secrets.NEXT_PUBLIC_LOG_WORKER_URL }}
+```
+
+### Debugging Strategies
+
+#### 1. Local vs Production Comparison
+
+```bash
+# Local environment check
+bun run sync-env
+cat apps/web/.env.local | grep NEXT_PUBLIC
+
+# Production environment check (via debug page)
+# Create apps/web/app/debug-env/page.tsx for production verification
+```
+
+#### 2. CI Debug Logging
+
+Add systematic environment variable logging to CI:
+
+```yaml
+- name: Environment Debug
+  run: |
+    echo "=== Secret Existence Check ==="
+    [ -n "${{ secrets.NEXT_PUBLIC_APP_URL }}" ] && echo "✅ APP_URL secret exists" || echo "❌ missing"
+
+    echo "=== Environment Variables ==="
+    echo "APP_URL length: ${#NEXT_PUBLIC_APP_URL}"
+    env | grep NEXT_PUBLIC || echo "No NEXT_PUBLIC vars found"
+```
+
+#### 3. String Length Analysis
+
+Use string length to identify value source:
+
+- `http://localhost:3000` = 21 characters (development)
+- `https://your-site.pages.dev` = 30+ characters (production)
+
+### Prevention Best Practices
+
+1. **Create Debug Environment Page**:
+   - Add `/debug-env` route to verify production environment variables
+   - Only show in development or to authenticated users
+
+2. **CI Validation**:
+   - Add checks for localhost values in production builds
+   - Fail build if production environment contains development URLs
+
+3. **Documentation**:
+   - Document expected environment variable values
+   - Include character length references for validation
+
 ## Related Documentation
 
 - **[Scripts and Commands Reference](./scripts-and-commands-reference.md)** - All available commands

@@ -281,7 +281,7 @@ For systematic development, reference specific epics and architectural component
 
 - **Auto-deployment**: Configured for `main` branch via Git integration
 - **Build Command**: `bun run build && bun run pages:build`
-- **Output Directory**: `.vercel/output/static`
+- **Output Directory**: `dist`
 - **Root Directory**: `apps/web`
 - **Environment Variables**: `HUSKY=0` (required for CI)
 - **Compatibility Flags**: `nodejs_compat` (required for Node.js runtime)
@@ -311,6 +311,8 @@ git push origin main  # Triggers automatic deployment
 - See [Deployment Troubleshooting Guide](docs/technical-guides/cloudflare-pages-deployment-troubleshooting.md)
 - Check build logs in Cloudflare Pages dashboard
 - Verify compatibility flags are enabled for both Production and Preview environments
+- **Dual Deployment Issues**: If seeing two deployments per commit, disable Cloudflare Pages auto-deploy in dashboard
+- **Environment Variables**: If production shows localhost values, check GitHub repository secrets configuration
 
 #### Convex Backend
 

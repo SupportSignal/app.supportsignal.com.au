@@ -17,6 +17,9 @@ const nextConfig = {
       process.env.NODE_ENV === 'development' &&
         process.env.CLAUDE_LOGGING !== 'false'
     ),
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
+    NEXT_PUBLIC_LOG_WORKER_URL: process.env.NEXT_PUBLIC_LOG_WORKER_URL,
   },
   // Add logging status to build info
   generateBuildId: async () => {

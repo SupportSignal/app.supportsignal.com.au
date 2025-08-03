@@ -6,13 +6,15 @@ This guide provides systematic troubleshooting approaches for Cloudflare Pages d
 
 ## Quick Reference: Common Issues
 
-| Issue                         | Symptom                                | Solution                                           |
-| ----------------------------- | -------------------------------------- | -------------------------------------------------- |
-| Husky CI Failure              | Build fails with git hook errors       | Set `HUSKY=0` environment variable                 |
-| Runtime Module Errors         | App crashes with Node.js module issues | Enable `nodejs_compat` compatibility flag          |
-| Build Configuration Conflicts | Deployment fails with config errors    | Remove wrangler.toml, use Pages dashboard          |
-| Auto-deployment Not Working   | New commits don't trigger deployment   | Check Git integration settings                     |
-| Build Output Not Found        | "Output directory not found" error     | Verify output directory is `dist` |
+| Issue                         | Symptom                                | Solution                                  |
+| ----------------------------- | -------------------------------------- | ----------------------------------------- |
+| Dual Deployments              | Two deployments per commit, one fails  | Disable Cloudflare Pages auto-deploy      |
+| Environment Variables Wrong   | Localhost URLs in production           | Check GitHub repository secrets values    |
+| Husky CI Failure              | Build fails with git hook errors       | Set `HUSKY=0` environment variable        |
+| Runtime Module Errors         | App crashes with Node.js module issues | Enable `nodejs_compat` compatibility flag |
+| Build Configuration Conflicts | Deployment fails with config errors    | Remove wrangler.toml, use Pages dashboard |
+| Auto-deployment Not Working   | New commits don't trigger deployment   | Check Git integration settings            |
+| Build Output Directory Not Found        | "Output directory not found" error     | Verify output directory is `dist`         |
 
 ## Systematic Troubleshooting Process
 
@@ -229,7 +231,7 @@ ls -la dist/
 
 **Common Mistakes**:
 
-- Using `.vercel/output/static` instead of `dist`
+- Using `dist` instead of `dist`
 - Using `.next` instead of processed output
 - Missing `pages:build` step
 
@@ -264,6 +266,101 @@ const nextConfig = {
 - `output: 'export'` - Enables static site generation
 - `images: { unoptimized: true }` - Disables Next.js image optimization
 - `trailingSlash: true` - Ensures proper routing
+
+### Issue: Dual Deployments (Two Deployments Per Commit)
+
+**Symptoms**:
+
+```
+First deployment: "No deployment available" (immediate)
+Second deployment: Successful deployment (2-3 minutes later)
+Build logs show npm workspace errors in first deployment
+```
+
+**Root Cause**: Both Cloudflare Pages Git integration and GitHub Actions are deploying simultaneously
+
+**Solution**: Disable Cloudflare Pages Auto-Deploy
+
+**Steps**:
+
+1. Go to Cloudflare Pages Dashboard → Settings → Build → Branch control
+2. **Turn OFF** "Enable automatic production branch deployments"
+3. Keep GitHub Actions deployment only
+4. Test with new commit - should see only one deployment
+
+**Why This Happens**:
+
+- GitHub Actions workflow includes "Deploy to Cloudflare Pages" step
+- Cloudflare Pages Git integration is also enabled
+- Both systems try to deploy the same commit
+- Cloudflare direct deploy often fails with npm/workspace issues
+- GitHub Actions deploy succeeds with proper bun setup
+
+**Verification**:
+
+- Single deployment entry per commit in Cloudflare Pages dashboard
+- No more "No deployment available" entries
+- Clean deployment logs via GitHub Actions
+
+### Issue: Environment Variables Show Localhost in Production
+
+**Symptoms**:
+
+```javascript
+// Production site shows:
+{
+  "NEXT_PUBLIC_APP_URL": "http://localhost:3000",
+  "NEXT_PUBLIC_LOG_WORKER_URL": "http://localhost:8787",
+  "NODE_ENV": "production"
+}
+```
+
+**Root Cause**: GitHub repository secrets configured with localhost values instead of production URLs
+
+**Solution**: Update GitHub Repository Secrets
+
+**Steps**:
+
+1. Go to GitHub Repository → Settings → Security → Secrets and variables → Actions
+2. Update the following Repository secrets:
+   - `NEXT_PUBLIC_APP_URL`: Change to `https://your-site.pages.dev`
+   - `NEXT_PUBLIC_LOG_WORKER_URL`: Change to `https://your-worker.workers.dev`
+3. Trigger new deployment to test
+
+**Debug Process**:
+
+Add debug logging to GitHub Actions workflow to identify the issue:
+
+```yaml
+- name: Debug Environment Variables
+  run: |
+    echo "=== Checking if GitHub Secrets are configured ==="
+    [ -n "${{ secrets.NEXT_PUBLIC_APP_URL }}" ] && echo "✅ NEXT_PUBLIC_APP_URL secret exists" || echo "❌ NEXT_PUBLIC_APP_URL secret missing"
+
+    echo "=== Environment Variables (length check) ==="
+    [ -n "$NEXT_PUBLIC_APP_URL" ] && echo "✅ NEXT_PUBLIC_APP_URL env var set (length: ${#NEXT_PUBLIC_APP_URL})" || echo "❌ NEXT_PUBLIC_APP_URL env var empty"
+
+    echo "=== All NEXT_PUBLIC env vars ==="
+    env | grep NEXT_PUBLIC || echo "No NEXT_PUBLIC vars found"
+```
+
+**Length Analysis**:
+
+- `http://localhost:3000` = 21 characters (indicates localhost)
+- `https://your-site.pages.dev` = 40+ characters (indicates production)
+
+**Common Misconceptions**:
+
+- ❌ It's NOT missing GitHub secrets (they exist)
+- ❌ It's NOT Next.js configuration issues (build works)
+- ❌ It's NOT local .env files affecting CI (properly ignored)
+- ✅ It IS GitHub secrets having wrong values
+
+**Verification**:
+
+- Debug logs show correct string lengths (40+ characters)
+- Production site shows correct URLs
+- No localhost references in deployed application
 
 ## Debugging Tools and Commands
 
@@ -392,6 +489,7 @@ When seeking help, collect:
 
 ## Related Documentation
 
+- [Dual Deployment and Environment Variable Troubleshooting KDD](../lessons-learned/dual-deployment-and-environment-variable-troubleshooting-kdd.md)
 - [Deployment Patterns](../patterns/development-workflow-patterns.md#deployment-workflow-patterns)
 - [Story 1.3 Lessons Learned](../lessons-learned/stories/story-1-3-lessons.md)
 - [CLAUDE.md Deployment Section](../../CLAUDE.md#deployment)
