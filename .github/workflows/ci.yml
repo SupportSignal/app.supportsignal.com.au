@@ -16,7 +16,28 @@ env:
   NODE_ENV: production
 
 jobs:
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch full history for complete scan
+
+      - name: Install Gitleaks
+        run: |
+          GITLEAKS_VERSION=$(curl -s https://api.github.com/repos/gitleaks/gitleaks/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+          curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION#v}_linux_x64.tar.gz" | tar -xz
+          sudo mv gitleaks /usr/local/bin/
+          gitleaks version
+
+      - name: Run Gitleaks
+        run: |
+          gitleaks detect --config=.gitleaks.toml --verbose --exit-code=1
+
   lint:
+    needs: [security]
     name: Lint
     runs-on: ubuntu-latest
     steps:
@@ -37,6 +58,7 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    needs: [security]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -78,6 +100,7 @@ jobs:
   test-e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
+    needs: [security]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

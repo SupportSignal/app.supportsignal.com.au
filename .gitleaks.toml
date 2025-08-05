@@ -1,0 +1,72 @@
+# Gitleaks configuration file
+# https://github.com/gitleaks/gitleaks
+
+[extend]
+# Use default rules as base
+useDefault = true
+
+# Additional allowlist entries to reduce false positives
+[[rules]]
+description = "Allow placeholder API keys in documentation"
+id = "doc-placeholders"
+regex = '''(YOUR_API_KEY|YOUR_OPENAI_KEY|YOUR_OPENROUTER_KEY|YOUR_API_TOKEN|your-token|secret-api-key-[0-9]+|EsmURKt0YSKTaFzsSUb37dotZvo2zJx1PpzC64GiBYc=|B5wCJK3jgRaA-4q9S0JhDSCg6w-9m3W_v27a6kUE)'''
+path = '''(docs/.*\.md|README\.md|-docs\.md)'''
+
+[[rules]]
+description = "Allow test API keys in test files"
+id = "test-placeholders"
+regex = '''(api-key-67890|convex-api-789|secret-api-key-12345)'''
+path = '''(tests/.*\.ts|.*\.test\.ts|.*\.spec\.ts)'''
+
+[[rules]]
+description = "Allow mock values in test configurations"
+id = "test-mock-values"
+regex = '''sk-or-v1-[a-f0-9]{64}'''
+path = '''tests/.*\.ts'''
+
+[[rules]]
+id = "convex-url-example"
+description = "Allow Convex URL examples in documentation"
+regex = '''https://.*\.convex\.cloud'''
+path = '''docs/.*\.md$'''
+
+[[rules]]
+id = "cloudflare-url-example" 
+description = "Allow Cloudflare Pages URL examples in documentation"
+regex = '''https://.*\.pages\.dev'''
+path = '''docs/.*\.md$'''
+
+# Global allowlist for specific patterns
+[allowlist]
+description = "Ignore documentation examples and test fixtures"
+paths = [
+    '''\.md$''',
+    '''tests/.*\.ts$''',
+    '''.*\.test\.ts$''',
+    '''.*\.spec\.ts$''',
+    '''-docs\.md$''',  # Ignore consolidated docs file
+    '''node_modules/''',
+    '''\.git/''',
+    '''dist/''',
+    '''build/''',
+    '''coverage/'''
+]
+
+# Ignore specific secrets that are known placeholders
+commits = [
+    # Add commit hashes here if needed for specific false positives
+]
+
+# Stop words - if these are found in the secret, it's likely a placeholder
+stopwords = [
+    "example",
+    "test",
+    "placeholder",
+    "your",
+    "insert",
+    "replace",
+    "dummy",
+    "fake",
+    "mock",
+    "sample"
+]

@@ -137,3 +137,6 @@ test-coverage/
 
 # Sentry Config File
 .sentryclirc
+
+# Gitleaks Security Reports
+security-audit.json
