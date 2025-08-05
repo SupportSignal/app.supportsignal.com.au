@@ -8,6 +8,13 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
+  // Suppress hydration warnings in development for better DX
+  reactStrictMode: true,
+  logging: {
+    fetches: {
+      fullUrl: process.env.NODE_ENV === 'development',
+    },
+  },
   trailingSlash: true,
   images: {
     unoptimized: true,

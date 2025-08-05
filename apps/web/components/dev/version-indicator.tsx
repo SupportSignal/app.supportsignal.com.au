@@ -78,6 +78,12 @@ export function VersionIndicator({
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const [, setLastRefresh] = useState<number>(Date.now());
   const [isProminent, setIsProminent] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Prevent hydration mismatch - only show after client-side hydration
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   // Check owner access
   const ownerAccess = useQuery(
@@ -87,6 +93,16 @@ export function VersionIndicator({
 
   // Don't show indicator if user doesn't have owner access
   const hasAccess = ownerAccess?.hasAccess === true;
+
+  // Prevent hydration mismatch - don't render anything until client-side hydration
+  if (!isHydrated) {
+    return null;
+  }
+
+  // Don't show if no access
+  if (!hasAccess) {
+    return null;
+  }
 
   const fetchManifest = useCallback(async () => {
     try {

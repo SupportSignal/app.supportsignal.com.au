@@ -63,6 +63,12 @@ export function VersionFlashNotification({
     incrementType?: 'major' | 'minor' | 'patch' | 'unknown';
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Prevent hydration mismatch - only show after client-side hydration
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout>;
@@ -198,6 +204,11 @@ export function VersionFlashNotification({
         return 'bg-gray-100 text-gray-800';
     }
   };
+
+  // Prevent hydration mismatch - don't render anything until client-side hydration
+  if (!isHydrated) {
+    return null;
+  }
 
   if (isLoading || !versionInfo) {
     return null;
