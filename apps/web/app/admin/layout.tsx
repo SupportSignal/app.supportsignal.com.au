@@ -1,3 +1,5 @@
+'use client';
+
 import { ReactNode } from 'react';
 
 interface AdminLayoutProps {
@@ -5,6 +7,7 @@ interface AdminLayoutProps {
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
+  // Standard admin layout with header and containers
   return (
     <div className="min-h-screen bg-background">
       <div className="border-b">

@@ -48,6 +48,28 @@ const suppressedPatterns = new Set([
   'Received an error',
   'Non-Error promise rejection',
 
+  // Convex sync operation noise - these are administrative logs from data organization
+  'Clearing existing debug logs',
+  'Cleared',
+  'logs from Redis',
+  'logs from Convex',
+  'Syncing current Redis state',
+  'Synced',
+  'logs for trace',
+  'logs for user',
+  'Clearing Redis logs',
+  'Clearing existing logs for trace',
+  // Claude logging system meta-logs (administrative noise)
+  'Claude logging provider initialized',
+  'Claude logging user context updated',
+  'Claude logging user context reset',
+  'Clearing existing logs for user',
+  'Failed to insert log',
+  'Failed to fetch logs for trace',
+  'syncAllLogs',
+  'clearRedisAndSync',
+  'clearRedisLogs',
+
   // Add more patterns as discovered
 ]);
 
@@ -120,10 +142,38 @@ function shouldSuppressMessage(level: string, args: unknown[]): boolean {
   return false;
 }
 
+function detectSystemSource(args: unknown[]): 'browser' | 'convex' {
+  const message = args
+    .map(arg => (typeof arg === 'object' ? JSON.stringify(arg) : String(arg)))
+    .join(' ');
+
+  // Detect Convex backend logs by their distinctive patterns
+  const convexPatterns = [
+    '[CONVEX A(',
+    '[CONVEX Q(',
+    '[CONVEX M(',
+    'Clearing Redis logs',
+    'Cleared',
+    'Syncing current Redis state',
+    'Synced',
+    'logs from Redis',
+    'logs from Convex',
+  ];
+
+  for (const pattern of convexPatterns) {
+    if (message.includes(pattern)) {
+      return 'convex';
+    }
+  }
+
+  return 'browser';
+}
+
 // Declare global window interface for TypeScript
 declare global {
   interface Window {
     CLAUDE_LOGGING_ENABLED?: string;
+    location: Location;
   }
 }
 
@@ -211,19 +261,25 @@ async function sendToWorker(level: string, args: unknown[]) {
     rateLimitResetTime = now + 60000;
   }
 
+  // Only capture stack traces for errors and warnings (not for log/info)
+  const shouldCaptureStack = level === 'error' || level === 'warn';
+
+  const detectedSystem = detectSystemSource(args);
+
   const payload = {
     trace_id: currentTraceId,
-    message: args.map(arg =>
-      typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
-    ).join(' '),
+    message: args
+      .map(arg => (typeof arg === 'object' ? JSON.stringify(arg) : String(arg)))
+      .join(' '),
     level: level as 'log' | 'info' | 'warn' | 'error',
-    system: 'browser' as const,
+    system: detectedSystem,
     user_id: currentUserId,
-    stack: new Error().stack,
+    stack: shouldCaptureStack ? new Error().stack : undefined,
     context: {
       timestamp: Date.now(),
       url: typeof window !== 'undefined' ? window.location.href : undefined,
-      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+      userAgent:
+        typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
     },
   };
 
@@ -235,7 +291,8 @@ async function sendToWorker(level: string, args: unknown[]) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Origin': typeof window !== 'undefined' ? window.location.origin : 'unknown',
+        Origin:
+          typeof window !== 'undefined' ? window.location.origin : 'unknown',
       },
       body: JSON.stringify(payload),
     });

@@ -1,6 +1,4 @@
-// @ts-nocheck
 // Worker-based rate limiting using Durable Objects for state management
-// TypeScript interface issues with DurableObjectStub.fetch() signature don't affect runtime
 
 import type { RateLimitConfig, RateLimitState } from './types';
 

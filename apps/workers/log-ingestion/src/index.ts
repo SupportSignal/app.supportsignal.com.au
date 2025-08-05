@@ -37,7 +37,7 @@ export default {
     if (url.pathname === '/' && request.method === 'GET') {
       return new Response(
         JSON.stringify({
-          service: 'log-ingestion-worker',
+          service: 'supportsignal-log-ingestion-worker',
           status: 'running',
           endpoints: {
             'POST /log': 'Log ingestion endpoint',
@@ -160,7 +160,14 @@ async function handleLogIngestion(
       env.UPSTASH_REDIS_REST_URL,
       env.UPSTASH_REDIS_REST_TOKEN
     );
-    await redis.storeLogEntry(processedEntry);
+    
+    try {
+      await redis.storeLogEntry(processedEntry);
+    } catch (redisError) {
+      console.error('Redis store failed:', redisError);
+      // Don't fail the request - rate limiting already succeeded
+      // But log the error for debugging
+    }
 
     return new Response(
       JSON.stringify({
@@ -234,7 +241,7 @@ async function handleHealthCheck(
 
     const healthStatus = {
       status: redisHealthy ? 'healthy' : 'degraded',
-      service: 'log-ingestion-worker',
+      service: 'supportsignal-log-ingestion-worker',
       timestamp: Date.now(),
       components: {
         redis: {

@@ -30,6 +30,18 @@ export {
   SelectValue 
 } from "./src/select"
 export { Tabs, TabsContent, TabsList, TabsTrigger } from "./src/tabs"
+export { 
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableCaption,
+} from "./src/table"
+export { Textarea, type TextareaProps } from "./src/textarea"
+export { Collapsible, CollapsibleTrigger, CollapsibleContent } from "./src/collapsible"
 
 // Utility exports
 export { cn } from "./src/lib/utils"

@@ -53,7 +53,27 @@ export default defineSchema({
     .index('by_token', ['token'])
     .index('by_user_id', ['userId']),
 
-  // Note: Logging tables removed - now handled by Cloudflare Worker + Redis
+  // Debug logs table for synced Redis data analysis
+  debug_logs: defineTable({
+    id: v.string(), // Original log ID from Redis
+    trace_id: v.string(),
+    user_id: v.optional(v.string()),
+    system: v.union(v.literal("browser"), v.literal("convex"), v.literal("worker"), v.literal("manual")),
+    level: v.union(v.literal("log"), v.literal("info"), v.literal("warn"), v.literal("error")),
+    message: v.string(),
+    timestamp: v.number(),
+    context: v.optional(v.any()),
+    stack: v.optional(v.string()),
+    raw_data: v.any(), // Full original log entry
+    synced_at: v.number(), // When this was synced from Redis
+  })
+    .index('by_trace_id', ['trace_id'])
+    .index('by_user_id', ['user_id'])
+    .index('by_system', ['system'])
+    .index('by_timestamp', ['timestamp'])
+    .index('by_synced_at', ['synced_at']),
+
+  // Note: Old logging tables removed - now handled by Cloudflare Worker + Redis
   // Old tables (log_queue, recent_log_entries, rate_limit_state, message_fingerprints)
   // have been migrated to Redis-based storage for better cost efficiency
 

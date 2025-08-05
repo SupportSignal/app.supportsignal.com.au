@@ -70,21 +70,21 @@ export default function DevPage() {
               </CardContent>
             </Card>
 
-            {/* Admin Panel */}
+            {/* Debug Logs */}
             <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Settings className="h-5 w-5 text-purple-600" />
-                  Admin Panel
+                  Debug Logs
                 </CardTitle>
-                <CardDescription>System monitoring and logs</CardDescription>
+                <CardDescription>Development logging dashboard</CardDescription>
               </CardHeader>
               <CardContent>
                 <Link
-                  href="/admin/logs"
+                  href="/debug-logs"
                   className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                 >
-                  Admin Dashboard
+                  Debug Dashboard
                   <ExternalLink className="h-4 w-4" />
                 </Link>
               </CardContent>

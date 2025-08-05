@@ -32,22 +32,18 @@ Dedicated step-by-step guide for deploying this template to production with all 
 
 Following BMAD methodology, these documents form the foundation:
 
-- **[Project Brief](./project-brief.md)** - Project goals and constraints
+- **[SupportSignal PRD](./prd.md)** - Complete product requirements for SupportSignal application
 - **[Product Requirements (PRD)](./prd/)** - Detailed product requirements document (sharded)
 - **[Architecture](./architecture/)** - Technical architecture and design decisions (sharded)
 
-### 📋 Product Requirements (Sharded)
+### 📋 SupportSignal Product Requirements
 
-**[prd/](./prd/)**
+**[SupportSignal PRD Documentation](./prd/)**
 
 - **[PRD Overview](./prd/index.md)** - Navigation and complete requirements overview
-- **[Epic 1: Platform Foundation](./prd/epic-1.md)** - Monorepo, deployment, and authentication
-- **[Epic 2: UI Toolkit](./prd/epic-2.md)** - Component showcase and theming
-- **[Epic 3: Real-time Logging](./prd/epic-3.md)** - Resilient logging architecture
-- **[Epic 4: Conversational AI](./prd/epic-4.md)** - RAG foundation and chat interface
-- **[Epic 5: Production Features](./prd/epic-5.md)** - Quality of life improvements
-- **[Epic 6: Documentation](./prd/epic-6.md)** - Onboarding and deployment guides
-- **[Epic 7: Hybrid Workflow](./prd/epic-7.md)** - Experimental agent workflow
+- **[Epic 1: Data Foundation & Backend Setup](./prd/epic-1.md)** - Infrastructure, database schema, AI integration, authentication
+- **[Epic 2: Incident Capture Workflow](./prd/epic-2.md)** - 7-step capture wizard, narrative collection, AI clarification system
+- **[Epic 3: Incident Analysis Workflow](./prd/epic-3.md)** - 4-step analysis process, contributing conditions, classification system
 
 ### 🏗️ Architecture (Sharded)
 

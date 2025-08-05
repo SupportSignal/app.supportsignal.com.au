@@ -1,5 +1,5 @@
 {
-  "name": "@appydave/log-ingestion-worker",
+  "name": "@supportsignal/log-ingestion-worker",
   "version": "1.0.0",
   "description": "Cloudflare Worker for AI-first logging system with Redis backend",
   "main": "src/index.ts",
@@ -33,11 +33,11 @@
     "rate-limiting",
     "monitoring"
   ],
-  "author": "AppyDave Templates",
+  "author": "SupportSignal",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/appydave-templates/starter-nextjs-convex-ai.git",
+    "url": "https://github.com/supportsignal/app.supportsignal.com.au.git",
     "directory": "apps/workers/log-ingestion"
   }
 }

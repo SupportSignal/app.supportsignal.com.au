@@ -51,11 +51,11 @@ export default function HomePage() {
                     Protected
                   </Link>
                   <Link
-                    href="/admin/logs"
+                    href="/debug-logs"
                     className="flex items-center text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium"
                   >
                     <Settings className="h-4 w-4 mr-1" />
-                    Admin
+                    Debug
                   </Link>
                 </>
               )}

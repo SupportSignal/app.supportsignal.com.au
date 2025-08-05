@@ -1,7 +1,7 @@
 # Cloudflare Worker configuration for log ingestion service
 # This file uses environment variables for sensitive values
 
-name = "log-ingestion-worker"
+name = "supportsignal-log-ingestion-worker"
 main = "src/index.ts"
 compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
@@ -18,7 +18,11 @@ ENVIRONMENT = "development"
 [[durable_objects.bindings]]
 name = "RATE_LIMIT_STATE"
 class_name = "RateLimiterDO"
-script_name = "log-ingestion-worker"
+
+# Durable Objects migrations
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["RateLimiterDO"]
 
 [build]
 command = "npm run build"
