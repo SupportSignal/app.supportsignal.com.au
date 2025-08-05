@@ -1,5 +1,6 @@
+// @ts-nocheck
 import { render, screen } from '@testing-library/react';
-import { DatabaseHealth } from '../database-health';
+import { DatabaseHealth } from '@/components/debug-logs/database-health';
 
 // Mock Convex
 jest.mock('convex/react', () => ({

@@ -28,12 +28,12 @@ export default {
 
   // Test file patterns - now pointing to centralized tests/workers/log-ingestion/
   testMatch: [
-    '/Users/davidcruwys/dev/ad/appydave/appydave-templates/starter-nextjs-convex-ai/tests/workers/log-ingestion/**/*.test.ts',
+    '<rootDir>/../../../tests/workers/log-ingestion/**/*.test.ts',
   ],
 
   // Setup files - setup.ts handles cross-file isolation
   setupFilesAfterEnv: [
-    '/Users/davidcruwys/dev/ad/appydave/appydave-templates/starter-nextjs-convex-ai/tests/workers/log-ingestion/integration/setup.ts',
+    '<rootDir>/../../../tests/workers/log-ingestion/integration/setup.ts',
   ],
 
   // Optional: Force test files to run in isolation (slower but guarantees isolation)

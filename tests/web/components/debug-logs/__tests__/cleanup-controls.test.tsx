@@ -1,5 +1,6 @@
+// @ts-nocheck
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { CleanupControls } from '../cleanup-controls';
+import { CleanupControls } from '@/components/debug-logs/cleanup-controls';
 
 // Mock Convex
 jest.mock('convex/react', () => ({

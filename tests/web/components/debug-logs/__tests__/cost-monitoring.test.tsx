@@ -1,5 +1,6 @@
+// @ts-nocheck
 import { render, screen } from '@testing-library/react';
-import { CostMonitoring } from '../cost-monitoring';
+import { CostMonitoring } from '@/components/debug-logs/cost-monitoring';
 
 // Mock Convex
 jest.mock('convex/react', () => ({

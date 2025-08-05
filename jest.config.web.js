@@ -2,12 +2,13 @@
 // Tests are located in tests/web/ for centralized organization
 export default {
   preset: 'ts-jest/presets/default-esm',
-  testEnvironment: 'node',
-  extensionsToTreatAsEsm: ['.ts'],
+  testEnvironment: 'jsdom',
+  extensionsToTreatAsEsm: ['.ts', '.tsx'],
 
   // Test discovery - only look in tests/web directory
   testMatch: [
     '<rootDir>/tests/web/**/*.test.ts',
+    '<rootDir>/tests/web/**/*.test.tsx',
     '<rootDir>/tests/web/**/*.test.js',
   ],
 
@@ -37,10 +38,45 @@ export default {
   ],
 
   // File extensions
-  moduleFileExtensions: ['ts', 'js', 'json'],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'json'],
+
+  // TypeScript transformation for ESM
+  transform: {
+    '^.+\\.ts$': [
+      'ts-jest',
+      {
+        useESM: true,
+        tsconfig: 'apps/web/tsconfig.json',
+      },
+    ],
+    '^.+\\.tsx$': [
+      'ts-jest',
+      {
+        useESM: true,
+        tsconfig: 'apps/web/tsconfig.json',
+      },
+    ],
+    '^.+\\.js$': [
+      'ts-jest',
+      {
+        useESM: true,
+      },
+    ],
+  },
 
   // Allow Jest to transform ESM modules
   transformIgnorePatterns: ['node_modules/(?!(convex|@convex)/)'],
+
+  // Module name mapping for path aliases
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/apps/web/$1',
+    '^@convex/(.*)$': '<rootDir>/apps/convex/$1',
+    '^@web/(.*)$': '<rootDir>/apps/web/$1',
+    '^@ui/(.*)$': '<rootDir>/packages/ui/$1',
+  },
+
+  // Setup file for React/jsdom environment
+  setupFilesAfterEnv: ['<rootDir>/tests/web/setup.ts'],
 
   // Prevent watch mode from automatically starting
   watchman: false,

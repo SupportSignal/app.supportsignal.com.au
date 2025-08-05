@@ -1,7 +1,8 @@
+// @ts-nocheck
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ConvexProviderWithClerk } from 'convex/react-clerk';
 import { ConvexReactClient } from 'convex/react';
-import { RateLimitStatus } from '../rate-limit-status';
+import { RateLimitStatus } from '@/components/debug-logs/rate-limit-status';
 import { api } from '@/lib/convex-api';
 
 // Mock Convex

@@ -13,6 +13,10 @@ const config = {
     url: 'http://localhost:3000',
   },
   testPathIgnorePatterns: ['/node_modules/', '/.next/'],
+  testMatch: [
+    '<rootDir>/**/*.test.{js,jsx,ts,tsx}',
+    '<rootDir>/../../tests/web/**/*.test.{js,jsx,ts,tsx}',
+  ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
     '^@test-coverage/(.*)$': '<rootDir>/../../test-coverage/$1',

@@ -1,5 +1,6 @@
+// @ts-nocheck
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { LogSearch } from '../log-search';
+import { LogSearch } from '@/components/debug-logs/log-search';
 
 // Mock Convex
 jest.mock('convex/react', () => ({

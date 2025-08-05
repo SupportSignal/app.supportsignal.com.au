@@ -1,0 +1,195 @@
+{
+  "feature": "debug-logs-system",
+  "version": "1.0.0",
+  "sync_metadata": {
+    "last_sync": "2025-08-05T15:40:00Z",
+    "source_commit": "54a0007",
+    "sync_strategy": "copy",
+    "template_repo": "/Users/davidcruwys/dev/ad/appydave/appydave-templates/starter-nextjs-convex-ai"
+  },
+  "layers": {
+    "frontend": {
+      "files": [
+        "apps/web/app/debug-logs/page.tsx",
+        "apps/web/app/page.tsx",
+        "apps/web/app/dev/page.tsx",
+        "apps/web/components/debug-logs/debug-logs-table.tsx",
+        "apps/web/components/debug-logs/redis-stats-card.tsx",
+        "apps/web/components/debug-logs/sync-controls-card.tsx",
+        "apps/web/components/debug-logs/export-controls-card.tsx",
+        "apps/web/components/debug-logs/suppression-rules-panel.tsx",
+        "apps/web/components/debug-logs/cleanup-controls.tsx",
+        "apps/web/components/debug-logs/cost-monitoring.tsx",
+        "apps/web/components/debug-logs/database-health.tsx",
+        "apps/web/components/debug-logs/log-search.tsx",
+        "apps/web/components/debug-logs/rate-limit-status.tsx",
+        "apps/web/components/debug-logs/system-health-overview.tsx",
+        "apps/web/lib/console-override.ts",
+        "apps/web/components/logging/logging-provider.tsx",
+        "apps/web/components/logging/logging-status.tsx",
+        "apps/web/app/api/redis-stats/route.ts"
+      ],
+      "dependencies": {
+        "npm": ["@radix-ui/react-collapsible"],
+        "imports": [
+          "@/components/ui/table",
+          "@/components/ui/textarea",
+          "@/components/ui/collapsible"
+        ],
+        "ui_components": [
+          "packages/ui/src/table.tsx",
+          "packages/ui/src/textarea.tsx",
+          "packages/ui/src/collapsible.tsx"
+        ]
+      },
+      "integration_points": [
+        "Navigation: Main homepage and dev center links",
+        "API Routes: Redis stats endpoint",
+        "Authentication: AuthProvider integration via useAuth() hook",
+        "Environment: Development-only access restriction"
+      ]
+    },
+    "backend": {
+      "files": [
+        "apps/convex/debugLogs.ts",
+        "apps/convex/debugActions.ts",
+        "apps/convex/workerSync.ts",
+        "apps/convex/monitoring.ts",
+        "apps/convex/lib/redisLogFetcher.ts",
+        "apps/convex/cleanupLoggingTables.ts",
+        "apps/convex/loggingAction.ts"
+      ],
+      "schema": [
+        "debug_logs table with indexes: trace_id, user_id, system, timestamp, synced_at"
+      ],
+      "env_vars": ["REDIS_URL", "REDIS_TOKEN", "NEXT_PUBLIC_CONVEX_URL"],
+      "api_endpoints": [
+        "debugLogs.insertLog",
+        "debugLogs.listLogs",
+        "workerSync.syncAllLogs",
+        "workerSync.clearRedisAndSync",
+        "debugActions.exportForClaude"
+      ]
+    },
+    "worker": {
+      "files": [
+        "apps/workers/log-ingestion/src/index.ts",
+        "apps/workers/log-ingestion/src/log-processor.ts",
+        "apps/workers/log-ingestion/src/redis-client.ts",
+        "apps/workers/log-ingestion/src/rate-limiter.ts",
+        "apps/workers/log-ingestion/src/types.ts",
+        "apps/workers/log-ingestion/wrangler.toml",
+        "apps/workers/log-ingestion/package.json"
+      ],
+      "config": [
+        "wrangler.toml: SQLite-based Durable Objects, compatibility flags",
+        "Environment variables: REDIS_URL, REDIS_TOKEN"
+      ],
+      "external_deps": ["Redis (Upstash)", "Rate limiting via Durable Objects"],
+      "health_endpoints": ["/health", "/logs (POST for ingestion)"]
+    }
+  },
+  "tests": {
+    "frontend": {
+      "files": [
+        "tests/web/components/debug-logs/debug-logs-page.test.tsx",
+        "tests/web/components/debug-logs/debug-logs-table.test.tsx",
+        "tests/web/lib/console-override.test.ts",
+        "tests/web/components/logging/logging-provider.test.tsx"
+      ],
+      "coverage": [
+        "Debug logs page component functionality and rendering",
+        "Debug logs table component with filtering and display logic",
+        "Browser console override functionality for log capture",
+        "Logging context provider with authentication integration"
+      ]
+    },
+    "backend": {
+      "files": [],
+      "missing_tests": [
+        "apps/convex/debugLogs.ts - Core CRUD operations (needs unit tests)",
+        "apps/convex/debugActions.ts - Advanced actions and export formatting (needs unit tests)",
+        "apps/convex/workerSync.ts - Redis-to-Convex synchronization (needs integration tests)"
+      ]
+    },
+    "worker": {
+      "unit_tests": [
+        "tests/workers/log-ingestion/src/index.test.ts",
+        "tests/workers/log-ingestion/src/log-processor.test.ts",
+        "tests/workers/log-ingestion/src/redis-client.test.ts",
+        "tests/workers/log-ingestion/src/rate-limiter.test.ts"
+      ],
+      "integration_tests": [
+        "tests/workers/log-ingestion/integration/cross-system.test.ts",
+        "tests/workers/log-ingestion/integration/integration.test.ts",
+        "tests/workers/log-ingestion/integration/load.test.ts",
+        "tests/workers/log-ingestion/integration/migration.test.ts"
+      ],
+      "coverage": [
+        "Main worker entry point, routing, and CORS handling",
+        "Log validation, processing, and Redis storage logic",
+        "Redis operations wrapper and connection management",
+        "Durable Object distributed rate limiting functionality",
+        "Multi-system log ingestion workflow testing",
+        "Complete browser → worker → Redis → retrieval workflow",
+        "Performance testing under high log volumes",
+        "Worker deployment and data migration testing"
+      ]
+    },
+    "test_summary": {
+      "total_files": 12,
+      "by_layer": {
+        "frontend": 4,
+        "backend": 0,
+        "worker": 8
+      },
+      "coverage_gaps": [
+        "Convex backend functions lack unit tests",
+        "Redis-to-Convex sync process needs integration tests",
+        "Export functionality needs end-to-end testing"
+      ]
+    }
+  },
+  "validation": {
+    "health_checks": [
+      "Worker /health endpoint responds",
+      "Redis connection active",
+      "Convex debugLogs.listLogs query succeeds"
+    ],
+    "integration_tests": [
+      "Browser → Worker → Redis → Convex → UI data flow",
+      "Authentication state updates in logging context",
+      "Cross-layer error handling propagation"
+    ],
+    "ui_verification": [
+      "Debug logs page renders without errors",
+      "Redis stats display correctly",
+      "Export functionality works for all formats",
+      "Console override suppression patterns active"
+    ]
+  },
+  "environment_requirements": {
+    "development_only": true,
+    "authentication_required": true,
+    "external_services": [
+      "Upstash Redis instance",
+      "Cloudflare Workers deployment"
+    ]
+  },
+  "architecture_notes": {
+    "data_flow": "Browser Console → Worker Ingestion → Redis Buffer → Convex Sync → Database → React Dashboard",
+    "key_patterns": [
+      "Volume-aware sync operations",
+      "Real-time authentication integration",
+      "Smart log categorization (browser vs convex)",
+      "Development environment restrictions",
+      "Claude-optimized export formats"
+    ],
+    "technical_impact": {
+      "files_total": "47+",
+      "insertions": "3800+",
+      "test_files": "12",
+      "deployment_layers": "3"
+    }
+  }
+}

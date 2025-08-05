@@ -1,101 +1,102 @@
 {
-  "lastUpdated": "2025-08-01T03:07:00.000Z",
-  "version": "2.1.0",
-  "visualReportLink": "https://claude.ai/chat/6f1cb39c-7f63-4093-876a-33d27f6f3838",
-  "reportDescription": "Interactive visual dashboard showing test metrics trends, coverage analysis, and failure patterns across all apps",
+  "lastUpdated": "2025-01-05T00:00:00.000Z",
+  "version": "1.0.0",
+  "visualReportLink": "TBD",
+  "reportDescription": "Initial metrics baseline for SupportSignal application test suite - tracking will diverge from template as application-specific testing evolves",
   "historicalMetrics": [
     {
-      "timestamp": "2025-08-01T03:07:00.000Z",
-      "version": "2.1.0",
+      "timestamp": "2025-01-05T00:00:00.000Z",
+      "version": "1.0.0",
       "totalApps": 3,
       "testingSessions": {
         "web": {
           "testSuites": {
-            "passed": 33,
-            "failed": 3,
+            "passed": 0,
+            "failed": 0,
             "total": 36
           },
           "tests": {
-            "passed": 327,
-            "failed": 17,
-            "skipped": 24,
-            "total": 368
+            "passed": 0,
+            "failed": 0,
+            "skipped": 0,
+            "total": 0
           },
           "coverage": {
-            "statements": "Not specified",
-            "branches": "Not specified",
-            "functions": "Not specified",
-            "lines": "Not specified"
+            "statements": "Not yet measured",
+            "branches": "Not yet measured", 
+            "functions": "Not yet measured",
+            "lines": "Not yet measured"
           },
-          "status": "MOSTLY_PASSING",
-          "issues": [
-            "3 test suites failing with 17 failing tests",
-            "24 tests skipped - may indicate incomplete test coverage",
-            "Coverage metrics not displayed in current run"
+          "status": "INITIAL",
+          "notes": [
+            "93 total test files identified across centralized and distributed locations",
+            "Centralized tests: 54 files in /tests/ directory",
+            "Distributed tests: 36+ files in /apps/ directory",
+            "Testing infrastructure sync from template completed"
           ]
         },
         "convex": {
           "testSuites": {
-            "passed": 2,
-            "failed": 4,
+            "passed": 0,
+            "failed": 0,
             "total": 6
           },
           "tests": {
-            "passed": 167,
-            "failed": 149,
-            "total": 316
+            "passed": 0,
+            "failed": 0,
+            "total": 0
           },
           "coverage": {
-            "statements": "0%",
-            "branches": "0%",
-            "functions": "0%",
-            "lines": "0%"
+            "statements": "Not yet measured",
+            "branches": "Not yet measured",
+            "functions": "Not yet measured",
+            "lines": "Not yet measured"
           },
-          "status": "FAILING",
-          "issues": [
-            "Worker process failed to exit gracefully - tests leaking due to improper teardown",
-            "Zero coverage reported - possible configuration issues",
-            "149 test failures across 4 failed test suites"
+          "status": "INITIAL",
+          "notes": [
+            "Knowledge system tests synchronized from template",
+            "Vectorize and text processing utilities present",
+            "Configuration tests established"
           ]
         },
         "workers": {
           "testSuites": {
-            "passed": 6,
-            "failed": 2,
+            "passed": 0,
+            "failed": 0,
             "total": 8
           },
           "tests": {
-            "passed": 223,
-            "failed": 4,
-            "total": 227
+            "passed": 0,
+            "failed": 0,
+            "total": 0
           },
           "coverage": {
-            "statements": "90.64%",
-            "branches": "91.8%",
-            "functions": "87.5%",
-            "lines": "92.42%"
+            "statements": "Not yet measured",
+            "branches": "Not yet measured",
+            "functions": "Not yet measured",
+            "lines": "Not yet measured"
           },
-          "status": "MOSTLY_PASSING",
-          "issues": [
-            "2 test suites failing with 4 failed tests",
-            "Coverage reduced to 90.64% statements from previous 94.79%",
-            "Applied pragmatic @ts-nocheck approach successfully"
+          "status": "INITIAL",
+          "notes": [
+            "Log ingestion worker tests present",
+            "Unit and integration test structure established",
+            "Redis client and rate limiter testing configured"
           ]
         }
       },
       "aggregated": {
         "testSuites": {
-          "passed": 41,
-          "failed": 9,
+          "passed": 0,
+          "failed": 0,
           "total": 50,
-          "successRate": "82.0%"
+          "successRate": "TBD"
         },
         "tests": {
-          "passed": 717,
-          "failed": 170,
-          "skipped": 24,
-          "total": 911,
-          "successRate": "78.7%"
+          "passed": 0,
+          "failed": 0,
+          "skipped": 0,
+          "total": 0,
+          "successRate": "TBD"
         }
       }
     },
@@ -198,114 +199,144 @@
   "breakdown": {
     "byApp": {
       "web": {
-        "description": "Next.js frontend with React components",
+        "description": "Next.js frontend with React components - SupportSignal specific implementation",
         "testingFramework": "Jest + Testing Library",
         "primaryChallenges": [
           "Convex hook mocking in test environment",
           "React component isolation",
-          "Authentication provider context"
+          "Authentication provider context",
+          "Admin panel component testing"
         ],
         "keyMetrics": {
           "coverageHighlights": {
-            "highest": "components/chat: 91.66% statements",
-            "lowest": "lib: 10.62% statements"
+            "highest": "TBD - initial measurement pending",
+            "lowest": "TBD - initial measurement pending"
           },
           "testDistribution": {
-            "components": "Most tests",
-            "lib": "Limited coverage",
-            "app": "Minimal tests"
+            "auth_components": "11 test files - comprehensive auth testing",
+            "admin_components": "6 test files - system monitoring and controls", 
+            "chat_components": "5 test files - AI chat interface",
+            "theme_components": "3 test files - UI theming system",
+            "logging_components": "2 test files - logging infrastructure",
+            "utilities": "Multiple test files - core utilities and email services"
           }
         }
       },
       "convex": {
-        "description": "Backend API and database logic",
+        "description": "Backend API and database logic - Knowledge system and vectorization",
         "testingFramework": "Jest + TypeScript",
         "primaryChallenges": [
           "External API mocking (OpenAI, Vectorize)",
           "Database context simulation",
-          "Text processing algorithm edge cases"
+          "Text processing algorithm edge cases",
+          "Knowledge ingestion and retrieval testing"
         ],
         "keyMetrics": {
           "coverageHighlights": {
-            "highest": "lib/textProcessing.ts: 100% coverage",
-            "lowest": "auth.ts: 0% coverage (not tested)"
+            "highest": "TBD - initial measurement pending",
+            "lowest": "TBD - initial measurement pending"
           },
           "testDistribution": {
-            "knowledge": "Comprehensive tests (230+ tests)",
-            "lib": "Good coverage (75.4%)",
-            "core": "Minimal coverage (13.23%)"
+            "knowledge_system": "3 test files - comprehensive knowledge testing",
+            "text_processing": "2 test files - vectorization and processing",
+            "configuration": "1 test file - system configuration"
           }
         }
       },
       "workers": {
-        "description": "Cloudflare Workers for log ingestion and processing",
+        "description": "Cloudflare Workers for log ingestion and processing - SupportSignal specific implementation",
         "testingFramework": "Jest + TypeScript",
         "primaryChallenges": [
-          "TypeScript interface issues resolved with @ts-nocheck",
-          "Centralized test migration completed",
-          "Jest configuration optimized for monorepo"
+          "Worker environment simulation",
+          "Redis client mocking and integration",
+          "Rate limiting and log processing testing",
+          "Cross-system integration scenarios"
         ],
         "keyMetrics": {
           "coverageHighlights": {
-            "highest": "log-processor.ts: 97.77% coverage",
-            "lowest": "redis-client.ts: 88.23% coverage"
+            "highest": "TBD - initial measurement pending",
+            "lowest": "TBD - initial measurement pending"
           },
           "testDistribution": {
-            "log-processor": "47 tests passing - comprehensive coverage",
-            "redis-client": "40 tests passing - integration scenarios",
-            "rate-limiter": "Excluded due to TypeScript interface issues"
+            "unit_tests": "4 test files - core worker functionality",
+            "integration_tests": "4 test files - cross-system scenarios",
+            "log_processor": "Comprehensive log processing testing",
+            "redis_client": "Redis integration and mocking",
+            "rate_limiter": "Rate limiting algorithms and edge cases"
           }
         }
       }
     },
     "technicalStatus": {
       "infrastructure": {
-        "jestConfiguration": "✅ Working (all apps)",
-        "coverageReporting": "✅ Functional",
-        "watchMode": "✅ Available all apps",
-        "ciIntegration": "⚠️ Some failures"
+        "jestConfiguration": "✅ Synced from template",
+        "coverageReporting": "⚠️ To be established",
+        "watchMode": "⚠️ To be validated",
+        "ciIntegration": "⚠️ To be tested"
       },
       "testPatterns": {
-        "unitTests": "✅ Established",
-        "integrationTests": "✅ Convex backend + Workers",
-        "componentTests": "⚠️ Web app challenges",
-        "workerTests": "⚠️ High coverage but failing tests",
-        "e2eTests": "❓ Not measured in this session"
+        "unitTests": "✅ Structure established",
+        "integrationTests": "✅ Worker integration tests present",
+        "componentTests": "✅ React component test structure",
+        "workerTests": "✅ Comprehensive worker testing",
+        "e2eTests": "❓ Not yet established"
       }
     }
   },
   "recommendations": {
     "immediate": [
-      "Fix 33 failing tests in workers log-ingestion despite excellent coverage",
-      "Fix Convex hook mocking in web app tests",
-      "Resolve text processing edge cases in convex tests",
-      "Address React component rendering issues"
+      "Run initial test suite to establish baseline metrics",
+      "Validate Jest configurations across all apps",
+      "Complete missing test utilities sync from template", 
+      "Establish coverage reporting and CI integration"
     ],
     "shortTerm": [
-      "Increase auth.ts test coverage in convex",
-      "Improve lib/ test coverage in web app",
-      "Standardize mocking patterns across apps"
+      "Measure initial test coverage across all domains",
+      "Identify and fix any configuration-related test failures",
+      "Optimize test performance and reliability",
+      "Document application-specific testing patterns"
     ],
     "longTerm": [
-      "Achieve >90% coverage across all apps",
+      "Achieve >85% coverage across all critical paths",
       "Establish comprehensive integration test suite",
       "Implement automated regression testing",
-      "Maintain excellent coverage achieved in workers"
+      "Maintain testing excellence as application evolves"
     ]
   },
   "commands": {
     "runTests": {
-      "web": "cd apps/web && bun run test:coverage:watch:all",
-      "convex": "cd apps/convex && bun run test:coverage:watch:all",
-      "workers": "bun run worker:test:coverage:watch:all",
-      "rootWeb": "bun run test:web:coverage:watch:all",
-      "rootConvex": "bun run test:convex:coverage:watch:all",
-      "rootWorkers": "bun run worker:test:coverage:watch:all"
+      "web": "cd apps/web && bun test",
+      "convex": "bun run test (convex tests via root config)",
+      "workers": "bun run worker:test",
+      "all": "bun test"
+    },
+    "runTestsWithCoverage": {
+      "web": "cd apps/web && bun run test:coverage",
+      "convex": "bun run test:coverage",
+      "workers": "bun run worker:test:coverage",
+      "all": "bun run test:coverage"
     },
     "viewCoverage": {
       "web": "open apps/web/coverage/lcov-report/index.html",
-      "convex": "open apps/convex/coverage/lcov-report/index.html",
+      "convex": "open test-coverage/convex/lcov-report/index.html",
       "workers": "open coverage/workers/lcov-report/index.html"
     }
+  },
+  "applicationSpecific": {
+    "name": "SupportSignal",
+    "domain": "AI-powered support and logging system",
+    "uniqueTestingNeeds": [
+      "AI chat interface testing and mocking",
+      "Log ingestion and correlation testing",
+      "Real-time system monitoring validation",
+      "Admin panel functionality testing",
+      "Multi-system integration scenarios"
+    ],
+    "divergenceFromTemplate": [
+      "Admin components instead of debug-logs namespace",
+      "SupportSignal-specific business logic testing",
+      "Logging system integration patterns",
+      "Application-specific configuration testing"
+    ]
   }
 }

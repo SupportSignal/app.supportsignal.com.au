@@ -1,0 +1,394 @@
+{
+  "feature": "testing-system",
+  "version": "1.0.0",
+  "sync_metadata": {
+    "last_sync": "2025-01-05T00:00:00Z",
+    "total_test_files": 93,
+    "centralized_count": 54,
+    "distributed_count": 36,
+    "test_metrics_reference": "docs/testing/test-metrics.json"
+  },
+  "test_locations": {
+    "centralized_tests": {
+      "path": "/tests/",
+      "description": "Target approach - unified test location for cross-cutting concerns and integration tests",
+      "web_tests": {
+        "count": 40,
+        "path": "/tests/web/",
+        "domains": {
+          "business_logic": [
+            "tests/web/centralized-rate-limiting.test.ts",
+            "tests/web/log-correlation-engine.test.ts",
+            "tests/web/log-streams-webhook-logic.test.ts",
+            "tests/web/logging-action-enhancements.test.ts"
+          ],
+          "auth_components": [
+            "tests/web/components/auth/__tests__/auth-provider.test.tsx",
+            "tests/web/components/auth/__tests__/auth-provider-methods.test.tsx",
+            "tests/web/components/auth/__tests__/login-form.test.tsx",
+            "tests/web/components/auth/__tests__/register-form.test.tsx",
+            "tests/web/components/auth/__tests__/logout-button.test.tsx",
+            "tests/web/components/auth/__tests__/github-oauth-button.test.tsx",
+            "tests/web/components/auth/__tests__/google-oauth-button.test.tsx",
+            "tests/web/components/auth/__tests__/remember-me.test.tsx",
+            "tests/web/components/auth/__tests__/password-reset-form.test.tsx",
+            "tests/web/components/auth/__tests__/password-reset-confirm-form.test.tsx",
+            "tests/web/components/auth/__tests__/change-password-form.test.tsx"
+          ],
+          "debug_logs_components": [
+            "tests/web/components/debug-logs/__tests__/cleanup-controls.test.tsx",
+            "tests/web/components/debug-logs/__tests__/cost-monitoring.test.tsx",
+            "tests/web/components/debug-logs/__tests__/database-health.test.tsx",
+            "tests/web/components/debug-logs/__tests__/log-search.test.tsx",
+            "tests/web/components/debug-logs/__tests__/rate-limit-status.test.tsx",
+            "tests/web/components/debug-logs/__tests__/system-health-overview.test.tsx"
+          ],
+          "chat_components": [
+            "tests/web/components/chat/__tests__/assistant-message.test.tsx",
+            "tests/web/components/chat/__tests__/chat-interface.test.tsx",
+            "tests/web/components/chat/__tests__/message-list.test.tsx",
+            "tests/web/components/chat/__tests__/typing-indicator.test.tsx",
+            "tests/web/components/chat/__tests__/user-message.test.tsx"
+          ],
+          "theme_components": [
+            "tests/web/components/theme/__tests__/theme-integration.test.tsx",
+            "tests/web/components/theme/__tests__/theme-provider.test.tsx",
+            "tests/web/components/theme/__tests__/theme-toggle.test.tsx"
+          ],
+          "logging_components": [
+            "tests/web/components/logging/__tests__/logging-provider.test.tsx",
+            "tests/web/components/logging/__tests__/logging-status.test.tsx"
+          ],
+          "dev_components": [
+            "tests/web/components/dev/__tests__/mock-email-viewer.test.tsx"
+          ],
+          "showcase": ["tests/web/app/showcase/__tests__/page.test.tsx"],
+          "utilities": [
+            "tests/web/lib/__tests__/console-override.test.ts",
+            "tests/web/lib/email/__tests__/email-service.test.ts",
+            "tests/web/lib/email/__tests__/email-templates.test.ts"
+          ]
+        }
+      },
+      "convex_tests": {
+        "count": 6,
+        "path": "/tests/convex/",
+        "domains": {
+          "knowledge_system": [
+            "tests/convex/knowledge.test.ts",
+            "tests/convex/knowledgeActions.test.ts",
+            "tests/convex/knowledgeMutations.test.ts"
+          ],
+          "text_processing": [
+            "tests/convex/lib/textProcessing.test.ts",
+            "tests/convex/lib/vectorize.test.ts"
+          ],
+          "configuration": ["tests/convex/lib/config.test.ts"]
+        }
+      },
+      "worker_tests": {
+        "count": 8,
+        "path": "/tests/workers/log-ingestion/",
+        "domains": {
+          "unit_tests": [
+            "tests/workers/log-ingestion/src/index.test.ts",
+            "tests/workers/log-ingestion/src/log-processor.test.ts",
+            "tests/workers/log-ingestion/src/redis-client.test.ts",
+            "tests/workers/log-ingestion/src/rate-limiter.test.ts"
+          ],
+          "integration_tests": [
+            "tests/workers/log-ingestion/integration/cross-system.test.ts",
+            "tests/workers/log-ingestion/integration/integration.test.ts",
+            "tests/workers/log-ingestion/integration/load.test.ts",
+            "tests/workers/log-ingestion/integration/migration.test.ts"
+          ]
+        }
+      }
+    },
+    "distributed_tests": {
+      "path": "/apps/web/__tests__/",
+      "description": "Legacy approach - component-adjacent tests for development convenience",
+      "component_tests": {
+        "count": 32,
+        "domains": {
+          "auth_components": [
+            "apps/web/components/auth/__tests__/auth-provider.test.tsx",
+            "apps/web/components/auth/__tests__/auth-provider-methods.test.tsx",
+            "apps/web/components/auth/__tests__/login-form.test.tsx",
+            "apps/web/components/auth/__tests__/register-form.test.tsx",
+            "apps/web/components/auth/__tests__/logout-button.test.tsx",
+            "apps/web/components/auth/__tests__/github-oauth-button.test.tsx",
+            "apps/web/components/auth/__tests__/google-oauth-button.test.tsx",
+            "apps/web/components/auth/__tests__/remember-me.test.tsx",
+            "apps/web/components/auth/__tests__/password-reset-form.test.tsx",
+            "apps/web/components/auth/__tests__/password-reset-confirm-form.test.tsx",
+            "apps/web/components/auth/__tests__/change-password-form.test.tsx"
+          ],
+          "chat_components": [
+            "apps/web/components/chat/__tests__/assistant-message.test.tsx",
+            "apps/web/components/chat/__tests__/chat-interface.test.tsx",
+            "apps/web/components/chat/__tests__/message-list.test.tsx",
+            "apps/web/components/chat/__tests__/typing-indicator.test.tsx",
+            "apps/web/components/chat/__tests__/user-message.test.tsx"
+          ],
+          "theme_components": [
+            "apps/web/components/theme/__tests__/theme-integration.test.tsx",
+            "apps/web/components/theme/__tests__/theme-provider.test.tsx",
+            "apps/web/components/theme/__tests__/theme-toggle.test.tsx"
+          ],
+          "logging_components": [
+            "apps/web/components/logging/__tests__/logging-provider.test.tsx",
+            "apps/web/components/logging/__tests__/logging-status.test.tsx"
+          ],
+          "dev_components": [
+            "apps/web/components/dev/__tests__/mock-email-viewer.test.tsx"
+          ],
+          "showcase": ["apps/web/app/showcase/__tests__/page.test.tsx"]
+        }
+      },
+      "utility_tests": {
+        "count": 4,
+        "domains": {
+          "core_utilities": ["apps/web/lib/__tests__/console-override.test.ts"],
+          "email_utilities": [
+            "apps/web/lib/email/__tests__/email-service.test.ts",
+            "apps/web/lib/email/__tests__/email-templates.test.ts"
+          ],
+          "business_logic": [
+            "apps/web/__tests__/centralized-rate-limiting.test.ts",
+            "apps/web/__tests__/log-correlation-engine.test.ts",
+            "apps/web/__tests__/log-streams-webhook-logic.test.ts",
+            "apps/web/__tests__/logging-action-enhancements.test.ts"
+          ]
+        }
+      }
+    }
+  },
+  "migration_analysis": {
+    "target_approach": "centralized",
+    "current_approach": "hybrid",
+    "migration_status": "mostly_complete",
+    "duplicated_tests": [
+      {
+        "domain": "auth_components",
+        "centralized": "tests/web/components/auth/__tests__/",
+        "distributed": "apps/web/components/auth/__tests__/",
+        "files": [
+          "auth-provider.test.tsx",
+          "auth-provider-methods.test.tsx",
+          "login-form.test.tsx",
+          "register-form.test.tsx",
+          "logout-button.test.tsx",
+          "github-oauth-button.test.tsx",
+          "google-oauth-button.test.tsx",
+          "remember-me.test.tsx",
+          "password-reset-form.test.tsx",
+          "password-reset-confirm-form.test.tsx",
+          "change-password-form.test.tsx"
+        ],
+        "count": 11
+      },
+      {
+        "domain": "chat_components",
+        "centralized": "tests/web/components/chat/__tests__/",
+        "distributed": "apps/web/components/chat/__tests__/",
+        "files": [
+          "assistant-message.test.tsx",
+          "chat-interface.test.tsx",
+          "message-list.test.tsx",
+          "typing-indicator.test.tsx",
+          "user-message.test.tsx"
+        ],
+        "count": 5
+      },
+      {
+        "domain": "theme_components",
+        "centralized": "tests/web/components/theme/__tests__/",
+        "distributed": "apps/web/components/theme/__tests__/",
+        "files": [
+          "theme-integration.test.tsx",
+          "theme-provider.test.tsx",
+          "theme-toggle.test.tsx"
+        ],
+        "count": 3
+      },
+      {
+        "domain": "logging_components",
+        "centralized": "tests/web/components/logging/__tests__/",
+        "distributed": "apps/web/components/logging/__tests__/",
+        "files": ["logging-provider.test.tsx", "logging-status.test.tsx"],
+        "count": 2
+      },
+      {
+        "domain": "dev_components",
+        "centralized": "tests/web/components/dev/__tests__/",
+        "distributed": "apps/web/components/dev/__tests__/",
+        "files": ["mock-email-viewer.test.tsx"],
+        "count": 1
+      },
+      {
+        "domain": "showcase",
+        "centralized": "tests/web/app/showcase/__tests__/",
+        "distributed": "apps/web/app/showcase/__tests__/",
+        "files": ["page.test.tsx"],
+        "count": 1
+      },
+      {
+        "domain": "utilities",
+        "centralized": "tests/web/lib/__tests__/",
+        "distributed": "apps/web/lib/__tests__/",
+        "files": ["console-override.test.ts"],
+        "count": 1
+      },
+      {
+        "domain": "email_utilities",
+        "centralized": "tests/web/lib/email/__tests__/",
+        "distributed": "apps/web/lib/email/__tests__/",
+        "files": ["email-service.test.ts", "email-templates.test.ts"],
+        "count": 2
+      },
+      {
+        "domain": "business_logic",
+        "centralized": "tests/web/",
+        "distributed": "apps/web/__tests__/",
+        "files": [
+          "centralized-rate-limiting.test.ts",
+          "log-correlation-engine.test.ts",
+          "log-streams-webhook-logic.test.ts",
+          "logging-action-enhancements.test.ts"
+        ],
+        "count": 4
+    ],
+    "unique_to_centralized": [],
+    "unique_to_distributed": [],
+    "missing_from_template": [
+      {
+        "domain": "infrastructure_utilities",
+        "description": "Testing utilities present in template but missing in current repo",
+        "files": [
+          "tests/web/lib/console-override.test.ts (missing - only distributed version exists)",
+          "tests/web/components/logging/logging-provider.test.tsx (enhanced version from template)"
+        ],
+        "count": 2
+      }
+    ],
+    "migration_recommendations": {
+      "immediate_actions": [
+        "Sync missing infrastructure utilities from template",
+        "Consider removing duplicate test files - keep centralized versions",
+        "Complete migration to centralized testing approach"
+      ],
+      "target_state": "All tests in /tests/ directory with clear domain organization",
+      "estimated_reduction": "36 files (from distributed removal after migration validation)"
+    }
+  },
+  "test_metrics_integration": {
+    "metrics_file": "docs/testing/test-metrics.json",
+    "latest_metrics": {
+      "timestamp": "2025-01-05T00:00:00Z",
+      "version": "1.0.0",
+      "total_test_suites": 47,
+      "total_tests": 850,
+      "success_rate": "To be determined",
+      "by_app": {
+        "web": {
+          "test_suites": { "passed": 0, "failed": 0, "total": 36 },
+          "tests": { "passed": 0, "failed": 0, "skipped": 0, "total": 0 },
+          "coverage": "Not yet measured",
+          "status": "INITIAL"
+        },
+        "convex": {
+          "test_suites": { "passed": 0, "failed": 0, "total": 6 },
+          "tests": { "passed": 0, "failed": 0, "total": 0 },
+          "coverage": "Not yet measured",
+          "status": "INITIAL"
+        },
+        "workers": {
+          "test_suites": { "passed": 0, "failed": 0, "total": 8 },
+          "tests": { "passed": 0, "failed": 0, "total": 0 },
+          "coverage": "Not yet measured",
+          "status": "INITIAL"
+        }
+      }
+    },
+    "coverage_summary": {
+      "web": "Coverage tracking to be established",
+      "convex": "Coverage tracking to be established",
+      "workers": "Coverage tracking to be established"
+    }
+  },
+  "jest_configurations": {
+    "centralized": [
+      {
+        "file": "jest.config.js",
+        "purpose": "Convex backend tests in /tests/convex/",
+        "root_dir": "project root",
+        "test_match": ["<rootDir>/tests/convex/**/*.test.ts"]
+      },
+      {
+        "file": "jest.workers.config.js",
+        "purpose": "Worker tests in /tests/workers/",
+        "root_dir": "project root",
+        "test_match": ["<rootDir>/tests/workers/**/*.test.ts"]
+      }
+    ],
+    "distributed": [
+      {
+        "file": "apps/web/jest.config.js",
+        "purpose": "Web app tests (both centralized and distributed)",
+        "root_dir": "apps/web",
+        "test_match": ["<rootDir>/**/*.test.{ts,tsx}"]
+      },
+      {
+        "file": "apps/convex/jest.config.js",
+        "purpose": "Convex-specific configuration",
+        "root_dir": "apps/convex",
+        "test_match": ["<rootDir>/**/*.test.ts"]
+      },
+      {
+        "file": "apps/workers/log-ingestion/jest.config.js",
+        "purpose": "Worker-specific configuration",
+        "root_dir": "apps/workers/log-ingestion",
+        "test_match": ["<rootDir>/**/*.test.ts"]
+      }
+    ]
+  },
+  "repository_sync": {
+    "purpose": "Enable cross-repository test synchronization and feature extraction",
+    "sync_targets": ["template repository", "other application repositories"],
+    "sync_strategy": "feature-based extraction using manifest structure",
+    "key_benefits": [
+      "Single manifest file for complete test inventory",
+      "Clear identification of misplaced tests and duplications",
+      "Integration with historical metrics tracking",
+      "Support for selective feature synchronization"
+    ]
+  },
+  "documentation_references": {
+    "primary_docs": [
+      "docs/testing/index.md - Main testing documentation overview",
+      "docs/testing/technical/test-strategy-and-standards.md - Testing standards",
+      "docs/testing/technical/testing-patterns.md - Implementation patterns",
+      "docs/testing/technical/testing-infrastructure-lessons-learned.md - Implementation challenges"
+    ],
+    "metrics_tracking": [
+      "docs/testing/test-metrics.json - Historical success/failure tracking (to be established)"
+    ]
+  },
+  "validation": {
+    "manifest_completeness": {
+      "total_files_tracked": 93,
+      "centralized_files": 54,
+      "distributed_files": 36,
+      "duplications_identified": 36,
+      "unique_centralized": 0,
+      "unique_distributed": 0
+    },
+    "integration_health": [
+      "Manifest structure aligned with template pattern",
+      "All test file paths need verification after sync",
+      "Jest configuration mapping complete",
+      "Migration analysis provides actionable recommendations"
+    ]
+  }
+}
