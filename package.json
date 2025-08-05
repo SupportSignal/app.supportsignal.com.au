@@ -56,6 +56,8 @@
     "debug:env": "node scripts/debug-env-build.cjs",
     "push": "./scripts/smart-push.sh",
     "push:no-ci": "./scripts/smart-push.sh false",
+    "sync": "./scripts/sync.sh",
+    "sync:force": "./scripts/sync.sh --force",
     "sync-env": "node ./scripts/sync-env.js",
     "seed:knowledge": "node scripts/seed-knowledge.cjs",
     "seed:knowledge:dry": "node scripts/seed-knowledge.cjs --dry-run",

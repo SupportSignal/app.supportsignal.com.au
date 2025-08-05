@@ -1,0 +1,149 @@
+{
+  "versions": [{
+  "version": "0.1.0",
+  "commitHash": "10325df8689f46db4ae0536e999d97828bb049f9",
+  "timestamp": 1754019138,
+  "description": "feat: initial project setup",
+  "commitUrl": "https://github.com/SupportSignal/app.supportsignal.com.au/commit/10325df8689f46db4ae0536e999d97828bb049f9"
+},{
+  "version": "0.2.0",
+  "commitHash": "9412f292b454567b4fe7042fd43b1d7c50580d30",
+  "timestamp": 1754020008,
+  "description": "feat: add template files",
+  "commitUrl": "https://github.com/SupportSignal/app.supportsignal.com.au/commit/9412f292b454567b4fe7042fd43b1d7c50580d30"
+},{
+  "version": "0.3.0",
+  "commitHash": "5c343fa2c5b839bd9f538c500d8375524e6d33fd",
+  "timestamp": 1754022749,
+  "description": "feat: complete foundation setup with corrected guide",
+  "commitUrl": "https://github.com/SupportSignal/app.supportsignal.com.au/commit/5c343fa2c5b839bd9f538c500d8375524e6d33fd"
+},{
+  "version": "0.4.0",
+  "commitHash": "f83e449f483f95b8a2105398f8c15c5ebf84a755",
+  "timestamp": 1754024103,
+  "description": "feat: update setup guide with real implementation lessons",
+  "commitUrl": "https://github.com/SupportSignal/app.supportsignal.com.au/commit/f83e449f483f95b8a2105398f8c15c5ebf84a755"
+},{
+  "version": "0.4.1",
+  "commitHash": "3867561f3899a1bfee21f2405398c18c1dfb06cd",
+  "timestamp": 1754024291,
+  "description": "security: redact potential real API token from example files",
+  "commitUrl": "https://github.com/SupportSignal/app.supportsignal.com.au/commit/3867561f3899a1bfee21f2405398c18c1dfb06cd"
+},{
+  "version": "0.4.2",
+  "commitHash": "0f19855585a24558b63db08280a0f8c69ec675bd",
+  "timestamp": 1754025738,
+  "description": "docs: apply documentation restructure migration",
+  "commitUrl": "https://github.com/SupportSignal/app.supportsignal.com.au/commit/0f19855585a24558b63db08280a0f8c69ec675bd"
+},{
+  "version": "0.5.0",
+  "commitHash": "9cd9b7bb403b1e1c6f160e6ee34b5e4a855f8caf",
+  "timestamp": 1754044473,
+  "description": "feat: complete foundation service setup and configuration",
+  "commitUrl": "https://github.com/SupportSignal/app.supportsignal.com.au/commit/9cd9b7bb403b1e1c6f160e6ee34b5e4a855f8caf"
+},{
+  "version": "0.6.0",
+  "commitHash": "325654b1db164817f408a0c10657e471117da07c",
+  "timestamp": 1754099426,
+  "description": "feat: implement comprehensive file system exploration for LLM context optimization",
+  "commitUrl": "https://github.com/SupportSignal/app.supportsignal.com.au/commit/325654b1db164817f408a0c10657e471117da07c"
+},{
+  "version": "0.7.0",
+  "commitHash": "d8803e36525b8867b1adb480248e4ce61b3793bd",
+  "timestamp": 1754134204,
+  "description": "feat: enhance file exploration system and repo-sync agent integration",
+  "commitUrl": "https://github.com/SupportSignal/app.supportsignal.com.au/commit/d8803e36525b8867b1adb480248e4ce61b3793bd"
+},{
+  "version": "0.8.0",
+  "commitHash": "abb393fbe6d51a5903d24f304156def27fe508b0",
+  "timestamp": 1754134836,
+  "description": "feat: add Gemini engineering assistant agent from template",
+  "commitUrl": "https://github.com/SupportSignal/app.supportsignal.com.au/commit/abb393fbe6d51a5903d24f304156def27fe508b0"
+},{
+  "version": "0.8.1",
+  "commitHash": "af253f5548addf41db93cdbcf8bde4db514d2f06",
+  "timestamp": 1754136800,
+  "description": "docs: sync enhanced environment management system from template",
+  "commitUrl": "https://github.com/SupportSignal/app.supportsignal.com.au/commit/af253f5548addf41db93cdbcf8bde4db514d2f06"
+},{
+  "version": "0.8.2",
+  "commitHash": "e1937872e490268b02e60feb51d508ce8b1b978c",
+  "timestamp": 1754143824,
+  "description": "refactor: standardize Cloudflare Pages build output to dist directory",
+  "commitUrl": "https://github.com/SupportSignal/app.supportsignal.com.au/commit/e1937872e490268b02e60feb51d508ce8b1b978c"
+},{
+  "version": "0.9.0",
+  "commitHash": "f0bfbc58f9ead56cf394818737e1bd432f16d001",
+  "timestamp": 1754145342,
+  "description": "feat: enhance GitHub OAuth component and add build standardization lessons",
+  "commitUrl": "https://github.com/SupportSignal/app.supportsignal.com.au/commit/f0bfbc58f9ead56cf394818737e1bd432f16d001"
+},{
+  "version": "0.9.1",
+  "commitHash": "3df1fda6b4c089257d185df3e262cc4ed42ba8dc",
+  "timestamp": 1754145556,
+  "description": "fix: update Cloudflare Pages project name for correct deployment target",
+  "commitUrl": "https://github.com/SupportSignal/app.supportsignal.com.au/commit/3df1fda6b4c089257d185df3e262cc4ed42ba8dc"
+},{
+  "version": "0.9.2",
+  "commitHash": "4835022f4c2b69881e4cdeb873b1a6686f345117",
+  "timestamp": 1754187875,
+  "description": "fix: remove CLI-created wrangler.toml to fix Cloudflare Pages build",
+  "commitUrl": "https://github.com/SupportSignal/app.supportsignal.com.au/commit/4835022f4c2b69881e4cdeb873b1a6686f345117"
+},{
+  "version": "0.10.0",
+  "commitHash": "a7099b695be821da3dd1793f2671db637019bdd8",
+  "timestamp": 1754203711,
+  "description": "feat: sync enhanced environment management from template",
+  "commitUrl": "https://github.com/SupportSignal/app.supportsignal.com.au/commit/a7099b695be821da3dd1793f2671db637019bdd8"
+},{
+  "version": "0.11.0",
+  "commitHash": "0be0378e326b54362455ce15d8f80e47dccc68ea",
+  "timestamp": 1754227026,
+  "description": "feat: sync GitHub/Cloudflare Pages deployment troubleshooting improvements",
+  "commitUrl": "https://github.com/SupportSignal/app.supportsignal.com.au/commit/0be0378e326b54362455ce15d8f80e47dccc68ea"
+},{
+  "version": "0.12.0",
+  "commitHash": "877da0a94cc799bd87349a57f35685eba0080de0",
+  "timestamp": 1754228636,
+  "description": "feat: sync OAuth environment variable troubleshooting documentation",
+  "commitUrl": "https://github.com/SupportSignal/app.supportsignal.com.au/commit/877da0a94cc799bd87349a57f35685eba0080de0"
+},{
+  "version": "0.12.1",
+  "commitHash": "d1a9cea9d04e645a125cdb18003a0587e6cf1a7b",
+  "timestamp": 1754302502,
+  "description": "chore: remove PNG screenshots and prevent future commits",
+  "commitUrl": "https://github.com/SupportSignal/app.supportsignal.com.au/commit/d1a9cea9d04e645a125cdb18003a0587e6cf1a7b"
+},{
+  "version": "0.13.0",
+  "commitHash": "750877d477a46b974abf58015f2be5e5def114c2",
+  "timestamp": 1754395440,
+  "description": "feat: deploy and configure supportsignal-log-ingestion-worker with admin interface",
+  "commitUrl": "https://github.com/SupportSignal/app.supportsignal.com.au/commit/750877d477a46b974abf58015f2be5e5def114c2"
+},{
+  "version": "0.13.1",
+  "commitHash": "21f157b8ae4750758fa10a5b6869f7086e13da25",
+  "timestamp": 1754396936,
+  "description": "refactor: restructure debug-logs-system to match manifest specification",
+  "commitUrl": "https://github.com/SupportSignal/app.supportsignal.com.au/commit/21f157b8ae4750758fa10a5b6869f7086e13da25"
+},{
+  "version": "0.13.2",
+  "commitHash": "8583d5278d4d10f8a38c0090767aceb5a04b801b",
+  "timestamp": 1754398179,
+  "description": "fix: update bun.lock to resolve CI lockfile conflicts",
+  "commitUrl": "https://github.com/SupportSignal/app.supportsignal.com.au/commit/8583d5278d4d10f8a38c0090767aceb5a04b801b"
+},{
+  "version": "0.14.0",
+  "commitHash": "92f9125f5e9d87cdeeee8a5afed21dcb5157575a",
+  "timestamp": 1754401230,
+  "description": "feat: implement Gitleaks secret detection system",
+  "commitUrl": "https://github.com/SupportSignal/app.supportsignal.com.au/commit/92f9125f5e9d87cdeeee8a5afed21dcb5157575a"
+},{
+  "version": "0.14.1",
+  "commitHash": "9c5725b490f5ab15e6b0df52d8728c44507d4554",
+  "timestamp": 1754409426,
+  "description": "fix: resolve log-ingestion worker sync issues and complete system synchronization",
+  "commitUrl": "https://github.com/SupportSignal/app.supportsignal.com.au/commit/9c5725b490f5ab15e6b0df52d8728c44507d4554"
+}],
+  "current": "0.14.1",
+  "lastUpdated": 1754409981
+}

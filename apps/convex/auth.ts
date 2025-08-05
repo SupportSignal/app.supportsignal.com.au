@@ -1113,3 +1113,60 @@ export const logAccessEvent = mutation({
     // in a dedicated access_logs table for security analysis
   },
 });
+
+// =======================
+// Owner Access Control for Version Indicator (Story 2.5)
+// =======================
+
+/**
+ * Verify if the current user has owner access to sensitive features
+ * Used for version indicator and other admin-only components
+ */
+export const verifyOwnerAccess = query({
+  args: {
+    sessionToken: v.optional(v.string()),
+  },
+  handler: async (ctx: QueryCtx, args: { sessionToken?: string }) => {
+    // No session token means no access
+    if (!args.sessionToken) {
+      return { hasAccess: false, reason: 'No session token provided' };
+    }
+
+    try {
+      // Get current user from session
+      const session = await ctx.db
+        .query('sessions')
+        .withIndex('by_session_token', q =>
+          q.eq('sessionToken', args.sessionToken!)
+        )
+        .first();
+
+      if (!session || session.expires < Date.now()) {
+        return { hasAccess: false, reason: 'Invalid or expired session' };
+      }
+
+      const user = await ctx.db.get(session.userId);
+      if (!user) {
+        return { hasAccess: false, reason: 'User not found' };
+      }
+
+      // Check if user email matches the owner email
+      const ownerEmail = 'david@ideasmen.com.au';
+      const hasAccess = user.email === ownerEmail;
+
+      return {
+        hasAccess,
+        reason: hasAccess
+          ? 'Access granted'
+          : 'Access restricted to owner only',
+        userEmail: user.email,
+      };
+    } catch (error) {
+      console.error('Error verifying owner access:', error);
+      return {
+        hasAccess: false,
+        reason: 'Error verifying access',
+      };
+    }
+  },
+});

@@ -42,6 +42,13 @@ export {
 } from "./src/table"
 export { Textarea, type TextareaProps } from "./src/textarea"
 export { Collapsible, CollapsibleTrigger, CollapsibleContent } from "./src/collapsible"
+export { Separator } from "./src/separator"
+export {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from "./src/tooltip"
 
 // Utility exports
 export { cn } from "./src/lib/utils"

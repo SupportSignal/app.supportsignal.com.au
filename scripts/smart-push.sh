@@ -1,19 +1,20 @@
 #!/bin/bash
 
-# smart-push.sh - Intelligent git push with pre-flight checks and CI monitoring
+# smart-push.sh - Intelligent git push with auto-sync and pre-flight checks
 #
 # What this script does:
 # 1. Checks if you have uncommitted changes (stops if you do)
-# 2. Checks if you have commits ready to push (exits if nothing to push)
-# 3. Runs local validation BEFORE pushing:
+# 2. AUTO-SYNCS with remote to handle version manifest updates from CI
+# 3. Checks if you have commits ready to push (exits if nothing to push)
+# 4. Runs local validation BEFORE pushing:
 #    - TypeScript type checking
 #    - ESLint code quality checks  
 #    - Production build test
-# 4. Only pushes to remote if all local validation passes
-# 5. Monitors the CI build and reports success/failure
+# 5. Only pushes to remote if all local validation passes
+# 6. Monitors the CI build and reports success/failure
 #
-# This prevents pushing broken code that would fail in CI, saving time
-# and keeping the main branch clean.
+# This prevents the "behind remote" issue caused by CI version increments
+# and ensures code quality before pushing to keep the main branch clean.
 #
 # Usage:
 #   ./scripts/smart-push.sh           # Full validation + CI monitoring
@@ -38,7 +39,82 @@ if ! git diff-index --quiet HEAD --; then
     exit 1
 fi
 
-# Check if we're ahead of remote
+# Auto-sync with remote to handle CI version increments
+echo "🔄 Syncing with remote..."
+echo ""
+
+# Fetch latest changes
+echo "📥 Fetching latest changes from remote..."
+if ! git fetch origin; then
+    echo "❌ Failed to fetch from remote. Check your connection."
+    exit 1
+fi
+
+# Check if we are behind remote
+COMMITS_BEHIND=$(git rev-list --count HEAD..@{u} 2>/dev/null || echo "0")
+if [ "$COMMITS_BEHIND" -gt "0" ]; then
+    echo "📊 Local branch is $COMMITS_BEHIND commit(s) behind remote"
+    echo "🔄 Attempting automatic sync..."
+    
+    # Try rebase first (cleaner history)
+    echo "   Trying rebase..."
+    if git rebase origin/"$BRANCH" 2>/dev/null; then
+        echo "✅ Successfully rebased with remote changes"
+    else
+        echo "   Rebase failed, trying merge..."
+        git rebase --abort 2>/dev/null || true
+        
+        # Try merge as fallback
+        if git merge origin/"$BRANCH" --no-edit 2>/dev/null; then
+            echo "✅ Successfully merged with remote changes"
+        else
+            # Handle conflicts - check if they're just version manifest
+            CONFLICT_FILES=$(git diff --name-only --diff-filter=U 2>/dev/null || echo "")
+            if [ -n "$CONFLICT_FILES" ]; then
+                echo "⚠️  Merge conflicts detected:"
+                echo "$CONFLICT_FILES"
+                
+                # Check if conflicts are only in version manifest
+                if echo "$CONFLICT_FILES" | grep -q "version-manifest.json" && [ "$(echo "$CONFLICT_FILES" | wc -l)" = "1" ]; then
+                    echo "🔧 Auto-resolving version manifest conflict (taking remote version)..."
+                    
+                    # Take remote version of manifest (it's always newer from CI)
+                    git checkout --theirs apps/web/public/version-manifest.json
+                    git add apps/web/public/version-manifest.json
+                    
+                    # Complete the merge
+                    if git commit --no-edit 2>/dev/null; then
+                        echo "✅ Successfully auto-resolved version manifest conflict"
+                    else
+                        echo "❌ Failed to complete merge after resolving conflicts"
+                        exit 1
+                    fi
+                else
+                    echo "❌ Manual conflict resolution required for:"
+                    echo "$CONFLICT_FILES"
+                    echo ""
+                    echo "💡 To resolve manually:"
+                    echo "   1. Fix conflicts in the files above"
+                    echo "   2. Run: git add <resolved-files>"
+                    echo "   3. Run: git commit"
+                    echo "   4. Run: bun run push again"
+                    exit 1
+                fi
+            else
+                echo "❌ Merge failed for unknown reason"
+                exit 1
+            fi
+        fi
+    fi
+    
+    echo "✅ Sync completed successfully!"
+    echo ""
+else
+    echo "✅ Already up to date with remote"
+    echo ""
+fi
+
+# Check if we're ahead of remote (after sync)
 COMMITS_AHEAD=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo "0")
 if [ "$COMMITS_AHEAD" = "0" ]; then
     echo "ℹ️  No new commits to push."
