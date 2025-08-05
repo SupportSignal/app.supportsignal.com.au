@@ -266,3 +266,165 @@ When analyzing changes for sync:
 **Minimal Analysis**: Only use deep analysis when copy/merge approaches genuinely fail
 
 Remember: Template is the source of truth. Copy proven patterns confidently. Analyze only when copying isn't clearly the right approach.
+
+## Multi-Layer Feature Sync Support
+
+For complex features spanning Next.js + Convex + Cloudflare Workers architectures:
+
+### Feature Manifest System
+
+**Manifest Location**: `docs/features/manifests/{feature-name}.manifest.json`
+
+**Structure**:
+
+```json
+{
+  "feature": "feature-name",
+  "version": "1.0.0",
+  "sync_metadata": {
+    "last_sync": "2025-01-15T10:00:00Z",
+    "source_commit": "abc123",
+    "sync_strategy": "copy|merge|analyze"
+  },
+  "layers": {
+    "frontend": {
+      "files": ["apps/web/components/feature/*", "apps/web/app/feature/*"],
+      "dependencies": { "npm": ["package1"], "imports": ["@/components/ui/*"] },
+      "integration_points": ["navigation", "api-routes"]
+    },
+    "backend": {
+      "files": ["apps/convex/feature*.ts"],
+      "schema": ["feature_table"],
+      "env_vars": ["FEATURE_API_KEY"]
+    },
+    "worker": {
+      "files": ["apps/workers/feature-worker/*"],
+      "config": ["wrangler.toml sections"],
+      "external_deps": ["redis", "rate-limiting"]
+    }
+  },
+  "validation": {
+    "health_checks": ["worker endpoint", "convex queries"],
+    "integration_tests": ["cross-layer data flow"],
+    "ui_verification": ["component rendering"]
+  }
+}
+```
+
+### Multi-Layer Sync Strategy
+
+**Sync Order** (Dependencies First):
+
+1. **Worker Layer**: Independent, external services (Redis, etc.)
+2. **Backend Layer**: Depends on worker endpoints
+3. **Frontend Layer**: Depends on backend APIs
+
+**Copy Mode for Multi-Layer**:
+
+- Template has complete feature implementation
+- All layers work together in template
+- **Action**: Copy all layers in sequence, minimal adaptation
+
+**Merge Mode for Multi-Layer**:
+
+- App has partial implementation or customizations
+- Template has improvements to existing feature
+- **Action**: Layer-by-layer merge with template priority
+
+### Layer-Specific Sync Rules
+
+**Worker Layer**:
+
+- Copy: Full worker directory + wrangler.toml merge
+- Preserve: Existing environment variables, deployment settings
+- Validate: Health endpoints respond
+
+**Backend Layer**:
+
+- Copy: Convex functions + schema additions
+- Preserve: Existing tables/data, app-specific functions
+- Validate: Database connections, API endpoints
+
+**Frontend Layer**:
+
+- Copy: Component directories + pages
+- Preserve: App layout, existing navigation structure
+- Validate: Components render, no console errors
+
+### Feature Sync Workflow
+
+1. **Check for Manifest**: Look for feature manifest in template
+2. **Sync Strategy Decision**: Apply Copy/Merge/Analyze to entire feature
+3. **Layer-by-Layer Execution**: Follow dependency order
+4. **Cross-Layer Validation**: Ensure layers integrate properly
+5. **Update Manifest**: Record sync metadata in target repo
+
+### Validation Requirements
+
+**Per Layer**:
+
+- Worker: HTTP endpoints respond correctly
+- Backend: Database queries work, API calls succeed
+- Frontend: Components render, no runtime errors
+
+**Cross-Layer**:
+
+- Data flows from worker → backend → frontend
+- Authentication works across all layers
+- Error handling propagates properly
+
+This multi-layer support maintains the "Template First, Copy Smart, Act Fast" philosophy while handling the complexity of features that span multiple deployment targets.
+
+## Simple Command Interface
+
+The repo-sync agent responds to these simple commands:
+
+### `list`
+
+```bash
+Task tool -> repo-sync agent: "list"
+```
+
+Shows all available features with manifests from template repository.
+
+### `pull <feature>`
+
+```bash
+Task tool -> repo-sync agent: "pull debug-logs-system"
+```
+
+Copies complete feature from template (all layers: worker → backend → frontend).
+
+### `analyze <feature>`
+
+```bash
+Task tool -> repo-sync agent: "analyze debug-logs-system"
+```
+
+Checks if target repo is ready for feature without making changes.
+
+### `compare <feature>`
+
+```bash
+Task tool -> repo-sync agent: "compare debug-logs-system"
+```
+
+Shows differences between existing implementation and template version.
+
+### `tests <feature>`
+
+```bash
+Task tool -> repo-sync agent: "tests debug-logs-system"
+```
+
+Pulls only test files for the specified feature.
+
+### `update manifest <feature>`
+
+```bash
+Task tool -> repo-sync agent: "update manifest debug-logs-system"
+```
+
+Creates or updates manifest file from current feature state.
+
+These commands automatically use the appropriate sync strategy (copy/merge/analyze) and handle all multi-layer complexity internally.

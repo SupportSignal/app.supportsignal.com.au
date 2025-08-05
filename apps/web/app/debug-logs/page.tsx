@@ -2,11 +2,11 @@
 
 import { useState, useCallback } from 'react';
 import Link from 'next/link';
-import { RedisStatsCard } from '@/components/admin/redis-stats-card';
-import { SyncControlsCard } from '@/components/admin/sync-controls-card';
-import { DebugLogsTable } from '@/components/admin/debug-logs-table';
-import { ExportControlsCard } from '@/components/admin/export-controls-card';
-import { SuppressionRulesPanel } from '@/components/admin/suppression-rules-panel';
+import { RedisStatsCard } from '@/components/debug-logs/redis-stats-card';
+import { SyncControlsCard } from '@/components/debug-logs/sync-controls-card';
+import { DebugLogsTable } from '@/components/debug-logs/debug-logs-table';
+import { ExportControlsCard } from '@/components/debug-logs/export-controls-card';
+import { SuppressionRulesPanel } from '@/components/debug-logs/suppression-rules-panel';
 import { Button } from '@starter/ui';
 import { RefreshCw, PanelLeft, PanelLeftClose, AlertTriangle } from 'lucide-react';
 
