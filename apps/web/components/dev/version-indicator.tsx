@@ -70,6 +70,7 @@ export function VersionIndicator({
   position = 'bottom-right',
   maxVersions = 20,
 }: VersionIndicatorProps) {
+  // ALL HOOKS MUST BE DECLARED FIRST - NO EXCEPTIONS
   const { sessionToken } = useAuth();
   const [isExpanded, setIsExpanded] = useState(false);
   const [manifest, setManifest] = useState<VersionManifest | null>(null);
@@ -80,29 +81,11 @@ export function VersionIndicator({
   const [isProminent, setIsProminent] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // Prevent hydration mismatch - only show after client-side hydration
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
-
-  // Check owner access
+  // Check owner access - ALL HOOKS DECLARED BEFORE CONDITIONS
   const ownerAccess = useQuery(
     api.auth.verifyOwnerAccess,
     sessionToken ? { sessionToken } : 'skip'
   );
-
-  // Don't show indicator if user doesn't have owner access
-  const hasAccess = ownerAccess?.hasAccess === true;
-
-  // Prevent hydration mismatch - don't render anything until client-side hydration
-  if (!isHydrated) {
-    return null;
-  }
-
-  // Don't show if no access
-  if (!hasAccess) {
-    return null;
-  }
 
   const fetchManifest = useCallback(async () => {
     try {
@@ -132,11 +115,20 @@ export function VersionIndicator({
     }
   }, [selectedVersion]);
 
+  // ALL EFFECTS AFTER HOOKS
   useEffect(() => {
-    if (hasAccess) {
+    setIsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    const hasAccess = ownerAccess?.hasAccess === true;
+    if (hasAccess && isHydrated) {
       fetchManifest();
     }
-  }, [hasAccess, fetchManifest]);
+  }, [ownerAccess?.hasAccess, isHydrated, fetchManifest]);
+
+  // COMPUTED VALUES AFTER ALL HOOKS
+  const hasAccess = ownerAccess?.hasAccess === true;
 
   const handleToggleExpanded = () => {
     setIsExpanded(!isExpanded);
@@ -200,8 +192,8 @@ export function VersionIndicator({
     }
   };
 
-  // Don't render if user doesn't have access
-  if (!hasAccess) {
+  // Prevent hydration mismatch and conditional rendering - ALL CONDITIONS CHECKED TOGETHER
+  if (!isHydrated || !hasAccess) {
     return null;
   }
 
