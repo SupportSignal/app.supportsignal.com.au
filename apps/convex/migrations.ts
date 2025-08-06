@@ -87,7 +87,7 @@ export const grantLLMAccessToDavid = mutation({
     }
 
     // Check if already has LLM access
-    if (user.hasLLMAccess === true) {
+    if (user.has_llm_access === true) {
       return { 
         message: `User ${targetEmail} already has LLM access`,
         updated: false 
@@ -96,7 +96,7 @@ export const grantLLMAccessToDavid = mutation({
 
     // Grant LLM access
     await ctx.db.patch(user._id, {
-      hasLLMAccess: true,
+      has_llm_access: true,
     });
 
     console.log(`✅ Granted LLM access to ${targetEmail}`);
@@ -131,7 +131,7 @@ export const grantLLMAccessByEmail = mutation({
     }
 
     // Check if already has LLM access
-    if (user.hasLLMAccess === true) {
+    if (user.has_llm_access === true) {
       return { 
         message: `User ${targetEmail} already has LLM access`,
         updated: false 
@@ -140,7 +140,7 @@ export const grantLLMAccessByEmail = mutation({
 
     // Grant LLM access
     await ctx.db.patch(user._id, {
-      hasLLMAccess: true,
+      has_llm_access: true,
     });
 
     console.log(`✅ Granted LLM access to ${targetEmail}`);
@@ -162,7 +162,7 @@ export const setDefaultLLMAccess = mutation({
     // Get all users without hasLLMAccess set
     const users = await ctx.db.query('users').collect();
     const usersToUpdate = users.filter(
-      (user: { hasLLMAccess?: boolean }) => user.hasLLMAccess === undefined
+      (user: { has_llm_access?: boolean }) => user.has_llm_access === undefined
     );
 
     if (usersToUpdate.length === 0) {
@@ -175,15 +175,62 @@ export const setDefaultLLMAccess = mutation({
     // Update each user
     for (const user of usersToUpdate) {
       await ctx.db.patch(user._id, {
-        hasLLMAccess: args.defaultAccess,
+        has_llm_access: args.defaultAccess,
       });
     }
 
     console.log(`✅ Set LLM access to ${args.defaultAccess} for ${usersToUpdate.length} users`);
 
     return {
-      message: `Migration complete: ${usersToUpdate.length} users updated with hasLLMAccess=${args.defaultAccess}`,
+      message: `Migration complete: ${usersToUpdate.length} users updated with has_llm_access=${args.defaultAccess}`,
       updated: usersToUpdate.length,
+    };
+  },
+});
+
+// Migration to update users from old "user" role to new snake_case roles
+export const migrateUserRoles = mutation({
+  args: {},
+  handler: async (ctx: MutationCtx) => {
+    console.log("🔄 Starting user role migration from 'user' to 'viewer'...");
+    
+    // Get all users
+    const users = await ctx.db.query("users").collect();
+    
+    let migratedCount = 0;
+    const errors: string[] = [];
+    
+    for (const user of users) {
+      try {
+        // Check if user has the old "user" role
+        if ((user.role as any) === "user") {
+          // Update to new "viewer" role (lowest permission level)
+          await ctx.db.patch(user._id, {
+            role: "viewer" as const
+          });
+          
+          console.log(`✅ Migrated user ${user.email} from "user" to "viewer" role`);
+          migratedCount++;
+        }
+      } catch (error) {
+        const errorMsg = `Failed to migrate user ${user.email}: ${error}`;
+        console.error(errorMsg);
+        errors.push(errorMsg);
+      }
+    }
+    
+    console.log(`✅ Role migration complete. Migrated ${migratedCount} users.`);
+    
+    if (errors.length > 0) {
+      console.error(`⚠️ ${errors.length} errors occurred during migration:`, errors);
+    }
+    
+    return {
+      success: errors.length === 0,
+      migratedCount,
+      totalUsers: users.length,
+      errors,
+      message: `Successfully migrated ${migratedCount} users from "user" to "viewer" role`
     };
   },
 });

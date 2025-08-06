@@ -16,7 +16,6 @@ function generateSimpleId(): string {
 export const deleteChunksBySource = internalMutation({
   args: {
     sourceDocument: v.string(),
-    correlationId: v.string(),
   },
   handler: async (ctx, args) => {
     // Get all chunks for this source document
@@ -47,7 +46,6 @@ export const createOrUpdateDocument = internalMutation({
     filePath: v.string(),
     fileType: v.string(),
     contentHash: v.string(),
-    correlationId: v.string(),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -61,7 +59,6 @@ export const createOrUpdateDocument = internalMutation({
         console.log(`Content changed for ${args.filePath}, cleaning up old chunks`);
         await ctx.runMutation(internal.knowledgeMutations.deleteChunksBySource, {
           sourceDocument: args.filePath,
-          correlationId: args.correlationId,
         });
       }
 
@@ -71,7 +68,6 @@ export const createOrUpdateDocument = internalMutation({
         content_hash: args.contentHash,
         last_processed: Date.now(),
         processing_status: 'processing',
-        correlation_id: args.correlationId,
         chunk_count: 0, // Reset, will be updated after processing
       });
       return existing._id;
@@ -84,7 +80,6 @@ export const createOrUpdateDocument = internalMutation({
         last_processed: Date.now(),
         chunk_count: 0,
         processing_status: 'processing',
-        correlation_id: args.correlationId,
       });
     }
   },
@@ -106,7 +101,6 @@ export const createDocumentChunk = internalMutation({
       modified_at: v.number(),
       chunk_size: v.number(),
     }),
-    correlationId: v.string(),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert('document_chunks', {
@@ -117,7 +111,6 @@ export const createDocumentChunk = internalMutation({
       vectorize_id: args.vectorizeId,
       metadata: args.metadata,
       created_at: Date.now(),
-      correlation_id: args.correlationId,
     });
   },
 });

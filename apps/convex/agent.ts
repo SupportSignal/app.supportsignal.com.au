@@ -17,17 +17,13 @@ export const createChatSession = internalMutation({
   args: {
     userId: v.id('users'),
     title: v.string(),
-    correlationId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const correlationId = args.correlationId || generateSimpleId();
-    
     return await ctx.db.insert('chat_sessions', {
       userId: args.userId,
       title: args.title,
       created_at: Date.now(),
       updated_at: Date.now(),
-      correlation_id: correlationId,
     });
   },
 });
@@ -41,21 +37,17 @@ export const createChatMessage = internalMutation({
     userId: v.id('users'),
     role: v.union(v.literal('user'), v.literal('assistant')),
     content: v.string(),
-    correlationId: v.optional(v.string()),
     modelUsed: v.optional(v.string()),
     tokensUsed: v.optional(v.number()),
     hasLLMAccess: v.boolean(),
   },
   handler: async (ctx, args) => {
-    const correlationId = args.correlationId || generateSimpleId();
-    
     return await ctx.db.insert('chat_messages', {
       sessionId: args.sessionId,
       userId: args.userId,
       role: args.role,
       content: args.content,
       timestamp: Date.now(),
-      correlation_id: correlationId,
       model_used: args.modelUsed,
       tokens_used: args.tokensUsed,
       has_llm_access: args.hasLLMAccess,

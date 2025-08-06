@@ -41,7 +41,7 @@ export const registerUser = mutation({
       name: args.name,
       email: args.email,
       password: hashedPassword,
-      role: 'user',
+      role: 'viewer',
     });
 
     return { userId, email: args.email, name: args.name };
@@ -459,7 +459,7 @@ export const createOrUpdateGitHubUser = mutation({
           email: githubUser.email,
           password: '', // OAuth users don't have passwords
           profile_image_url: githubUser.avatar_url,
-          role: 'user',
+          role: 'viewer',
         });
 
         // Create OAuth account record
@@ -754,7 +754,7 @@ export const createOrUpdateGoogleUser = mutation({
           email: googleUser.email,
           password: '', // OAuth users don't have passwords
           profile_image_url: googleUser.picture,
-          role: 'user',
+          role: 'viewer',
         });
 
         // Create OAuth account record
@@ -1038,23 +1038,23 @@ export const checkUserLLMAccess = query({
         };
       }
 
-      const hasAccess = user.hasLLMAccess === true;
+      const hasAccess = user.has_llm_access === true;
 
       if (!hasAccess) {
         return {
-          hasLLMAccess: false,
+          has_llm_access: false,
           fallbackMessage: `Hi ${user.name}! You're using the basic chat experience. To access our AI-powered responses with knowledge base integration, please contact david@ideasmen.com.au to request LLM access.`,
         };
       }
 
       return {
-        hasLLMAccess: true,
+        has_llm_access: true,
         fallbackMessage: null,
       };
     } catch (error) {
       console.error('Error checking user LLM access:', (error as Error).message);
       return {
-        hasLLMAccess: false,
+        has_llm_access: false,
         fallbackMessage: 'Unable to verify access. Please try again later.',
       };
     }
@@ -1067,16 +1067,16 @@ export const checkUserLLMAccess = query({
 export const updateUserLLMAccess = mutation({
   args: {
     userId: v.id('users'),
-    hasLLMAccess: v.boolean(),
+    has_llm_access: v.boolean(),
   },
   handler: async (ctx, args) => {
     try {
       await ctx.db.patch(args.userId, {
-        hasLLMAccess: args.hasLLMAccess,
+        has_llm_access: args.has_llm_access,
       });
 
       const user = await ctx.db.get(args.userId);
-      console.log(`Updated LLM access for user ${user?.email}: ${args.hasLLMAccess}`);
+      console.log(`Updated LLM access for user ${user?.email}: ${args.has_llm_access}`);
 
       return { success: true };
     } catch (error) {

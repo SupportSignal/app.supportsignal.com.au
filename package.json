@@ -12,6 +12,7 @@
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
+    "uat:test": "bun run scripts/run-uat-tests.ts",
     "web:dev": "cd apps/web && bun dev",
     "storybook:dev": "cd packages/storybook && bun run storybook",
     "lint": "turbo lint",
