@@ -39,7 +39,7 @@ export const createChatMessage = internalMutation({
     content: v.string(),
     modelUsed: v.optional(v.string()),
     tokensUsed: v.optional(v.number()),
-    hasLLMAccess: v.boolean(),
+    has_llm_access: v.boolean(),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert('chat_messages', {
@@ -50,7 +50,7 @@ export const createChatMessage = internalMutation({
       timestamp: Date.now(),
       model_used: args.modelUsed,
       tokens_used: args.tokensUsed,
-      has_llm_access: args.hasLLMAccess,
+      has_llm_access: args.has_llm_access,
     });
   },
 });

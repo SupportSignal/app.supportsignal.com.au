@@ -1033,7 +1033,7 @@ export const checkUserLLMAccess = query({
       
       if (!user) {
         return {
-          hasLLMAccess: false,
+          has_llm_access: false,
           fallbackMessage: 'User not found. Please sign in to access chat features.',
         };
       }

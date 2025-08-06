@@ -22,7 +22,7 @@ export const generateResponse = action({
     response: string;
     model: string;
     tokensUsed: number;
-    hasLLMAccess: boolean;
+    has_llm_access: boolean;
     fallbackMessage: string | null;
   }> => {
     const correlationId = crypto.randomUUID();
@@ -30,13 +30,13 @@ export const generateResponse = action({
     try {
       // Check user's LLM access using authenticated user context
       const accessCheck: {
-        hasLLMAccess: boolean;
+        has_llm_access: boolean;
         fallbackMessage: string | null;
       } = await ctx.runQuery(api.auth.checkUserLLMAccess, {
         userId: ctx.session.userId,
       });
 
-      if (!accessCheck.hasLLMAccess) {
+      if (!accessCheck.has_llm_access) {
         // Log access denial
         await ctx.runMutation(api.auth.logAccessEvent, {
           userId: ctx.session.userId,
@@ -54,14 +54,14 @@ export const generateResponse = action({
           role: 'assistant',
           content: fallbackResponse,
           correlationId,
-          hasLLMAccess: false,
+          has_llm_access: false,
         });
 
         return {
           response: fallbackResponse,
           model: 'fallback',
           tokensUsed: 0,
-          hasLLMAccess: false,
+          has_llm_access: false,
           fallbackMessage: accessCheck.fallbackMessage,
         };
       }
@@ -100,14 +100,14 @@ export const generateResponse = action({
         correlationId,
         modelUsed: response.model,
         tokensUsed: response.tokensUsed,
-        hasLLMAccess: true,
+        has_llm_access: true,
       });
 
       return {
         response: response.content,
         model: response.model,
         tokensUsed: response.tokensUsed,
-        hasLLMAccess: true,
+        has_llm_access: true,
         fallbackMessage: null,
       };
     } catch (error) {
@@ -123,14 +123,14 @@ export const generateResponse = action({
         role: 'assistant',
         content: fallbackResponse,
         correlationId,
-        hasLLMAccess: false,
+        has_llm_access: false,
       });
 
       return {
         response: fallbackResponse,
         model: 'error_fallback',
         tokensUsed: 0,
-        hasLLMAccess: false,
+        has_llm_access: false,
         fallbackMessage: 'An error occurred while processing your request.',
       };
     }
@@ -260,7 +260,6 @@ export const createOrGetChatSession = action({
     title?: string;
     created_at: number;
     updated_at: number;
-    correlation_id: string;
   }> => {
     const correlationId = crypto.randomUUID();
     
@@ -271,7 +270,6 @@ export const createOrGetChatSession = action({
       title?: string;
       created_at: number;
       updated_at: number;
-      correlation_id: string;
     }> = await ctx.runQuery(api.agent.getUserChatSessions, {
       userId: ctx.session.userId,
       limit: 1,
@@ -294,7 +292,6 @@ export const createOrGetChatSession = action({
       title: args.title || 'New Chat',
       created_at: Date.now(),
       updated_at: Date.now(),
-      correlation_id: correlationId,
     };
   }),
 });
