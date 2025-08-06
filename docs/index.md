@@ -66,6 +66,7 @@ Following BMAD methodology, these documents form the foundation:
 
 - **[BMAD Context Engineering](./methodology/bmad-context-engineering.md)** - Structured AI development approach
 - **[Agentic Architect Developer Persona](./methodology/agentic-architect-developer-persona.md)** - AI personas for requirements gathering
+- **[Multi-Layer Manifest Architecture KDD](./methodology/multi-layer-manifest-architecture-kdd.md)** - Knowledge management system for complex multi-layer templates
 
 ### 🔧 Technical Guides
 
@@ -81,6 +82,7 @@ Following BMAD methodology, these documents form the foundation:
 - **[Authentication Architecture](./technical-guides/authentication-architecture.md)** - Complete authentication system architecture and security patterns
 - **[Cloudflare Pages Setup](./technical-guides/cloudflare-pages-setup.md)** - Step-by-step Cloudflare Pages deployment guide
 - **[Cloudflare Pages Troubleshooting](./technical-guides/cloudflare-pages-deployment-troubleshooting.md)** - Systematic troubleshooting for deployment issues
+- **[Implementing Manifest Systems Guide](./technical-guides/implementing-manifest-systems-guide.md)** - Step-by-step guide for adopting Multi-Layer Manifest Architecture
 
 ### 🧪 Testing
 
