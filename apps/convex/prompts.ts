@@ -243,23 +243,24 @@ export const recordPromptUsage = mutation({
     }
 
     // Update usage statistics
+    const currentUsageCount = prompt.usage_count || 0;
     const updates: any = {
-      usage_count: prompt.usage_count + 1,
+      usage_count: currentUsageCount + 1,
     };
 
     // Calculate running average response time
     if (args.responseTime && prompt.average_response_time) {
-      const totalPreviousTime = prompt.average_response_time * prompt.usage_count;
-      updates.average_response_time = (totalPreviousTime + args.responseTime) / (prompt.usage_count + 1);
+      const totalPreviousTime = prompt.average_response_time * currentUsageCount;
+      updates.average_response_time = (totalPreviousTime + args.responseTime) / (currentUsageCount + 1);
     } else if (args.responseTime) {
       updates.average_response_time = args.responseTime;
     }
 
     // Calculate success rate
-    if (prompt.success_rate !== undefined && prompt.usage_count > 0) {
-      const previousSuccesses = Math.round(prompt.success_rate * prompt.usage_count);
+    if (prompt.success_rate !== undefined && currentUsageCount > 0) {
+      const previousSuccesses = Math.round(prompt.success_rate * currentUsageCount);
       const newSuccesses = previousSuccesses + (args.successful ? 1 : 0);
-      updates.success_rate = newSuccesses / (prompt.usage_count + 1);
+      updates.success_rate = newSuccesses / (currentUsageCount + 1);
     } else {
       updates.success_rate = args.successful ? 1 : 0;
     }
@@ -300,7 +301,7 @@ export const getPromptAnalytics = query({
       subsystem: p.subsystem,
       workflowStep: p.workflow_step,
       isActive: p.is_active,
-      usageCount: p.usage_count,
+      usageCount: p.usage_count || 0,
       averageResponseTime: p.average_response_time,
       successRate: p.success_rate,
       created_at: p.created_at,
@@ -327,7 +328,7 @@ export const getPromptPerformanceSummary = query({
     }
     
     const activePrompts = prompts.filter(p => p.is_active);
-    const totalUsage = prompts.reduce((sum, p) => sum + p.usage_count, 0);
+    const totalUsage = prompts.reduce((sum, p) => sum + (p.usage_count || 0), 0);
     const averageSuccessRate = prompts.length > 0 ? 
       prompts.filter(p => p.success_rate !== undefined).reduce((sum, p) => sum + (p.success_rate || 0), 0) / 
       prompts.filter(p => p.success_rate !== undefined).length : 0;
@@ -345,24 +346,25 @@ export const getPromptPerformanceSummary = query({
       
       // Breakdown by subsystem
       subsystemBreakdown: args.subsystem ? null : prompts.reduce((acc, p) => {
-        if (!acc[p.subsystem]) {
-          acc[p.subsystem] = { count: 0, usage: 0, active: 0 };
+        const subsystem = p.subsystem || 'unknown';
+        if (!acc[subsystem]) {
+          acc[subsystem] = { count: 0, usage: 0, active: 0 };
         }
-        acc[p.subsystem].count++;
-        acc[p.subsystem].usage += p.usage_count;
-        if (p.is_active) acc[p.subsystem].active++;
+        acc[subsystem].count++;
+        acc[subsystem].usage += (p.usage_count || 0);
+        if (p.is_active) acc[subsystem].active++;
         return acc;
       }, {} as Record<string, { count: number; usage: number; active: number }>),
 
       // Top performing prompts
       topPrompts: prompts
-        .filter(p => p.usage_count > 0)
+        .filter(p => (p.usage_count || 0) > 0)
         .sort((a, b) => (b.success_rate || 0) - (a.success_rate || 0))
         .slice(0, 10)
         .map(p => ({
           promptName: p.prompt_name,
           promptVersion: p.prompt_version,
-          usageCount: p.usage_count,
+          usageCount: p.usage_count || 0,
           successRate: p.success_rate,
         })),
     };
