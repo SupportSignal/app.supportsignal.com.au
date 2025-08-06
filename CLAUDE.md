@@ -116,6 +116,30 @@ bunx convex run cleanup:force                     # Testing/emergency - delete A
 └── tests/            # E2E Playwright tests
 ```
 
+### Dynamic Source Tree System
+
+The project includes a comprehensive navigation system providing always-current, categorized views of the codebase:
+
+**Location**: `docs/architecture/source-tree/`
+
+**15 Available Views**:
+- **Core**: All files (with/without hidden), hidden-only views
+- **Code**: Code-only, code-plus-tests, architecture-context views  
+- **Documentation**: Permanent vs transient documentation views
+- **Specialized**: Tests, config, deployment files, deprecated files
+- **Module-Specific**: Backend-only, frontend-only views
+
+**Usage**:
+```bash
+# Generate all views
+./docs/architecture/source-tree/generate-trees.sh
+
+# Individual commands available in:
+# docs/architecture/source-tree/commands.md
+```
+
+**Benefits**: Always-current project structure, optimal AI context, zero maintenance overhead.
+
 ### Key Architectural Patterns
 
 1. **Convex Integration**
