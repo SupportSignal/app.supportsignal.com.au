@@ -14,6 +14,15 @@ This file provides guidance to Gemini when working with code in this repository.
 
 **Setup Reference**: Follow the [New Repository Setup Guide](docs/template-usage/new-repository-setup-guide.md) for complete deployment configuration.
 
+## Project Structure
+
+For detailed project structure views, see **[Dynamic Source Trees](docs/architecture/source-tree/README.md)**:
+
+- **Manual Commands**: Use `docs/architecture/source-tree/commands.md` for individual gpt_context commands
+- **Batch Generation**: Run `docs/architecture/source-tree/generate-trees.sh` to refresh all views
+- **15 Different Views**: Code-only, architecture-context, test-segmented, config-only, etc.
+- **Always Current**: Generated from live file system, never outdated
+
 ## Import Path Guidelines
 
 **CRITICAL**: Use configured path aliases instead of relative imports.
@@ -43,6 +52,7 @@ import { Component } from '../../../components/ui/Component'; // Confusing navig
 ```bash
 # Development
 bun dev              # Start development server
+bun dev:gemini       # Development with Gemini logging integration
 
 # Build & Production
 bun build            # Build for production
@@ -83,6 +93,10 @@ bun run build:pages  # Build for Cloudflare Pages (includes CI=true flag)
 bun run pages:deploy # Manual deployment via Wrangler CLI
 bun run pages:dev    # Local development with Cloudflare Pages emulation
 
+# Gemini Integration
+bun chrome:debug     # Start Chrome with debugging port
+bun gemini:bridge    # Start Gemini Dev Bridge for log capture
+
 # Monitoring & Cleanup
 bunx convex run cleanup:status                    # Check what needs cleaning with message patterns
 bunx convex run monitoring:usage                  # Database usage stats and warnings
@@ -92,6 +106,12 @@ bunx convex run monitoring:traces                 # Find traces generating lots 
 bunx convex run cleanup:safe                      # Normal maintenance - expired/old logs only
 bunx convex run cleanup:force                     # Testing/emergency - delete ALL logs
 ./scripts/cleanup-logs.sh                         # Automated cleanup script
+
+# SupportSignal Specific Commands
+./scripts/cleanup-integration-test-data.ts        # Clean up integration test data
+./scripts/integration-test.sh                     # Run integration tests
+./scripts/run-integration-tests.ts                # TypeScript integration test runner
+./scripts/analyze-naming-conventions.ts           # Analyze Convex naming conventions
 ```
 
 ## Architecture & Key Patterns
@@ -140,6 +160,12 @@ bunx convex run cleanup:force                     # Testing/emergency - delete A
    - Custom error boundaries for graceful degradation
    - Convex error handling with proper status codes
 
+6. **Multi-Tenant Architecture** (SupportSignal Specific)
+   - Company-based data isolation
+   - Role-based access control (RBAC)
+   - Incident management system
+   - Real-time notifications and status updates
+
 ## Development Workflow
 
 ### AI-Assisted Development
@@ -180,13 +206,13 @@ This project follows the BMAD (Before, Model, After, Document) method with integ
 - **Never skip CI verification** in After phase - it's non-negotiable
 - **CI failures block story completion** - fix before documenting
 - **Document CI lessons** - maintain institutional CI knowledge
-- **Adopt a tester persona** for complex CI debugging during any phase
+- **Use tester agent** for complex CI debugging during any phase
 
 ### BMAD Documentation Structure
 
 The project uses sharded documentation for AI agent consumption:
 
-- **[docs/prd/](docs/prd/)** - Sharded Product Requirements (Epic 1-7)
+- **[docs/prd/](docs/prd/)** - Sharded Product Requirements
 - **[docs/architecture/](docs/architecture/)** - Sharded Architecture components
 - **[docs/methodology/](docs/methodology/)** - BMAD methodology guides
 
@@ -261,7 +287,7 @@ For systematic development, reference specific epics and architectural component
 1. **Don't ignore CI failures** - they represent production environment issues
 2. **Fix before proceeding** - no new work until CI is green
 3. **Document lessons learned** - update testing documentation
-4. **Adopt a tester persona** - delegate complex CI debugging to a testing specialist mindset.
+4. **Use tester agent** - delegate complex CI debugging to testing specialist
 
 #### Integration with BMAD Phases
 
@@ -340,6 +366,12 @@ git push origin main  # Triggers automatic deployment
    - Implement proper loading states
    - Cache Convex queries appropriately
 
+5. **SupportSignal Specific Patterns** (Application Context)
+   - Multi-tenant data isolation via company context
+   - Incident management workflow patterns
+   - Real-time status update mechanisms
+   - Company-scoped data access patterns
+
 # important-instruction-reminders
 
 Do what has been asked; nothing more, nothing less.
@@ -361,29 +393,57 @@ NEVER proactively create documentation files (\*.md) or README files. Only creat
 
 **Documentation-First Protocol**: Search existing docs before implementing new solutions.
 
-## Testing Philosophy and Practice
+## Specialized Agent Delegation
 
-**CRITICAL**: When working on tests, a proactive and specialized testing mindset must be adopted. This means not just writing tests that pass, but architecting a robust and maintainable testing suite.
+### Testing Infrastructure Work (MANDATORY)
 
-### Proactive Test Planning
+**CRITICAL**: Testing work MUST involve the tester agent proactively, not just reactively when problems arise.
+
+#### Mandatory Tester Agent Usage
+
 **BEFORE implementing tests** (NON-NEGOTIABLE):
-- **Plan the test strategy**: Define the approach and patterns for the feature.
-- **Define requirements**: What are the coverage requirements? What are the critical paths?
-- **Confirm the framework**: Ensure the existing tools and setup are appropriate for the task.
 
-### Diligent Test Implementation
+- [ ] **Strategy Planning**: Delegate test approach and patterns to tester agent
+- [ ] **Requirements Analysis**: Have tester agent define coverage requirements
+- [ ] **Framework Selection**: Confirm testing tools and setup with tester agent
+
 **DURING test implementation**:
-- **Isolate and debug**: When issues arise with the testing framework (e.g., Jest), address them systematically.
-- **Handle complexity**: For complex scenarios like accessibility and user interactions, ensure tests are comprehensive.
-- **Consider CI**: Write tests with the CI environment in mind.
 
-### Thorough Test Review
+- [ ] **Infrastructure Issues**: Immediately delegate Jest/framework problems to tester agent
+- [ ] **Complex Scenarios**: Use tester agent for accessibility and interaction testing
+- [ ] **CI Integration**: Have tester agent handle CI testing configuration
+
 **AFTER test implementation** (REQUIRED):
-- **Review coverage**: Analyze test coverage and identify gaps.
-- **Assess quality**: Evaluate the quality and maintainability of the tests.
-- **Document learnings**: Capture any lessons learned, especially regarding the testing infrastructure.
 
-### Pragmatic vs Perfectionist Testing Philosophy (Story 4.2 Lesson)
+- [ ] **Coverage Review**: Tester agent MUST analyze coverage and patterns
+- [ ] **Quality Assessment**: Delegate test quality evaluation to tester agent
+- [ ] **Documentation**: Tester agent handles testing lessons learned documentation
+
+#### Testing Agent Usage Pattern
+
+```
+Use Task tool with subagent_type: "tester" for:
+
+PROACTIVE (before issues):
+- Test strategy planning for new features
+- Testing pattern establishment
+- Coverage requirement definition
+- CI testing integration planning
+
+REACTIVE (when issues arise):
+- Jest/testing framework debugging
+- Test infrastructure troubleshooting
+- Complex mocking scenarios
+- Accessibility testing implementation
+
+EVALUATIVE (after implementation):
+- Test coverage analysis
+- Testing pattern review
+- Quality assessment
+- Lessons learned documentation
+```
+
+#### Pragmatic vs Perfectionist Testing Philosophy (Story 4.2 Lesson)
 
 **CRITICAL GUIDANCE**: After discovering 39 false test failures caused by overly precise expectations, the following testing philosophy MUST be followed:
 
@@ -395,14 +455,18 @@ NEVER proactively create documentation files (\*.md) or README files. Only creat
 - **BE FLEXIBLE** for: Algorithm details, performance metrics, implementation specifics
 - **ALWAYS VERIFY** expectations against actual function output before writing assertions
 
-**Adopt a PRAGMATIC testing approach**:
+**For Tester Agent**:
+
+```
+Default to PRAGMATIC testing approach:
 - Use `toBeGreaterThan()`, `toBeLessThan()` for non-critical values
 - Test behavior and outcomes, not implementation details
 - Verify all numeric expectations by running the function first
 - Document any precise assertions with comments explaining why
 - When in doubt, ask for clarification about precision requirements
 
-Reference: See `docs/testing/technical/pragmatic-vs-perfectionist-testing-kdd.md`
+Reference: See docs/testing/technical/pragmatic-vs-perfectionist-testing-kdd.md
+```
 
 **Examples**:
 
@@ -414,6 +478,34 @@ expect(stats.characterCount).toBe(18); // Where did 18 come from?
 expect(stats.characterCount).toBe(text.length); // Matches implementation
 expect(stats.characterCount).toBeGreaterThan(0); // Verifies function works
 ```
+
+#### Lessons from Story 4.1 Analysis
+
+**Failure Pattern Identified**: Story 4.1 achieved 28/28 passing tests but failed to use tester agent proactively. This missed opportunities for:
+
+- Better testing architecture
+- More comprehensive patterns
+- Systematic coverage analysis
+- Testing infrastructure optimization
+
+**Prevention Rule**: **NEVER** implement testing without tester agent involvement, even if local implementation succeeds.
+
+#### Testing Workflow Integration
+
+```bash
+# MANDATORY workflow for ANY testing work:
+
+# 1. BEFORE implementing tests
+Task tool -> tester agent: "Plan test strategy for [component/feature]"
+
+# 2. DURING implementation
+Task tool -> tester agent: "Debug [specific testing issue]" (when issues arise)
+
+# 3. AFTER implementation
+Task tool -> tester agent: "Review test coverage and patterns for [feature]"
+```
+
+**Enforcement**: Any story involving testing MUST show evidence of tester agent delegation in story documentation.
 
 ## Testing Documentation Priority
 
@@ -508,7 +600,7 @@ This protocol prevents incorrect file placement and maintains project consistenc
 - **Convex Backend**: `apps/convex/`
 - **Documentation**: `docs/`
 - **Agent Configs**: `.bmad-core/` (if exists)
-- **Claude Config**: `.claude/` (if exists)
+- **Gemini Config**: `.gemini/` (if exists)
 
 ### Troubleshooting Navigation Issues
 
@@ -627,3 +719,9 @@ For comprehensive CI setup and troubleshooting:
 - **[CI/CD Pipeline Setup Guide](docs/technical-guides/cicd-pipeline-setup.md)** - Complete setup instructions
 - **[Testing Infrastructure Lessons](docs/testing/technical/testing-infrastructure-lessons-learned.md)** - CI debugging patterns
 - **[Chat Component KDD](docs/testing/technical/chat-component-testing-lessons.md)** - Testing methodology improvements
+
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.

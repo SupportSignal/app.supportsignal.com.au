@@ -66,6 +66,7 @@
     "migrate:logging-status": "cd apps/convex && bunx convex run migrations/cleanupLoggingTables:checkLoggingDataStatus",
     "migrate:logging-verify": "cd apps/convex && bunx convex run migrations/cleanupLoggingTables:verifyCleanupComplete",
     "deploy:worker": "./scripts/deploy-worker.sh",
+    "schema:docs": "bun run scripts/generate-schema-manifest.ts",
     "prepare": "echo 'Skipping husky in CI' && exit 0"
   },
   "dependencies": {

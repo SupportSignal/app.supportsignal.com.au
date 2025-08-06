@@ -1,0 +1,2179 @@
+{
+  "schema_manifest": {
+    "version": "1.1.0",
+    "generated_at": "2025-08-06T16:07:23.625Z",
+    "source_file": "apps/convex/schema.ts",
+    "generation_method": "automated_typescript_analysis",
+    "ai_context": {
+      "purpose": "Multi-tenant SupportSignal application for NDIS provider support and comprehensive incident management",
+      "architecture": "Next.js frontend + Convex backend + multi-tenant company isolation + AI-powered analysis",
+      "key_patterns": [
+        "BetterAuth integration for authentication",
+        "Multi-tenant company-based data isolation",
+        "Role-based access control (RBAC) for support organizations",
+        "Multi-phase incident narrative collection",
+        "AI-powered incident analysis and classification",
+        "Centralized prompt management with versioning",
+        "Hybrid Convex/Vectorize knowledge storage",
+        "Real-time conversation tracking with LLM access control"
+      ],
+      "design_philosophy": "Multi-tenant SaaS with comprehensive incident management, AI-powered analysis, and robust data isolation for NDIS support providers"
+    },
+    "table_categories": {
+      "multi_tenancy": {
+        "tables": [
+          "companies"
+        ],
+        "purpose": "Company-based tenant isolation for multiple NDIS providers",
+        "key_features": [
+          "Slug-based URL routing",
+          "Status-based subscription management",
+          "Audit trail creation tracking"
+        ]
+      },
+      "authentication": {
+        "tables": [
+          "users",
+          "sessions",
+          "accounts",
+          "password_reset_tokens"
+        ],
+        "purpose": "BetterAuth-integrated user management with multi-tenant association",
+        "key_features": [
+          "OAuth support",
+          "Session persistence",
+          "Multi-tenant user isolation",
+          "Enhanced role hierarchy for support organizations"
+        ]
+      },
+      "incident_management": {
+        "tables": [
+          "incidents",
+          "incident_narratives",
+          "clarification_questions",
+          "clarification_answers",
+          "incident_analysis",
+          "incident_classifications"
+        ],
+        "purpose": "Comprehensive incident tracking, narrative collection, and AI-powered analysis",
+        "key_features": [
+          "Multi-phase narrative capture",
+          "AI-generated clarification questions",
+          "Contributing conditions analysis",
+          "Incident classification and severity assessment",
+          "Multi-tenant company isolation"
+        ]
+      },
+      "ai_prompts_system": {
+        "tables": [
+          "ai_prompts"
+        ],
+        "purpose": "Centralized AI prompt management with versioning and performance tracking",
+        "key_features": [
+          "Version-controlled prompt templates",
+          "Usage analytics and performance metrics",
+          "Workflow-specific prompt organization",
+          "Schema validation for inputs/outputs"
+        ]
+      },
+      "knowledge_management": {
+        "tables": [
+          "source_documents",
+          "document_chunks"
+        ],
+        "purpose": "Document ingestion and vector-based knowledge retrieval",
+        "key_features": [
+          "Content hash-based change detection",
+          "Hybrid Convex/Vectorize storage",
+          "Chunk-based document processing",
+          "Metadata-driven retrieval"
+        ]
+      },
+      "conversation_ai": {
+        "tables": [
+          "chat_sessions",
+          "chat_messages"
+        ],
+        "purpose": "Conversational AI interface with LLM access control",
+        "key_features": [
+          "Session-based conversation tracking",
+          "Token usage monitoring",
+          "LLM access feature gating",
+          "Model usage tracking"
+        ]
+      },
+      "logging": {
+        "tables": [
+          "debug_logs"
+        ],
+        "purpose": "Application-wide debugging and audit logging",
+        "key_features": [
+          "Cross-system correlation",
+          "Cost-aware retention",
+          "Multi-source log aggregation"
+        ]
+      },
+      "development": {
+        "tables": [
+          "test_messages"
+        ],
+        "purpose": "Development and testing infrastructure validation",
+        "key_features": [
+          "Connection validation",
+          "Development workflows"
+        ]
+      }
+    },
+    "tables": [
+      {
+        "name": "test_messages",
+        "category": "development",
+        "ai_context": {
+          "business_meaning": "test_messages data management and operations",
+          "common_operations": [
+            "basic_crud",
+            "data_retrieval"
+          ],
+          "security_model": "Standard access control",
+          "integration_points": [
+            "System integration"
+          ]
+        },
+        "relationships": {
+          "incoming": [],
+          "outgoing": []
+        },
+        "key_fields": [
+          {
+            "name": "message",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "timestamp",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          }
+        ],
+        "access_patterns": []
+      },
+      {
+        "name": "companies",
+        "category": "multi_tenancy",
+        "ai_context": {
+          "business_meaning": "Central tenant entity enabling data isolation for multiple NDIS support providers",
+          "common_operations": [
+            "company_onboarding",
+            "subscription_management",
+            "data_isolation_enforcement"
+          ],
+          "security_model": "Tenant boundary enforcement with status-based access control",
+          "integration_points": [
+            "User association",
+            "Incident scoping",
+            "Analysis boundaries"
+          ]
+        },
+        "relationships": {
+          "incoming": [
+            {
+              "table": "users",
+              "type": "many_to_one",
+              "field": "created_by",
+              "purpose": "Reference to users for created_by association"
+            }
+          ],
+          "outgoing": []
+        },
+        "key_fields": [
+          {
+            "name": "name",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "\"Support Signal\", \"ABC NDIS Provider\""
+          },
+          {
+            "name": "slug",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "URL-friendly identifier"
+          },
+          {
+            "name": "contact_email",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Primary contact"
+          },
+          {
+            "name": "status",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "purpose": "Workflow state management and filtering"
+          },
+          {
+            "name": "created_at",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "purpose": "Audit trail and temporal tracking"
+          },
+          {
+            "name": "created_by",
+            "type": "id<users>",
+            "optional": false,
+            "constraints": [
+              "foreign_key"
+            ],
+            "description": "Temporarily optional for seed data - should be required in production",
+            "purpose": "Audit trail and temporal tracking"
+          }
+        ],
+        "access_patterns": [
+          {
+            "pattern": "by_slug",
+            "index": "by_slug",
+            "frequency": "high",
+            "description": "Primary lookup pattern for authentication/routing"
+          },
+          {
+            "pattern": "by_status",
+            "index": "by_status",
+            "frequency": "medium",
+            "description": "Workflow management and temporal queries"
+          }
+        ]
+      },
+      {
+        "name": "users",
+        "category": "authentication",
+        "ai_context": {
+          "business_meaning": "users data management and operations",
+          "common_operations": [
+            "basic_crud",
+            "data_retrieval"
+          ],
+          "security_model": "Standard access control",
+          "integration_points": [
+            "System integration"
+          ]
+        },
+        "relationships": {
+          "incoming": [
+            {
+              "table": "companies",
+              "type": "many_to_one",
+              "field": "company_id",
+              "purpose": "Reference to companies for company association"
+            }
+          ],
+          "outgoing": []
+        },
+        "key_fields": [
+          {
+            "name": "name",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "email",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "purpose": "User identification and authentication",
+            "security": "PII - requires protection"
+          },
+          {
+            "name": "password",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Required password field"
+          },
+          {
+            "name": "profile_image_url",
+            "type": "string",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "role",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "has_llm_access",
+            "type": "boolean",
+            "optional": false,
+            "constraints": [],
+            "description": "LLM access control flag"
+          },
+          {
+            "name": "company_id",
+            "type": "id<companies>",
+            "optional": false,
+            "constraints": [
+              "foreign_key"
+            ],
+            "description": "Which company they belong to",
+            "purpose": "Entity association and referential integrity"
+          }
+        ],
+        "access_patterns": [
+          {
+            "pattern": "by_email",
+            "index": "by_email",
+            "frequency": "high",
+            "description": "Primary lookup pattern for authentication/routing"
+          },
+          {
+            "pattern": "by_company",
+            "index": "by_company",
+            "frequency": "high",
+            "description": "Multi-tenant data isolation and scoping"
+          }
+        ]
+      },
+      {
+        "name": "sessions",
+        "category": "authentication",
+        "ai_context": {
+          "business_meaning": "sessions data management and operations",
+          "common_operations": [
+            "basic_crud",
+            "data_retrieval"
+          ],
+          "security_model": "Standard access control",
+          "integration_points": [
+            "System integration"
+          ]
+        },
+        "relationships": {
+          "incoming": [],
+          "outgoing": []
+        },
+        "key_fields": [
+          {
+            "name": "userId",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "purpose": "Entity association and referential integrity"
+          },
+          {
+            "name": "sessionToken",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "expires",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "rememberMe",
+            "type": "boolean",
+            "optional": false,
+            "constraints": []
+          }
+        ],
+        "access_patterns": [
+          {
+            "pattern": "by_session_token",
+            "index": "by_session_token",
+            "frequency": "medium",
+            "description": "Query pattern using sessionToken"
+          },
+          {
+            "pattern": "by_user_id",
+            "index": "by_user_id",
+            "frequency": "medium",
+            "description": "Query pattern using userId"
+          }
+        ]
+      },
+      {
+        "name": "accounts",
+        "category": "authentication",
+        "ai_context": {
+          "business_meaning": "accounts data management and operations",
+          "common_operations": [
+            "basic_crud",
+            "data_retrieval"
+          ],
+          "security_model": "Standard access control",
+          "integration_points": [
+            "System integration"
+          ]
+        },
+        "relationships": {
+          "incoming": [],
+          "outgoing": []
+        },
+        "key_fields": [
+          {
+            "name": "userId",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "purpose": "Entity association and referential integrity"
+          },
+          {
+            "name": "type",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "provider",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "providerAccountId",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "purpose": "Entity association and referential integrity"
+          },
+          {
+            "name": "refresh_token",
+            "type": "string",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "access_token",
+            "type": "string",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "expires_at",
+            "type": "number",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "token_type",
+            "type": "string",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "scope",
+            "type": "string",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "id_token",
+            "type": "string",
+            "optional": false,
+            "constraints": []
+          }
+        ],
+        "access_patterns": [
+          {
+            "pattern": "by_provider_account",
+            "index": "by_provider_account",
+            "frequency": "medium",
+            "description": "Query pattern using provider, providerAccountId"
+          },
+          {
+            "pattern": "by_user_id",
+            "index": "by_user_id",
+            "frequency": "medium",
+            "description": "Query pattern using userId"
+          }
+        ]
+      },
+      {
+        "name": "password_reset_tokens",
+        "category": "authentication",
+        "ai_context": {
+          "business_meaning": "password_reset_tokens data management and operations",
+          "common_operations": [
+            "basic_crud",
+            "data_retrieval"
+          ],
+          "security_model": "Standard access control",
+          "integration_points": [
+            "System integration"
+          ]
+        },
+        "relationships": {
+          "incoming": [],
+          "outgoing": []
+        },
+        "key_fields": [
+          {
+            "name": "userId",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "purpose": "Entity association and referential integrity"
+          },
+          {
+            "name": "token",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "expires",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          }
+        ],
+        "access_patterns": [
+          {
+            "pattern": "by_token",
+            "index": "by_token",
+            "frequency": "medium",
+            "description": "Query pattern using token"
+          },
+          {
+            "pattern": "by_user_id",
+            "index": "by_user_id",
+            "frequency": "medium",
+            "description": "Query pattern using userId"
+          }
+        ]
+      },
+      {
+        "name": "debug_logs",
+        "category": "logging",
+        "ai_context": {
+          "business_meaning": "debug_logs data management and operations",
+          "common_operations": [
+            "basic_crud",
+            "data_retrieval"
+          ],
+          "security_model": "Standard access control",
+          "integration_points": [
+            "System integration"
+          ]
+        },
+        "relationships": {
+          "incoming": [],
+          "outgoing": []
+        },
+        "key_fields": [
+          {
+            "name": "id",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Original log ID from Redis"
+          },
+          {
+            "name": "trace_id",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "purpose": "Entity association and referential integrity"
+          },
+          {
+            "name": "user_id",
+            "type": "string",
+            "optional": false,
+            "constraints": [],
+            "purpose": "Entity association and referential integrity"
+          },
+          {
+            "name": "system",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "level",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "message",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "timestamp",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "context",
+            "type": "any",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "stack",
+            "type": "string",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "raw_data",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Full original log entry"
+          },
+          {
+            "name": "synced_at",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "When this was synced from Redis"
+          }
+        ],
+        "access_patterns": [
+          {
+            "pattern": "by_trace_id",
+            "index": "by_trace_id",
+            "frequency": "medium",
+            "description": "Query pattern using trace_id"
+          },
+          {
+            "pattern": "by_user_id",
+            "index": "by_user_id",
+            "frequency": "medium",
+            "description": "Query pattern using user_id"
+          },
+          {
+            "pattern": "by_system",
+            "index": "by_system",
+            "frequency": "medium",
+            "description": "Query pattern using system"
+          },
+          {
+            "pattern": "by_timestamp",
+            "index": "by_timestamp",
+            "frequency": "medium",
+            "description": "Query pattern using timestamp"
+          },
+          {
+            "pattern": "by_synced_at",
+            "index": "by_synced_at",
+            "frequency": "medium",
+            "description": "Query pattern using synced_at"
+          }
+        ]
+      },
+      {
+        "name": "chat_sessions",
+        "category": "conversation_ai",
+        "ai_context": {
+          "business_meaning": "chat_sessions data management and operations",
+          "common_operations": [
+            "basic_crud",
+            "data_retrieval"
+          ],
+          "security_model": "Standard access control",
+          "integration_points": [
+            "System integration"
+          ]
+        },
+        "relationships": {
+          "incoming": [],
+          "outgoing": []
+        },
+        "key_fields": [
+          {
+            "name": "userId",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "purpose": "Entity association and referential integrity"
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "created_at",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "purpose": "Audit trail and temporal tracking"
+          },
+          {
+            "name": "updated_at",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "purpose": "Audit trail and temporal tracking"
+          }
+        ],
+        "access_patterns": [
+          {
+            "pattern": "by_user_id",
+            "index": "by_user_id",
+            "frequency": "medium",
+            "description": "Query pattern using userId"
+          }
+        ]
+      },
+      {
+        "name": "chat_messages",
+        "category": "conversation_ai",
+        "ai_context": {
+          "business_meaning": "chat_messages data management and operations",
+          "common_operations": [
+            "basic_crud",
+            "data_retrieval"
+          ],
+          "security_model": "Standard access control",
+          "integration_points": [
+            "System integration"
+          ]
+        },
+        "relationships": {
+          "incoming": [],
+          "outgoing": []
+        },
+        "key_fields": [
+          {
+            "name": "sessionId",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "purpose": "Entity association and referential integrity"
+          },
+          {
+            "name": "userId",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "purpose": "Entity association and referential integrity"
+          },
+          {
+            "name": "role",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "content",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "timestamp",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "model_used",
+            "type": "string",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "tokens_used",
+            "type": "number",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "has_llm_access",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Track if message used LLM or fallback"
+          }
+        ],
+        "access_patterns": [
+          {
+            "pattern": "by_session_id",
+            "index": "by_session_id",
+            "frequency": "medium",
+            "description": "Query pattern using sessionId"
+          }
+        ]
+      },
+      {
+        "name": "document_chunks",
+        "category": "knowledge_management",
+        "ai_context": {
+          "business_meaning": "document_chunks data management and operations",
+          "common_operations": [
+            "basic_crud",
+            "data_retrieval"
+          ],
+          "security_model": "Standard access control",
+          "integration_points": [
+            "System integration"
+          ]
+        },
+        "relationships": {
+          "incoming": [],
+          "outgoing": []
+        },
+        "key_fields": [
+          {
+            "name": "source_document",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "File path or document identifier"
+          },
+          {
+            "name": "chunk_index",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "content",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "chunk_hash",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "For deduplication",
+            "purpose": "Content integrity and deduplication"
+          },
+          {
+            "name": "vectorize_id",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "ID in Cloudflare Vectorize",
+            "purpose": "Entity association and referential integrity"
+          },
+          {
+            "name": "metadata",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "file_path",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "file_type",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "modified_at",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "chunk_size",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "created_at",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "purpose": "Audit trail and temporal tracking"
+          }
+        ],
+        "access_patterns": [
+          {
+            "pattern": "by_source_document",
+            "index": "by_source_document",
+            "frequency": "medium",
+            "description": "Query pattern using source_document"
+          },
+          {
+            "pattern": "by_chunk_hash",
+            "index": "by_chunk_hash",
+            "frequency": "medium",
+            "description": "Query pattern using chunk_hash"
+          },
+          {
+            "pattern": "by_vectorize_id",
+            "index": "by_vectorize_id",
+            "frequency": "medium",
+            "description": "Query pattern using vectorize_id"
+          }
+        ]
+      },
+      {
+        "name": "source_documents",
+        "category": "knowledge_management",
+        "ai_context": {
+          "business_meaning": "source_documents data management and operations",
+          "common_operations": [
+            "basic_crud",
+            "data_retrieval"
+          ],
+          "security_model": "Standard access control",
+          "integration_points": [
+            "System integration"
+          ]
+        },
+        "relationships": {
+          "incoming": [],
+          "outgoing": []
+        },
+        "key_fields": [
+          {
+            "name": "file_path",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "file_type",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "content_hash",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "For change detection",
+            "purpose": "Content integrity and deduplication"
+          },
+          {
+            "name": "last_processed",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "chunk_count",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "processing_status",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "error_message",
+            "type": "string",
+            "optional": false,
+            "constraints": []
+          }
+        ],
+        "access_patterns": [
+          {
+            "pattern": "by_file_path",
+            "index": "by_file_path",
+            "frequency": "medium",
+            "description": "Query pattern using file_path"
+          },
+          {
+            "pattern": "by_content_hash",
+            "index": "by_content_hash",
+            "frequency": "medium",
+            "description": "Query pattern using content_hash"
+          },
+          {
+            "pattern": "by_processing_status",
+            "index": "by_processing_status",
+            "frequency": "medium",
+            "description": "Workflow management and temporal queries"
+          }
+        ]
+      },
+      {
+        "name": "incidents",
+        "category": "incident_management",
+        "ai_context": {
+          "business_meaning": "Support incidents requiring narrative capture, analysis, and structured response within NDIS provider context",
+          "common_operations": [
+            "incident_creation",
+            "narrative_collection",
+            "analysis_workflow",
+            "company_scoped_reporting"
+          ],
+          "security_model": "Company-scoped data isolation with workflow-based access control",
+          "integration_points": [
+            "Multi-phase narratives",
+            "AI analysis pipeline",
+            "Clarification questions",
+            "Classifications"
+          ]
+        },
+        "relationships": {
+          "incoming": [
+            {
+              "table": "users",
+              "type": "many_to_one",
+              "field": "created_by",
+              "purpose": "Reference to users for created_by association"
+            }
+          ],
+          "outgoing": []
+        },
+        "key_fields": [
+          {
+            "name": "company_id",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Multi-tenant isolation",
+            "purpose": "Entity association and referential integrity"
+          },
+          {
+            "name": "reporter_name",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "participant_name",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "event_date_time",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "location",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "capture_status",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "analysis_status",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "overall_status",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "created_at",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "purpose": "Audit trail and temporal tracking"
+          },
+          {
+            "name": "created_by",
+            "type": "id<users>",
+            "optional": false,
+            "constraints": [
+              "foreign_key"
+            ],
+            "description": "Temporarily optional for seed data - should be required in production",
+            "purpose": "Audit trail and temporal tracking"
+          },
+          {
+            "name": "updated_at",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "purpose": "Audit trail and temporal tracking"
+          },
+          {
+            "name": "narrative_hash",
+            "type": "string",
+            "optional": false,
+            "constraints": [],
+            "purpose": "Content integrity and deduplication"
+          },
+          {
+            "name": "questions_generated",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "narrative_enhanced",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "analysis_generated",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          }
+        ],
+        "access_patterns": [
+          {
+            "pattern": "by_company",
+            "index": "by_company",
+            "frequency": "high",
+            "description": "Multi-tenant data isolation and scoping"
+          },
+          {
+            "pattern": "by_status",
+            "index": "by_status",
+            "frequency": "medium",
+            "description": "Workflow management and temporal queries"
+          },
+          {
+            "pattern": "by_created",
+            "index": "by_created",
+            "frequency": "medium",
+            "description": "Workflow management and temporal queries"
+          }
+        ]
+      },
+      {
+        "name": "incident_narratives",
+        "category": "incident_management",
+        "ai_context": {
+          "business_meaning": "Multi-phase incident narratives with original user content and AI-enhanced versions",
+          "common_operations": [
+            "narrative_capture",
+            "ai_enhancement",
+            "consolidation",
+            "version_tracking"
+          ],
+          "security_model": "Incident-level access control with narrative versioning",
+          "integration_points": [
+            "Incident workflow",
+            "AI analysis input",
+            "Clarification context"
+          ]
+        },
+        "relationships": {
+          "incoming": [],
+          "outgoing": []
+        },
+        "key_fields": [
+          {
+            "name": "incident_id",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Reference to parent incident",
+            "purpose": "Entity association and referential integrity"
+          },
+          {
+            "name": "before_event",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Pre-incident circumstances"
+          },
+          {
+            "name": "during_event",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Incident occurrence"
+          },
+          {
+            "name": "end_event",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Incident resolution"
+          },
+          {
+            "name": "post_event",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Post-incident support"
+          },
+          {
+            "name": "before_event_extra",
+            "type": "string",
+            "optional": false,
+            "constraints": [],
+            "description": "AI-enhanced before narrative"
+          },
+          {
+            "name": "during_event_extra",
+            "type": "string",
+            "optional": false,
+            "constraints": [],
+            "description": "AI-enhanced during narrative"
+          },
+          {
+            "name": "end_event_extra",
+            "type": "string",
+            "optional": false,
+            "constraints": [],
+            "description": "AI-enhanced end narrative"
+          },
+          {
+            "name": "post_event_extra",
+            "type": "string",
+            "optional": false,
+            "constraints": [],
+            "description": "AI-enhanced post narrative"
+          },
+          {
+            "name": "consolidated_narrative",
+            "type": "string",
+            "optional": false,
+            "constraints": [],
+            "description": "Combined narrative for AI analysis"
+          },
+          {
+            "name": "created_at",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "purpose": "Audit trail and temporal tracking"
+          },
+          {
+            "name": "updated_at",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "purpose": "Audit trail and temporal tracking"
+          },
+          {
+            "name": "enhanced_at",
+            "type": "number",
+            "optional": false,
+            "constraints": [],
+            "description": "When AI enhancement was completed"
+          },
+          {
+            "name": "version",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Version number for change tracking"
+          }
+        ],
+        "access_patterns": [
+          {
+            "pattern": "by_incident",
+            "index": "by_incident",
+            "frequency": "high",
+            "description": "Multi-tenant data isolation and scoping"
+          },
+          {
+            "pattern": "by_updated",
+            "index": "by_updated",
+            "frequency": "medium",
+            "description": "Query pattern using updated_at"
+          }
+        ]
+      },
+      {
+        "name": "clarification_questions",
+        "category": "incident_management",
+        "ai_context": {
+          "business_meaning": "AI-generated questions to elicit additional narrative details from users",
+          "common_operations": [
+            "question_generation",
+            "phase_organization",
+            "active_management"
+          ],
+          "security_model": "Incident-scoped with AI generation tracking",
+          "integration_points": [
+            "Narrative analysis",
+            "User responses",
+            "AI prompt system"
+          ]
+        },
+        "relationships": {
+          "incoming": [],
+          "outgoing": []
+        },
+        "key_fields": [
+          {
+            "name": "incident_id",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Reference to parent incident",
+            "purpose": "Entity association and referential integrity"
+          },
+          {
+            "name": "question_id",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Unique question identifier",
+            "purpose": "Entity association and referential integrity"
+          },
+          {
+            "name": "phase",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "question_text",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "The actual question"
+          },
+          {
+            "name": "question_order",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Display order within phase"
+          },
+          {
+            "name": "generated_at",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "When question was generated"
+          },
+          {
+            "name": "ai_model",
+            "type": "string",
+            "optional": false,
+            "constraints": [],
+            "description": "AI model used for generation"
+          },
+          {
+            "name": "prompt_version",
+            "type": "string",
+            "optional": false,
+            "constraints": [],
+            "description": "Version of prompt used"
+          },
+          {
+            "name": "is_active",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Whether question is currently active"
+          }
+        ],
+        "access_patterns": [
+          {
+            "pattern": "by_incident",
+            "index": "by_incident",
+            "frequency": "high",
+            "description": "Multi-tenant data isolation and scoping"
+          },
+          {
+            "pattern": "by_incident_phase",
+            "index": "by_incident_phase",
+            "frequency": "high",
+            "description": "Multi-tenant data isolation and scoping"
+          },
+          {
+            "pattern": "by_generated",
+            "index": "by_generated",
+            "frequency": "medium",
+            "description": "Query pattern using generated_at"
+          }
+        ]
+      },
+      {
+        "name": "clarification_answers",
+        "category": "incident_management",
+        "ai_context": {
+          "business_meaning": "User responses to AI-generated clarification questions for narrative enhancement",
+          "common_operations": [
+            "answer_collection",
+            "completeness_tracking",
+            "quality_metrics"
+          ],
+          "security_model": "Question-scoped with user attribution",
+          "integration_points": [
+            "Clarification questions",
+            "Narrative enhancement",
+            "Analysis input"
+          ]
+        },
+        "relationships": {
+          "incoming": [
+            {
+              "table": "users",
+              "type": "many_to_one",
+              "field": "answered_by",
+              "purpose": "Reference to users for answered_by association"
+            }
+          ],
+          "outgoing": []
+        },
+        "key_fields": [
+          {
+            "name": "incident_id",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Reference to parent incident",
+            "purpose": "Entity association and referential integrity"
+          },
+          {
+            "name": "question_id",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Reference to clarification question",
+            "purpose": "Entity association and referential integrity"
+          },
+          {
+            "name": "answer_text",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "User's answer content"
+          },
+          {
+            "name": "phase",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "answered_at",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "When answer was provided"
+          },
+          {
+            "name": "answered_by",
+            "type": "id<users>",
+            "optional": false,
+            "constraints": [
+              "foreign_key"
+            ],
+            "description": "Who provided the answer - temporarily optional"
+          },
+          {
+            "name": "updated_at",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Last modification",
+            "purpose": "Audit trail and temporal tracking"
+          },
+          {
+            "name": "is_complete",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Whether answer is considered complete"
+          },
+          {
+            "name": "character_count",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Length of answer"
+          },
+          {
+            "name": "word_count",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Word count for analysis"
+          }
+        ],
+        "access_patterns": [
+          {
+            "pattern": "by_incident",
+            "index": "by_incident",
+            "frequency": "high",
+            "description": "Multi-tenant data isolation and scoping"
+          },
+          {
+            "pattern": "by_incident_phase",
+            "index": "by_incident_phase",
+            "frequency": "high",
+            "description": "Multi-tenant data isolation and scoping"
+          },
+          {
+            "pattern": "by_question",
+            "index": "by_question",
+            "frequency": "medium",
+            "description": "Query pattern using question_id"
+          },
+          {
+            "pattern": "by_answered",
+            "index": "by_answered",
+            "frequency": "medium",
+            "description": "Query pattern using answered_at"
+          }
+        ]
+      },
+      {
+        "name": "incident_analysis",
+        "category": "incident_management",
+        "ai_context": {
+          "business_meaning": "AI-powered analysis of incident contributing conditions with user review capability",
+          "common_operations": [
+            "ai_analysis_generation",
+            "user_review",
+            "content_editing",
+            "version_control"
+          ],
+          "security_model": "Incident-level with analysis workflow control",
+          "integration_points": [
+            "Incident data",
+            "AI prompts",
+            "Classification system"
+          ]
+        },
+        "relationships": {
+          "incoming": [
+            {
+              "table": "users",
+              "type": "many_to_one",
+              "field": "analyzed_by",
+              "purpose": "Reference to users for analyzed_by association"
+            }
+          ],
+          "outgoing": []
+        },
+        "key_fields": [
+          {
+            "name": "incident_id",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Reference to parent incident",
+            "purpose": "Entity association and referential integrity"
+          },
+          {
+            "name": "contributing_conditions",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "AI-generated + user-edited analysis"
+          },
+          {
+            "name": "conditions_original",
+            "type": "string",
+            "optional": false,
+            "constraints": [],
+            "description": "Original AI-generated content"
+          },
+          {
+            "name": "conditions_edited",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Whether user modified AI content"
+          },
+          {
+            "name": "analyzed_at",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "When analysis was performed"
+          },
+          {
+            "name": "analyzed_by",
+            "type": "id<users>",
+            "optional": false,
+            "constraints": [
+              "foreign_key"
+            ],
+            "description": "Who performed the analysis - temporarily optional"
+          },
+          {
+            "name": "updated_at",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Last modification",
+            "purpose": "Audit trail and temporal tracking"
+          },
+          {
+            "name": "ai_analysis_prompt",
+            "type": "string",
+            "optional": false,
+            "constraints": [],
+            "description": "Prompt used for AI analysis"
+          },
+          {
+            "name": "ai_model",
+            "type": "string",
+            "optional": false,
+            "constraints": [],
+            "description": "AI model used"
+          },
+          {
+            "name": "ai_confidence",
+            "type": "number",
+            "optional": false,
+            "constraints": [],
+            "description": "AI confidence score (0-1)"
+          },
+          {
+            "name": "ai_processing_time",
+            "type": "number",
+            "optional": false,
+            "constraints": [],
+            "description": "Time taken for AI analysis"
+          },
+          {
+            "name": "analysis_status",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "revision_count",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Number of times analysis was revised"
+          },
+          {
+            "name": "total_edit_time",
+            "type": "number",
+            "optional": false,
+            "constraints": [],
+            "description": "Total time spent editing"
+          }
+        ],
+        "access_patterns": [
+          {
+            "pattern": "by_incident",
+            "index": "by_incident",
+            "frequency": "high",
+            "description": "Multi-tenant data isolation and scoping"
+          },
+          {
+            "pattern": "by_analyzed",
+            "index": "by_analyzed",
+            "frequency": "medium",
+            "description": "Query pattern using analyzed_at"
+          },
+          {
+            "pattern": "by_analyzer",
+            "index": "by_analyzer",
+            "frequency": "medium",
+            "description": "Query pattern using analyzed_by"
+          },
+          {
+            "pattern": "by_status",
+            "index": "by_status",
+            "frequency": "medium",
+            "description": "Workflow management and temporal queries"
+          }
+        ]
+      },
+      {
+        "name": "incident_classifications",
+        "category": "incident_management",
+        "ai_context": {
+          "business_meaning": "Structured categorization and severity assessment of incidents",
+          "common_operations": [
+            "type_classification",
+            "severity_assessment",
+            "evidence_tracking",
+            "user_validation"
+          ],
+          "security_model": "Analysis-scoped with classification confidence tracking",
+          "integration_points": [
+            "Analysis results",
+            "AI confidence scoring",
+            "User review workflow"
+          ]
+        },
+        "relationships": {
+          "incoming": [
+            {
+              "table": "users",
+              "type": "many_to_one",
+              "field": "classified_by",
+              "purpose": "Reference to users for classified_by association"
+            }
+          ],
+          "outgoing": []
+        },
+        "key_fields": [
+          {
+            "name": "incident_id",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Reference to parent incident",
+            "purpose": "Entity association and referential integrity"
+          },
+          {
+            "name": "analysis_id",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Reference to analysis record",
+            "purpose": "Entity association and referential integrity"
+          },
+          {
+            "name": "classification_id",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Unique classification identifier",
+            "purpose": "Entity association and referential integrity"
+          },
+          {
+            "name": "incident_type",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "supporting_evidence",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Evidence supporting this classification"
+          },
+          {
+            "name": "severity",
+            "type": "unknown",
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "confidence_score",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "AI confidence in classification (0-1)"
+          },
+          {
+            "name": "user_reviewed",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Whether user reviewed AI classification"
+          },
+          {
+            "name": "user_modified",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Whether user modified AI classification"
+          },
+          {
+            "name": "review_notes",
+            "type": "string",
+            "optional": false,
+            "constraints": [],
+            "description": "User notes on classification"
+          },
+          {
+            "name": "created_at",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "purpose": "Audit trail and temporal tracking"
+          },
+          {
+            "name": "updated_at",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "purpose": "Audit trail and temporal tracking"
+          },
+          {
+            "name": "classified_by",
+            "type": "id<users>",
+            "optional": false,
+            "constraints": [
+              "foreign_key"
+            ],
+            "description": "Who classified/reviewed - temporarily optional"
+          },
+          {
+            "name": "ai_generated",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Whether AI-generated or user-created"
+          },
+          {
+            "name": "ai_model",
+            "type": "string",
+            "optional": false,
+            "constraints": [],
+            "description": "AI model used for generation"
+          },
+          {
+            "name": "original_ai_classification",
+            "type": "string",
+            "optional": false,
+            "constraints": [],
+            "description": "Original AI classification"
+          }
+        ],
+        "access_patterns": [
+          {
+            "pattern": "by_incident",
+            "index": "by_incident",
+            "frequency": "high",
+            "description": "Multi-tenant data isolation and scoping"
+          },
+          {
+            "pattern": "by_analysis",
+            "index": "by_analysis",
+            "frequency": "medium",
+            "description": "Query pattern using analysis_id"
+          },
+          {
+            "pattern": "by_type",
+            "index": "by_type",
+            "frequency": "medium",
+            "description": "Query pattern using incident_type"
+          },
+          {
+            "pattern": "by_severity",
+            "index": "by_severity",
+            "frequency": "medium",
+            "description": "Query pattern using severity"
+          },
+          {
+            "pattern": "by_created",
+            "index": "by_created",
+            "frequency": "medium",
+            "description": "Workflow management and temporal queries"
+          }
+        ]
+      },
+      {
+        "name": "ai_prompts",
+        "category": "ai_prompts_system",
+        "ai_context": {
+          "business_meaning": "Centralized repository of versioned AI prompts with usage analytics",
+          "common_operations": [
+            "prompt_versioning",
+            "performance_tracking",
+            "workflow_organization"
+          ],
+          "security_model": "System-wide with version control and usage monitoring",
+          "integration_points": [
+            "All AI workflows",
+            "Performance analytics",
+            "Schema validation"
+          ]
+        },
+        "relationships": {
+          "incoming": [
+            {
+              "table": "users",
+              "type": "many_to_one",
+              "field": "created_by",
+              "purpose": "Reference to users for created_by association"
+            }
+          ],
+          "outgoing": []
+        },
+        "key_fields": [
+          {
+            "name": "prompt_name",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Identifier (e.g., \"generate_clarification_questions\")"
+          },
+          {
+            "name": "prompt_version",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "Version number (e.g., \"v1.2.0\")"
+          },
+          {
+            "name": "prompt_template",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "description": "The actual prompt template"
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "optional": false,
+            "constraints": [],
+            "description": "Human-readable description"
+          },
+          {
+            "name": "input_schema",
+            "type": "string",
+            "optional": false,
+            "constraints": [],
+            "description": "JSON schema for expected inputs"
+          },
+          {
+            "name": "output_schema",
+            "type": "string",
+            "optional": false,
+            "constraints": [],
+            "description": "JSON schema for expected outputs"
+          },
+          {
+            "name": "workflow_step",
+            "type": "string",
+            "optional": false,
+            "constraints": [],
+            "description": "Which workflow step uses this prompt"
+          },
+          {
+            "name": "subsystem",
+            "type": "string",
+            "optional": false,
+            "constraints": [],
+            "description": "\"incidents\", \"chat\", etc."
+          },
+          {
+            "name": "ai_model",
+            "type": "string",
+            "optional": false,
+            "constraints": [],
+            "description": "Recommended AI model"
+          },
+          {
+            "name": "max_tokens",
+            "type": "number",
+            "optional": false,
+            "constraints": [],
+            "description": "Token limit for responses"
+          },
+          {
+            "name": "temperature",
+            "type": "number",
+            "optional": false,
+            "constraints": [],
+            "description": "AI temperature setting"
+          },
+          {
+            "name": "is_active",
+            "type": "boolean",
+            "optional": false,
+            "constraints": [],
+            "description": "Whether this version is currently active"
+          },
+          {
+            "name": "created_at",
+            "type": "unknown",
+            "optional": false,
+            "constraints": [],
+            "purpose": "Audit trail and temporal tracking"
+          },
+          {
+            "name": "created_by",
+            "type": "id<users>",
+            "optional": false,
+            "constraints": [
+              "foreign_key"
+            ],
+            "description": "Temporarily optional for seed data - should be required in production",
+            "purpose": "Audit trail and temporal tracking"
+          },
+          {
+            "name": "replaced_at",
+            "type": "number",
+            "optional": false,
+            "constraints": [],
+            "description": "When this version was replaced"
+          },
+          {
+            "name": "replaced_by",
+            "type": "string",
+            "optional": false,
+            "constraints": [],
+            "description": "Which version replaced this"
+          },
+          {
+            "name": "usage_count",
+            "type": "number",
+            "optional": false,
+            "constraints": [],
+            "description": "How many times this prompt was used"
+          },
+          {
+            "name": "average_response_time",
+            "type": "number",
+            "optional": false,
+            "constraints": [],
+            "description": "Average AI response time"
+          },
+          {
+            "name": "success_rate",
+            "type": "number",
+            "optional": false,
+            "constraints": [],
+            "description": "Success rate (0-1)"
+          }
+        ],
+        "access_patterns": [
+          {
+            "pattern": "by_name",
+            "index": "by_name",
+            "frequency": "medium",
+            "description": "Query pattern using prompt_name"
+          },
+          {
+            "pattern": "by_name_version",
+            "index": "by_name_version",
+            "frequency": "medium",
+            "description": "Query pattern using prompt_name, prompt_version"
+          },
+          {
+            "pattern": "by_active",
+            "index": "by_active",
+            "frequency": "medium",
+            "description": "Query pattern using is_active"
+          },
+          {
+            "pattern": "by_workflow",
+            "index": "by_workflow",
+            "frequency": "medium",
+            "description": "Query pattern using workflow_step"
+          },
+          {
+            "pattern": "by_subsystem",
+            "index": "by_subsystem",
+            "frequency": "medium",
+            "description": "Query pattern using subsystem"
+          }
+        ]
+      }
+    ],
+    "system_integrations": {
+      "authentication": {
+        "provider": "BetterAuth",
+        "adapter": "Convex adapter",
+        "features": [
+          "Email/password authentication",
+          "OAuth provider integration",
+          "Session management",
+          "Password reset workflows",
+          "Multi-tenant user isolation"
+        ]
+      },
+      "multi_tenancy": {
+        "isolation_strategy": "Company-based data boundaries",
+        "routing_pattern": "Slug-based URL routing",
+        "access_control": "Role-based permissions within company scope"
+      },
+      "incident_management": {
+        "workflow_phases": [
+          "capture",
+          "analysis",
+          "classification"
+        ],
+        "narrative_phases": [
+          "before_event",
+          "during_event",
+          "end_event",
+          "post_event"
+        ],
+        "ai_integration": "Multi-step analysis pipeline with clarification loops"
+      },
+      "ai_system": {
+        "prompt_management": "Centralized versioned prompts",
+        "knowledge_base": "Hybrid Convex/Vectorize storage",
+        "conversation_tracking": "Session-based with usage analytics"
+      }
+    },
+    "ai_development_patterns": {
+      "context_injection": {
+        "user_context": "Authentication state, role, and company association from users table",
+        "company_context": "Multi-tenant boundaries and company-specific data from companies table",
+        "incident_context": "Multi-phase narratives and analysis pipeline state",
+        "ai_context": "Prompt versioning and performance tracking",
+        "knowledge_context": "Document chunks and vector metadata"
+      },
+      "access_control": {
+        "company_isolation": "All queries scoped by company_id for data isolation",
+        "role_based_permissions": "Hierarchical role system with company-boundary enforcement",
+        "feature_gating": "has_llm_access flag for AI feature control"
+      },
+      "workflow_patterns": {
+        "incident_workflow": "Multi-phase capture → AI analysis → human review cycle",
+        "ai_enhancement": "Original content + AI suggestions + user edits pattern",
+        "prompt_evolution": "Versioned prompts with performance tracking and replacement"
+      }
+    },
+    "query_patterns": {
+      "high_frequency": [
+        {
+          "table": "companies",
+          "pattern": "Company resolution by slug for multi-tenant routing",
+          "index": "by_slug",
+          "optimization": "Essential for tenant identification"
+        },
+        {
+          "table": "users",
+          "pattern": "Authentication lookup by email",
+          "index": "by_email",
+          "optimization": "Critical for login performance"
+        },
+        {
+          "table": "incidents",
+          "pattern": "Company-scoped incident dashboard queries",
+          "index": "by_company",
+          "optimization": "Primary incident management interface"
+        }
+      ],
+      "medium_frequency": [
+        {
+          "table": "incident_narratives",
+          "pattern": "Incident narrative retrieval and updates",
+          "index": "by_incident",
+          "optimization": "Narrative workflow management"
+        },
+        {
+          "table": "clarification_questions",
+          "pattern": "Phase-specific question generation and management",
+          "index": "by_incident_phase",
+          "optimization": "AI-driven clarification workflows"
+        },
+        {
+          "table": "ai_prompts",
+          "pattern": "Active prompt lookup by workflow step",
+          "index": "by_workflow",
+          "optimization": "AI system prompt resolution"
+        }
+      ]
+    }
+  }
+}
