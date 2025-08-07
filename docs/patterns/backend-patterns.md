@@ -80,33 +80,214 @@ This document outlines established patterns for Convex backend development, API 
 
 ## Authentication & Authorization Patterns
 
-### Session Management
+### Role-Based Permission System Pattern
 
-**Context**: User authentication with Convex
+**Context**: Implementing hierarchical role-based access control with Convex
 **Implementation**:
 
-- Use Convex Auth for session handling
-- Store user context in functions
-- Validate permissions per operation
-- Handle unauthenticated states
+- Define clear role hierarchy with inheritance
+- Use centralized permission checking functions
+- Implement company-scoped permissions for multi-tenancy
+- Create comprehensive permission matrix for business logic validation
 
-**Example**: _(Will be populated from actual implementations)_
+**Example**:
+```typescript
+// Role definitions with hierarchy
+export const ROLES = {
+  SYSTEM_ADMIN: 'system_admin',
+  COMPANY_ADMIN: 'company_admin',
+  TEAM_LEAD: 'team_lead',
+  FRONTLINE_WORKER: 'frontline_worker',
+} as const;
 
-**Rationale**: Provides secure, scalable authentication
+// Permission checking pattern
+export const checkPermission = query({
+  args: {
+    sessionToken: v.string(),
+    permission: v.string(),
+    companyId: v.optional(v.id("companies")),
+    resourceId: v.optional(v.string()),
+  },
+  handler: async (ctx, { sessionToken, permission, companyId, resourceId }) => {
+    const session = await validateSession(ctx, sessionToken);
+    if (!session) return { allowed: false, reason: "Invalid session" };
 
-### Permission Checks
+    const user = await ctx.db.get(session.userId);
+    if (!user) return { allowed: false, reason: "User not found" };
 
-**Context**: Authorization in Convex functions
+    // Company scope validation for multi-tenancy
+    if (companyId && user.company_id !== companyId) {
+      return { allowed: false, reason: "Company access denied" };
+    }
+
+    // Check role-based permissions with hierarchy
+    const userPermissions = await getUserPermissions(ctx, user.role, user.company_id);
+    const allowed = userPermissions.includes(permission);
+
+    return { 
+      allowed, 
+      reason: allowed ? "Permission granted" : "Insufficient permissions",
+      userRole: user.role 
+    };
+  },
+});
+
+// Usage in protected functions
+export const createIncident = mutation({
+  args: { sessionToken: v.string(), /* other args */ },
+  handler: async (ctx, { sessionToken, ...args }) => {
+    const permissionCheck = await ctx.db.query(api.permissions.checkPermission, {
+      sessionToken,
+      permission: "create_incident",
+    });
+    
+    if (!permissionCheck.allowed) {
+      throw new ConvexError(permissionCheck.reason);
+    }
+    
+    // Proceed with incident creation...
+  },
+});
+```
+
+**Rationale**: 
+- Hierarchical roles reduce permission complexity while maintaining flexibility
+- Company scoping enables secure multi-tenancy
+- Centralized permission checking ensures consistency and auditability
+- Clear error messages improve debugging and user experience
+
+### Enhanced Session Management Pattern
+
+**Context**: Secure session handling with workflow state persistence
 **Implementation**:
 
-- Check user permissions early in functions
-- Use consistent permission patterns
-- Return appropriate errors for unauthorized access
-- Document permission requirements
+- Generate cryptographically secure session tokens
+- Implement session expiration and refresh mechanisms
+- Store workflow state for recovery after interruptions
+- Limit concurrent sessions per user for security
 
-**Example**: _(Will be populated from actual implementations)_
+**Example**:
+```typescript
+// Session creation with security features
+export const createSession = mutation({
+  args: {
+    userId: v.id("users"),
+    deviceInfo: v.optional(v.string()),
+    workflowState: v.optional(v.any()),
+  },
+  handler: async (ctx, { userId, deviceInfo, workflowState }) => {
+    // Generate secure session token
+    const tokenBytes = new Uint8Array(32);
+    crypto.getRandomValues(tokenBytes);
+    const sessionToken = Array.from(tokenBytes, byte => 
+      byte.toString(16).padStart(2, '0')).join('');
 
-**Rationale**: Ensures consistent security across all operations
+    // Enforce session limits (max 5 per user)
+    const existingSessions = await ctx.db
+      .query("userSessions")
+      .withIndex("by_user", q => q.eq("userId", userId))
+      .collect();
+    
+    if (existingSessions.length >= 5) {
+      // Remove oldest session
+      const oldestSession = existingSessions
+        .sort((a, b) => a.createdAt - b.createdAt)[0];
+      await ctx.db.delete(oldestSession._id);
+    }
+
+    // Create session with metadata
+    const sessionId = await ctx.db.insert("userSessions", {
+      userId,
+      sessionToken,
+      deviceInfo: deviceInfo || "unknown",
+      workflowState: workflowState || {},
+      createdAt: Date.now(),
+      expiresAt: Date.now() + (24 * 60 * 60 * 1000), // 24 hours
+      isActive: true,
+    });
+
+    return { sessionToken, expiresAt: Date.now() + (24 * 60 * 60 * 1000) };
+  },
+});
+
+// Session validation with automatic cleanup
+export const validateSession = async (ctx: any, sessionToken: string) => {
+  const session = await ctx.db
+    .query("userSessions")
+    .withIndex("by_token", q => q.eq("sessionToken", sessionToken))
+    .first();
+
+  if (!session || !session.isActive) return null;
+  
+  // Check expiration
+  if (session.expiresAt < Date.now()) {
+    await ctx.db.patch(session._id, { isActive: false });
+    return null;
+  }
+
+  return session;
+};
+```
+
+**Rationale**:
+- Cryptographic randomness prevents session token prediction
+- Session limits prevent resource exhaustion attacks
+- Workflow state persistence improves user experience during interruptions
+- Automatic cleanup maintains database hygiene
+
+### Permission Matrix Validation Pattern
+
+**Context**: Business logic validation through comprehensive permission testing
+**Implementation**:
+
+- Define complete permission matrix for all role combinations
+- Create automated validation through testing interfaces
+- Implement real-time permission checking with user feedback
+- Document business rules alongside technical implementation
+
+**Example**:
+```typescript
+// Complete permission matrix definition
+const PERMISSION_MATRIX = {
+  [ROLES.SYSTEM_ADMIN]: [
+    'create_incident', 'edit_own_incident_capture', 'view_team_incidents',
+    'view_company_incidents', 'perform_analysis', 'manage_users',
+    'invite_users', 'view_user_profiles', 'system_configuration',
+    'company_configuration', 'access_llm_features', 'view_audit_logs',
+    'view_security_logs'
+  ],
+  [ROLES.COMPANY_ADMIN]: [
+    'create_incident', 'edit_own_incident_capture', 'view_team_incidents',
+    'view_company_incidents', 'perform_analysis', 'manage_users',
+    'invite_users', 'view_user_profiles', 'company_configuration',
+    'access_llm_features', 'view_audit_logs'
+  ],
+  [ROLES.TEAM_LEAD]: [
+    'create_incident', 'view_team_incidents', 'perform_analysis',
+    'view_user_profiles', 'access_llm_features'
+  ],
+  [ROLES.FRONTLINE_WORKER]: [
+    'create_incident', 'edit_own_incident_capture'
+  ],
+} as const;
+
+// Business rule documentation within code
+/**
+ * BUSINESS RULE: "Democratic Creation, Controlled Editing"
+ * - Anyone can CREATE incidents (democratic incident reporting)
+ * - Once created, incidents become READ-ONLY for most users (data integrity)
+ * - Only specific administrative roles can EDIT (controlled modification)
+ * 
+ * Example: Team Leaders can CREATE incidents but cannot EDIT their own incidents
+ * This prevents accidental changes while maintaining audit trail integrity.
+ */
+```
+
+**Rationale**:
+- Explicit permission matrix prevents authorization bugs
+- Business rule documentation maintains institutional knowledge
+- Testing interfaces enable non-technical validation
+- Real-time feedback helps users understand system boundaries
 
 ## Error Handling Patterns
 
