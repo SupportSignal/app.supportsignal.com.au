@@ -513,9 +513,9 @@ When asked about testing or testing-related documentation:
    - **Writing tests**: Use `testing-patterns.md`
    - **Setup/standards**: Reference `test-strategy-and-standards.md`
 
-2. **Functional/UAT Testing**: Only include UAT files from `docs/testing/uat/` when specifically requested for functional testing
+2. **Functional/Story Acceptance Testing**: Only include files from `docs/testing/stories/` when specifically requested for functional testing
 
-3. **Key principle**: Technical testing docs are for developers writing/debugging tests. UAT docs are for product validation. Don't mix contexts unless explicitly asked.
+3. **Key principle**: Technical testing docs are for developers writing/debugging tests. Story acceptance test docs are for story validation. Don't mix contexts unless explicitly asked.
 
 ## File Creation Discovery Protocol
 
@@ -529,12 +529,12 @@ Before creating ANY new files, Claude MUST follow this discovery protocol:
 2. **Check BMAD Methodology**
    - Look for `.bmad-core/tasks/` directory for task-specific guidance
    - Check for templates in `.bmad-core/templates/`
-   - Follow established naming conventions (e.g., `uat-plan-{epic}.{story}.md`)
+   - Follow established naming conventions (e.g., `story-acceptance-test-{epic}.{story}.md`)
 
 3. **Verify File Placement**
    - Ensure new files follow existing documentation hierarchy
    - Update `docs/index.md` when adding new documentation
-   - Use established directory patterns (e.g., `docs/testing/` for UAT files)
+   - Use established directory patterns (e.g., `docs/testing/stories/` for story acceptance test files)
 
 This protocol prevents incorrect file placement and maintains project consistency.
 

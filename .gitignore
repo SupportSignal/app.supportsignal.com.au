@@ -140,3 +140,6 @@ test-coverage/
 
 # Gitleaks Security Reports
 security-audit.json
+
+# Integration Test Data Views
+integration-test-data-view.md

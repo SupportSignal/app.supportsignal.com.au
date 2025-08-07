@@ -18,27 +18,13 @@ This directory contains all testing-related documentation organized by purpose a
 
 ## For QA/Product (Functional Testing)
 
-**User acceptance testing and functional verification:**
+**Story acceptance testing and functional verification:**
 
-### Functional Test Plans
+### Story Acceptance Tests
 
-**Epic 1 - Platform Foundation:**
-- [Story 1.2 - Basic Next.js App Shell](uat/functional-test-plan-1.2.md)
-- [Story 1.4 - Convex Backend Integration](uat/functional-test-plan-1.4.md) 
-- [Story 1.5 - Authentication System](uat/functional-test-plan-1.5.md)
-- [Story 1.6 - User Dashboard](uat/functional-test-plan-1.6.md)
-- [Story 1.7 - GitHub OAuth](uat/functional-test-plan-1.7.md)
-- [Story 1.8 - Profile Management](uat/functional-test-plan-1.8.md)
-
-**Epic 2 - UI Toolkit & Component Showcase:**
-- [Story 2.1 - Integrate ShadCN/UI Library](uat/functional-test-plan-2.1.md)
-
-**Epic 3 - Resilient Real-time Logging:**
-- [Story 3.1 - Browser Log Capture Foundation](uat/functional-test-plan-3.1.md)
-- [Story 3.2 - Multi-System Log Ingestion & Correlation](uat/functional-test-plan-3.2.md)
-
-**Epic 4 - AI-Powered Chat Interface:**
-- [Story 4.2 - Knowledge Ingestion Service](uat/functional-test-plan-4.2.md)
+**Epic 1 - SupportSignal Foundation:**
+- [Story 1.1 - Multi-Tenant Database Implementation](stories/story-acceptance-test-1.1.md)
+- [Story 1.2 - AI Service Integration](stories/story-acceptance-test-1.2.md)
 
 ## Testing Commands Reference
 
@@ -69,15 +55,7 @@ docs/testing/
 │   ├── test-strategy-and-standards.md
 │   ├── testing-patterns.md
 │   └── testing-infrastructure-lessons-learned.md
-└── uat/                       # Functional testing documentation  
-    ├── functional-test-plan-1.2.md
-    ├── functional-test-plan-1.4.md
-    ├── functional-test-plan-1.5.md
-    ├── functional-test-plan-1.6.md
-    ├── functional-test-plan-1.7.md
-    ├── functional-test-plan-1.8.md
-    ├── functional-test-plan-2.1.md
-    ├── functional-test-plan-3.1.md
-    ├── functional-test-plan-3.2.md
-    └── functional-test-plan-4.2.md
+└── stories/                    # Story acceptance testing documentation  
+    ├── story-acceptance-test-1.1.md
+    └── story-acceptance-test-1.2.md
 ```

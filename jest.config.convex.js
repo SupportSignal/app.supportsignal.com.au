@@ -1,9 +1,9 @@
 // Jest configuration for Convex tests (run from project root)
-module.exports = {
+export default {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  roots: ['<rootDir>/convex-tests'],
-  testMatch: ['convex-tests/**/*.test.ts'],
+  roots: ['<rootDir>/tests/convex'],
+  testMatch: ['tests/convex/**/*.test.ts'],
   collectCoverageFrom: [
     'apps/convex/**/*.ts',
     '!apps/convex/**/*.d.ts',
@@ -25,11 +25,13 @@ module.exports = {
   transform: {
     '^.+\\.ts$': 'ts-jest',
   },
-  // Allow imports from apps/convex
+  // Allow imports from apps/convex using @/ aliases
   moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/apps/convex/$1',
     '^../(.*)$': '<rootDir>/apps/convex/$1',
     '^../../(.*)$': '<rootDir>/apps/convex/$1',
   },
+  setupFilesAfterEnv: ['<rootDir>/tests/convex/setup.ts'],
   // Prevent watch mode from automatically starting
   watchman: false,
 };

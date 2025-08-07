@@ -68,6 +68,7 @@ export default {
 
   // Module name mapping for path aliases
   moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/apps/convex/$1',
     '^@convex/(.*)$': '<rootDir>/apps/convex/$1',
     '^@convex-tests/(.*)$': '<rootDir>/tests/convex/$1',
     '^@web/(.*)$': '<rootDir>/apps/web/$1',

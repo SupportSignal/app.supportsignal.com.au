@@ -310,6 +310,17 @@ export const getPromptAnalytics = query({
   },
 });
 
+// List all active prompts (alias for backward compatibility)
+export const listActivePrompts = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db
+      .query("ai_prompts")
+      .filter((q) => q.eq(q.field("is_active"), true))
+      .collect();
+  },
+});
+
 // Get prompt performance summary
 export const getPromptPerformanceSummary = query({
   args: { subsystem: v.optional(v.string()) },

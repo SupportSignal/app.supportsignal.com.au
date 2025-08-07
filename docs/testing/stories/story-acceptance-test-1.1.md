@@ -1,7 +1,7 @@
-# UAT Plan 1.1: Multi-Tenant Database Implementation
+# Story Acceptance Test 1.1: Multi-Tenant Database Implementation
 
 ## Overview
-User Acceptance Testing plan to verify Story 1.1 implementation of SupportSignal's multi-tenant incident management database foundation.
+Story Acceptance Testing plan to verify Story 1.1 implementation of SupportSignal's multi-tenant incident management database foundation.
 
 **Story**: Multi-Tenant Database Implementation  
 **Test Environment**: Development/Convex Dashboard  
@@ -330,7 +330,7 @@ User Acceptance Testing plan to verify Story 1.1 implementation of SupportSignal
 - Workflow status transitions work correctly
 - All CRUD operations function properly
 
-### Next Steps After UAT:
+### Next Steps After Story Acceptance Testing:
 - If all tests pass: Story 1.1 ready for production
 - If issues found: Document and prioritize fixes
 - Begin Story 1.2 planning (incident capture UI)

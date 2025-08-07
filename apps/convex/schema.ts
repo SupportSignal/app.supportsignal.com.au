@@ -393,4 +393,41 @@ export default defineSchema({
     .index("by_active", ["is_active"])
     .index("by_workflow", ["workflow_step"])
     .index("by_subsystem", ["subsystem"]),
+
+  // AI request/response logging for performance monitoring and debugging
+  ai_request_logs: defineTable({
+    // Request Identification
+    correlation_id: v.string(), // Unique identifier for tracing requests
+    operation: v.string(), // "generateClarificationQuestions", "enhanceNarrative", etc.
+    
+    // AI Service Details
+    model: v.string(), // "openai/gpt-4.1-nano", etc.
+    prompt_template: v.string(), // Name of prompt template used
+    
+    // Request/Response Data
+    input_data: v.any(), // Input parameters for the AI operation
+    output_data: v.optional(v.any()), // AI response data
+    
+    // Performance Metrics
+    processing_time_ms: v.number(), // Total processing time
+    tokens_used: v.optional(v.number()), // Tokens consumed by AI model
+    cost_usd: v.optional(v.number()), // Estimated cost in USD
+    
+    // Status & Error Handling
+    success: v.boolean(), // Whether operation completed successfully
+    error_message: v.optional(v.string()), // Error details if failed
+    
+    // Context & Attribution
+    user_id: v.optional(v.id("users")), // User who initiated the request
+    incident_id: v.optional(v.id("incidents")), // Related incident (if applicable)
+    
+    // Timestamps
+    created_at: v.number(), // When request was made
+  })
+    .index("by_correlation_id", ["correlation_id"])
+    .index("by_operation", ["operation"])
+    .index("by_created", ["created_at"])
+    .index("by_user", ["user_id"])
+    .index("by_incident", ["incident_id"])
+    .index("by_success", ["success"]),
 });
