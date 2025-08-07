@@ -20,7 +20,7 @@ export function VersionDebug() {
   );
 
   return (
-    <Card className="max-w-md mx-auto mt-8 border-blue-200">
+    <Card className="border-blue-200">
       <CardHeader>
         <CardTitle className="text-blue-800">Version System Debug</CardTitle>
       </CardHeader>

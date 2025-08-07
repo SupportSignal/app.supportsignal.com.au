@@ -289,6 +289,109 @@ export const createIncident = mutation({
 
 ---
 
+### Story 1.5: UI Design System Foundation
+
+**Priority**: HIGH  
+**Estimated Effort**: 3-4 days  
+**Dependencies**: Analysis of NDIS system screenshots and patterns
+
+#### Requirements
+Establish comprehensive UI design system and React component specifications based on proven patterns from the NDIS Assistant system, providing the foundation for both incident capture and analysis workflows.
+
+**Core Design System Elements**:
+
+##### Incident Management APIs
+- `incidents.create`: Create new incident with metadata validation
+- `incidents.getById`: Retrieve incident with user permission checking
+- `incidents.listByUser`: List incidents accessible to current user
+- `incidents.updateStatus`: Update workflow status with state validation
+- `incidents.delete`: Soft delete with audit trail preservation
+
+##### Narrative Management APIs
+- `narratives.create`: Initialize narrative content for new incident
+- `narratives.update`: Update narrative phase content with auto-save
+- `narratives.enhance`: Apply AI-enhanced content to narratives
+- `narratives.getConsolidated`: Retrieve complete narrative for analysis
+
+##### Analysis APIs
+- `analysis.create`: Initialize analysis workflow for incident
+- `analysis.update`: Update contributing conditions analysis
+- `analysis.generateClassifications`: Create AI-powered incident classifications
+- `analysis.complete`: Finalize analysis and mark incident complete
+
+##### User & Session APIs
+- `users.getCurrent`: Get current user profile and permissions
+- `sessions.updateWorkflowState`: Persist wizard step progress
+- `sessions.recoverState`: Restore user's workflow state after login
+
+#### Acceptance Criteria
+- [ ] All API endpoints implemented with proper TypeScript definitions
+- [ ] Input validation using Convex validators with meaningful error messages
+- [ ] Permission checking integrated into all queries and mutations
+- [ ] Real-time subscriptions for workflow handoffs and collaborative features
+- [ ] Comprehensive error handling with user-friendly messages
+- [ ] API documentation with examples for frontend integration
+
+#### Technical Pattern Example
+```typescript
+// Example: Incident creation with full validation and audit trail
+export const createIncident = mutation({
+  args: {
+    reporterName: v.string(),
+    participantName: v.string(),
+    eventDateTime: v.string(),
+    location: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Verify user permissions
+    const currentUser = await getCurrentUser(ctx);
+    if (!canCreateIncident(currentUser)) {
+      throw new ConvexError("Insufficient permissions to create incident");
+    }
+    
+    // Validate input data
+    validateIncidentMetadata(args);
+    
+    // Create incident record
+    const incidentId = await ctx.db.insert("incidents", {
+      ...args,
+      captureStatus: "draft",
+      analysisStatus: "not_started", 
+      overallStatus: "capture_pending",
+      createdAt: Date.now(),
+      createdBy: currentUser._id,
+      updatedAt: Date.now(),
+      questionsGenerated: false,
+      narrativeEnhanced: false,
+      analysisGenerated: false,
+    });
+    
+    // Initialize empty narrative structure
+    await ctx.db.insert("incidentNarratives", {
+      incidentId,
+      beforeEvent: "",
+      duringEvent: "", 
+      endEvent: "",
+      postEvent: "",
+      createdAt: Date.now(),
+    });
+    
+    // Log creation activity
+    await ctx.db.insert("activityLogs", {
+      userId: currentUser._id,
+      action: "incident_created",
+      resourceType: "incident",
+      resourceId: incidentId,
+      timestamp: Date.now(),
+    });
+    
+    return incidentId;
+  },
+});
+```
+
+---
+
 ## Epic Success Criteria
 
 ### Technical Validation
