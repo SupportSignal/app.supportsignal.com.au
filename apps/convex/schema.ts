@@ -26,14 +26,12 @@ export default defineSchema({
     email: v.string(),
     password: v.string(), // Required password field
     profile_image_url: v.optional(v.string()),
-    // Enhanced role hierarchy for SupportSignal (snake_case)
+    // Simplified role hierarchy for SupportSignal (snake_case)
     role: v.union(
       v.literal("system_admin"),
       v.literal("company_admin"), 
       v.literal("team_lead"),
-      v.literal("frontline_worker"),
-      v.literal("viewer"),
-      v.literal("support")
+      v.literal("frontline_worker")
     ),
     has_llm_access: v.optional(v.boolean()), // LLM access control flag
     // Multi-tenant company association

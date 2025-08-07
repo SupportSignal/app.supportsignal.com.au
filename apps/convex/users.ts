@@ -35,6 +35,7 @@ export const getCurrentUser = query({
       email: user.email,
       profile_image_url: user.profile_image_url,
       role: user.role,
+      has_llm_access: user.has_llm_access,
       _creationTime: user._creationTime,
     };
   },

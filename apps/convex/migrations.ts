@@ -192,7 +192,7 @@ export const setDefaultLLMAccess = mutation({
 export const migrateUserRoles = mutation({
   args: {},
   handler: async (ctx: MutationCtx) => {
-    console.log("🔄 Starting user role migration from 'user' to 'viewer'...");
+    console.log("🔄 Starting user role migration from 'user' to 'frontline_worker'...");
     
     // Get all users
     const users = await ctx.db.query("users").collect();
@@ -204,12 +204,12 @@ export const migrateUserRoles = mutation({
       try {
         // Check if user has the old "user" role
         if ((user.role as any) === "user") {
-          // Update to new "viewer" role (lowest permission level)
+          // Update to new "frontline_worker" role (lowest permission level)
           await ctx.db.patch(user._id, {
-            role: "viewer" as const
+            role: "frontline_worker" as const
           });
           
-          console.log(`✅ Migrated user ${user.email} from "user" to "viewer" role`);
+          console.log(`✅ Migrated user ${user.email} from "user" to "frontline_worker" role`);
           migratedCount++;
         }
       } catch (error) {
@@ -230,7 +230,7 @@ export const migrateUserRoles = mutation({
       migratedCount,
       totalUsers: users.length,
       errors,
-      message: `Successfully migrated ${migratedCount} users from "user" to "viewer" role`
+      message: `Successfully migrated ${migratedCount} users from "user" to "frontline_worker" role`
     };
   },
 });

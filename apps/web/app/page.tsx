@@ -45,6 +45,12 @@ export default function HomePage() {
                     Chat
                   </Link>
                   <Link
+                    href="/dashboard"
+                    className="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium"
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
                     href="/protected"
                     className="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium"
                   >

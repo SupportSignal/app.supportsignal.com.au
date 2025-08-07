@@ -11,99 +11,411 @@ import { v } from 'convex/values';
 import bcrypt from 'bcryptjs';
 import { api } from './_generated/api';
 import { ConvexError } from 'convex/values';
+import { ROLES } from './permissions';
+import { Id } from './_generated/dataModel';
 
-// User registration mutation
+// Password validation constants
+const PASSWORD_REQUIREMENTS = {
+  MIN_LENGTH: 8,
+  MAX_LENGTH: 128,
+  REQUIRE_UPPERCASE: true,
+  REQUIRE_LOWERCASE: true,
+  REQUIRE_NUMBERS: true,
+  REQUIRE_SPECIAL_CHARS: true,
+  SPECIAL_CHARS: '!@#$%^&*(),.?":{}|<>',
+} as const;
+
+// Security constants
+const SECURITY_CONFIG = {
+  MAX_LOGIN_ATTEMPTS: 5,
+  LOCKOUT_DURATION: 15 * 60 * 1000, // 15 minutes
+  BCRYPT_ROUNDS: 12, // Increased from 10 for better security
+} as const;
+
+// Account lockout tracking (in production, this would use a proper cache/database)
+const accountLockouts = new Map<string, { attempts: number; lockoutUntil?: number }>();
+
+/**
+ * Validate password strength according to security requirements
+ */
+function validatePassword(password: string): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+
+  if (password.length < PASSWORD_REQUIREMENTS.MIN_LENGTH) {
+    errors.push(`Password must be at least ${PASSWORD_REQUIREMENTS.MIN_LENGTH} characters long`);
+  }
+
+  if (password.length > PASSWORD_REQUIREMENTS.MAX_LENGTH) {
+    errors.push(`Password must not exceed ${PASSWORD_REQUIREMENTS.MAX_LENGTH} characters`);
+  }
+
+  if (PASSWORD_REQUIREMENTS.REQUIRE_UPPERCASE && !/[A-Z]/.test(password)) {
+    errors.push('Password must contain at least one uppercase letter');
+  }
+
+  if (PASSWORD_REQUIREMENTS.REQUIRE_LOWERCASE && !/[a-z]/.test(password)) {
+    errors.push('Password must contain at least one lowercase letter');
+  }
+
+  if (PASSWORD_REQUIREMENTS.REQUIRE_NUMBERS && !/\d/.test(password)) {
+    errors.push('Password must contain at least one number');
+  }
+
+  if (PASSWORD_REQUIREMENTS.REQUIRE_SPECIAL_CHARS) {
+    const specialCharsRegex = new RegExp(`[${PASSWORD_REQUIREMENTS.SPECIAL_CHARS.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}]`);
+    if (!specialCharsRegex.test(password)) {
+      errors.push(`Password must contain at least one special character (${PASSWORD_REQUIREMENTS.SPECIAL_CHARS})`);
+    }
+  }
+
+  // Common password patterns to avoid
+  if (/(.)\1{2,}/.test(password)) {
+    errors.push('Password must not contain three or more consecutive identical characters');
+  }
+
+  if (/123456|password|qwerty|admin/i.test(password)) {
+    errors.push('Password must not contain common patterns');
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+  };
+}
+
+/**
+ * Generate correlation ID for request tracing
+ */
+function generateCorrelationId(): string {
+  return Array.from(crypto.getRandomValues(new Uint8Array(16)))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+/**
+ * Check if account is locked out
+ */
+function isAccountLocked(email: string): boolean {
+  const lockoutInfo = accountLockouts.get(email);
+  if (!lockoutInfo) return false;
+
+  if (lockoutInfo.lockoutUntil && Date.now() < lockoutInfo.lockoutUntil) {
+    return true;
+  }
+
+  // Clear expired lockout
+  if (lockoutInfo.lockoutUntil && Date.now() >= lockoutInfo.lockoutUntil) {
+    accountLockouts.delete(email);
+  }
+
+  return false;
+}
+
+/**
+ * Track failed login attempt
+ */
+function trackFailedLogin(email: string): void {
+  const lockoutInfo = accountLockouts.get(email) || { attempts: 0 };
+  lockoutInfo.attempts += 1;
+
+  if (lockoutInfo.attempts >= SECURITY_CONFIG.MAX_LOGIN_ATTEMPTS) {
+    lockoutInfo.lockoutUntil = Date.now() + SECURITY_CONFIG.LOCKOUT_DURATION;
+  }
+
+  accountLockouts.set(email, lockoutInfo);
+}
+
+/**
+ * Clear failed login attempts on successful login
+ */
+function clearFailedLogins(email: string): void {
+  accountLockouts.delete(email);
+}
+
+/**
+ * Detect device type from user agent
+ */
+function detectDeviceType(userAgent?: string): string {
+  if (!userAgent) return 'unknown';
+  
+  const ua = userAgent.toLowerCase();
+  
+  if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
+    return 'mobile';
+  } else if (ua.includes('tablet') || ua.includes('ipad')) {
+    return 'tablet';
+  } else {
+    return 'desktop';
+  }
+}
+
+/**
+ * Log security events for audit trail
+ */
+async function logSecurityEvent(
+  ctx: QueryCtx | MutationCtx,
+  data: {
+    eventType: string;
+    userId?: Id<'users'>;
+    email?: string;
+    details: string;
+    correlationId: string;
+    ipAddress?: string;
+    userAgent?: string;
+  }
+) {
+  console.log('🛡️ SECURITY AUDIT', {
+    eventType: data.eventType,
+    userId: data.userId,
+    email: data.email,
+    details: data.details,
+    correlationId: data.correlationId,
+    ipAddress: data.ipAddress,
+    userAgent: data.userAgent,
+    timestamp: new Date().toISOString(),
+  });
+  
+  // In production, this would store to a dedicated security_audit_logs table
+  // with proper indexing for security monitoring and alerting
+}
+
+// Enhanced User registration mutation with security validation
 export const registerUser = mutation({
   args: {
     name: v.string(),
     email: v.string(),
     password: v.string(),
+    company_id: v.optional(v.id('companies')),
+    invitationToken: v.optional(v.string()),
+    userAgent: v.optional(v.string()),
+    ipAddress: v.optional(v.string()),
   },
-  handler: async (
-    ctx: MutationCtx,
-    args: { name: string; email: string; password: string }
-  ) => {
-    // Check if user already exists
-    const existingUser = await ctx.db
-      .query('users')
-      .withIndex('by_email', q => q.eq('email', args.email))
-      .first();
+  handler: async (ctx: MutationCtx, args) => {
+    const correlationId = generateCorrelationId();
 
-    if (existingUser) {
-      throw new Error('User with this email already exists');
+    try {
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(args.email)) {
+        throw new ConvexError('Invalid email format');
+      }
+
+      // Validate password strength
+      const passwordValidation = validatePassword(args.password);
+      if (!passwordValidation.valid) {
+        await logSecurityEvent(ctx, {
+          eventType: 'registration_failed_weak_password',
+          email: args.email,
+          details: `Password validation errors: ${passwordValidation.errors.join(', ')}`,
+          correlationId,
+          userAgent: args.userAgent,
+          ipAddress: args.ipAddress,
+        });
+        throw new ConvexError(`Password does not meet requirements: ${passwordValidation.errors.join(', ')}`);
+      }
+
+      // Check if user already exists
+      const existingUser = await ctx.db
+        .query('users')
+        .withIndex('by_email', q => q.eq('email', args.email.toLowerCase()))
+        .first();
+
+      if (existingUser) {
+        await logSecurityEvent(ctx, {
+          eventType: 'registration_failed_duplicate_email',
+          email: args.email,
+          details: 'Attempted to register with existing email',
+          correlationId,
+          userAgent: args.userAgent,
+          ipAddress: args.ipAddress,
+        });
+        throw new ConvexError('User with this email already exists');
+      }
+
+      // Hash the password with enhanced security
+      const hashedPassword = bcrypt.hashSync(args.password, SECURITY_CONFIG.BCRYPT_ROUNDS);
+
+      // Determine default role and company
+      let defaultRole = ROLES.FRONTLINE_WORKER;
+      let companyId = args.company_id;
+
+      // If invitation token provided, validate it and get role/company from invitation
+      if (args.invitationToken) {
+        // In production, this would validate invitation token and get role/company
+        console.log('📧 INVITATION TOKEN VALIDATION', {
+          token: args.invitationToken,
+          email: args.email,
+          correlationId,
+        });
+      }
+
+      // Create user account
+      const userId = await ctx.db.insert('users', {
+        name: args.name.trim(),
+        email: args.email.toLowerCase(),
+        password: hashedPassword,
+        role: defaultRole,
+        company_id: companyId,
+        has_llm_access: false, // Default to no LLM access
+      });
+
+      // Log successful registration
+      await logSecurityEvent(ctx, {
+        eventType: 'user_registered',
+        userId,
+        email: args.email,
+        details: `New user registered with role: ${defaultRole}`,
+        correlationId,
+        userAgent: args.userAgent,
+        ipAddress: args.ipAddress,
+      });
+
+      return { 
+        success: true,
+        userId, 
+        email: args.email, 
+        name: args.name,
+        role: defaultRole,
+        correlationId,
+      };
+    } catch (error) {
+      console.error('Registration error:', error);
+      if (error instanceof ConvexError) {
+        throw error;
+      }
+      throw new ConvexError(`Registration failed: ${(error as Error).message}`);
     }
-
-    // Hash the password before storing (using sync version for Convex)
-    const saltRounds = 10;
-    const hashedPassword = bcrypt.hashSync(args.password, saltRounds);
-
-    const userId = await ctx.db.insert('users', {
-      name: args.name,
-      email: args.email,
-      password: hashedPassword,
-      role: 'viewer',
-    });
-
-    return { userId, email: args.email, name: args.name };
   },
 });
 
-// User login mutation (simplified)
+// Enhanced User login mutation with security measures
 export const loginUser = mutation({
   args: {
     email: v.string(),
     password: v.string(),
     rememberMe: v.optional(v.boolean()),
+    userAgent: v.optional(v.string()),
+    ipAddress: v.optional(v.string()),
   },
-  handler: async (
-    ctx: MutationCtx,
-    args: { email: string; password: string; rememberMe?: boolean }
-  ) => {
-    const user = await ctx.db
-      .query('users')
-      .withIndex('by_email', q => q.eq('email', args.email))
-      .first();
+  handler: async (ctx: MutationCtx, args) => {
+    const correlationId = generateCorrelationId();
+    const email = args.email.toLowerCase();
 
-    if (!user) {
-      throw new Error('Invalid email or password');
+    try {
+      // Check account lockout
+      if (isAccountLocked(email)) {
+        await logSecurityEvent(ctx, {
+          eventType: 'login_failed_account_locked',
+          email,
+          details: 'Account temporarily locked due to multiple failed attempts',
+          correlationId,
+          userAgent: args.userAgent,
+          ipAddress: args.ipAddress,
+        });
+        throw new ConvexError('Account temporarily locked due to multiple failed login attempts. Please try again later.');
+      }
+
+      // Find user by email
+      const user = await ctx.db
+        .query('users')
+        .withIndex('by_email', q => q.eq('email', email))
+        .first();
+
+      if (!user) {
+        trackFailedLogin(email);
+        await logSecurityEvent(ctx, {
+          eventType: 'login_failed_user_not_found',
+          email,
+          details: 'Login attempt with non-existent email',
+          correlationId,
+          userAgent: args.userAgent,
+          ipAddress: args.ipAddress,
+        });
+        throw new ConvexError('Invalid email or password');
+      }
+
+      // Verify the password
+      if (!user.password) {
+        await logSecurityEvent(ctx, {
+          eventType: 'login_failed_no_password',
+          userId: user._id,
+          email,
+          details: 'User account has no password set',
+          correlationId,
+          userAgent: args.userAgent,
+          ipAddress: args.ipAddress,
+        });
+        throw new ConvexError('Account requires password reset. Please use the password reset option.');
+      }
+
+      const isPasswordValid = bcrypt.compareSync(args.password, user.password);
+      if (!isPasswordValid) {
+        trackFailedLogin(email);
+        await logSecurityEvent(ctx, {
+          eventType: 'login_failed_invalid_password',
+          userId: user._id,
+          email,
+          details: 'Invalid password provided',
+          correlationId,
+          userAgent: args.userAgent,
+          ipAddress: args.ipAddress,
+        });
+        throw new ConvexError('Invalid email or password');
+      }
+
+      // Clear failed login attempts on successful authentication
+      clearFailedLogins(email);
+
+      // Create enhanced session with secure random token generation
+      const sessionToken = Array.from(crypto.getRandomValues(new Uint8Array(32)))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+      
+      // Extended session for "Remember Me" (30 days) or regular session (24 hours)
+      const sessionDuration = args.rememberMe
+        ? 30 * 24 * 60 * 60 * 1000 // 30 days for Remember Me
+        : 24 * 60 * 60 * 1000; // 24 hours for regular login
+      const expires = Date.now() + sessionDuration;
+
+      await ctx.db.insert('sessions', {
+        userId: user._id,
+        sessionToken,
+        expires,
+        rememberMe: args.rememberMe || false,
+      });
+
+      // Log successful login
+      await logSecurityEvent(ctx, {
+        eventType: 'login_successful',
+        userId: user._id,
+        email,
+        details: `User logged in with role: ${user.role}`,
+        correlationId,
+        userAgent: args.userAgent,
+        ipAddress: args.ipAddress,
+      });
+
+      return {
+        success: true,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          company_id: user.company_id,
+          has_llm_access: user.has_llm_access,
+        },
+        sessionToken,
+        expires,
+        correlationId,
+      };
+    } catch (error) {
+      console.error('Login error:', error);
+      if (error instanceof ConvexError) {
+        throw error;
+      }
+      throw new ConvexError(`Login failed: ${(error as Error).message}`);
     }
-
-    // Verify the password
-    if (!user.password) {
-      throw new Error('User account needs password reset');
-    }
-
-    const isPasswordValid = bcrypt.compareSync(args.password, user.password);
-    if (!isPasswordValid) {
-      throw new Error('Invalid email or password');
-    }
-
-    // Create a session with secure random token generation
-    const sessionToken = Array.from(crypto.getRandomValues(new Uint8Array(32)))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
-    // Extended session for "Remember Me" (30 days) or regular session (24 hours)
-    const sessionDuration = args.rememberMe
-      ? 30 * 24 * 60 * 60 * 1000 // 30 days for Remember Me
-      : 24 * 60 * 60 * 1000; // 24 hours for regular login
-    const expires = Date.now() + sessionDuration;
-
-    await ctx.db.insert('sessions', {
-      userId: user._id,
-      sessionToken,
-      expires,
-      rememberMe: args.rememberMe || false,
-    });
-
-    return {
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
-      sessionToken,
-    };
   },
 });
 
@@ -459,7 +771,7 @@ export const createOrUpdateGitHubUser = mutation({
           email: githubUser.email,
           password: '', // OAuth users don't have passwords
           profile_image_url: githubUser.avatar_url,
-          role: 'viewer',
+          role: 'frontline_worker',
         });
 
         // Create OAuth account record
@@ -505,6 +817,7 @@ export const createOrUpdateGitHubUser = mutation({
         email: user.email,
         role: user.role,
         profile_image_url: user.profile_image_url,
+        has_llm_access: user.has_llm_access,
       },
       sessionToken,
     };
@@ -527,6 +840,7 @@ export const githubOAuthLogin = action({
       email: string;
       role: string;
       profile_image_url?: string;
+      has_llm_access?: boolean;
     };
     sessionToken: string;
   }> => {
@@ -754,7 +1068,7 @@ export const createOrUpdateGoogleUser = mutation({
           email: googleUser.email,
           password: '', // OAuth users don't have passwords
           profile_image_url: googleUser.picture,
-          role: 'viewer',
+          role: 'frontline_worker',
         });
 
         // Create OAuth account record
@@ -800,6 +1114,7 @@ export const createOrUpdateGoogleUser = mutation({
         email: user.email,
         role: user.role,
         profile_image_url: user.profile_image_url,
+        has_llm_access: user.has_llm_access,
       },
       sessionToken,
     };
@@ -822,6 +1137,7 @@ export const googleOAuthLogin = action({
       email: string;
       role: string;
       profile_image_url?: string;
+      has_llm_access?: boolean;
     };
     sessionToken: string;
   }> => {

@@ -7,6 +7,8 @@ export interface User {
   email: string;
   profile_image_url?: string;
   role: string;
+  has_llm_access?: boolean;
+  sessionToken?: string;
   _creationTime: number;
 }
 
