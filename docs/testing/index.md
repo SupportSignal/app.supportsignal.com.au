@@ -25,6 +25,7 @@ This directory contains all testing-related documentation organized by purpose a
 **Epic 1 - SupportSignal Foundation:**
 - [Story 1.1 - Multi-Tenant Database Implementation](stories/story-acceptance-test-1.1.md)
 - [Story 1.2 - AI Service Integration](stories/story-acceptance-test-1.2.md)
+- [Story 1.3 - User Authentication & Permissions](stories/story-acceptance-test-1.3.md)
 
 ## Testing Commands Reference
 
@@ -57,5 +58,6 @@ docs/testing/
 │   └── testing-infrastructure-lessons-learned.md
 └── stories/                    # Story acceptance testing documentation  
     ├── story-acceptance-test-1.1.md
-    └── story-acceptance-test-1.2.md
+    ├── story-acceptance-test-1.2.md
+    └── story-acceptance-test-1.3.md
 ```
