@@ -67,8 +67,8 @@ export default function RootLayout({
             <LoggingProvider>
               <ConvexClientProvider>
                 <VersionProvider
-                  showIndicator={true}
-                  showFlashNotifications={true}
+                  showIndicator={false}
+                  showFlashNotifications={false}
                   indicatorPosition="bottom-left"
                   maxVersions={20}
                 >

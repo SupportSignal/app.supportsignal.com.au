@@ -4,48 +4,62 @@
 
 @layer base {
   :root {
+    /* ShadCN Base Light Mode Colors */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
+    --primary: 203 89% 53.3%; /* SupportSignal Navy */
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96%;
     --secondary-foreground: 222.2 84% 4.9%;
     --muted: 210 40% 96%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 84% 4.9%;
+    --accent: 179 60% 50%; /* SupportSignal Teal */
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    --ring: 179 60% 50%; /* SupportSignal Teal for focus ring */
     --radius: 0.5rem;
+
+    /* SupportSignal Healthcare Light Mode Variables */
+    --healthcare-background: 210 27% 97%; /* #F4F7FA */
+    --healthcare-surface: 0 0% 100%; /* #FFFFFF */
+    --healthcare-primary: 203 89% 19%; /* #0C2D55 Navy */
+    --healthcare-accent: 179 60% 50%; /* #2CC4B7 Teal */
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 84% 4.9%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
+    /* ShadCN Base Dark Mode Colors - SupportSignal Enhanced */
+    --background: 210 100% 5%; /* Deep navy-black #0F1419 */
+    --foreground: 179 25% 90%; /* Light teal-tinted text #E2F4F2 */
+    --card: 210 50% 12%; /* Navy-grey surface #1A2332 */
+    --card-foreground: 179 25% 90%;
+    --popover: 210 50% 12%;
+    --popover-foreground: 179 25% 90%;
+    --primary: 179 70% 60%; /* Brighter teal #3CD7C4 for dark mode visibility */
+    --primary-foreground: 210 100% 5%;
+    --secondary: 215 25% 20%; /* Slightly lighter navy-grey #243447 */
+    --secondary-foreground: 179 25% 90%;
+    --muted: 215 25% 20%;
+    --muted-foreground: 220 14% 56%; /* Muted text #64748B */
+    --accent: 179 70% 60%; /* Bright teal for accents */
+    --accent-foreground: 210 100% 5%;
+    --destructive: 0 62.8% 50%; /* Darker red for dark mode */
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 220 14% 32%; /* Subtle dark borders #334155 */
+    --input: 215 25% 20%;
+    --ring: 179 70% 60%; /* Bright teal focus ring */
+
+    /* SupportSignal Healthcare Dark Mode Variables */
+    --healthcare-background: 210 100% 5%; /* #0F1419 */
+    --healthcare-surface: 210 50% 12%; /* #1A2332 */
+    --healthcare-primary: 179 25% 90%; /* #E2F4F2 Light teal text */
+    --healthcare-accent: 179 70% 60%; /* #3CD7C4 Bright teal */
   }
 }
 
