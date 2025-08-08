@@ -1,0 +1,7 @@
+{
+  "functions": "apps/convex",
+  "generateCommonJSWrapper": false,
+  "node": {
+    "18": true
+  }
+}

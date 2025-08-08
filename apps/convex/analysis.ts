@@ -1,38 +1,87 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, action } from "./_generated/server";
 import { v } from "convex/values";
 import { ConvexError } from "convex/values";
+import { requirePermission, PERMISSIONS } from './permissions';
+import { Id } from './_generated/dataModel';
 
-// Get incident analysis by incident ID
-export const getIncidentAnalysis = query({
-  args: { incident_id: v.id("incidents") },
+/**
+ * Get incident analysis by incident ID with proper access control
+ * Requires PERFORM_ANALYSIS permission or ownership
+ */
+export const getByIncident = query({
+  args: { 
+    sessionToken: v.string(),
+    incident_id: v.id("incidents") 
+  },
   handler: async (ctx, args) => {
-    // TODO: Add authentication and authorization checks
+    // Get the incident to validate access
+    const incident = await ctx.db.get(args.incident_id);
+    if (!incident) {
+      throw new ConvexError("Incident not found");
+    }
+
+    // Check permissions for analysis access
+    const { user, correlationId } = await requirePermission(
+      ctx,
+      args.sessionToken,
+      PERMISSIONS.PERFORM_ANALYSIS,
+      {
+        companyId: incident.company_id,
+        resourceOwnerId: incident.created_by || undefined,
+      }
+    );
+
+    // Validate user is in same company
+    if (user.company_id !== incident.company_id) {
+      throw new ConvexError("Access denied: incident belongs to different company");
+    }
     
     const analysis = await ctx.db
       .query("incident_analysis")
       .withIndex("by_incident", (q) => q.eq("incident_id", args.incident_id))
       .first();
 
+    console.log('📊 ANALYSIS ACCESSED', {
+      analysisId: analysis?._id,
+      incidentId: args.incident_id,
+      userId: user._id,
+      correlationId,
+      timestamp: new Date().toISOString(),
+    });
+
     return analysis;
   },
 });
 
-// Create incident analysis
-export const createIncidentAnalysis = mutation({
+/**
+ * Initialize analysis workflow for incident
+ * Creates initial analysis record and sets up workflow state
+ */
+export const create = mutation({
   args: {
+    sessionToken: v.string(),
     incident_id: v.id("incidents"),
-    contributing_conditions: v.string(),
-    ai_analysis_prompt: v.optional(v.string()),
-    ai_model: v.optional(v.string()),
-    ai_confidence: v.optional(v.number()),
-    ai_processing_time: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    // TODO: Add authentication and authorization checks
-    
+    // Get the incident to validate access
     const incident = await ctx.db.get(args.incident_id);
     if (!incident) {
       throw new ConvexError("Incident not found");
+    }
+
+    // Check permissions for analysis creation
+    const { user, correlationId } = await requirePermission(
+      ctx,
+      args.sessionToken,
+      PERMISSIONS.PERFORM_ANALYSIS,
+      {
+        companyId: incident.company_id,
+      }
+    );
+
+    // Validate user is in same company
+    if (user.company_id !== incident.company_id) {
+      throw new ConvexError("Access denied: incident belongs to different company");
     }
 
     // Check if analysis already exists
@@ -45,41 +94,58 @@ export const createIncidentAnalysis = mutation({
       throw new ConvexError("Analysis already exists for this incident");
     }
 
+    // Ensure capture is complete before starting analysis
+    if (incident.capture_status !== "completed") {
+      throw new ConvexError("Cannot start analysis: incident capture must be completed first");
+    }
+
     const now = Date.now();
 
     const analysisId = await ctx.db.insert("incident_analysis", {
       incident_id: args.incident_id,
-      contributing_conditions: args.contributing_conditions,
-      conditions_original: args.contributing_conditions, // Store original AI content
+      contributing_conditions: "", // Start empty, will be filled by AI or user
+      conditions_original: undefined,
       conditions_edited: false,
       
       analyzed_at: now,
-      // analyzed_by will be set when proper auth context is available
+      analyzed_by: user._id,
       updated_at: now,
       
-      ai_analysis_prompt: args.ai_analysis_prompt,
-      ai_model: args.ai_model,
-      ai_confidence: args.ai_confidence,
-      ai_processing_time: args.ai_processing_time,
+      ai_analysis_prompt: undefined,
+      ai_model: undefined,
+      ai_confidence: undefined,
+      ai_processing_time: undefined,
       
-      analysis_status: "ai_generated",
+      analysis_status: "draft",
       revision_count: 0,
+      total_edit_time: 0,
     });
 
-    // Update incident to mark analysis as generated
+    // Update incident to indicate analysis has started
     await ctx.db.patch(args.incident_id, {
-      analysis_generated: true,
       analysis_status: "in_progress",
       updated_at: now,
+    });
+
+    console.log('🔍 ANALYSIS CREATED', {
+      analysisId,
+      incidentId: args.incident_id,
+      userId: user._id,
+      correlationId,
+      timestamp: new Date().toISOString(),
     });
 
     return analysisId;
   },
 });
 
-// Update incident analysis
-export const updateIncidentAnalysis = mutation({
+/**
+ * Update contributing conditions analysis with user editing tracking
+ * Tracks revisions and edit history for audit purposes
+ */
+export const update = mutation({
   args: {
+    sessionToken: v.string(),
     analysis_id: v.id("incident_analysis"),
     contributing_conditions: v.string(),
     analysis_status: v.optional(v.union(
@@ -90,22 +156,57 @@ export const updateIncidentAnalysis = mutation({
     )),
   },
   handler: async (ctx, args) => {
-    // TODO: Add authentication and authorization checks
+    // Input validation
+    if (!args.contributing_conditions.trim()) {
+      throw new ConvexError("Contributing conditions cannot be empty");
+    }
     
     const analysis = await ctx.db.get(args.analysis_id);
     if (!analysis) {
       throw new ConvexError("Analysis not found");
     }
 
+    // Get incident for permission checking
+    const incident = await ctx.db.get(analysis.incident_id);
+    if (!incident) {
+      throw new ConvexError("Associated incident not found");
+    }
+
+    // Check permissions for analysis updates
+    const { user, correlationId } = await requirePermission(
+      ctx,
+      args.sessionToken,
+      PERMISSIONS.PERFORM_ANALYSIS,
+      {
+        companyId: incident.company_id,
+      }
+    );
+
+    // Validate user is in same company
+    if (user.company_id !== incident.company_id) {
+      throw new ConvexError("Access denied: incident belongs to different company");
+    }
+
+    // Check if analysis is still editable
+    if (analysis.analysis_status === "completed") {
+      throw new ConvexError("Cannot edit completed analysis");
+    }
+
     const now = Date.now();
-    const conditionsEdited = args.contributing_conditions !== analysis.conditions_original;
+    const conditionsEdited = analysis.conditions_original && 
+      args.contributing_conditions !== analysis.conditions_original;
 
     const updates: any = {
-      contributing_conditions: args.contributing_conditions,
+      contributing_conditions: args.contributing_conditions.trim(),
       conditions_edited: conditionsEdited,
       updated_at: now,
       revision_count: analysis.revision_count + 1,
     };
+
+    // Store original content if this is the first edit
+    if (!analysis.conditions_original && args.contributing_conditions) {
+      updates.conditions_original = args.contributing_conditions.trim();
+    }
 
     if (args.analysis_status) {
       updates.analysis_status = args.analysis_status;
@@ -121,7 +222,334 @@ export const updateIncidentAnalysis = mutation({
       });
     }
 
+    console.log('📝 ANALYSIS UPDATED', {
+      analysisId: args.analysis_id,
+      incidentId: analysis.incident_id,
+      userId: user._id,
+      revision: updates.revision_count,
+      statusChange: args.analysis_status,
+      correlationId,
+      timestamp: new Date().toISOString(),
+    });
+
+    return { success: true, revision: updates.revision_count };
+  },
+});
+
+/**
+ * Generate AI-powered incident classifications using normalized enum values
+ * This is an action because it involves external AI service calls
+ */
+export const generateClassifications = action({
+  args: {
+    sessionToken: v.string(),
+    analysis_id: v.id("incident_analysis"),
+    prompt_override: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // Get analysis and associated incident
+    const analysis = await ctx.runQuery("analysis:getByAnalysisId", {
+      sessionToken: args.sessionToken,
+      analysis_id: args.analysis_id,
+    });
+
+    if (!analysis) {
+      throw new ConvexError("Analysis not found or access denied");
+    }
+
+    // Validate analysis has content to classify
+    if (!analysis.contributing_conditions || analysis.contributing_conditions.trim().length < 10) {
+      throw new ConvexError("Contributing conditions must be completed before generating classifications");
+    }
+
+    // Get consolidated narrative for context
+    const narrative = await ctx.runQuery("narratives:getConsolidated", {
+      sessionToken: args.sessionToken,
+      incident_id: analysis.incident_id,
+    });
+
+    // TODO: Implement actual AI service call here
+    // For now, we'll create mock classifications using the normalized enums
+    const mockClassifications = [
+      {
+        classification_id: `cls_${Date.now()}_1`,
+        incident_type: "behavioural" as const,
+        supporting_evidence: "Analysis indicates behavioral factors contributed to the incident",
+        severity: "medium" as const,
+        confidence_score: 0.85,
+      },
+      {
+        classification_id: `cls_${Date.now()}_2`,
+        incident_type: "environmental" as const,
+        supporting_evidence: "Environmental conditions were a contributing factor",
+        severity: "low" as const,
+        confidence_score: 0.72,
+      },
+    ];
+
+    // Create classifications in database
+    const classificationIds = [];
+    for (const classification of mockClassifications) {
+      const classificationId = await ctx.runMutation("analysis:createClassification", {
+        sessionToken: args.sessionToken,
+        incident_id: analysis.incident_id,
+        analysis_id: args.analysis_id,
+        classification_id: classification.classification_id,
+        incident_type: classification.incident_type,
+        supporting_evidence: classification.supporting_evidence,
+        severity: classification.severity,
+        confidence_score: classification.confidence_score,
+        ai_generated: true,
+        ai_model: "gpt-4o-mini",
+        original_ai_classification: JSON.stringify(classification),
+      });
+      classificationIds.push(classificationId);
+    }
+
+    // Update analysis status to indicate AI classifications are generated
+    await ctx.runMutation("analysis:updateStatus", {
+      sessionToken: args.sessionToken,
+      analysis_id: args.analysis_id,
+      analysis_status: "ai_generated",
+    });
+
+    return {
+      success: true,
+      classificationsCreated: classificationIds.length,
+      classificationIds,
+    };
+  },
+});
+
+/**
+ * Finalize analysis and mark incident complete
+ * Performs final validation and workflow completion
+ */
+export const complete = mutation({
+  args: {
+    sessionToken: v.string(),
+    analysis_id: v.id("incident_analysis"),
+    completion_notes: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const analysis = await ctx.db.get(args.analysis_id);
+    if (!analysis) {
+      throw new ConvexError("Analysis not found");
+    }
+
+    // Get incident for permission checking
+    const incident = await ctx.db.get(analysis.incident_id);
+    if (!incident) {
+      throw new ConvexError("Associated incident not found");
+    }
+
+    // Check permissions for analysis completion
+    const { user, correlationId } = await requirePermission(
+      ctx,
+      args.sessionToken,
+      PERMISSIONS.PERFORM_ANALYSIS,
+      {
+        companyId: incident.company_id,
+      }
+    );
+
+    // Validate user is in same company
+    if (user.company_id !== incident.company_id) {
+      throw new ConvexError("Access denied: incident belongs to different company");
+    }
+
+    // Validate analysis is ready for completion
+    if (!analysis.contributing_conditions || analysis.contributing_conditions.trim().length < 10) {
+      throw new ConvexError("Contributing conditions must be completed before finalizing analysis");
+    }
+
+    // Check if there are any classifications
+    const classifications = await ctx.db
+      .query("incident_classifications")
+      .withIndex("by_analysis", (q) => q.eq("analysis_id", args.analysis_id))
+      .collect();
+
+    if (classifications.length === 0) {
+      throw new ConvexError("At least one classification must be created before completing analysis");
+    }
+
+    const now = Date.now();
+
+    // Update analysis status to completed
+    await ctx.db.patch(args.analysis_id, {
+      analysis_status: "completed",
+      updated_at: now,
+    });
+
+    // Update incident to mark analysis as completed
+    await ctx.db.patch(analysis.incident_id, {
+      analysis_status: "completed",
+      overall_status: "completed", // Both capture and analysis are now complete
+      updated_at: now,
+    });
+
+    console.log('✅ ANALYSIS COMPLETED', {
+      analysisId: args.analysis_id,
+      incidentId: analysis.incident_id,
+      userId: user._id,
+      classificationsCount: classifications.length,
+      correlationId,
+      timestamp: new Date().toISOString(),
+    });
+
+    return {
+      success: true,
+      classificationsCount: classifications.length,
+      completedAt: now,
+    };
+  },
+});
+
+/**
+ * Internal helper query to get analysis by ID (for actions)
+ */
+export const getByAnalysisId = query({
+  args: {
+    sessionToken: v.string(),
+    analysis_id: v.id("incident_analysis"),
+  },
+  handler: async (ctx, args) => {
+    const analysis = await ctx.db.get(args.analysis_id);
+    if (!analysis) {
+      throw new ConvexError("Analysis not found");
+    }
+
+    // Get incident for permission checking
+    const incident = await ctx.db.get(analysis.incident_id);
+    if (!incident) {
+      throw new ConvexError("Associated incident not found");
+    }
+
+    // Check permissions
+    await requirePermission(
+      ctx,
+      args.sessionToken,
+      PERMISSIONS.PERFORM_ANALYSIS,
+      {
+        companyId: incident.company_id,
+      }
+    );
+
+    return analysis;
+  },
+});
+
+/**
+ * Update analysis status helper
+ */
+export const updateStatus = mutation({
+  args: {
+    sessionToken: v.string(),
+    analysis_id: v.id("incident_analysis"),
+    analysis_status: v.union(
+      v.literal("draft"),
+      v.literal("ai_generated"),
+      v.literal("user_reviewed"),
+      v.literal("completed")
+    ),
+  },
+  handler: async (ctx, args) => {
+    const analysis = await ctx.db.get(args.analysis_id);
+    if (!analysis) {
+      throw new ConvexError("Analysis not found");
+    }
+
+    // Get incident for permission checking
+    const incident = await ctx.db.get(analysis.incident_id);
+    if (!incident) {
+      throw new ConvexError("Associated incident not found");
+    }
+
+    // Check permissions
+    await requirePermission(
+      ctx,
+      args.sessionToken,
+      PERMISSIONS.PERFORM_ANALYSIS,
+      {
+        companyId: incident.company_id,
+      }
+    );
+
+    await ctx.db.patch(args.analysis_id, {
+      analysis_status: args.analysis_status,
+      updated_at: Date.now(),
+    });
+
     return { success: true };
+  },
+});
+
+/**
+ * Create classification helper for internal use
+ */
+export const createClassification = mutation({
+  args: {
+    sessionToken: v.string(),
+    incident_id: v.id("incidents"),
+    analysis_id: v.id("incident_analysis"),
+    classification_id: v.string(),
+    incident_type: v.union(
+      v.literal("behavioural"),
+      v.literal("environmental"),
+      v.literal("medical"),
+      v.literal("communication"),
+      v.literal("other")
+    ),
+    supporting_evidence: v.string(),
+    severity: v.union(
+      v.literal("low"),
+      v.literal("medium"),
+      v.literal("high")
+    ),
+    confidence_score: v.number(),
+    ai_generated: v.optional(v.boolean()),
+    ai_model: v.optional(v.string()),
+    original_ai_classification: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // Get incident for permission checking
+    const incident = await ctx.db.get(args.incident_id);
+    if (!incident) {
+      throw new ConvexError("Incident not found");
+    }
+
+    // Check permissions for classification creation
+    const { user } = await requirePermission(
+      ctx,
+      args.sessionToken,
+      PERMISSIONS.PERFORM_ANALYSIS,
+      {
+        companyId: incident.company_id,
+      }
+    );
+
+    const now = Date.now();
+
+    return await ctx.db.insert("incident_classifications", {
+      incident_id: args.incident_id,
+      analysis_id: args.analysis_id,
+      classification_id: args.classification_id,
+      incident_type: args.incident_type,
+      supporting_evidence: args.supporting_evidence,
+      severity: args.severity,
+      confidence_score: args.confidence_score,
+      
+      user_reviewed: !args.ai_generated, // If not AI-generated, assume user reviewed
+      user_modified: false,
+      
+      created_at: now,
+      updated_at: now,
+      classified_by: user._id,
+      
+      ai_generated: args.ai_generated ?? false,
+      ai_model: args.ai_model,
+      original_ai_classification: args.original_ai_classification,
+    });
   },
 });
 
@@ -158,17 +586,17 @@ export const createIncidentClassification = mutation({
     analysis_id: v.id("incident_analysis"),
     classification_id: v.string(),
     incident_type: v.union(
-      v.literal("Behavioural"),
-      v.literal("Environmental"),
-      v.literal("Medical"),
-      v.literal("Communication"),
-      v.literal("Other")
+      v.literal("behavioural"),
+      v.literal("environmental"),
+      v.literal("medical"),
+      v.literal("communication"),
+      v.literal("other")
     ),
     supporting_evidence: v.string(),
     severity: v.union(
-      v.literal("Low"),
-      v.literal("Medium"),
-      v.literal("High")
+      v.literal("low"),
+      v.literal("medium"),
+      v.literal("high")
     ),
     confidence_score: v.number(),
     ai_generated: v.optional(v.boolean()),
@@ -208,17 +636,17 @@ export const updateIncidentClassification = mutation({
   args: {
     classification_id: v.id("incident_classifications"),
     incident_type: v.optional(v.union(
-      v.literal("Behavioural"),
-      v.literal("Environmental"),
-      v.literal("Medical"),
-      v.literal("Communication"),
-      v.literal("Other")
+      v.literal("behavioural"),
+      v.literal("environmental"),
+      v.literal("medical"),
+      v.literal("communication"),
+      v.literal("other")
     )),
     supporting_evidence: v.optional(v.string()),
     severity: v.optional(v.union(
-      v.literal("Low"),
-      v.literal("Medium"),
-      v.literal("High")
+      v.literal("low"),
+      v.literal("medium"),
+      v.literal("high")
     )),
     confidence_score: v.optional(v.number()),
     review_notes: v.optional(v.string()),
@@ -358,16 +786,16 @@ export const getAnalysisMetrics = query({
       // Classification metrics
       totalClassifications: classifications.length,
       classificationsByType: {
-        Behavioural: classifications.filter(c => c.incident_type === "Behavioural").length,
-        Environmental: classifications.filter(c => c.incident_type === "Environmental").length,
-        Medical: classifications.filter(c => c.incident_type === "Medical").length,
-        Communication: classifications.filter(c => c.incident_type === "Communication").length,
-        Other: classifications.filter(c => c.incident_type === "Other").length,
+        behavioural: classifications.filter(c => c.incident_type === "behavioural").length,
+        environmental: classifications.filter(c => c.incident_type === "environmental").length,
+        medical: classifications.filter(c => c.incident_type === "medical").length,
+        communication: classifications.filter(c => c.incident_type === "communication").length,
+        other: classifications.filter(c => c.incident_type === "other").length,
       },
       classificationsBySeverity: {
-        Low: classifications.filter(c => c.severity === "Low").length,
-        Medium: classifications.filter(c => c.severity === "Medium").length,
-        High: classifications.filter(c => c.severity === "High").length,
+        low: classifications.filter(c => c.severity === "low").length,
+        medium: classifications.filter(c => c.severity === "medium").length,
+        high: classifications.filter(c => c.severity === "high").length,
       },
       
       // AI vs Human metrics
@@ -378,5 +806,157 @@ export const getAnalysisMetrics = query({
     };
 
     return metrics;
+  },
+});
+
+/**
+ * Real-time subscription to analysis updates
+ * Enables collaborative analysis editing with live classification updates
+ */
+export const subscribeToAnalysis = query({
+  args: {
+    sessionToken: v.string(),
+    incident_id: v.id("incidents"),
+  },
+  handler: async (ctx, args) => {
+    // Get the incident to validate access
+    const incident = await ctx.db.get(args.incident_id);
+    if (!incident) {
+      return null;
+    }
+
+    // Check permissions
+    const { user, correlationId } = await requirePermission(
+      ctx,
+      args.sessionToken,
+      PERMISSIONS.PERFORM_ANALYSIS,
+      {
+        companyId: incident.company_id,
+      }
+    );
+
+    // Validate user is in same company
+    if (user.company_id !== incident.company_id) {
+      throw new ConvexError("Access denied: incident belongs to different company");
+    }
+
+    // Get analysis
+    const analysis = await ctx.db
+      .query("incident_analysis")
+      .withIndex("by_incident", (q) => q.eq("incident_id", args.incident_id))
+      .first();
+
+    // Get classifications if analysis exists
+    const classifications = analysis ? await ctx.db
+      .query("incident_classifications")
+      .withIndex("by_analysis", (q) => q.eq("analysis_id", analysis._id))
+      .collect() : [];
+
+    console.log('🔍 REAL-TIME ANALYSIS SUBSCRIPTION', {
+      incidentId: args.incident_id,
+      analysisId: analysis?._id,
+      userId: user._id,
+      analysisStatus: analysis?.analysis_status || 'not_started',
+      classificationsCount: classifications.length,
+      correlationId,
+      timestamp: new Date().toISOString(),
+    });
+
+    return {
+      incident_id: args.incident_id,
+      analysis,
+      classifications,
+      workflowStatus: {
+        analysisExists: !!analysis,
+        classificationsGenerated: classifications.length > 0,
+        canComplete: analysis && classifications.length > 0 && analysis.contributing_conditions?.trim().length > 10,
+        analysisStatus: analysis?.analysis_status || 'not_started',
+      },
+      subscribedAt: Date.now(),
+      correlationId,
+    };
+  },
+});
+
+/**
+ * Real-time subscription to classification updates
+ * Monitors AI-generated and user-modified classifications
+ */
+export const subscribeToClassifications = query({
+  args: {
+    sessionToken: v.string(),
+    analysis_id: v.id("incident_analysis"),
+  },
+  handler: async (ctx, args) => {
+    const analysis = await ctx.db.get(args.analysis_id);
+    if (!analysis) {
+      return null;
+    }
+
+    // Get incident for permission checking
+    const incident = await ctx.db.get(analysis.incident_id);
+    if (!incident) {
+      throw new ConvexError("Associated incident not found");
+    }
+
+    // Check permissions
+    const { user, correlationId } = await requirePermission(
+      ctx,
+      args.sessionToken,
+      PERMISSIONS.PERFORM_ANALYSIS,
+      {
+        companyId: incident.company_id,
+      }
+    );
+
+    // Get classifications
+    const classifications = await ctx.db
+      .query("incident_classifications")
+      .withIndex("by_analysis", (q) => q.eq("analysis_id", args.analysis_id))
+      .collect();
+
+    // Calculate classification statistics
+    const stats = {
+      total: classifications.length,
+      aiGenerated: classifications.filter(c => c.ai_generated).length,
+      userModified: classifications.filter(c => c.user_modified).length,
+      userReviewed: classifications.filter(c => c.user_reviewed).length,
+      byType: {
+        behavioural: classifications.filter(c => c.incident_type === "behavioural").length,
+        environmental: classifications.filter(c => c.incident_type === "environmental").length,
+        medical: classifications.filter(c => c.incident_type === "medical").length,
+        communication: classifications.filter(c => c.incident_type === "communication").length,
+        other: classifications.filter(c => c.incident_type === "other").length,
+      },
+      bySeverity: {
+        low: classifications.filter(c => c.severity === "low").length,
+        medium: classifications.filter(c => c.severity === "medium").length,
+        high: classifications.filter(c => c.severity === "high").length,
+      },
+    };
+
+    console.log('🏷️ REAL-TIME CLASSIFICATIONS SUBSCRIPTION', {
+      analysisId: args.analysis_id,
+      incidentId: analysis.incident_id,
+      userId: user._id,
+      totalClassifications: stats.total,
+      aiGenerated: stats.aiGenerated,
+      userModified: stats.userModified,
+      correlationId,
+      timestamp: new Date().toISOString(),
+    });
+
+    return {
+      analysis_id: args.analysis_id,
+      incident_id: analysis.incident_id,
+      classifications: classifications.map(c => ({
+        ...c,
+        // Add real-time metadata
+        isRecent: (Date.now() - c.created_at) < 300000, // 5 minutes
+      })),
+      statistics: stats,
+      subscribedAt: Date.now(),
+      correlationId,
+    };
   },
 });

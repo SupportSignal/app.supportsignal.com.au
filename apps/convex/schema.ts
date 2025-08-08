@@ -318,19 +318,19 @@ export default defineSchema({
     // Classification Details
     classification_id: v.string(), // Unique classification identifier
     incident_type: v.union( // Type of incident
-      v.literal("Behavioural"),
-      v.literal("Environmental"),
-      v.literal("Medical"),
-      v.literal("Communication"),
-      v.literal("Other")
+      v.literal("behavioural"),
+      v.literal("environmental"),
+      v.literal("medical"),
+      v.literal("communication"),
+      v.literal("other")
     ),
     supporting_evidence: v.string(), // Evidence supporting this classification
     
     // Severity & Confidence
     severity: v.union( // Incident severity level
-      v.literal("Low"),
-      v.literal("Medium"),
-      v.literal("High")
+      v.literal("low"),
+      v.literal("medium"),
+      v.literal("high")
     ),
     confidence_score: v.number(), // AI confidence in classification (0-1)
     

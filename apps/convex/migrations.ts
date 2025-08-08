@@ -234,3 +234,81 @@ export const migrateUserRoles = mutation({
     };
   },
 });
+
+// Migration to normalize incident classification enum values to lowercase snake_case
+export const normalizeClassificationEnums = mutation({
+  args: {},
+  handler: async (ctx: MutationCtx) => {
+    console.log("🔄 Starting incident_classifications enum normalization...");
+    
+    // Enum mapping for incident_type
+    const incidentTypeMapping: Record<string, string> = {
+      "Behavioural": "behavioural",
+      "Environmental": "environmental", 
+      "Medical": "medical",
+      "Communication": "communication",
+      "Other": "other"
+    };
+    
+    // Enum mapping for severity
+    const severityMapping: Record<string, string> = {
+      "Low": "low",
+      "Medium": "medium", 
+      "High": "high"
+    };
+    
+    // Get all classification records
+    const classifications = await ctx.db.query("incident_classifications").collect();
+    
+    let updatedCount = 0;
+    let skippedCount = 0;
+    const errors: string[] = [];
+    
+    for (const classification of classifications) {
+      try {
+        let needsUpdate = false;
+        const updates: any = {};
+        
+        // Check and update incident_type
+        if (classification.incident_type && incidentTypeMapping[classification.incident_type as string]) {
+          updates.incident_type = incidentTypeMapping[classification.incident_type as string];
+          needsUpdate = true;
+        }
+        
+        // Check and update severity
+        if (classification.severity && severityMapping[classification.severity as string]) {
+          updates.severity = severityMapping[classification.severity as string];
+          needsUpdate = true;
+        }
+        
+        if (needsUpdate) {
+          await ctx.db.patch(classification._id, updates);
+          console.log(`✅ Updated classification ${classification._id}: ${JSON.stringify(updates)}`);
+          updatedCount++;
+        } else {
+          skippedCount++;
+        }
+        
+      } catch (error) {
+        const errorMsg = `Failed to update classification ${classification._id}: ${error}`;
+        console.error(errorMsg);
+        errors.push(errorMsg);
+      }
+    }
+    
+    console.log(`✅ Classification enum normalization complete. Updated ${updatedCount}, skipped ${skippedCount}.`);
+    
+    if (errors.length > 0) {
+      console.error(`⚠️ ${errors.length} errors occurred during migration:`, errors);
+    }
+    
+    return {
+      success: errors.length === 0,
+      updatedCount,
+      skippedCount,
+      totalRecords: classifications.length,
+      errors,
+      message: `Successfully normalized ${updatedCount} classification records to lowercase snake_case enums`
+    };
+  },
+});

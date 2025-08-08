@@ -1,45 +1,51 @@
 import { query, mutation, QueryCtx, MutationCtx } from './_generated/server';
 import { v } from 'convex/values';
+import { ConvexError } from 'convex/values';
+import { requirePermission, PERMISSIONS } from './permissions';
 
-// Get current user profile
-export const getCurrentUser = query({
+/**
+ * Get current user profile with proper authentication
+ * Story 1.4 API: users.getCurrent(): Query<UserProfile | null>
+ */
+export const getCurrent = query({
   args: {
-    sessionToken: v.optional(v.string()),
+    sessionToken: v.string(),
   },
-  handler: async (ctx: QueryCtx, args: { sessionToken?: string }) => {
-    if (!args.sessionToken) {
+  handler: async (ctx: QueryCtx, args) => {
+    try {
+      // Use permission system to validate session and get user
+      const { user, correlationId } = await requirePermission(
+        ctx,
+        args.sessionToken,
+        PERMISSIONS.CREATE_INCIDENT // Basic permission all users have
+      );
+
+      console.log('👤 USER PROFILE ACCESSED', {
+        userId: user._id,
+        correlationId,
+        timestamp: new Date().toISOString(),
+      });
+
+      return {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        profile_image_url: user.profile_image_url,
+        role: user.role,
+        has_llm_access: user.has_llm_access,
+        company_id: user.company_id,
+        _creationTime: user._creationTime,
+      };
+    } catch (error) {
+      console.error('Error getting current user:', error);
+      // Return null instead of throwing for unauthenticated users
       return null;
     }
-
-    // Find session
-    const session = await ctx.db
-      .query('sessions')
-      .withIndex('by_session_token', q =>
-        q.eq('sessionToken', args.sessionToken!)
-      )
-      .first();
-
-    if (!session || session.expires < Date.now()) {
-      return null;
-    }
-
-    // Get user
-    const user = await ctx.db.get(session.userId);
-    if (!user) {
-      return null;
-    }
-
-    return {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      profile_image_url: user.profile_image_url,
-      role: user.role,
-      has_llm_access: user.has_llm_access,
-      _creationTime: user._creationTime,
-    };
   },
 });
+
+// Legacy compatibility - keeping old name as alias
+export const getCurrentUser = getCurrent;
 
 // Update user profile
 export const updateUserProfile = mutation({
