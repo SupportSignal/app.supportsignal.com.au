@@ -56,7 +56,7 @@ export default {
         tsconfig: 'apps/web/tsconfig.json',
       },
     ],
-    '^.+\\.js$': [
+    '^.+\\.(js|jsx)$': [
       'ts-jest',
       {
         useESM: true,
@@ -73,6 +73,8 @@ export default {
     '^@convex/(.*)$': '<rootDir>/apps/convex/$1',
     '^@web/(.*)$': '<rootDir>/apps/web/$1',
     '^@ui/(.*)$': '<rootDir>/packages/ui/$1',
+    '^@starter/ui$': '<rootDir>/packages/ui/src/index.ts',
+    '^@starter/ui/(.*)$': '<rootDir>/packages/ui/src/$1',
   },
 
   // Setup file for React/jsdom environment

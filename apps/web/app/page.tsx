@@ -72,6 +72,12 @@ export default function HomePage() {
                 Components
               </Link>
               <Link
+                href="/wizard-demo"
+                className="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Wizard Demo
+              </Link>
+              <Link
                 href="/dev"
                 className="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium"
               >
