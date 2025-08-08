@@ -74,3 +74,73 @@ Schema normalization was incorporated into Story 1.4 (Core API Layer) to address
 - Updated all affected code from Stories 1.2 and 1.3
 
 This ensures documentation matches reality while identifying improvements needed.
+
+## Story 1.4 Schema Migration Critical Learning
+
+### The Migration Challenge
+**Problem Discovered**: Production data contained 21 `incident_classifications` records with PascalCase enum values conflicting with new snake_case schema.
+
+**Critical Error**: 
+```
+Document with ID 'n1701v1n9cw56drs52va3xb0kwh7n7yym' in table 'incident_classifications' 
+does not match the schema
+```
+
+### The 3-Step Migration Solution
+
+**Step 1**: Relax Schema Validation (Temporary)
+```typescript
+// Allow both old and new enum formats during migration
+incident_type: v.union(
+  v.literal("behavioural"), v.literal("environmental"), // New format
+  v.literal("Behavioural"), v.literal("Environmental")  // Old format (temp)
+)
+```
+
+**Step 2**: Deploy Functions & Migrate Data
+```javascript
+// Migration script updated 21 records
+const records = await ctx.db.query("incident_classifications").collect();
+const updates = records.map(record => ({
+  ...record,
+  incident_type: record.incident_type.toLowerCase(),
+  severity: record.severity.toLowerCase()
+}));
+```
+
+**Step 3**: Restore Strict Schema
+```typescript
+// Final schema with only new format
+incident_type: v.union(
+  v.literal("behavioural"), v.literal("environmental"),
+  v.literal("medical"), v.literal("communication"), v.literal("other")
+)
+```
+
+### Integration Impact on Story 1.4 Testing
+
+**Before Migration**: API testing completely blocked
+- Integration tests failed with schema validation errors
+- Unable to assess actual API implementation status
+- Could not distinguish between schema vs implementation issues
+
+**After Migration**: Clear API assessment possible  
+- Enabled 70.4% success rate testing with real authentication
+- Discovered 87% API implementation complete (not 66.7% as initially thought)
+- Allowed proper Story 1.4 completion assessment
+
+### Future Schema Migration Best Practices
+
+1. **Plan for Production Data**: Always assume production contains data in old format
+2. **3-Step Migration Pattern**: Relax → Deploy/Migrate → Restore strict validation
+3. **Test Migration Scripts**: Validate against realistic data volumes
+4. **Migration as Deployment Requirement**: Schema changes require data migration planning
+5. **Enum Consistency**: Establish and enforce naming conventions across all enum fields
+
+### Connection to API Testing Methodology
+
+The schema migration enabled the multi-phase API testing methodology:
+- **Without schema fix**: No API testing possible
+- **With schema fix**: Full API existence, authentication, and workflow testing possible
+
+This demonstrates how foundational issues (schema validation) can completely mask implementation assessment, making systematic problem-solving approach critical for accurate project status evaluation.

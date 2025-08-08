@@ -1034,3 +1034,77 @@ The testing infrastructure implementation revealed the hidden complexity of mode
 The key insight is that testing infrastructure is not just about writing tests—it's about orchestrating a complex ecosystem of tools that must work harmoniously across development, CI/CD, and deployment environments.
 
 **Additional Insight**: Achieving high test coverage (86.7% statements, 79.49% branches) requires systematic approaches to mocking, strategic test planning, and understanding of coverage optimization patterns. The investment in comprehensive testing infrastructure pays dividends in code quality and developer confidence.
+
+### 12. Story 1.4 API Testing Methodology (2025-08-08)
+
+#### Critical Discovery: Authentication Testing vs API Implementation Validation
+
+**The Problem**: Initial Story 1.4 integration testing showed 66.7% failure rate, leading to incorrect assumption that APIs were missing or broken.
+
+**The Solution**: Separate API existence testing from authentication testing using phased validation approach.
+
+#### Key Learning: Multi-Phase API Testing Strategy
+
+**Phase 1 - API Existence Testing**:
+```typescript
+// Test API availability and validation without authentication
+await testAPIEndpoint('incidents.create', client.mutation, api.incidents.create, mockData);
+// Result: Confirms API exists, has proper validation, returns appropriate errors
+```
+
+**Phase 2 - Authentication Integration Testing**:
+```typescript  
+// Test with real authentication after confirming APIs exist
+const loginResult = await client.mutation(api.auth.loginUser, {
+  email: "system_admin@ndis.com.au", 
+  password: "password"
+});
+// Result: Tests actual permission system with real role validation
+```
+
+**Phase 3 - Business Logic Workflow Testing**:
+```typescript
+// Test complete end-to-end workflows with authenticated users
+// Result: Validates business logic implementation and user permissions
+```
+
+#### Impact on Story 1.4 Assessment
+
+**Before Multi-Phase Testing**:
+- Assumed 66.7% test failure = missing API implementation
+- Authentication issues masked successful API implementation
+- Incorrect gaps analysis led to unnecessary development work
+
+**After Multi-Phase Testing**:  
+- Discovered 87% API implementation complete (13/15 APIs working)
+- 70.4% success rate with real authentication (authentic permission testing)
+- Clear distinction between implementation bugs vs missing functionality
+
+#### Static User Authentication Pattern
+
+**Challenge**: Integration testing required multiple user roles but dynamic user creation always defaulted to `frontline_worker`.
+
+**Solution**: Use persistent static users with known credentials:
+```typescript
+const STATIC_USERS = {
+  system_admin: { email: "system_admin@ndis.com.au", password: "password" },
+  company_admin: { email: "company_admin@ndis.com.au", password: "password" },
+  team_lead: { email: "team_lead@ndis.com.au", password: "password" },
+  frontline_worker: { email: "frontline_worker@ndis.com.au", password: "password" }
+};
+```
+
+**Benefits**:
+- Authentic role-based permission testing
+- Consistent test environment without user creation complexity
+- Clear distinction between permission issues vs implementation bugs
+
+#### Future Application
+
+This methodology should be applied to all API testing scenarios:
+1. **Always test API existence separately from authentication**
+2. **Use static users with known credentials for role-based testing** 
+3. **Validate permission systems with real authentication, not mocks**
+4. **Distinguish between missing functionality vs configuration issues**
+
+This discovery significantly improves Story completion assessment accuracy and prevents wasted development effort on non-existent gaps.
