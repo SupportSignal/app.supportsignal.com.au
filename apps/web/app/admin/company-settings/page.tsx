@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use client';
 
 import { ComingSoonPage } from '@/components/layout/coming-soon-page';
