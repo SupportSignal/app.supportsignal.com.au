@@ -4,10 +4,12 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useQuery, useAction } from 'convex/react';
 import { ChatInterface } from '@/components/chat/chat-interface';
+import { AdminPageHeader } from '@/components/layout/admin-page-header';
 import { ChatMessage } from '@/types/chat';
 import { useAuth } from '@/components/auth/auth-provider';
 import { api } from '../../../convex/_generated/api';
 import { Id } from '../../../convex/_generated/dataModel';
+import { MessageCircle } from 'lucide-react';
 
 export default function ChatPage() {
   const { user, sessionToken, isLoading: authLoading } = useAuth();
@@ -129,40 +131,31 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="container mx-auto h-screen flex flex-col p-4">
-      {/* Home Navigation */}
-      <div className="text-left mb-4">
-        <Link
-          href="/"
-          className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <span className="mr-1">←</span>
-          Back to Home
-        </Link>
-      </div>
+    <div className="min-h-full bg-gray-50 dark:bg-gray-900">
+      <div className="container mx-auto px-6 py-12 h-screen flex flex-col">
+        <AdminPageHeader
+          title="AI Chat Assistant"
+          description="Ask questions about this project and get AI-powered answers"
+          icon={<MessageCircle className="w-6 h-6 text-teal-600 dark:text-teal-400" />}
+        />
 
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">AI Chat Assistant</h1>
-        <p className="text-muted-foreground">
-          Ask questions about this project and get AI-powered answers.
-        </p>
         {llmAccess && !llmAccess.hasLLMAccess && (
-          <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
-            <p className="text-sm text-amber-800">
+          <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md">
+            <p className="text-sm text-amber-800 dark:text-amber-200">
               You&apos;re using the basic chat experience. For AI-powered responses with access to our knowledge base, 
               please contact <strong>david@ideasmen.com.au</strong> to request LLM access.
             </p>
           </div>
         )}
-      </div>
 
-      <div className="flex-1 min-h-0">
-        <ChatInterface
-          messages={messages}
-          onSendMessage={handleSendMessage}
-          isLoading={isLoading}
-          error={error || undefined}
-        />
+        <div className="flex-1 min-h-0">
+          <ChatInterface
+            messages={messages}
+            onSendMessage={handleSendMessage}
+            isLoading={isLoading}
+            error={error || undefined}
+          />
+        </div>
       </div>
     </div>
   );

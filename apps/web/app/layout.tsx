@@ -6,6 +6,7 @@ import { AuthProvider } from '../components/auth/auth-provider';
 import { ThemeProvider } from '../components/theme/theme-provider';
 import { LoggingProvider } from '../components/logging/logging-provider';
 import { VersionProvider } from '../components/dev/version-provider';
+import { MainLayout } from '../components/layout/main-layout';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -72,7 +73,9 @@ export default function RootLayout({
                   indicatorPosition="bottom-left"
                   maxVersions={20}
                 >
-                  {children}
+                  <MainLayout>
+                    {children}
+                  </MainLayout>
                 </VersionProvider>
               </ConvexClientProvider>
             </LoggingProvider>

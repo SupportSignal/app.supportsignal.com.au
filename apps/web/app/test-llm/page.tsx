@@ -48,11 +48,11 @@ export default function TestLLMPage() {
       {/* Home Navigation */}
       <div className="text-left mb-4">
         <Link
-          href="/"
+          href="/admin"
           className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <span className="mr-1">←</span>
-          Back to Home
+          Back to Admin Tools
         </Link>
       </div>
 

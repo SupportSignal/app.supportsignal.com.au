@@ -1,184 +1,212 @@
 'use client';
 
+import Link from 'next/link';
 import { useQuery } from 'convex/react';
 import { api } from '@/lib/convex-api';
 import { useAuth } from '../components/auth/auth-provider';
-import { LogoutButton } from '../components/auth/logout-button';
-import Link from 'next/link';
-import { ThemeToggle } from '../components/theme/theme-toggle';
-import { Menu, User, Settings, MessageSquare } from 'lucide-react';
+import { EmbeddedAuth } from '../components/auth/embedded-auth';
+import { NAVIGATION_CONFIG } from '@/lib/navigation/navigation-config';
+import { Button } from '@starter/ui/button';
+import { 
+  Shield, 
+  Users, 
+  BarChart3,
+  ArrowRight,
+  CheckCircle
+} from 'lucide-react';
 
 export default function HomePage() {
   const testMessage = useQuery(api.queries.getTestMessage);
-  const testMessages = useQuery(api.queries.getTestMessages);
   const { user } = useAuth();
 
-  return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      {/* Navigation Header */}
-      <nav className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo/Brand */}
-            <div className="flex items-center space-x-2">
-              <Menu className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-              <span className="text-xl font-bold text-gray-900 dark:text-white">
-                Starter App
-              </span>
-            </div>
-
-            {/* Navigation Links */}
-            <div className="hidden md:flex items-center space-x-6">
-              <Link
-                href="/"
-                className="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Home
-              </Link>
-              {user && (
-                <>
-                  <Link
-                    href="/chat"
-                    className="flex items-center text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium"
-                  >
-                    <MessageSquare className="h-4 w-4 mr-1" />
-                    Chat
+  // If user is signed in, show direct access to app functions
+  if (user) {
+    return (
+      <div className="min-h-full bg-gray-50 dark:bg-gray-900">
+        {/* Welcome Header for Signed-In Users */}
+        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+          <div className="container mx-auto px-6 py-8">
+            <div className="max-w-4xl mx-auto">
+              <div className="mb-6">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Welcome back, {user.name}
+                </h1>
+                <p className="text-gray-600 dark:text-gray-400 capitalize">
+                  {user.role?.replace('_', ' ')} Access
+                </p>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button asChild size="lg" className="bg-teal-600 hover:bg-teal-700 text-white">
+                  <Link href="/dashboard">
+                    <BarChart3 className="w-5 h-5 mr-2" />
+                    Go to Dashboard
                   </Link>
-                  <Link
-                    href="/dashboard"
-                    className="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium"
-                  >
-                    Dashboard
+                </Button>
+                <Button asChild size="lg" variant="outline">
+                  <Link href="/incidents">
+                    <Shield className="w-5 h-5 mr-2" />
+                    Report Incident
                   </Link>
-                  <Link
-                    href="/protected"
-                    className="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium"
-                  >
-                    Protected
-                  </Link>
-                  <Link
-                    href="/debug-logs"
-                    className="flex items-center text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium"
-                  >
-                    <Settings className="h-4 w-4 mr-1" />
-                    Debug
-                  </Link>
-                </>
-              )}
-              <Link
-                href="/showcase"
-                className="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Components
-              </Link>
-              <Link
-                href="/wizard-demo"
-                className="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Wizard Demo
-              </Link>
-              <Link
-                href="/dev"
-                className="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Dev
-              </Link>
-            </div>
-
-            {/* Right side - Auth & Theme */}
-            <div className="flex items-center space-x-4">
-              {user ? (
-                <div className="flex items-center space-x-3">
-                  <div className="flex items-center space-x-2">
-                    <User className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
-                      {user.name}
-                    </span>
-                  </div>
-                  <LogoutButton />
-                </div>
-              ) : (
-                <div className="flex items-center space-x-2">
-                  <Link
-                    href="/login"
-                    className="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium"
-                  >
-                    Sign In
-                  </Link>
-                  <Link
-                    href="/register"
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-sm font-medium"
-                  >
-                    Sign Up
-                  </Link>
-                </div>
-              )}
-              <ThemeToggle />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
-      </nav>
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-          <div className="space-y-6">
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white">
-              Welcome - Auto Deploy Test
-            </h1>
-            <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl">
-              to the Agentic Starter Template
-            </p>
 
-            {/* Welcome Message */}
-            {user && (
-              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md mx-auto">
-                <p className="text-green-600 dark:text-green-400 text-lg">
-                  👋 Welcome back, {user.name}!
-                </p>
-                <p className="text-gray-600 dark:text-gray-400 text-sm mt-2">
-                  Use the navigation menu above to explore the app.
-                </p>
-              </div>
-            )}
-            <div className="pt-8 space-y-4">
-              <div className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 transition-colors">
-                🚀 Next.js App Router + TypeScript + Tailwind CSS
-              </div>
-
-              {/* Convex Connection Test */}
-              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md mx-auto">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  📡 Convex Connection Test
-                </h3>
-
-                {testMessage === undefined ? (
-                  <p className="text-yellow-600 dark:text-yellow-400">
-                    Loading...
+        {/* Direct Action Cards */}
+        <div className="container mx-auto px-6 py-12">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+              Your workspace tools:
+            </h2>
+            <div className="grid md:grid-cols-3 gap-6">
+              <Link href="/incidents" className="group">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-teal-300 dark:hover:border-teal-600 transition-colors">
+                  <Shield className="w-8 h-8 text-teal-600 mb-3" />
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Report Incident</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Quick incident entry and tracking
                   </p>
-                ) : testMessage === null ? (
-                  <p className="text-red-600 dark:text-red-400">
-                    Connection failed
+                  <ArrowRight className="w-4 h-4 text-teal-600 mt-3 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </Link>
+              
+              <Link href="/dashboard" className="group">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-teal-300 dark:hover:border-teal-600 transition-colors">
+                  <BarChart3 className="w-8 h-8 text-teal-600 mb-3" />
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">View Dashboard</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Analytics and insights overview
                   </p>
-                ) : (
-                  <div className="space-y-2 text-sm">
-                    <p className="text-green-600 dark:text-green-400">
-                      ✅ Connected!
-                    </p>
-                    <p className="text-gray-600 dark:text-gray-300">
-                      Message: {testMessage.message}
-                    </p>
-                    <p className="text-gray-600 dark:text-gray-300">
-                      Status: {testMessage.status}
-                    </p>
-                    <p className="text-gray-600 dark:text-gray-300">
-                      Messages in DB: {testMessages?.length || 0}
-                    </p>
-                  </div>
-                )}
+                  <ArrowRight className="w-4 h-4 text-teal-600 mt-3 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </Link>
+              
+              <Link href="/users" className="group">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-teal-300 dark:hover:border-teal-600 transition-colors">
+                  <Users className="w-8 h-8 text-teal-600 mb-3" />
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Manage Team</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    User management and permissions
+                  </p>
+                  <ArrowRight className="w-4 h-4 text-teal-600 mt-3 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* System Status (Development) */}
+        {testMessage && (
+          <div className="container mx-auto px-6 pb-8">
+            <div className="max-w-md mx-auto bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-4 rounded-lg">
+              <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                <CheckCircle className="w-5 h-5" />
+                <span className="font-medium">System Status: Connected</span>
               </div>
+              <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                All systems operational • Database: {testMessage.status}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // If user is signed out, show auth-first minimal + feature gateway
+  return (
+    <div className="min-h-full bg-gray-50 dark:bg-gray-900">
+      {/* Auth-First Section Above the Fold */}
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="container mx-auto px-6 py-16">
+          <div className="max-w-lg mx-auto">
+            <div className="text-center mb-8">
+              <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Welcome to Your NDIS Intelligence Platform
+              </h1>
+            </div>
+            
+            {/* Embedded Auth Form */}
+            <EmbeddedAuth />
+            
+            <div className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
+              <p className="font-medium">New to SupportSignal?</p>
+              <p>→ Quick 2-minute setup</p>
+              <p>→ No credit card required</p>
             </div>
           </div>
         </div>
       </div>
-    </main>
+
+      {/* Feature Gateway Section Below the Fold */}
+      <div className="container mx-auto px-6 py-16">
+        <div className="max-w-4xl mx-auto">
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white text-center mb-8">
+            What you can do once signed in:
+          </h3>
+          
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+              <Shield className="w-8 h-8 text-teal-600 mb-4" />
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
+                🚨 Report an Incident
+              </h4>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Quick incident entry and tracking with AI-guided assistance
+              </p>
+              <Button asChild size="sm" variant="outline" className="w-full">
+                <Link href="/login">
+                  Sign in to start →
+                </Link>
+              </Button>
+            </div>
+            
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+              <BarChart3 className="w-8 h-8 text-teal-600 mb-4" />
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
+                📊 View Dashboard
+              </h4>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Analytics and insights overview with real-time monitoring
+              </p>
+              <Button asChild size="sm" variant="outline" className="w-full">
+                <Link href="/login">
+                  Sign in to access →
+                </Link>
+              </Button>
+            </div>
+            
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+              <Users className="w-8 h-8 text-teal-600 mb-4" />
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
+                👥 Manage Team
+              </h4>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                User management and role-based permissions setup
+              </p>
+              <Button asChild size="sm" variant="outline" className="w-full">
+                <Link href="/login">
+                  Sign in to manage →
+                </Link>
+              </Button>
+            </div>
+          </div>
+          
+          <div className="text-center mt-12">
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              Ready to get started?
+            </p>
+            <Button asChild size="lg" className="bg-teal-600 hover:bg-teal-700 text-white">
+              <Link href="/register">
+                Create Your Account
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

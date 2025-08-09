@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { Button } from '@starter/ui';
@@ -12,6 +13,7 @@ import {
 } from '@starter/ui';
 import { Input } from '@starter/ui';
 import { ThemeToggle } from '../../components/theme/theme-toggle';
+import { AdminPageHeader } from '@/components/layout/admin-page-header';
 import { IncidentCard, MetadataDisplay } from '@/components/incident';
 import { StatusBadge } from '@/components/shared';
 import { WorkflowProgress } from '@/components/workflow';
@@ -225,36 +227,18 @@ const mockWizardSteps = [
 
 export default function ShowcasePage() {
   return (
-    <div className="min-h-screen bg-healthcare-background dark:bg-healthcare-dark-background">
-      {/* Header with SupportSignal branding */}
-      <header className="bg-ss-navy dark:bg-healthcare-dark-surface text-white shadow-lg">
-        <div className="max-w-ss-content mx-auto px-ss-lg py-ss-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-ss-md">
-              <div className="w-10 h-10 bg-gradient-to-r from-ss-teal-light to-ss-teal-deep rounded-lg flex items-center justify-center">
-                <span className="font-bold text-white text-xl">SS</span>
-              </div>
-              <div>
-                <h1 className="text-header-h1 font-bold text-white">SupportSignal Design System</h1>
-                <p className="text-healthcare-sm text-gray-300 dark:text-healthcare-dark-muted">Where insight meets action</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-ss-sm">
-              <Link
-                href="/"
-                className="inline-flex items-center text-ss-teal-light hover:text-ss-teal dark:text-healthcare-dark-accent dark:hover:text-ss-teal-light font-medium px-4 py-2 rounded-md transition-colors"
-              >
-                ← Back to Home
-              </Link>
-              <ThemeToggle />
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-full bg-gray-50 dark:bg-gray-900">
+      <div className="container mx-auto px-6 py-12">
+        <AdminPageHeader
+          title="Component Showcase"
+          description="Browse and test UI components and design patterns"
+          icon={<span className="text-2xl">🧪</span>}
+        >
+          <ThemeToggle />
+        </AdminPageHeader>
 
-      <main className="max-w-ss-content mx-auto p-ss-lg">
-
-        {/* SupportSignal Button Components Section */}
+        <main className="max-w-4xl mx-auto">
+          {/* SupportSignal Button Components Section */}
         <section className="mb-ss-3xl">
           <Card className="dark:bg-card dark:border-border">
             <CardHeader>
@@ -1091,7 +1075,8 @@ export default function ShowcasePage() {
             </CardContent>
           </Card>
         </section>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

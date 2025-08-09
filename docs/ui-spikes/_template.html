@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SupportSignal UI Spike - [Replace with Specific Title]</title>
+    
+    <!-- SupportSignal Healthcare Styles -->
+    <link rel="stylesheet" href="../styles.css">
+    
+    <!-- Tailwind CSS CDN (for additional utilities) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Configure Tailwind to use our SupportSignal color palette
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // SupportSignal Brand Colors
+                        'ss-teal': {
+                            light: '#3CD7C4',
+                            DEFAULT: '#2CC4B7',
+                            deep: '#1798A2',
+                        },
+                        'ss-navy': '#0C2D55',
+                        'ss-bg-grey': '#F4F7FA',
+                        'ss-cta-blue': '#287BCB',
+                        'ss-success': '#27AE60',
+                        'ss-alert': '#F2C94C',
+                        
+                        // Healthcare Semantic Colors
+                        'healthcare': {
+                            primary: '#0C2D55',
+                            accent: '#2CC4B7',
+                            success: '#27AE60',
+                            warning: '#F2C94C',
+                            background: '#F4F7FA',
+                            surface: '#FFFFFF',
+                        },
+                        
+                        // Workflow Status Colors
+                        'workflow': {
+                            draft: '#6B7280',
+                            progress: '#287BCB',
+                            completed: '#27AE60',
+                            alert: '#F2C94C',
+                        },
+                    },
+                    fontFamily: {
+                        'healthcare': ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    fontSize: {
+                        'healthcare-xs': ['0.75rem', { lineHeight: '1.25', letterSpacing: '0.025em' }],
+                        'healthcare-sm': ['0.875rem', { lineHeight: '1.5', letterSpacing: '0.025em' }],
+                        'healthcare-base': ['1rem', { lineHeight: '1.6', letterSpacing: '0.0125em' }],
+                        'healthcare-lg': ['1.125rem', { lineHeight: '1.6', letterSpacing: '0.0125em' }],
+                        'header-h1': ['2.25rem', { lineHeight: '1.2', fontWeight: '700', letterSpacing: '-0.025em' }],
+                        'header-h2': ['1.875rem', { lineHeight: '1.3', fontWeight: '600', letterSpacing: '-0.025em' }],
+                        'header-h3': ['1.25rem', { lineHeight: '1.4', fontWeight: '600', letterSpacing: '-0.0125em' }],
+                    },
+                    spacing: {
+                        'ss-xs': '0.5rem',
+                        'ss-sm': '0.75rem',
+                        'ss-md': '1rem',
+                        'ss-lg': '1.5rem',
+                        'ss-xl': '2rem',
+                        'ss-2xl': '3rem',
+                        'ss-3xl': '4rem',
+                    },
+                    maxWidth: {
+                        'ss-content': '87.5rem',
+                        'ss-form': '32rem',
+                        'ss-card': '24rem',
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <!-- Inter Font for Healthcare Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons for UI elements -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <style>
+        /* Additional custom styles specific to this spike go here */
+        /* Keep this section minimal - prefer using our base classes */
+    </style>
+</head>
+<body class="min-h-screen bg-healthcare-background font-healthcare text-healthcare-primary">
+    
+    <!-- SupportSignal Header (Optional - remove if not needed) -->
+    <header class="bg-ss-navy text-white shadow-lg">
+        <div class="max-w-ss-content mx-auto px-ss-lg py-ss-lg">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-ss-md">
+                    <!-- SupportSignal Logo -->
+                    <div class="w-10 h-10 bg-gradient-to-r from-ss-teal-light to-ss-teal-deep rounded-lg flex items-center justify-center">
+                        <span class="font-bold text-white text-xl">SS</span>
+                    </div>
+                    <div>
+                        <h1 class="text-header-h3 font-bold text-white">UI Spike</h1>
+                        <p class="text-healthcare-sm text-gray-300">Where insight meets action</p>
+                    </div>
+                </div>
+                
+                <!-- Optional navigation/controls -->
+                <div class="flex items-center gap-ss-sm">
+                    <button class="ss-btn ss-btn-outline text-white border-white hover:bg-white hover:text-ss-navy">
+                        Back to Spikes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-ss-content mx-auto p-ss-lg">
+        
+        <!-- Page Title Section -->
+        <section class="ss-section">
+            <h1 class="header-h1 text-healthcare-primary mb-ss-sm">
+                [Replace with Component Title]
+            </h1>
+            <p class="healthcare-lg text-gray-600">
+                [Replace with component description and purpose]
+            </p>
+        </section>
+
+        <!-- Component Demo Section -->
+        <section class="ss-section">
+            <div class="healthcare-card">
+                <h2 class="header-h2 text-healthcare-primary mb-ss-md">Component Demo</h2>
+                
+                <!-- Replace this entire div with your component implementation -->
+                <div class="ss-grid ss-grid-2 gap-ss-lg">
+                    
+                    <!-- Example Card 1 -->
+                    <div class="ss-card">
+                        <h3 class="header-h3 mb-ss-sm">Example Element 1</h3>
+                        <p class="healthcare-base text-gray-600 mb-ss-md">
+                            Replace this with your actual component content. Use SupportSignal classes for consistent styling.
+                        </p>
+                        
+                        <!-- Example buttons using SupportSignal styles -->
+                        <div class="flex gap-ss-sm">
+                            <button class="ss-btn ss-btn-primary">
+                                Primary Action
+                            </button>
+                            <button class="ss-btn ss-btn-outline">
+                                Secondary Action
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Example Card 2 -->
+                    <div class="ss-card">
+                        <h3 class="header-h3 mb-ss-sm">Example Element 2</h3>
+                        <p class="healthcare-base text-gray-600 mb-ss-md">
+                            Another component example. Notice how we use consistent spacing (ss-sm, ss-md, ss-lg) and colors.
+                        </p>
+                        
+                        <!-- Example form elements -->
+                        <div class="space-y-ss-sm">
+                            <input type="text" class="ss-input" placeholder="Healthcare professional input...">
+                            <button class="ss-btn ss-btn-success w-full">
+                                Complete Task
+                            </button>
+                        </div>
+                    </div>
+                    
+                </div>
+                
+                <!-- Progress indicator example -->
+                <div class="mt-ss-lg">
+                    <div class="flex justify-between items-center mb-ss-sm">
+                        <span class="healthcare-sm text-gray-600">Example Progress</span>
+                        <span class="healthcare-sm font-semibold text-ss-teal">75%</span>
+                    </div>
+                    <div class="ss-progress">
+                        <div class="ss-progress-bar" style="width: 75%"></div>
+                    </div>
+                </div>
+                
+            </div>
+        </section>
+
+        <!-- Component Variations Section (Optional) -->
+        <section class="ss-section">
+            <h2 class="header-h2 text-healthcare-primary mb-ss-lg">Variations</h2>
+            
+            <div class="ss-grid ss-grid-3 gap-ss-lg">
+                
+                <!-- Variation 1: Minimal -->
+                <div class="healthcare-card">
+                    <div class="ss-badge ss-badge-secondary mb-ss-md">Minimal</div>
+                    <h3 class="header-h3 mb-ss-sm">Minimal Version</h3>
+                    <p class="healthcare-sm text-gray-600">
+                        Stripped down version with essential elements only.
+                    </p>
+                </div>
+                
+                <!-- Variation 2: Standard -->
+                <div class="healthcare-card">
+                    <div class="ss-badge ss-badge-primary mb-ss-md">Standard</div>
+                    <h3 class="header-h3 mb-ss-sm">Standard Version</h3>
+                    <p class="healthcare-sm text-gray-600">
+                        Full-featured version with all options available.
+                    </p>
+                </div>
+                
+                <!-- Variation 3: Enhanced -->
+                <div class="healthcare-card">
+                    <div class="ss-badge ss-badge-success mb-ss-md">Enhanced</div>
+                    <h3 class="header-h3 mb-ss-sm">Enhanced Version</h3>
+                    <p class="healthcare-sm text-gray-600">
+                        Advanced version with additional features and styling.
+                    </p>
+                </div>
+                
+            </div>
+        </section>
+
+        <!-- Implementation Notes Section -->
+        <section class="ss-section">
+            <h2 class="header-h2 text-healthcare-primary mb-ss-lg">Implementation Notes</h2>
+            
+            <div class="healthcare-alert mb-ss-md">
+                <strong>Design Decisions:</strong> Document key design choices and rationale here.
+            </div>
+            
+            <div class="healthcare-success">
+                <strong>Accessibility:</strong> Note accessibility considerations and WCAG compliance measures.
+            </div>
+            
+            <!-- Notes list -->
+            <ul class="mt-ss-md space-y-ss-sm healthcare-base text-gray-700">
+                <li class="flex items-start gap-ss-sm">
+                    <span class="ss-text-teal font-bold">•</span>
+                    Replace this with actual implementation notes
+                </li>
+                <li class="flex items-start gap-ss-sm">
+                    <span class="ss-text-teal font-bold">•</span>
+                    Document responsive behavior and mobile considerations
+                </li>
+                <li class="flex items-start gap-ss-sm">
+                    <span class="ss-text-teal font-bold">•</span>
+                    Include interaction states (hover, focus, disabled)
+                </li>
+                <li class="flex items-start gap-ss-sm">
+                    <span class="ss-text-teal font-bold">•</span>
+                    Note any deviations from SupportSignal design system
+                </li>
+            </ul>
+        </section>
+        
+    </main>
+
+    <!-- Footer (Optional) -->
+    <footer class="bg-healthcare-surface border-t border-gray-200 py-ss-lg mt-ss-3xl">
+        <div class="max-w-ss-content mx-auto px-ss-lg text-center">
+            <p class="healthcare-sm text-gray-500">
+                SupportSignal UI Spike • Created with SupportSignal Design System
+            </p>
+            <p class="healthcare-xs text-gray-400 mt-ss-xs">
+                Source: <code>/docs/ui-spikes/_template.html</code>
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Lucide icons if used
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+        
+        // Add any component-specific JavaScript here
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('SupportSignal UI Spike loaded');
+            
+            // Example: Add interaction handlers
+            document.querySelectorAll('.ss-btn').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    console.log('SupportSignal button clicked:', this.textContent.trim());
+                });
+            });
+        });
+    </script>
+    
+</body>
+</html>
+
+<!--
+USAGE INSTRUCTIONS:
+1. Copy this file to your spike folder (e.g., wizard/version-01-basic.html)
+2. Replace [placeholder text] with your specific content
+3. Modify the component demo section with your implementation
+4. Use SupportSignal classes (ss-*, healthcare-*, workflow-*) for consistency
+5. Test responsive behavior and accessibility
+6. Document your design decisions in the implementation notes
+
+AVAILABLE CLASSES:
+- Colors: ss-teal, ss-navy, ss-cta-blue, ss-success, ss-alert
+- Typography: healthcare-xs to healthcare-4xl, header-h1 to header-h3
+- Spacing: ss-xs (8px) to ss-3xl (64px)
+- Components: ss-btn, ss-card, ss-input, ss-progress, ss-badge
+- Layout: ss-container, ss-grid, ss-flex utilities
+
+SOURCE REFERENCE:
+- Style System: /docs/ui-spikes/style-source-mapping.md
+- Main App Colors: /apps/web/tailwind.config.js lines 56-97
+- Typography: /apps/web/tailwind.config.js lines 105-125
+- Last Updated: 2025-01-08
+-->

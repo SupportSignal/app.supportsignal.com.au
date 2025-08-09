@@ -1,0 +1,474 @@
+/* SupportSignal Healthcare Theme - Base Styles */
+/* Source: Derived from /apps/web/tailwind.config.js and main app styling */
+/* Last Updated: 2025-01-08 */
+
+/* Import Inter font for healthcare readability */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Base reset and healthcare typography */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 16px; /* Base size for healthcare-base */
+  line-height: 1.6; /* Optimized for healthcare documentation */
+  color: #0C2D55; /* ss-navy - professional healthcare text */
+  background-color: #F4F7FA; /* ss-bg-grey - clean healthcare background */
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #F4F7FA; /* healthcare-background */
+}
+
+/* SupportSignal Healthcare Typography Scale */
+.healthcare-xs { 
+  font-size: 0.75rem; 
+  line-height: 1.25; 
+  letter-spacing: 0.025em; 
+}
+
+.healthcare-sm { 
+  font-size: 0.875rem; 
+  line-height: 1.5; 
+  letter-spacing: 0.025em; 
+}
+
+.healthcare-base { 
+  font-size: 1rem; 
+  line-height: 1.6; 
+  letter-spacing: 0.0125em; 
+}
+
+.healthcare-lg { 
+  font-size: 1.125rem; 
+  line-height: 1.6; 
+  letter-spacing: 0.0125em; 
+}
+
+.healthcare-xl { 
+  font-size: 1.25rem; 
+  line-height: 1.5; 
+  letter-spacing: 0.0125em; 
+}
+
+.healthcare-2xl { 
+  font-size: 1.5rem; 
+  line-height: 1.4; 
+  letter-spacing: 0.0125em; 
+}
+
+.healthcare-3xl { 
+  font-size: 1.875rem; 
+  line-height: 1.3; 
+  letter-spacing: 0.0125em; 
+}
+
+.healthcare-4xl { 
+  font-size: 2.25rem; 
+  line-height: 1.2; 
+  letter-spacing: 0.0125em; 
+}
+
+/* Header Hierarchy */
+.header-h1 { 
+  font-size: 2.25rem; 
+  line-height: 1.2; 
+  font-weight: 700; 
+  letter-spacing: -0.025em; 
+  color: #0C2D55; /* ss-navy */
+}
+
+.header-h2 { 
+  font-size: 1.875rem; 
+  line-height: 1.3; 
+  font-weight: 600; 
+  letter-spacing: -0.025em; 
+  color: #0C2D55; /* ss-navy */
+}
+
+.header-h3 { 
+  font-size: 1.25rem; 
+  line-height: 1.4; 
+  font-weight: 600; 
+  letter-spacing: -0.0125em; 
+  color: #0C2D55; /* ss-navy */
+}
+
+/* SupportSignal Brand Colors as CSS Custom Properties */
+:root {
+  /* Brand Colors */
+  --ss-teal-light: #3CD7C4;
+  --ss-teal: #2CC4B7;
+  --ss-teal-deep: #1798A2;
+  --ss-navy: #0C2D55;
+  --ss-bg-grey: #F4F7FA;
+  --ss-cta-blue: #287BCB;
+  --ss-success: #27AE60;
+  --ss-alert: #F2C94C;
+  
+  /* Healthcare Semantic Colors */
+  --healthcare-primary: #0C2D55;
+  --healthcare-accent: #2CC4B7;
+  --healthcare-success: #27AE60;
+  --healthcare-warning: #F2C94C;
+  --healthcare-background: #F4F7FA;
+  --healthcare-surface: #FFFFFF;
+  
+  /* Workflow Status Colors */
+  --workflow-draft: #6B7280;
+  --workflow-progress: #287BCB;
+  --workflow-completed: #27AE60;
+  --workflow-alert: #F2C94C;
+
+  /* Spacing System */
+  --ss-xs: 0.5rem;    /* 8px */
+  --ss-sm: 0.75rem;   /* 12px */
+  --ss-md: 1rem;      /* 16px */
+  --ss-lg: 1.5rem;    /* 24px */
+  --ss-xl: 2rem;      /* 32px */
+  --ss-2xl: 3rem;     /* 48px */
+  --ss-3xl: 4rem;     /* 64px */
+
+  /* Layout Constants */
+  --sidebar-width: 15rem;      /* 240px */
+  --content-max-width: 87.5rem; /* 1400px */
+  --form-max-width: 32rem;     /* 512px */
+  --card-max-width: 24rem;     /* 384px */
+}
+
+/* Component Base Styles */
+
+/* Cards with SupportSignal styling */
+.ss-card {
+  background-color: var(--healthcare-surface);
+  border: 1px solid #e5e7eb; /* gray-200 */
+  border-radius: 0.5rem;
+  padding: var(--ss-lg);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  max-width: var(--card-max-width);
+}
+
+/* Buttons with SupportSignal branding */
+.ss-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ss-sm) var(--ss-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  border-radius: 0.375rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  text-decoration: none;
+  font-family: inherit;
+}
+
+.ss-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Button Variants */
+.ss-btn-primary {
+  background-color: var(--ss-teal);
+  color: white;
+}
+
+.ss-btn-primary:hover:not(:disabled) {
+  background-color: var(--ss-teal-deep);
+}
+
+.ss-btn-secondary {
+  background-color: var(--ss-cta-blue);
+  color: white;
+}
+
+.ss-btn-secondary:hover:not(:disabled) {
+  background-color: #1d4ed8; /* darker blue */
+}
+
+.ss-btn-success {
+  background-color: var(--ss-success);
+  color: white;
+}
+
+.ss-btn-success:hover:not(:disabled) {
+  background-color: #16a34a; /* darker green */
+}
+
+.ss-btn-outline {
+  background-color: transparent;
+  border-color: var(--ss-navy);
+  color: var(--ss-navy);
+}
+
+.ss-btn-outline:hover:not(:disabled) {
+  background-color: var(--ss-navy);
+  color: white;
+}
+
+/* Form Elements */
+.ss-input {
+  display: block;
+  width: 100%;
+  padding: var(--ss-sm) var(--ss-md);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--healthcare-primary);
+  background-color: var(--healthcare-surface);
+  border: 1px solid #d1d5db; /* gray-300 */
+  border-radius: 0.375rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.ss-input:focus {
+  outline: none;
+  border-color: var(--ss-teal);
+  box-shadow: 0 0 0 3px rgba(44, 196, 183, 0.1);
+}
+
+/* Progress Bars */
+.ss-progress {
+  width: 100%;
+  height: 0.75rem; /* 12px */
+  background-color: #e5e7eb; /* gray-200 */
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.ss-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--ss-teal-light) 0%, var(--ss-teal) 50%, var(--ss-teal-deep) 100%);
+  border-radius: 9999px;
+  transition: width 0.5s ease-in-out;
+}
+
+/* Status Badges */
+.ss-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1;
+  border-radius: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.ss-badge-success {
+  background-color: rgba(39, 174, 96, 0.1);
+  color: var(--ss-success);
+  border: 1px solid rgba(39, 174, 96, 0.2);
+}
+
+.ss-badge-warning {
+  background-color: rgba(242, 201, 76, 0.1);
+  color: #b45309; /* amber-700 */
+  border: 1px solid rgba(242, 201, 76, 0.2);
+}
+
+.ss-badge-primary {
+  background-color: rgba(44, 196, 183, 0.1);
+  color: var(--ss-teal-deep);
+  border: 1px solid rgba(44, 196, 183, 0.2);
+}
+
+.ss-badge-secondary {
+  background-color: rgba(12, 45, 85, 0.1);
+  color: var(--ss-navy);
+  border: 1px solid rgba(12, 45, 85, 0.2);
+}
+
+/* Layout Utilities */
+.ss-container {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: 0 var(--ss-lg);
+}
+
+.ss-section {
+  margin-bottom: var(--ss-3xl);
+}
+
+.ss-grid {
+  display: grid;
+  gap: var(--ss-lg);
+}
+
+.ss-grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.ss-grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.ss-flex {
+  display: flex;
+}
+
+.ss-flex-col {
+  flex-direction: column;
+}
+
+.ss-items-center {
+  align-items: center;
+}
+
+.ss-justify-between {
+  justify-content: space-between;
+}
+
+.ss-gap-sm {
+  gap: var(--ss-sm);
+}
+
+.ss-gap-md {
+  gap: var(--ss-md);
+}
+
+.ss-gap-lg {
+  gap: var(--ss-lg);
+}
+
+/* Spacing Utilities */
+.ss-p-xs { padding: var(--ss-xs); }
+.ss-p-sm { padding: var(--ss-sm); }
+.ss-p-md { padding: var(--ss-md); }
+.ss-p-lg { padding: var(--ss-lg); }
+.ss-p-xl { padding: var(--ss-xl); }
+
+.ss-m-xs { margin: var(--ss-xs); }
+.ss-m-sm { margin: var(--ss-sm); }
+.ss-m-md { margin: var(--ss-md); }
+.ss-m-lg { margin: var(--ss-lg); }
+.ss-m-xl { margin: var(--ss-xl); }
+
+.ss-mb-xs { margin-bottom: var(--ss-xs); }
+.ss-mb-sm { margin-bottom: var(--ss-sm); }
+.ss-mb-md { margin-bottom: var(--ss-md); }
+.ss-mb-lg { margin-bottom: var(--ss-lg); }
+.ss-mb-xl { margin-bottom: var(--ss-xl); }
+
+.ss-mt-xs { margin-top: var(--ss-xs); }
+.ss-mt-sm { margin-top: var(--ss-sm); }
+.ss-mt-md { margin-top: var(--ss-md); }
+.ss-mt-lg { margin-top: var(--ss-lg); }
+.ss-mt-xl { margin-top: var(--ss-xl); }
+
+/* Color Utilities */
+.ss-text-navy { color: var(--ss-navy); }
+.ss-text-teal { color: var(--ss-teal); }
+.ss-text-success { color: var(--ss-success); }
+.ss-text-alert { color: var(--workflow-alert); }
+.ss-text-muted { color: #6b7280; } /* gray-500 */
+
+.ss-bg-surface { background-color: var(--healthcare-surface); }
+.ss-bg-background { background-color: var(--healthcare-background); }
+.ss-bg-teal { background-color: var(--ss-teal); }
+.ss-bg-navy { background-color: var(--ss-navy); }
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .ss-grid-2,
+  .ss-grid-3 {
+    grid-template-columns: 1fr;
+  }
+  
+  .ss-container {
+    padding: 0 var(--ss-md);
+  }
+  
+  .header-h1 { font-size: 1.875rem; }
+  .header-h2 { font-size: 1.5rem; }
+  .header-h3 { font-size: 1.125rem; }
+}
+
+/* Accessibility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Focus styles for keyboard navigation */
+.ss-btn:focus,
+.ss-input:focus {
+  outline: 2px solid var(--ss-teal);
+  outline-offset: 2px;
+}
+
+/* Animation Utilities */
+.ss-transition {
+  transition: all 0.2s ease-in-out;
+}
+
+.ss-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.ss-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+/* Healthcare-specific patterns */
+.healthcare-card {
+  background-color: var(--healthcare-surface);
+  border: 1px solid #e5e7eb;
+  border-left: 4px solid var(--ss-teal);
+  border-radius: 0.5rem;
+  padding: var(--ss-lg);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.healthcare-alert {
+  padding: var(--ss-md);
+  border-radius: 0.375rem;
+  border-left: 4px solid var(--ss-alert);
+  background-color: rgba(242, 201, 76, 0.05);
+  color: #92400e; /* amber-800 */
+}
+
+.healthcare-success {
+  padding: var(--ss-md);
+  border-radius: 0.375rem;
+  border-left: 4px solid var(--ss-success);
+  background-color: rgba(39, 174, 96, 0.05);
+  color: #065f46; /* green-800 */
+}
+
+/* Maintain source attribution in CSS */
+/*
+SOURCE ATTRIBUTION:
+- Colors: /apps/web/tailwind.config.js lines 56-97
+- Typography: /apps/web/tailwind.config.js lines 105-125  
+- Spacing: /apps/web/tailwind.config.js lines 127-148
+- Layout patterns: Derived from SupportSignal showcase components
+- Last synced: 2025-01-08
+*/

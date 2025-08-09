@@ -2,13 +2,14 @@
 
 import { useState, useCallback } from 'react';
 import Link from 'next/link';
+import { AdminPageHeader } from '@/components/layout/admin-page-header';
 import { RedisStatsCard } from '@/components/debug-logs/redis-stats-card';
 import { SyncControlsCard } from '@/components/debug-logs/sync-controls-card';
 import { DebugLogsTable } from '@/components/debug-logs/debug-logs-table';
 import { ExportControlsCard } from '@/components/debug-logs/export-controls-card';
 import { SuppressionRulesPanel } from '@/components/debug-logs/suppression-rules-panel';
 import { Button } from '@starter/ui';
-import { RefreshCw, PanelLeft, PanelLeftClose, AlertTriangle } from 'lucide-react';
+import { RefreshCw, PanelLeft, PanelLeftClose, AlertTriangle, Bug } from 'lucide-react';
 
 export default function DebugLogsPage() {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -95,11 +96,11 @@ export default function DebugLogsPage() {
                 <h2 className="text-2xl font-bold tracking-tight">Debug Logs Dashboard</h2>
                 <div className="text-sm text-muted-foreground">
                   <Link
-                    href="/"
+                    href="/admin"
                     className="inline-flex items-center hover:text-foreground transition-colors"
                   >
                     <span className="mr-1">←</span>
-                    Back to Home
+                    Back to Admin Tools
                   </Link>
                 </div>
               </div>

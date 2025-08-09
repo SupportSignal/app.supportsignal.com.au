@@ -1,7 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useAuth } from './auth-provider';
+import { Button } from '@starter/ui/button';
+import { ArrowLeft, Key } from 'lucide-react';
 
 export function ChangePasswordForm() {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -82,110 +85,121 @@ export function ChangePasswordForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <h2 className="text-2xl font-bold mb-6 text-gray-900">Change Password</h2>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-4 pb-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-teal-100 dark:bg-teal-900">
+          <Key className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Change Password
+          </h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Update your account password to keep your account secure
+          </p>
+        </div>
+      </div>
 
+      {/* Alerts */}
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
+        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-md">
+          <strong>Error:</strong> {error}
         </div>
       )}
 
       {success && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-          Password changed successfully!
-          <div className="mt-3 space-y-2">
-            <div>
-              <a
-                href="/protected"
-                className="text-green-800 hover:text-green-900 font-medium underline"
-              >
+        <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded-md">
+          <strong>Success:</strong> Password changed successfully!
+          <div className="mt-3 flex gap-4">
+            <Button asChild size="sm" variant="outline">
+              <Link href="/dashboard">
                 Return to Dashboard
-              </a>
-            </div>
-            <div>
-              <a
-                href="/login"
-                className="text-green-800 hover:text-green-900 font-medium underline"
-              >
-                Go to Login
-              </a>
-            </div>
+              </Link>
+            </Button>
           </div>
         </div>
       )}
 
-      <div>
-        <label
-          htmlFor="currentPassword"
-          className="block text-sm font-medium text-gray-900 mb-1"
-        >
-          Current Password
-        </label>
-        <input
-          type="password"
-          id="currentPassword"
-          value={currentPassword}
-          onChange={e => setCurrentPassword(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500"
-          required
-        />
-      </div>
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label
+            htmlFor="currentPassword"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
+            Current Password
+          </label>
+          <input
+            type="password"
+            id="currentPassword"
+            value={currentPassword}
+            onChange={e => setCurrentPassword(e.target.value)}
+            disabled={isSubmitting}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 disabled:bg-gray-100 dark:disabled:bg-gray-800"
+            placeholder="Enter your current password"
+            required
+          />
+        </div>
 
-      <div>
-        <label
-          htmlFor="newPassword"
-          className="block text-sm font-medium text-gray-900 mb-1"
-        >
-          New Password
-        </label>
-        <input
-          type="password"
-          id="newPassword"
-          value={newPassword}
-          onChange={e => setNewPassword(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500"
-          required
-        />
-        <p className="text-sm text-gray-700 mt-1">
-          Must be at least 8 characters with uppercase, lowercase, number, and
-          special character
-        </p>
-      </div>
+        <div>
+          <label
+            htmlFor="newPassword"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
+            New Password
+          </label>
+          <input
+            type="password"
+            id="newPassword"
+            value={newPassword}
+            onChange={e => setNewPassword(e.target.value)}
+            disabled={isSubmitting}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 disabled:bg-gray-100 dark:disabled:bg-gray-800"
+            placeholder="Enter your new password"
+            required
+          />
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            Must be at least 8 characters with uppercase, lowercase, number, and special character (!@#$%^&*)
+          </p>
+        </div>
 
-      <div>
-        <label
-          htmlFor="confirmPassword"
-          className="block text-sm font-medium text-gray-900 mb-1"
-        >
-          Confirm New Password
-        </label>
-        <input
-          type="password"
-          id="confirmPassword"
-          value={confirmPassword}
-          onChange={e => setConfirmPassword(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500"
-          required
-        />
-      </div>
+        <div>
+          <label
+            htmlFor="confirmPassword"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
+            Confirm New Password
+          </label>
+          <input
+            type="password"
+            id="confirmPassword"
+            value={confirmPassword}
+            onChange={e => setConfirmPassword(e.target.value)}
+            disabled={isSubmitting}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 disabled:bg-gray-100 dark:disabled:bg-gray-800"
+            placeholder="Confirm your new password"
+            required
+          />
+        </div>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-      >
-        {isSubmitting ? 'Changing Password...' : 'Change Password'}
-      </button>
-
-      <div className="text-center mt-4">
-        <a
-          href="/protected"
-          className="text-blue-600 hover:text-blue-800 text-sm underline"
-        >
-          Back to Dashboard
-        </a>
-      </div>
-    </form>
+        <div className="flex gap-4 pt-6">
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="bg-teal-600 hover:bg-teal-700 text-white"
+          >
+            {isSubmitting ? 'Changing Password...' : 'Change Password'}
+          </Button>
+          
+          <Button asChild variant="outline">
+            <Link href="/dashboard" className="flex items-center gap-2">
+              <ArrowLeft className="w-4 h-4" />
+              Back to Dashboard
+            </Link>
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 }

@@ -10,6 +10,7 @@
     "./button": "./src/button.tsx",
     "./card": "./src/card.tsx",
     "./checkbox": "./src/checkbox.tsx",
+    "./collapsible": "./src/collapsible.tsx",
     "./dropdown-menu": "./src/dropdown-menu.tsx",
     "./input": "./src/input.tsx",
     "./label": "./src/label.tsx",

@@ -85,7 +85,8 @@
     "prepare": "echo 'Skipping husky in CI' && exit 0"
   },
   "dependencies": {
-    "convex": "^1.25.4"
+    "convex": "^1.25.4",
+    "zustand": "^5.0.7"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",

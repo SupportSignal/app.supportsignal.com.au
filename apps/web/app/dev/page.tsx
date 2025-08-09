@@ -240,8 +240,8 @@ export default function DevPage() {
           {/* Quick Actions */}
           <div className="mt-8 text-center">
             <div className="space-x-4">
-              <Link href="/">
-                <Button variant="outline">← Back to Home</Button>
+              <Link href="/admin">
+                <Button variant="outline">← Back to Admin Tools</Button>
               </Link>
               <Link href="/showcase">
                 <Button variant="default">View Components</Button>

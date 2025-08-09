@@ -4,10 +4,11 @@ import React, { useState } from 'react';
 import { WizardShell } from '@/components/workflow/wizard-shell';
 import { createWizardConfig, createWizardStep } from '@/lib/wizard/wizard-utils';
 import { WizardShellProps } from '@/components/workflow/wizard-types';
+import { AdminPageHeader } from '@/components/layout/admin-page-header';
 import { Button } from '@starter/ui';
 import { Card, CardContent, CardHeader, CardTitle } from '@starter/ui';
 import { Badge } from '@starter/ui';
-import { ArrowLeft, User, Briefcase, Settings, CheckCircle } from 'lucide-react';
+import { User, Briefcase, Settings, CheckCircle, Wand2 } from 'lucide-react';
 import Link from 'next/link';
 
 // Demo step components
@@ -334,41 +335,33 @@ export default function WizardDemoPage() {
 
   if (completedData) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12">
-        <div className="container mx-auto px-4">
+      <div className="min-h-full bg-gray-50 dark:bg-gray-900">
+        <div className="container mx-auto px-6 py-12">
           <div className="max-w-2xl mx-auto">
-            <Link 
-              href="/"
-              className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-6"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Home
-            </Link>
+            <AdminPageHeader
+              title="Wizard Completed!"
+              description="The onboarding process has been completed successfully"
+              icon={<CheckCircle className="w-6 h-6 text-teal-600 dark:text-teal-400" />}
+            />
             
-            <Card>
-              <CardHeader className="text-center">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle className="w-8 h-8 text-green-600" />
-                </div>
-                <CardTitle className="text-2xl">Wizard Completed!</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-center text-gray-600 mb-6">
+            <Card className="border border-gray-200 dark:border-gray-700">
+              <CardContent className="p-8">
+                <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
                   Thank you for completing the onboarding process. Here's the data that was collected:
                 </p>
                 
-                <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                  <pre className="text-sm overflow-auto">
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6">
+                  <pre className="text-sm overflow-auto text-gray-900 dark:text-gray-100">
                     {JSON.stringify(completedData, null, 2)}
                   </pre>
                 </div>
                 
                 <div className="flex justify-center space-x-4">
-                  <Button onClick={handleReset}>
+                  <Button onClick={handleReset} className="bg-teal-600 hover:bg-teal-700 text-white">
                     Try Again
                   </Button>
                   <Button variant="outline" asChild>
-                    <Link href="/">Go Home</Link>
+                    <Link href="/admin">Go to Admin</Link>
                   </Button>
                 </div>
               </CardContent>
@@ -380,63 +373,54 @@ export default function WizardDemoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="container mx-auto px-4">
+    <div className="min-h-full bg-gray-50 dark:bg-gray-900">
+      <div className="container mx-auto px-6 py-12">
         <div className="max-w-4xl mx-auto">
-          <div className="mb-8">
-            <Link 
-              href="/"
-              className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Home
-            </Link>
-            
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Wizard Framework Demo</h1>
-                <p className="text-gray-600">Interactive demo of the reusable wizard component</p>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <span className="text-sm font-medium">Variant:</span>
-                <Button
-                  size="sm"
-                  variant={variant === 'full' ? 'default' : 'outline'}
-                  onClick={() => setVariant('full')}
-                >
-                  Full
-                </Button>
-                <Button
-                  size="sm"
-                  variant={variant === 'minimal' ? 'default' : 'outline'}
-                  onClick={() => setVariant('minimal')}
-                >
-                  Minimal
-                </Button>
-              </div>
+          <AdminPageHeader
+            title="Wizard Framework Demo"
+            description="Interactive demo of the reusable wizard component"
+            icon={<Wand2 className="w-6 h-6 text-teal-600 dark:text-teal-400" />}
+          >
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Variant:</span>
+              <Button
+                size="sm"
+                variant={variant === 'full' ? 'default' : 'outline'}
+                onClick={() => setVariant('full')}
+                className={variant === 'full' ? 'bg-teal-600 hover:bg-teal-700 text-white' : ''}
+              >
+                Full
+              </Button>
+              <Button
+                size="sm"
+                variant={variant === 'minimal' ? 'default' : 'outline'}
+                onClick={() => setVariant('minimal')}
+                className={variant === 'minimal' ? 'bg-teal-600 hover:bg-teal-700 text-white' : ''}
+              >
+                Minimal
+              </Button>
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-              <Card>
-                <CardContent className="p-4">
-                  <Badge className="mb-2">Auto-save</Badge>
-                  <p className="text-sm text-gray-600">Changes are automatically saved after 300ms</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <Badge className="mb-2">Session Recovery</Badge>
-                  <p className="text-sm text-gray-600">Progress is restored if you refresh the page</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <Badge className="mb-2">Keyboard Navigation</Badge>
-                  <p className="text-sm text-gray-600">Use arrow keys, Ctrl+Enter, and Escape</p>
-                </CardContent>
-              </Card>
-            </div>
+          </AdminPageHeader>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <Card className="border border-gray-200 dark:border-gray-700">
+              <CardContent className="p-4">
+                <Badge className="mb-2 bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200">Auto-save</Badge>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Changes are automatically saved after 300ms</p>
+              </CardContent>
+            </Card>
+            <Card className="border border-gray-200 dark:border-gray-700">
+              <CardContent className="p-4">
+                <Badge className="mb-2 bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200">Session Recovery</Badge>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Progress is restored if you refresh the page</p>
+              </CardContent>
+            </Card>
+            <Card className="border border-gray-200 dark:border-gray-700">
+              <CardContent className="p-4">
+                <Badge className="mb-2 bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200">Keyboard Navigation</Badge>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Use arrow keys, Ctrl+Enter, and Escape</p>
+              </CardContent>
+            </Card>
           </div>
 
           <WizardShell
