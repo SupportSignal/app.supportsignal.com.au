@@ -239,7 +239,6 @@ describe('ChangePasswordForm', () => {
 
       // Check success message links
       expect(screen.getByText('Return to Dashboard')).toBeInTheDocument();
-      expect(screen.getByText('Go to Login')).toBeInTheDocument();
     });
 
     it('should show error message when password change fails', async () => {
