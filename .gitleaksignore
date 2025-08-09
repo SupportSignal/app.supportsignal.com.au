@@ -1,0 +1,27 @@
+# Gitleaks ignore file
+# Ignore test fixture tokens with ANSI escape sequences - use full fingerprints
+
+# Test fingerprints from gitleaks output
+tests/convex/impersonation-security-edge-cases.test.ts:generic-api-key:474
+tests/convex/impersonation-security-edge-cases.test.ts:generic-api-key:570
+tests/convex/session-resolver-impersonation.test.ts:generic-api-key:311
+tests/convex/session-resolver-impersonation.test.ts:generic-api-key:312
+tests/convex/session-resolver-impersonation.test.ts:generic-api-key:341
+tests/convex/session-resolver-impersonation.test.ts:generic-api-key:342
+tests/convex/session-resolver-impersonation.test.ts:generic-api-key:526
+tests/convex/session-resolver-impersonation.test.ts:generic-api-key:528
+tests/convex/session-resolver-impersonation.test.ts:generic-api-key:530
+tests/web/components/auth/impersonation-auth-flow.test.tsx:generic-api-key:146
+tests/web/components/auth/impersonation-auth-flow.test.tsx:generic-api-key:204
+tests/workers/log-ingestion/integration/integration.test.ts:generic-api-key:495
+tests/workers/log-ingestion/integration/cross-system.test.ts:generic-api-key:801
+
+# Environment file secrets (already committed, suppressed for CI)
+.env.source-of-truth.local:openai-api-key:12
+apps/convex/.env.local:generic-api-key:24
+apps/convex/.env.local:generic-api-key:29
+apps/convex/.env.local:generic-api-key:34
+apps/convex/.env.local:generic-api-key:51
+apps/convex/.env.local:generic-api-key:56
+apps/convex/.env.local:openai-api-key:33
+apps/convex/.env.local:cloudflare-api-key:14

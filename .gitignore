@@ -63,6 +63,8 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 .env.development.local
 .env.test.local
 .env.production.local
+.env.backup*
+.env.source-of-truth*
 
 # Screenshots from root directory only (prevent accidental commits)
 /*.png
