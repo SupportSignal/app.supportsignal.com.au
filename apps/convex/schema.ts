@@ -161,11 +161,34 @@ export default defineSchema({
 
   // SupportSignal Incident Management Tables
   
+  // NDIS participants table with multi-tenant support
+  participants: defineTable({
+    company_id: v.id("companies"), // Multi-tenant isolation
+    first_name: v.string(),
+    last_name: v.string(),
+    date_of_birth: v.string(),
+    ndis_number: v.string(), // NDIS participant identifier
+    contact_phone: v.optional(v.string()),
+    emergency_contact: v.optional(v.string()),
+    support_level: v.union(v.literal("high"), v.literal("medium"), v.literal("low")),
+    care_notes: v.optional(v.string()),
+    status: v.union(v.literal("active"), v.literal("inactive"), v.literal("discharged")),
+    created_at: v.number(),
+    created_by: v.id("users"),
+    updated_at: v.number(),
+    updated_by: v.id("users"),
+  })
+    .index("by_company", ["company_id"])
+    .index("by_ndis_number", ["ndis_number"])
+    .index("by_status", ["status"])
+    .index("by_name", ["last_name", "first_name"]),
+  
   // Core incidents table with multi-tenant support
   incidents: defineTable({
     company_id: v.id("companies"), // Multi-tenant isolation
     reporter_name: v.string(),
-    participant_name: v.string(),
+    participant_id: v.optional(v.id("participants")), // Reference to participant record
+    participant_name: v.string(), // Keep for backwards compatibility and non-participant incidents
     event_date_time: v.string(),
     location: v.string(),
     

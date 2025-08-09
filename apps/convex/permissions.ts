@@ -47,7 +47,120 @@ export const PERMISSIONS = {
   // Audit and Security
   VIEW_AUDIT_LOGS: 'view_audit_logs',
   VIEW_SECURITY_LOGS: 'view_security_logs',
+  
+  // Testing and Development
+  SAMPLE_DATA: 'sample_data',
 } as const;
+
+// Enhanced Permission Registry with UI metadata
+interface PermissionDefinition {
+  key: string;
+  label: string;
+  description: string;
+  category: string;
+  testable: boolean;
+}
+
+export const PERMISSION_REGISTRY: Record<string, PermissionDefinition> = {
+  [PERMISSIONS.CREATE_INCIDENT]: {
+    key: PERMISSIONS.CREATE_INCIDENT,
+    label: 'Create Incidents',
+    description: 'Create new incident reports',
+    category: 'Incident Management',
+    testable: true,
+  },
+  [PERMISSIONS.EDIT_OWN_INCIDENT_CAPTURE]: {
+    key: PERMISSIONS.EDIT_OWN_INCIDENT_CAPTURE,
+    label: 'Edit Own Incidents',
+    description: 'Edit incident captures you created',
+    category: 'Incident Management',
+    testable: true,
+  },
+  [PERMISSIONS.VIEW_TEAM_INCIDENTS]: {
+    key: PERMISSIONS.VIEW_TEAM_INCIDENTS,
+    label: 'View Team Incidents',
+    description: 'View incidents from your team',
+    category: 'Incident Management',
+    testable: true,
+  },
+  [PERMISSIONS.VIEW_ALL_COMPANY_INCIDENTS]: {
+    key: PERMISSIONS.VIEW_ALL_COMPANY_INCIDENTS,
+    label: 'View Company Incidents',
+    description: 'View all company incidents',
+    category: 'Incident Management',
+    testable: true,
+  },
+  [PERMISSIONS.PERFORM_ANALYSIS]: {
+    key: PERMISSIONS.PERFORM_ANALYSIS,
+    label: 'Perform Analysis',
+    description: 'Analyze incidents and generate insights',
+    category: 'Incident Management',
+    testable: true,
+  },
+  [PERMISSIONS.MANAGE_USERS]: {
+    key: PERMISSIONS.MANAGE_USERS,
+    label: 'Manage Users',
+    description: 'Add, edit, and manage users',
+    category: 'User Management',
+    testable: true,
+  },
+  [PERMISSIONS.INVITE_USERS]: {
+    key: PERMISSIONS.INVITE_USERS,
+    label: 'Invite Users',
+    description: 'Send user invitations',
+    category: 'User Management',
+    testable: true,
+  },
+  [PERMISSIONS.VIEW_USER_PROFILES]: {
+    key: PERMISSIONS.VIEW_USER_PROFILES,
+    label: 'View User Profiles',
+    description: 'View detailed user information',
+    category: 'User Management',
+    testable: true,
+  },
+  [PERMISSIONS.SYSTEM_CONFIGURATION]: {
+    key: PERMISSIONS.SYSTEM_CONFIGURATION,
+    label: 'System Configuration',
+    description: 'Configure system-wide settings',
+    category: 'Configuration',
+    testable: true,
+  },
+  [PERMISSIONS.COMPANY_CONFIGURATION]: {
+    key: PERMISSIONS.COMPANY_CONFIGURATION,
+    label: 'Company Configuration',
+    description: 'Configure company settings',
+    category: 'Configuration',
+    testable: true,
+  },
+  [PERMISSIONS.ACCESS_LLM_FEATURES]: {
+    key: PERMISSIONS.ACCESS_LLM_FEATURES,
+    label: 'Access LLM Features',
+    description: 'Use AI-powered features',
+    category: 'AI & Analytics',
+    testable: true,
+  },
+  [PERMISSIONS.VIEW_AUDIT_LOGS]: {
+    key: PERMISSIONS.VIEW_AUDIT_LOGS,
+    label: 'View Audit Logs',
+    description: 'View system audit trails',
+    category: 'Security & Audit',
+    testable: true,
+  },
+  [PERMISSIONS.VIEW_SECURITY_LOGS]: {
+    key: PERMISSIONS.VIEW_SECURITY_LOGS,
+    label: 'View Security Logs',
+    description: 'View security-related logs',
+    category: 'Security & Audit',
+    testable: true,
+  },
+  [PERMISSIONS.SAMPLE_DATA]: {
+    key: PERMISSIONS.SAMPLE_DATA,
+    label: 'Sample Data',
+    description: 'Access sample data for testing purposes',
+    category: 'Testing & Development',
+    testable: true,
+  },
+};
 
 type Role = typeof ROLES[keyof typeof ROLES];
 type Permission = typeof PERMISSIONS[keyof typeof PERMISSIONS];
@@ -68,6 +181,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     PERMISSIONS.ACCESS_LLM_FEATURES,
     PERMISSIONS.VIEW_AUDIT_LOGS,
     PERMISSIONS.VIEW_SECURITY_LOGS,
+    PERMISSIONS.SAMPLE_DATA,
   ],
   [ROLES.COMPANY_ADMIN]: [
     PERMISSIONS.CREATE_INCIDENT,
@@ -557,6 +671,86 @@ function generateCorrelationId(): string {
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
 }
+
+/**
+ * Get complete permission registry with UI metadata
+ */
+export const getPermissionRegistry = query({
+  args: {},
+  handler: async (ctx: QueryCtx) => {
+    return {
+      permissions: Object.values(PERMISSION_REGISTRY),
+      correlationId: generateCorrelationId(),
+    };
+  },
+});
+
+/**
+ * Get testable permissions for permission tester UI
+ */
+export const getTestablePermissions = query({
+  args: {},
+  handler: async (ctx: QueryCtx) => {
+    const testablePermissions = Object.values(PERMISSION_REGISTRY)
+      .filter(p => p.testable)
+      .sort((a, b) => a.category.localeCompare(b.category) || a.label.localeCompare(b.label));
+    
+    return {
+      permissions: testablePermissions,
+      correlationId: generateCorrelationId(),
+    };
+  },
+});
+
+/**
+ * Get human-readable permission labels for a role
+ */
+export const getRolePermissionLabels = query({
+  args: {
+    sessionToken: v.string(),
+    role: v.optional(v.string()), // If not provided, use current user's role
+  },
+  handler: async (ctx: QueryCtx, args) => {
+    try {
+      // Get user from session (for authentication)
+      const user = await getUserFromSession(ctx, args.sessionToken);
+      if (!user) {
+        throw new ConvexError('Authentication required');
+      }
+
+      // Determine which role to get permissions for
+      const targetRole = args.role || user.role;
+      
+      // Validate role
+      if (!Object.values(ROLES).includes(targetRole as Role)) {
+        throw new ConvexError(`Invalid role: ${targetRole}`);
+      }
+
+      // Get permissions for the role
+      const rolePermissions = ROLE_PERMISSIONS[targetRole as Role] || [];
+      
+      // Convert to human-readable labels using the registry
+      const permissionLabels = rolePermissions
+        .map(permission => PERMISSION_REGISTRY[permission]?.label || permission)
+        .sort();
+
+      const correlationId = generateCorrelationId();
+
+      return {
+        role: targetRole,
+        permissions: permissionLabels,
+        permissionDetails: rolePermissions.map(p => PERMISSION_REGISTRY[p]).filter(Boolean),
+        correlationId,
+      };
+    } catch (error) {
+      console.error('Error getting role permission labels:', error);
+      if (error instanceof ConvexError) {
+        throw error;
+      }
+      throw new ConvexError(`Failed to get role permissions: ${(error as Error).message}`);
+    }
+  },
+});
 
 /**
  * Middleware helper for protecting mutations/queries

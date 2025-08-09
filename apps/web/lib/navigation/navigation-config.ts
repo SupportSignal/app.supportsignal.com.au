@@ -71,6 +71,13 @@ export const NAVIGATION_CONFIG: NavigationConfig = {
             status: 'planned'
           }
         },
+        {
+          id: 'participants',
+          label: 'Participants',
+          icon: '👥',
+          href: '/participants',
+          requiredRole: ['system_admin', 'company_admin', 'team_lead'],
+        },
       ],
     },
     {

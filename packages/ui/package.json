@@ -17,7 +17,9 @@
     "./progress": "./src/progress.tsx",
     "./select": "./src/select.tsx",
     "./separator": "./src/separator.tsx",
+    "./table": "./src/table.tsx",
     "./tabs": "./src/tabs.tsx",
+    "./textarea": "./src/textarea.tsx",
     "./tooltip": "./src/tooltip.tsx",
     "./lib/utils": "./src/lib/utils.ts"
   },

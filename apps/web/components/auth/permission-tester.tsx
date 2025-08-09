@@ -4,27 +4,24 @@ import { useQuery } from 'convex/react';
 import { api } from '@/lib/convex-api';
 import { useAuth } from './auth-provider';
 
-// All testable permissions with descriptions
-const TESTABLE_PERMISSIONS = [
+// Fallback permissions for when backend is unavailable (kept minimal for emergency fallback)
+const FALLBACK_TESTABLE_PERMISSIONS = [
   { key: 'create_incident', label: 'Create Incidents', description: 'Create new incident reports' },
-  { key: 'edit_own_incident_capture', label: 'Edit Own Incidents', description: 'Edit incident captures you created' },
-  { key: 'view_team_incidents', label: 'View Team Incidents', description: 'View incidents from your team' },
-  { key: 'view_company_incidents', label: 'View Company Incidents', description: 'View all company incidents' },
-  { key: 'perform_analysis', label: 'Perform Analysis', description: 'Analyze incidents and generate insights' },
   { key: 'manage_users', label: 'Manage Users', description: 'Add, edit, and manage users' },
-  { key: 'invite_users', label: 'Invite Users', description: 'Send user invitations' },
-  { key: 'view_user_profiles', label: 'View User Profiles', description: 'View detailed user information' },
   { key: 'system_configuration', label: 'System Configuration', description: 'Configure system-wide settings' },
-  { key: 'company_configuration', label: 'Company Configuration', description: 'Configure company settings' },
-  { key: 'access_llm_features', label: 'Access LLM Features', description: 'Use AI-powered features' },
-  { key: 'view_audit_logs', label: 'View Audit Logs', description: 'View system audit trails' },
-  { key: 'view_security_logs', label: 'View Security Logs', description: 'View security-related logs' },
+  { key: 'sample_data', label: 'Sample Data', description: 'Access sample data for testing purposes' },
 ];
 
 export function PermissionTester() {
   const { user } = useAuth();
   
-  // Get all permission results at once
+  // Get testable permissions from centralized registry
+  const testablePermissions = useQuery(
+    api.permissions.getTestablePermissions,
+    {}
+  );
+  
+  // Get user's actual permissions
   const permissionResults = useQuery(
     api.permissions.getUserPermissions,
     user?.sessionToken ? { sessionToken: user.sessionToken } : 'skip'
@@ -88,9 +85,9 @@ export function PermissionTester() {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600">
-              {TESTABLE_PERMISSIONS.map((permission, index) => {
+              {(testablePermissions?.permissions || FALLBACK_TESTABLE_PERMISSIONS).map((permission, index) => {
                 const allowed = hasPermission(permission.key);
-                const isLoading = permissionResults === undefined;
+                const isLoading = permissionResults === undefined || testablePermissions === undefined;
                 
                 return (
                   <tr key={permission.key} className={index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-750'}>
@@ -142,19 +139,19 @@ export function PermissionTester() {
               <div>
                 <span className="text-gray-600 dark:text-gray-400">Total Permissions:</span>
                 <span className="ml-2 font-mono text-gray-900 dark:text-white">
-                  {TESTABLE_PERMISSIONS.length}
+                  {(testablePermissions?.permissions || FALLBACK_TESTABLE_PERMISSIONS).length}
                 </span>
               </div>
               <div>
                 <span className="text-gray-600 dark:text-gray-400">Allowed:</span>
                 <span className="ml-2 font-mono text-green-600 dark:text-green-400">
-                  {TESTABLE_PERMISSIONS.filter(p => hasPermission(p.key)).length}
+                  {(testablePermissions?.permissions || FALLBACK_TESTABLE_PERMISSIONS).filter(p => hasPermission(p.key)).length}
                 </span>
               </div>
               <div>
                 <span className="text-gray-600 dark:text-gray-400">Denied:</span>
                 <span className="ml-2 font-mono text-red-600 dark:text-red-400">
-                  {TESTABLE_PERMISSIONS.filter(p => !hasPermission(p.key)).length}
+                  {(testablePermissions?.permissions || FALLBACK_TESTABLE_PERMISSIONS).filter(p => !hasPermission(p.key)).length}
                 </span>
               </div>
             </div>

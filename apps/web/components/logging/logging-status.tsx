@@ -10,7 +10,7 @@ export function LoggingStatus() {
     traceId: string;
     userId: string;
   } | null>(null);
-  const [isMinimized, setIsMinimized] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(true);
   const [showFullTrace, setShowFullTrace] = useState(false);
 
   useEffect(() => {

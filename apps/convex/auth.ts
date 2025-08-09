@@ -1466,9 +1466,9 @@ export const verifyOwnerAccess = query({
         return { hasAccess: false, reason: 'User not found' };
       }
 
-      // Check if user email matches the owner email
+      // Check if user has system admin role or is the owner email
       const ownerEmail = 'david@ideasmen.com.au';
-      const hasAccess = user.email === ownerEmail;
+      const hasAccess = user.email === ownerEmail || user.role === 'system_admin';
 
       return {
         hasAccess,

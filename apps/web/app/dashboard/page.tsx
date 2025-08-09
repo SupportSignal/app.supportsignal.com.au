@@ -91,9 +91,15 @@ export default function DashboardPage() {
   const router = useRouter();
   const [permissions, setPermissions] = useState<string[]>([]);
 
-  // Query user permissions
+  // Query user permissions from centralized permission system
   const userPermissions = useQuery(
     api.permissions.getUserPermissions,
+    user?.sessionToken ? { sessionToken: user.sessionToken } : 'skip'
+  );
+
+  // Query role-based permission labels from centralized registry
+  const rolePermissionLabels = useQuery(
+    api.permissions.getRolePermissionLabels,
     user?.sessionToken ? { sessionToken: user.sessionToken } : 'skip'
   );
 
@@ -104,10 +110,20 @@ export default function DashboardPage() {
   }, [user, isLoading, router]);
 
   useEffect(() => {
-    if (user && user.role) {
+    if (rolePermissionLabels?.permissions) {
+      // Use centralized permission registry for display
+      setPermissions(rolePermissionLabels.permissions);
+    } else if (userPermissions?.permissions) {
+      // Fallback: convert permission keys to human-readable labels
+      const permissionLabels = userPermissions.permissions.map(perm => {
+        return perm.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      });
+      setPermissions(permissionLabels);
+    } else if (user && user.role) {
+      // Final fallback to static permissions if all backend queries fail
       setPermissions(ROLE_PERMISSIONS[user.role as keyof typeof ROLE_PERMISSIONS] || []);
     }
-  }, [user]);
+  }, [rolePermissionLabels, userPermissions, user]);
 
   if (isLoading) {
     return (
