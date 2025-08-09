@@ -134,7 +134,7 @@ describe('Impersonation System Backend Functions', () => {
     });
 
     it('should successfully start impersonation with valid admin and target user', async () => {
-      const { startImpersonation } = require('@/convex/impersonation');
+      const { startImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       const result = await startImpersonation.handler(ctx, validArgs);
@@ -173,7 +173,7 @@ describe('Impersonation System Backend Functions', () => {
     });
 
     it('should reject non-admin users', async () => {
-      const { startImpersonation } = require('@/convex/impersonation');
+      const { startImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       // Mock regular user instead of admin
@@ -192,7 +192,7 @@ describe('Impersonation System Backend Functions', () => {
     });
 
     it('should reject when admin not authenticated', async () => {
-      const { startImpersonation } = require('@/convex/impersonation');
+      const { startImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       // Mock no user found
@@ -204,7 +204,7 @@ describe('Impersonation System Backend Functions', () => {
     });
 
     it('should reject when target user not found', async () => {
-      const { startImpersonation } = require('@/convex/impersonation');
+      const { startImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       // Mock target user not found
@@ -216,7 +216,7 @@ describe('Impersonation System Backend Functions', () => {
     });
 
     it('should prevent impersonating other system admins', async () => {
-      const { startImpersonation } = require('@/convex/impersonation');
+      const { startImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       // Mock target user as another admin
@@ -233,7 +233,7 @@ describe('Impersonation System Backend Functions', () => {
     });
 
     it('should enforce maximum concurrent sessions limit', async () => {
-      const { startImpersonation } = require('@/convex/impersonation');
+      const { startImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       // Mock 3 active sessions already exist
@@ -250,7 +250,7 @@ describe('Impersonation System Backend Functions', () => {
     });
 
     it('should generate secure tokens with proper length', async () => {
-      const { startImpersonation } = require('@/convex/impersonation');
+      const { startImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       await startImpersonation.handler(ctx, validArgs);
@@ -261,7 +261,7 @@ describe('Impersonation System Backend Functions', () => {
     });
 
     it('should set correct session expiration time', async () => {
-      const { startImpersonation } = require('@/convex/impersonation');
+      const { startImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       const startTime = Date.now();
@@ -294,7 +294,7 @@ describe('Impersonation System Backend Functions', () => {
     });
 
     it('should successfully end active impersonation session', async () => {
-      const { endImpersonation } = require('@/convex/impersonation');
+      const { endImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       const result = await endImpersonation.handler(ctx, validArgs);
@@ -324,7 +324,7 @@ describe('Impersonation System Backend Functions', () => {
     });
 
     it('should reject when session not found', async () => {
-      const { endImpersonation } = require('@/convex/impersonation');
+      const { endImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       // Mock session not found
@@ -336,7 +336,7 @@ describe('Impersonation System Backend Functions', () => {
     });
 
     it('should reject when session already terminated', async () => {
-      const { endImpersonation } = require('@/convex/impersonation');
+      const { endImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       // Mock inactive session
@@ -352,7 +352,7 @@ describe('Impersonation System Backend Functions', () => {
     });
 
     it('should calculate session duration correctly', async () => {
-      const { endImpersonation } = require('@/convex/impersonation');
+      const { endImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       const now = Date.now();
@@ -386,7 +386,7 @@ describe('Impersonation System Backend Functions', () => {
     };
 
     it('should return impersonation status with user details', async () => {
-      const { getImpersonationStatus } = require('@/convex/impersonation');
+      const { getImpersonationStatus } = require('@/impersonation');
       const ctx = createMockContext();
       
       // Mock finding active session
@@ -421,7 +421,7 @@ describe('Impersonation System Backend Functions', () => {
     });
 
     it('should return non-impersonating status when no session found', async () => {
-      const { getImpersonationStatus } = require('@/convex/impersonation');
+      const { getImpersonationStatus } = require('@/impersonation');
       const ctx = createMockContext();
       
       // Mock no session found
@@ -435,7 +435,7 @@ describe('Impersonation System Backend Functions', () => {
     });
 
     it('should return non-impersonating status when session expired', async () => {
-      const { getImpersonationStatus } = require('@/convex/impersonation');
+      const { getImpersonationStatus } = require('@/impersonation');
       const ctx = createMockContext();
       
       // Mock expired session
@@ -453,7 +453,7 @@ describe('Impersonation System Backend Functions', () => {
     });
 
     it('should handle missing user details gracefully', async () => {
-      const { getImpersonationStatus } = require('@/convex/impersonation');
+      const { getImpersonationStatus } = require('@/impersonation');
       const ctx = createMockContext();
       
       // Mock finding session but missing users
@@ -470,7 +470,7 @@ describe('Impersonation System Backend Functions', () => {
     });
 
     it('should calculate time remaining correctly', async () => {
-      const { getImpersonationStatus } = require('@/convex/impersonation');
+      const { getImpersonationStatus } = require('@/impersonation');
       const ctx = createMockContext();
       
       const now = Date.now();
@@ -520,7 +520,7 @@ describe('Impersonation System Backend Functions', () => {
     });
 
     it('should return filtered and sorted user list for admin', async () => {
-      const { searchUsersForImpersonation } = require('@/convex/impersonation');
+      const { searchUsersForImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       const result = await searchUsersForImpersonation.handler(ctx, validArgs);
@@ -542,7 +542,7 @@ describe('Impersonation System Backend Functions', () => {
     });
 
     it('should reject non-admin users', async () => {
-      const { searchUsersForImpersonation } = require('@/convex/impersonation');
+      const { searchUsersForImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       // Mock regular user
@@ -554,7 +554,7 @@ describe('Impersonation System Backend Functions', () => {
     });
 
     it('should filter users by search term', async () => {
-      const { searchUsersForImpersonation } = require('@/convex/impersonation');
+      const { searchUsersForImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       // The function filters in JavaScript after DB query
@@ -581,7 +581,7 @@ describe('Impersonation System Backend Functions', () => {
     });
 
     it('should respect limit parameter', async () => {
-      const { searchUsersForImpersonation } = require('@/convex/impersonation');
+      const { searchUsersForImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       // Mock many users
@@ -602,7 +602,7 @@ describe('Impersonation System Backend Functions', () => {
     });
 
     it('should include company names when available', async () => {
-      const { searchUsersForImpersonation } = require('@/convex/impersonation');
+      const { searchUsersForImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       const userWithCompany = {
@@ -646,7 +646,7 @@ describe('Impersonation System Backend Functions', () => {
     });
 
     it('should terminate all active sessions', async () => {
-      const { emergencyTerminateAllSessions } = require('@/convex/impersonation');
+      const { emergencyTerminateAllSessions } = require('@/impersonation');
       const ctx = createMockContext();
       
       const result = await emergencyTerminateAllSessions.handler(ctx, validArgs);
@@ -675,7 +675,7 @@ describe('Impersonation System Backend Functions', () => {
     });
 
     it('should handle no active sessions gracefully', async () => {
-      const { emergencyTerminateAllSessions } = require('@/convex/impersonation');
+      const { emergencyTerminateAllSessions } = require('@/impersonation');
       const ctx = createMockContext();
       
       // Mock no active sessions
@@ -696,7 +696,7 @@ describe('Impersonation System Backend Functions', () => {
 
   describe('cleanupExpiredSessions', () => {
     it('should cleanup expired sessions and log timeouts', async () => {
-      const { cleanupExpiredSessions } = require('@/convex/impersonation');
+      const { cleanupExpiredSessions } = require('@/impersonation');
       const ctx = createMockContext();
       
       const now = Date.now();
@@ -753,7 +753,7 @@ describe('Impersonation System Backend Functions', () => {
     });
 
     it('should handle no expired sessions', async () => {
-      const { cleanupExpiredSessions } = require('@/convex/impersonation');
+      const { cleanupExpiredSessions } = require('@/impersonation');
       const ctx = createMockContext();
       
       // Mock no expired sessions
@@ -772,7 +772,7 @@ describe('Impersonation System Backend Functions', () => {
 
   describe('Security Edge Cases and Error Handling', () => {
     it('should handle database connection errors gracefully', async () => {
-      const { startImpersonation } = require('@/convex/impersonation');
+      const { startImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       const validArgs = {
@@ -795,7 +795,7 @@ describe('Impersonation System Backend Functions', () => {
     });
 
     it('should validate correlation ID uniqueness', async () => {
-      const { startImpersonation } = require('@/convex/impersonation');
+      const { startImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       // Mock crypto to return unique values each call
@@ -818,7 +818,7 @@ describe('Impersonation System Backend Functions', () => {
     });
 
     it('should handle concurrent session queries with proper filtering', async () => {
-      const { startImpersonation } = require('@/convex/impersonation');
+      const { startImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       const now = Date.now();

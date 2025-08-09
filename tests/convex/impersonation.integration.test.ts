@@ -126,7 +126,7 @@ describe('Impersonation Security Integration Tests', () => {
 
   describe('Security Attack Scenarios', () => {
     it('should prevent privilege escalation attempts', async () => {
-      const { startImpersonation } = require('@/convex/impersonation');
+      const { startImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       // Attempt by company admin to impersonate (should fail)
@@ -152,7 +152,7 @@ describe('Impersonation Security Integration Tests', () => {
     });
 
     it('should prevent admin-to-admin impersonation attacks', async () => {
-      const { startImpersonation } = require('@/convex/impersonation');
+      const { startImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       // Mock finding target user as another admin
@@ -179,7 +179,7 @@ describe('Impersonation Security Integration Tests', () => {
     });
 
     it('should enforce session limits to prevent resource exhaustion', async () => {
-      const { startImpersonation } = require('@/convex/impersonation');
+      const { startImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       // Mock maximum active sessions already exist
@@ -210,7 +210,7 @@ describe('Impersonation Security Integration Tests', () => {
     });
 
     it('should validate session tokens to prevent token hijacking', async () => {
-      const { endImpersonation } = require('@/convex/impersonation');
+      const { endImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       // Mock session not found (invalid/hijacked token)
@@ -230,7 +230,7 @@ describe('Impersonation Security Integration Tests', () => {
     });
 
     it('should prevent replay attacks on expired sessions', async () => {
-      const { endImpersonation } = require('@/convex/impersonation');
+      const { endImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       // Mock already terminated session
@@ -256,7 +256,7 @@ describe('Impersonation Security Integration Tests', () => {
 
   describe('Concurrent Session Management', () => {
     it('should handle race conditions in session creation', async () => {
-      const { startImpersonation } = require('@/convex/impersonation');
+      const { startImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       // Mock scenario where sessions are created simultaneously
@@ -293,7 +293,7 @@ describe('Impersonation Security Integration Tests', () => {
     });
 
     it('should properly clean up expired sessions during concurrent checks', async () => {
-      const { startImpersonation } = require('@/convex/impersonation');
+      const { startImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       const now = Date.now();
@@ -326,7 +326,7 @@ describe('Impersonation Security Integration Tests', () => {
     });
 
     it('should handle emergency termination of all sessions', async () => {
-      const { emergencyTerminateAllSessions } = require('@/convex/impersonation');
+      const { emergencyTerminateAllSessions } = require('@/impersonation');
       const ctx = createMockContext();
       
       const now = Date.now();
@@ -381,7 +381,7 @@ describe('Impersonation Security Integration Tests', () => {
 
   describe('Session Lifecycle and Timeout Management', () => {
     it('should automatically cleanup expired sessions', async () => {
-      const { cleanupExpiredSessions } = require('@/convex/impersonation');
+      const { cleanupExpiredSessions } = require('@/impersonation');
       const ctx = createMockContext();
       
       const now = Date.now();
@@ -442,7 +442,7 @@ describe('Impersonation Security Integration Tests', () => {
     });
 
     it('should handle session timeout edge cases', async () => {
-      const { cleanupExpiredSessions } = require('@/convex/impersonation');
+      const { cleanupExpiredSessions } = require('@/impersonation');
       const ctx = createMockContext();
       
       // Edge case: session that expired exactly at cleanup time
@@ -477,7 +477,7 @@ describe('Impersonation Security Integration Tests', () => {
     });
 
     it('should maintain session state consistency during concurrent operations', async () => {
-      const { endImpersonation, cleanupExpiredSessions } = require('@/convex/impersonation');
+      const { endImpersonation, cleanupExpiredSessions } = require('@/impersonation');
       const ctx1 = createMockContext();
       const ctx2 = createMockContext();
       
@@ -529,7 +529,7 @@ describe('Impersonation Security Integration Tests', () => {
 
   describe('Audit Trail and Correlation Tracking', () => {
     it('should maintain complete audit trail throughout session lifecycle', async () => {
-      const { startImpersonation, endImpersonation } = require('@/convex/impersonation');
+      const { startImpersonation, endImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       // Start impersonation
@@ -596,7 +596,7 @@ describe('Impersonation Security Integration Tests', () => {
     });
 
     it('should track correlation IDs across all related operations', async () => {
-      const { startImpersonation, getImpersonationStatus } = require('@/convex/impersonation');
+      const { startImpersonation, getImpersonationStatus } = require('@/impersonation');
       const ctx = createMockContext();
       
       // Start session
@@ -646,7 +646,7 @@ describe('Impersonation Security Integration Tests', () => {
     });
 
     it('should handle audit logging failures gracefully', async () => {
-      const { startImpersonation } = require('@/convex/impersonation');
+      const { startImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       // Setup successful session creation but audit log failure
@@ -683,7 +683,7 @@ describe('Impersonation Security Integration Tests', () => {
 
   describe('Error Propagation and Recovery', () => {
     it('should handle database transaction failures', async () => {
-      const { startImpersonation } = require('@/convex/impersonation');
+      const { startImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       // Mock session creation failure
@@ -713,7 +713,7 @@ describe('Impersonation Security Integration Tests', () => {
     });
 
     it('should handle ConvexError propagation correctly', async () => {
-      const { startImpersonation } = require('@/convex/impersonation');
+      const { startImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       // Mock authentication failure
@@ -739,7 +739,7 @@ describe('Impersonation Security Integration Tests', () => {
     });
 
     it('should maintain data consistency during partial failures', async () => {
-      const { endImpersonation } = require('@/convex/impersonation');
+      const { endImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       const sessionData = {
@@ -773,7 +773,7 @@ describe('Impersonation Security Integration Tests', () => {
     });
 
     it('should handle network and timeout errors', async () => {
-      const { searchUsersForImpersonation } = require('@/convex/impersonation');
+      const { searchUsersForImpersonation } = require('@/impersonation');
       const ctx = createMockContext();
       
       // Mock network timeout during user search
@@ -796,7 +796,7 @@ describe('Impersonation Security Integration Tests', () => {
 
   describe('Performance and Resource Management', () => {
     it('should handle large numbers of expired sessions efficiently', async () => {
-      const { cleanupExpiredSessions } = require('@/convex/impersonation');
+      const { cleanupExpiredSessions } = require('@/impersonation');
       const ctx = createMockContext();
       
       const now = Date.now();
@@ -833,7 +833,7 @@ describe('Impersonation Security Integration Tests', () => {
     });
 
     it('should efficiently filter active sessions during concurrent checks', async () => {
-      const { getActiveImpersonationSessions } = require('@/convex/impersonation');
+      const { getActiveImpersonationSessions } = require('@/impersonation');
       const ctx = createMockContext();
       
       const now = Date.now();

@@ -51,6 +51,7 @@ module.exports = {
 
   // Module name mapping for path aliases
   moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/$1',
     '^@convex/(.*)$': '<rootDir>/$1',
     '^@convex-tests/(.*)$': '<rootDir>/../../tests/convex/$1',
     '^@web/(.*)$': '<rootDir>/../web/$1',
