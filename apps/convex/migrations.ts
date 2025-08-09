@@ -2,41 +2,12 @@ import { mutation, MutationCtx } from './_generated/server';
 import { v } from 'convex/values';
 import bcrypt from 'bcryptjs';
 
-// Migration to set default password for existing users
-export const migrateUsersWithDefaultPassword = mutation({
-  args: {},
-  handler: async (ctx: MutationCtx) => {
-    // Get all users without passwords
-    const users = await ctx.db.query('users').collect();
-    const usersWithoutPasswords = users.filter(
-      (user: { password?: string }) => !user.password
-    );
+// =============================================================================
+// ACTIVE UTILITY FUNCTIONS
+// These functions provide ongoing administrative value and should be retained
+// =============================================================================
 
-    if (usersWithoutPasswords.length === 0) {
-      return { message: 'No users need password migration', updated: 0 };
-    }
-
-    // Hash the default password (using sync version for Convex)
-    const defaultPassword = 'testpass123';
-    const saltRounds = 10;
-    const hashedPassword = bcrypt.hashSync(defaultPassword, saltRounds);
-
-    // Update each user without a password
-    for (const user of usersWithoutPasswords) {
-      await ctx.db.patch(user._id, {
-        password: hashedPassword,
-      });
-    }
-
-    return {
-      message: `Migration complete: ${usersWithoutPasswords.length} users updated with default password`,
-      updated: usersWithoutPasswords.length,
-      defaultPassword: defaultPassword,
-    };
-  },
-});
-
-// Helper function to reset a specific user's password
+// Reset a specific user's password
 export const resetUserPassword = mutation({
   args: {
     email: v.string(),
@@ -67,49 +38,7 @@ export const resetUserPassword = mutation({
   },
 });
 
-// Migration to grant LLM access to david@ideasmen.com.au (Story 4.2)
-export const grantLLMAccessToDavid = mutation({
-  args: {},
-  handler: async (ctx: MutationCtx) => {
-    const targetEmail = 'david@ideasmen.com.au';
-    
-    // Find the user
-    const user = await ctx.db
-      .query('users')
-      .withIndex('by_email', q => q.eq('email', targetEmail))
-      .first();
-
-    if (!user) {
-      return { 
-        message: `User ${targetEmail} not found. Please create user account first.`,
-        updated: false 
-      };
-    }
-
-    // Check if already has LLM access
-    if (user.has_llm_access === true) {
-      return { 
-        message: `User ${targetEmail} already has LLM access`,
-        updated: false 
-      };
-    }
-
-    // Grant LLM access
-    await ctx.db.patch(user._id, {
-      has_llm_access: true,
-    });
-
-    console.log(`✅ Granted LLM access to ${targetEmail}`);
-
-    return {
-      message: `Successfully granted LLM access to ${targetEmail}`,
-      updated: true,
-      userId: user._id,
-    };
-  },
-});
-
-// Generic migration to grant LLM access to any user by email
+// Grant LLM access to any user by email
 export const grantLLMAccessByEmail = mutation({
   args: {
     email: v.string(),
@@ -153,7 +82,7 @@ export const grantLLMAccessByEmail = mutation({
   },
 });
 
-// Migration to set default LLM access for all existing users (optional)
+// Set default LLM access for all users without it set
 export const setDefaultLLMAccess = mutation({
   args: {
     defaultAccess: v.boolean(),
@@ -167,7 +96,7 @@ export const setDefaultLLMAccess = mutation({
 
     if (usersToUpdate.length === 0) {
       return { 
-        message: 'No users need LLM access migration', 
+        message: 'No users need LLM access update', 
         updated: 0 
       };
     }
@@ -182,133 +111,137 @@ export const setDefaultLLMAccess = mutation({
     console.log(`✅ Set LLM access to ${args.defaultAccess} for ${usersToUpdate.length} users`);
 
     return {
-      message: `Migration complete: ${usersToUpdate.length} users updated with has_llm_access=${args.defaultAccess}`,
+      message: `Updated ${usersToUpdate.length} users with has_llm_access=${args.defaultAccess}`,
       updated: usersToUpdate.length,
     };
   },
 });
 
-// Migration to update users from old "user" role to new snake_case roles
-export const migrateUserRoles = mutation({
+// Set all user passwords to "password" for development
+export const setAllPasswordsToPassword = mutation({
   args: {},
   handler: async (ctx: MutationCtx) => {
-    console.log("🔄 Starting user role migration from 'user' to 'frontline_worker'...");
+    console.log("🔄 Setting all user passwords to 'password'...");
     
     // Get all users
     const users = await ctx.db.query("users").collect();
     
-    let migratedCount = 0;
+    // Hash the standard password (using sync version for Convex)
+    const newPassword = 'password';
+    const saltRounds = 10;
+    const hashedPassword = bcrypt.hashSync(newPassword, saltRounds);
+    
+    let updatedCount = 0;
     const errors: string[] = [];
     
     for (const user of users) {
       try {
-        // Check if user has the old "user" role
-        if ((user.role as any) === "user") {
-          // Update to new "frontline_worker" role (lowest permission level)
-          await ctx.db.patch(user._id, {
-            role: "frontline_worker" as const
-          });
-          
-          console.log(`✅ Migrated user ${user.email} from "user" to "frontline_worker" role`);
-          migratedCount++;
-        }
+        await ctx.db.patch(user._id, {
+          password: hashedPassword,
+        });
+        
+        console.log(`✅ Updated password for ${user.email} (${user.role})`);
+        updatedCount++;
       } catch (error) {
-        const errorMsg = `Failed to migrate user ${user.email}: ${error}`;
+        const errorMsg = `Failed to update password for ${user.email}: ${error}`;
         console.error(errorMsg);
         errors.push(errorMsg);
       }
     }
     
-    console.log(`✅ Role migration complete. Migrated ${migratedCount} users.`);
-    
-    if (errors.length > 0) {
-      console.error(`⚠️ ${errors.length} errors occurred during migration:`, errors);
-    }
-    
-    return {
-      success: errors.length === 0,
-      migratedCount,
-      totalUsers: users.length,
-      errors,
-      message: `Successfully migrated ${migratedCount} users from "user" to "frontline_worker" role`
-    };
-  },
-});
-
-// Migration to normalize incident classification enum values to lowercase snake_case
-export const normalizeClassificationEnums = mutation({
-  args: {},
-  handler: async (ctx: MutationCtx) => {
-    console.log("🔄 Starting incident_classifications enum normalization...");
-    
-    // Enum mapping for incident_type
-    const incidentTypeMapping: Record<string, string> = {
-      "Behavioural": "behavioural",
-      "Environmental": "environmental", 
-      "Medical": "medical",
-      "Communication": "communication",
-      "Other": "other"
-    };
-    
-    // Enum mapping for severity
-    const severityMapping: Record<string, string> = {
-      "Low": "low",
-      "Medium": "medium", 
-      "High": "high"
-    };
-    
-    // Get all classification records
-    const classifications = await ctx.db.query("incident_classifications").collect();
-    
-    let updatedCount = 0;
-    let skippedCount = 0;
-    const errors: string[] = [];
-    
-    for (const classification of classifications) {
-      try {
-        let needsUpdate = false;
-        const updates: any = {};
-        
-        // Check and update incident_type
-        if (classification.incident_type && incidentTypeMapping[classification.incident_type as string]) {
-          updates.incident_type = incidentTypeMapping[classification.incident_type as string];
-          needsUpdate = true;
-        }
-        
-        // Check and update severity
-        if (classification.severity && severityMapping[classification.severity as string]) {
-          updates.severity = severityMapping[classification.severity as string];
-          needsUpdate = true;
-        }
-        
-        if (needsUpdate) {
-          await ctx.db.patch(classification._id, updates);
-          console.log(`✅ Updated classification ${classification._id}: ${JSON.stringify(updates)}`);
-          updatedCount++;
-        } else {
-          skippedCount++;
-        }
-        
-      } catch (error) {
-        const errorMsg = `Failed to update classification ${classification._id}: ${error}`;
-        console.error(errorMsg);
-        errors.push(errorMsg);
-      }
-    }
-    
-    console.log(`✅ Classification enum normalization complete. Updated ${updatedCount}, skipped ${skippedCount}.`);
-    
-    if (errors.length > 0) {
-      console.error(`⚠️ ${errors.length} errors occurred during migration:`, errors);
-    }
+    console.log(`✅ Password update complete. Updated ${updatedCount} users.`);
     
     return {
       success: errors.length === 0,
       updatedCount,
-      skippedCount,
-      totalRecords: classifications.length,
+      totalUsers: users.length,
       errors,
-      message: `Successfully normalized ${updatedCount} classification records to lowercase snake_case enums`
+      message: `Updated passwords for ${updatedCount} users to 'password'`,
+      newPassword: newPassword
     };
   },
 });
+
+// Debug company date issues including _creationTime
+export const debugCompanyDates = mutation({
+  args: {},
+  handler: async (ctx: MutationCtx) => {
+    console.log("🔍 Debugging company date issues...");
+    
+    const companies = await ctx.db.query("companies").collect();
+    const currentTimestamp = Date.now();
+    const currentDate = new Date(currentTimestamp);
+    
+    const results = companies.map((company) => {
+      const createdAt = company.created_at;
+      const creationTime = company._creationTime;
+      
+      const createdAtDate = new Date(createdAt);
+      const creationTimeDate = new Date(creationTime);
+      
+      const isValidCreatedAt = !isNaN(createdAtDate.getTime());
+      const isValidCreationTime = !isNaN(creationTimeDate.getTime());
+      
+      const createdAtFormatted = isValidCreatedAt ? createdAtDate.toLocaleDateString('en-AU', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }) : 'Invalid Date';
+      
+      const creationTimeFormatted = isValidCreationTime ? creationTimeDate.toLocaleDateString('en-AU', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }) : 'Invalid Date';
+      
+      return {
+        id: company._id,
+        name: company.name,
+        created_at: createdAt,
+        created_at_type: typeof createdAt,
+        created_at_formatted: createdAtFormatted,
+        is_valid_created_at: isValidCreatedAt,
+        _creation_time: creationTime,
+        _creation_time_type: typeof creationTime,
+        _creation_time_formatted: creationTimeFormatted,
+        is_valid_creation_time: isValidCreationTime,
+        created_by: company.created_by || 'undefined',
+        days_ago_created_at: Math.round((currentTimestamp - createdAt) / (1000 * 60 * 60 * 24)),
+        days_ago_creation_time: isValidCreationTime ? Math.round((currentTimestamp - creationTime) / (1000 * 60 * 60 * 24)) : 'N/A'
+      };
+    });
+    
+    console.log("📊 Company Date Analysis:", results);
+    console.log("🕐 Current timestamp:", currentTimestamp);
+    console.log("📅 Current date:", currentDate.toISOString());
+    
+    return {
+      companies: results,
+      totalCompanies: companies.length,
+      invalidCreatedAt: results.filter(r => !r.is_valid_created_at).length,
+      invalidCreationTime: results.filter(r => !r.is_valid_creation_time).length,
+      currentTimestamp,
+      currentDateISO: currentDate.toISOString(),
+    };
+  },
+});
+
+// =============================================================================
+// ARCHIVED MIGRATIONS (COMPLETED)
+// These were one-time migrations that have been completed successfully.
+// They are kept here for historical reference but should not be run again.
+// =============================================================================
+//
+// ✅ migrateUsersWithDefaultPassword - Set default passwords (completed)
+// ✅ grantLLMAccessToDavid - Granted LLM access to david@ideasmen.com.au (completed)  
+// ✅ migrateUserRoles - Migrated "user" role to "frontline_worker" (completed)
+// ✅ normalizeClassificationEnums - Normalized classification enums to snake_case (completed)
+// ✅ cleanupCompanySlugField - Removed slug field from company records (completed)
+// ✅ forceCleanupCompanySlugField - Aggressive cleanup of company records (completed)
+// ✅ fixUserCompanyAssociations - Fixed user-company associations after ID regeneration (completed)
+//
+// Total migrations completed: 7

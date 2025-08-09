@@ -3,7 +3,7 @@ import { v, ConvexError } from 'convex/values';
 import { requirePermission, PERMISSIONS } from '../permissions';
 
 /**
- * Get current user's company information
+ * Get current user's company information with users list
  * Used to display company context in forms and UI components
  */
 export const getCurrentUserCompany = query({
@@ -33,10 +33,39 @@ export const getCurrentUserCompany = query({
       // Type assertion: we know this is a company record since user.company_id is Id<"companies">
       const companyRecord = company as any;
 
+      // Get all users in the same company (if user has permission)
+      let companyUsers: any[] = [];
+      try {
+        // Check if user can view company users (team_lead+ can view users)
+        if (user.role === 'system_admin' || user.role === 'company_admin' || user.role === 'team_lead') {
+          // Get all users in this company
+          const users = await ctx.db
+            .query("users")
+            .withIndex("by_company", (q) => q.eq("company_id", user.company_id))
+            .collect();
+          
+          // Filter sensitive data - only return safe fields
+          companyUsers = users.map(u => ({
+            _id: u._id,
+            name: u.name,
+            email: u.email,
+            role: u.role,
+            has_llm_access: u.has_llm_access,
+            profile_image_url: u.profile_image_url,
+          }));
+        }
+      } catch (error) {
+        // User doesn't have permission to view other users, that's fine
+        console.log('User lacks permission to view company users:', user.email);
+        companyUsers = [];
+      }
+
       console.log('🏢 COMPANY INFO ACCESSED', {
         companyId: companyRecord._id,
         companyName: companyRecord.name,
         accessedBy: user._id,
+        userRole: user.role,
+        companyUsersCount: companyUsers.length,
         correlationId,
         timestamp: new Date().toISOString(),
       });
@@ -45,8 +74,12 @@ export const getCurrentUserCompany = query({
         company: {
           _id: companyRecord._id,
           name: companyRecord.name,
-          slug: companyRecord.slug,
+          contact_email: companyRecord.contact_email,
           status: companyRecord.status,
+          created_at: companyRecord.created_at,
+          _creationTime: companyRecord._creationTime,
+          users: companyUsers,
+          userCount: companyUsers.length,
         },
         correlationId,
       };

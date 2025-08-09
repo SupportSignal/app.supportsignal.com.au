@@ -263,6 +263,163 @@ const companyAdministrationGroup = {
 
 ---
 
+### Story 2.5: System Administrator Impersonation System
+
+**Priority**: MEDIUM  
+**Estimated Effort**: 1 week  
+**Status**: PENDING  
+**Dependencies**: Epic 1 (authentication system), Stories 2.0 (UI foundation), 2.2 (navigation)
+
+#### Requirements
+Implement secure user impersonation system allowing system administrators to temporarily assume other user identities for testing, UAT, and future customer support scenarios. This administrative capability enhances testing workflows and provides foundation for customer support tools.
+
+**Core Impersonation Features**:
+- **Permission-Based Access**: Restricted to users with `IMPERSONATE_USERS` permission only
+- **Session Management**: Secure impersonation sessions with 30-minute timeout
+- **Audit Trail**: Comprehensive logging of all impersonation activities
+- **Visual Indicators**: Clear UI indication during impersonation mode
+- **Easy Exit**: One-click return to original admin session
+
+#### Acceptance Criteria
+- [ ] **Impersonation Control Panel**: Admin interface to search and select users for impersonation
+- [ ] **Secure Session Management**: Impersonation tokens with 30-minute expiry and proper security
+- [ ] **Visual Impersonation Banner**: Persistent header showing impersonation status with exit button
+- [ ] **Permission Inheritance**: Impersonated user's exact role and permissions applied
+- [ ] **Comprehensive Audit Trail**: All impersonation events logged with correlation IDs
+- [ ] **Auto-Timeout**: Sessions automatically expire after 30 minutes for security
+- [ ] **Emergency Exit**: Always-available mechanism to exit impersonation mode
+
+#### Technical Implementation
+
+**Database Schema Addition:**
+```typescript
+// Add to schema.ts
+impersonation_sessions: defineTable({
+  adminUserId: v.id('users'),         // System admin performing impersonation
+  targetUserId: v.id('users'),        // User being impersonated
+  sessionToken: v.string(),           // Unique impersonation session token
+  originalSessionToken: v.string(),   // Admin's original session for reverting
+  reason: v.string(),                 // Why impersonating (testing, support)
+  expires: v.number(),                // 30-minute timeout
+  isActive: v.boolean(),              // Can be terminated early
+  createdAt: v.number(),
+  terminatedAt: v.optional(v.number()),
+  correlationId: v.string(),          // For audit trail correlation
+})
+  .index('by_session_token', ['sessionToken'])
+  .index('by_admin_user', ['adminUserId'])
+  .index('by_target_user', ['targetUserId'])
+  .index('by_active_sessions', ['isActive', 'expires'])
+```
+
+**Core Convex Functions:**
+```typescript
+// New permission constant
+const PERMISSIONS = {
+  // ... existing permissions
+  IMPERSONATE_USERS: 'impersonate_users',
+};
+
+// Enhanced session resolution for impersonation
+export const startImpersonation = mutation({
+  args: {
+    adminSessionToken: v.string(),
+    targetUserEmail: v.string(),
+    reason: v.string(),
+  },
+  handler: async (ctx: MutationCtx, args) => {
+    // Implementation details from analysis phase
+  },
+});
+
+export const endImpersonation = mutation({
+  args: { impersonationToken: v.string() },
+  handler: async (ctx: MutationCtx, args) => {
+    // Implementation details from analysis phase
+  },
+});
+
+export const getImpersonationStatus = query({
+  args: { sessionToken: v.string() },
+  handler: async (ctx: QueryCtx, args) => {
+    // Implementation details from analysis phase
+  },
+});
+```
+
+**Session Resolution Enhancement:**
+```typescript
+// Extend getUserFromSession in permissions.ts
+async function getUserFromSession(ctx: QueryCtx, sessionToken: string) {
+  // First check for impersonation session
+  const impersonationSession = await ctx.db
+    .query('impersonation_sessions')
+    .withIndex('by_session_token', q => q.eq('sessionToken', sessionToken))
+    .first();
+
+  if (impersonationSession?.isActive && impersonationSession.expires > Date.now()) {
+    await logImpersonationAccess(ctx, impersonationSession);
+    return await ctx.db.get(impersonationSession.targetUserId);
+  }
+
+  // Fall back to normal session logic
+  return await normalUserSessionLookup(ctx, sessionToken);
+}
+```
+
+#### UI Components Required
+
+**1. Admin Impersonation Panel** (`/admin/impersonation`)
+- User search by email/name with autocomplete
+- Role-based user filtering
+- Impersonation reason input field
+- Active impersonation sessions management
+- Security warnings and confirmations
+
+**2. Impersonation Status Banner** 
+- Persistent header component during impersonation
+- Format: "⚠️ Impersonating: user@email.com | Time left: 25 min | Exit Impersonation"
+- Distinctive styling (orange/red background)
+- Always-visible exit button
+
+**3. Enhanced Navigation Integration**
+- Add impersonation panel to existing admin tools
+- Admin menu item: "User Impersonation" (requires `IMPERSONATE_USERS` permission)
+- Integration with existing role-based navigation system
+
+#### Security & Audit Requirements
+
+**Security Safeguards:**
+- Maximum 3 concurrent impersonation sessions per admin
+- Auto-terminate impersonation on admin session expiry
+- Block impersonation of other system_admin users
+- Require strong reason/justification for each impersonation
+
+**Audit Trail:**
+- All impersonation start/end events logged with correlation IDs
+- Every action during impersonation tagged with impersonation context
+- Weekly audit reports of impersonation usage
+- Integration with existing security event logging system
+
+**Access Control:**
+- Restricted to users with `PERMISSIONS.IMPERSONATE_USERS` permission
+- Permission-based validation (initially granted to `ROLES.SYSTEM_ADMIN`)
+- No hardcoded email restrictions - purely permission-driven access control
+
+#### Integration Points
+- **Existing Auth System**: Builds on current session management in `auth.ts`
+- **Permission System**: Extends current role-based access in `permissions.ts`
+- **Audit Logging**: Uses existing correlation ID and security event patterns
+- **UI Navigation**: Integrates with existing admin tools and navigation structure
+
+#### Use Cases
+1. **Manual UAT Testing**: Admin can test workflows as different user types
+2. **Customer Support**: Future capability to assist users by seeing their exact view
+3. **Bug Reproduction**: Reproduce user-specific issues in their exact context
+4. **Training**: Demonstrate features from user perspective during training sessions
+
+---
+
 ## Epic Success Criteria
 
 ### Functional Requirements

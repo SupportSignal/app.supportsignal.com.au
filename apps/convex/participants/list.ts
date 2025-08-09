@@ -109,7 +109,7 @@ export const listParticipants = query({
         company: {
           _id: companyRecord._id,
           name: companyRecord.name,
-          slug: companyRecord.slug,
+          contact_email: companyRecord.contact_email,
         },
         totalCount: participants.length,
         correlationId,

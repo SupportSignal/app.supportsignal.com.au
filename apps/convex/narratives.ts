@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { query, mutation } from "./_generated/server";
+import { query, mutation, action } from "./_generated/server";
 import { v } from "convex/values";
 import { ConvexError } from "convex/values";
 import { requirePermission, PERMISSIONS } from './permissions';

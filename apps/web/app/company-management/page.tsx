@@ -1,23 +1,10 @@
 'use client';
 
-import { ComingSoonPage } from '@/components/layout/coming-soon-page';
+import { CompanyManagementPage } from '@/components/company/CompanyManagementPage';
 
-export default function CompanyManagementPage() {
+export default function CompanyManagementRoute() {
   return (
-    <ComingSoonPage
-      title="Company Management"
-      description="Manage your company's information, settings, and administrative configuration."
-      icon="🏢"
-      expectedFeatures={[
-        'View and edit company details',
-        'Manage organizational settings',
-        'Configure default participant status',
-        'Set incident escalation rules',
-        'Notification preferences',
-        'Administrative user management',
-        'Company branding and customization',
-        'Audit trail and change history'
-      ]}
+    <CompanyManagementPage 
       backUrl="/dashboard"
       backLabel="Back to Dashboard"
     />

@@ -74,7 +74,7 @@ export const getParticipantById = query({
         company: {
           _id: companyRecord._id,
           name: companyRecord.name,
-          slug: companyRecord.slug,
+          contact_email: companyRecord.contact_email,
         },
         correlationId,
       };

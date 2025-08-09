@@ -11,13 +11,11 @@ export default defineSchema({
   // Multi-tenant companies table for SupportSignal
   companies: defineTable({
     name: v.string(), // "Support Signal", "ABC NDIS Provider"
-    slug: v.string(), // URL-friendly identifier
     contact_email: v.string(), // Primary contact
     status: v.union(v.literal("active"), v.literal("trial"), v.literal("suspended")),
     created_at: v.number(),
     created_by: v.optional(v.id("users")), // Temporarily optional for seed data - should be required in production
   })
-    .index("by_slug", ["slug"])
     .index("by_status", ["status"]),
 
   // User authentication table with multi-tenant support

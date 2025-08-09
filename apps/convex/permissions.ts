@@ -40,6 +40,7 @@ export const PERMISSIONS = {
   // System Configuration
   SYSTEM_CONFIGURATION: 'system_configuration',
   COMPANY_CONFIGURATION: 'company_configuration',
+  MANAGE_COMPANY: 'manage_company',
   
   // LLM Access Control
   ACCESS_LLM_FEATURES: 'access_llm_features',
@@ -132,6 +133,13 @@ export const PERMISSION_REGISTRY: Record<string, PermissionDefinition> = {
     category: 'Configuration',
     testable: true,
   },
+  [PERMISSIONS.MANAGE_COMPANY]: {
+    key: PERMISSIONS.MANAGE_COMPANY,
+    label: 'Manage Company',
+    description: 'Update company information and settings',
+    category: 'Configuration',
+    testable: true,
+  },
   [PERMISSIONS.ACCESS_LLM_FEATURES]: {
     key: PERMISSIONS.ACCESS_LLM_FEATURES,
     label: 'Access LLM Features',
@@ -178,6 +186,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     PERMISSIONS.VIEW_USER_PROFILES,
     PERMISSIONS.SYSTEM_CONFIGURATION,
     PERMISSIONS.COMPANY_CONFIGURATION,
+    PERMISSIONS.MANAGE_COMPANY,
     PERMISSIONS.ACCESS_LLM_FEATURES,
     PERMISSIONS.VIEW_AUDIT_LOGS,
     PERMISSIONS.VIEW_SECURITY_LOGS,
@@ -193,6 +202,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     PERMISSIONS.INVITE_USERS,
     PERMISSIONS.VIEW_USER_PROFILES,
     PERMISSIONS.COMPANY_CONFIGURATION,
+    PERMISSIONS.MANAGE_COMPANY,
     PERMISSIONS.ACCESS_LLM_FEATURES,
     PERMISSIONS.VIEW_AUDIT_LOGS,
   ],

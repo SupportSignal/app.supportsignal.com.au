@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useQuery } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useAuth } from '@/components/auth/auth-provider';
 import { Button } from '@starter/ui/button';
@@ -48,9 +48,13 @@ export function ParticipantList({
   });
 
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [isSampleDataLoading, setIsSampleDataLoading] = useState(false);
 
   // Get session token from authenticated user
   const sessionToken = user?.sessionToken;
+
+  // Sample data mutation
+  const createSampleData = useMutation(api.participants.createSampleData.createSampleParticipants);
   
   const participants = useQuery(
     api.participants.list.listParticipants,
@@ -73,6 +77,25 @@ export function ParticipantList({
 
   const toggleSearchExpanded = () => {
     setIsSearchExpanded(!isSearchExpanded);
+  };
+
+  const handleCreateSampleData = async () => {
+    if (!sessionToken) return;
+
+    setIsSampleDataLoading(true);
+    try {
+      const result = await createSampleData({ sessionToken });
+      if (result.success) {
+        alert(`Success: ${result.message}`);
+      } else {
+        alert(`Info: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('Error creating sample data:', error);
+      alert(`Error: ${error instanceof Error ? error.message : 'Failed to create sample data'}`);
+    } finally {
+      setIsSampleDataLoading(false);
+    }
   };
 
   if (!user || !sessionToken) {
@@ -148,6 +171,19 @@ export function ParticipantList({
                 {isSearchExpanded ? 'Simple' : 'Advanced'} Search
               </Button>
               
+              {/* Sample Data Button - only for system_admin */}
+              {user?.role === 'system_admin' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCreateSampleData}
+                  disabled={isSampleDataLoading}
+                  className="whitespace-nowrap"
+                >
+                  {isSampleDataLoading ? 'Creating...' : '🧪 Sample Data'}
+                </Button>
+              )}
+
               {/* Create Button */}
               {showCreateButton && onCreateParticipant && (
                 <Button 

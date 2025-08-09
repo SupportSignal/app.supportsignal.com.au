@@ -40,26 +40,31 @@ export default {
   // File extensions
   moduleFileExtensions: ['ts', 'tsx', 'js', 'json'],
 
-  // TypeScript transformation for ESM
+  // TypeScript transformation for ESM with JSX support
   transform: {
-    '^.+\\.ts$': [
+    '^.+\\.tsx?$': [
       'ts-jest',
       {
         useESM: true,
-        tsconfig: 'apps/web/tsconfig.json',
-      },
-    ],
-    '^.+\\.tsx$': [
-      'ts-jest',
-      {
-        useESM: true,
-        tsconfig: 'apps/web/tsconfig.json',
+        tsconfig: {
+          jsx: 'react-jsx',
+          esModuleInterop: true,
+          allowSyntheticDefaultImports: true,
+          verbatimModuleSyntax: false,
+          module: 'ESNext',
+          moduleResolution: 'node',
+        },
       },
     ],
     '^.+\\.(js|jsx)$': [
       'ts-jest',
       {
         useESM: true,
+        tsconfig: {
+          jsx: 'react-jsx',
+          verbatimModuleSyntax: false,
+          module: 'ESNext',
+        },
       },
     ],
   },
@@ -73,7 +78,7 @@ export default {
     '^@convex/(.*)$': '<rootDir>/apps/convex/$1',
     '^@web/(.*)$': '<rootDir>/apps/web/$1',
     '^@ui/(.*)$': '<rootDir>/packages/ui/$1',
-    '^@starter/ui$': '<rootDir>/packages/ui/src/index.ts',
+    '^@starter/ui$': '<rootDir>/packages/ui/index.ts',
     '^@starter/ui/(.*)$': '<rootDir>/packages/ui/src/$1',
   },
 

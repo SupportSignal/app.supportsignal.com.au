@@ -170,7 +170,7 @@ export interface ParticipantAge {
 export interface ParticipantCompany {
   _id: Id<"companies">;
   name: string;
-  slug: string;
+  contact_email: string;
 }
 
 // Response type for participant list with company info
