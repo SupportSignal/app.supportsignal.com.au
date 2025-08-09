@@ -1,439 +1,241 @@
-# Epic 2: Incident Capture Workflow
+# Epic 2: Entity & Relationship Management
 
 ## Epic Overview
 
 **Status**: **READY FOR DEVELOPMENT** ✅  
 **Epic 1 Handoff**: COMPLETED - All dependencies satisfied
 
-**Goal**: Implement the complete 7-step incident capture workflow for frontline workers, featuring intelligent narrative collection, AI-powered clarification questions, and seamless handoff to the analysis phase.
+**Goal**: Implement the foundational entity management system for NDIS participants and establish proper relationships between users, companies, and participants required for incident reporting workflows.
 
-**Duration**: 3-4 weeks  
-**Team Size**: 2-3 developers (frontend focus)  
-**Dependencies**: ✅ Epic 1 (database, AI services, authentication) - **COMPLETED**  
-**Primary Users**: Frontline support workers, disability care providers
+**Duration**: 2 weeks  
+**Team Size**: 1-2 developers (frontend focus)  
+**Dependencies**: ✅ Epic 1 (database, authentication, companies) - **COMPLETED**  
+**Primary Users**: Team leads, company administrators (for participant management)
 
 ---
 
 ## Business Context
 
-Epic 2 delivers the core value proposition of SupportSignal for frontline workers - transforming chaotic, incomplete incident reporting into a guided, comprehensive process that captures critical details while minimizing cognitive load during stressful post-incident situations.
+Epic 2 establishes the foundational entity management required for effective incident reporting. Without proper participant management, incident reporting lacks the necessary context and relationships that make reports meaningful for compliance and analysis.
 
 **Key Business Drivers**:
-- **Compliance Assurance**: Structured workflow ensures all required incident details are captured
-- **Reduced Cognitive Load**: Progressive disclosure and validation guidance reduces mental burden
-- **Improved Data Quality**: AI-generated clarification questions capture details often missed in manual reports
-- **Time Efficiency**: Guided workflow is faster than unstructured forms while capturing more information
+- **Data Foundation**: Proper participant entities are required for meaningful incident reporting
+- **Role-Based Access**: Only authorized staff can create and manage participant records
+- **Company Isolation**: Multi-tenant participant management ensures data privacy between NDIS providers
+- **Workflow Enablement**: Establishes the participant selection foundation needed for Epic 3 incident capture
 
 **Success Metrics**:
-- **Completion Rate**: >90% of started incidents reach completion
-- **Time to Complete**: <15 minutes average for complete incident capture
-- **Data Quality**: >95% of incidents have all narrative phases completed
-- **User Satisfaction**: >4.5/5 rating from frontline workers
-
----
-
-## User Journey Overview
-
-```mermaid
-graph TD
-    A[Incident Occurs] --> B[Open SupportSignal]
-    B --> C[Step 1: Metadata Entry]
-    C --> D[Step 2: Multi-Phase Narrative]
-    D --> E[Step 3-6: AI Clarification]
-    E --> F[Step 7: Final Review]
-    F --> G[Submit & Handoff to Analysis]
-    
-    subgraph "Validation & Progress"
-        H[Progress Indicator]
-        I[Step Validation]
-        J[Auto-Save]
-    end
-    
-    C -.-> H
-    D -.-> I
-    E -.-> J
-    F -.-> H
-```
+- **Participant Onboarding**: <5 minutes to create a new participant record
+- **Data Quality**: 100% participant-to-company association accuracy
+- **Role Compliance**: Only authorized roles can access participant management
+- **User Adoption**: >90% of incidents reference existing participants (vs manual entry)
 
 ---
 
 ## Story Breakdown
 
+### Story 2.0: UI Design System Foundation
+
+**Priority**: CRITICAL  
+**Estimated Effort**: 1 week  
+**Status**: ✅ **COMPLETED**  
+**Dependencies**: Epic 1 (basic infrastructure)
+
+#### Requirements
+Establish comprehensive UI design system and React component specifications providing the application layout and component foundation needed for entity management and incident workflows.
+
+#### Acceptance Criteria
+- [x] Complete SupportSignal brand color palette implemented in Tailwind config
+- [x] Typography scale and layout grid system with healthcare accessibility
+- [x] Core incident management UI components built and documented
+- [x] Application layout with proper navigation structure
+- [x] Comprehensive component documentation and integration patterns
+
+---
+
 ### Story 2.1: Wizard Framework & Navigation
 
 **Priority**: CRITICAL  
 **Estimated Effort**: 1 week  
-**Dependencies**: Epic 1 (session management APIs)
+**Status**: ✅ **COMPLETED**  
+**Dependencies**: Story 2.0 (UI foundation)
 
 #### Requirements
-Build reusable wizard component framework that provides consistent navigation, progress tracking, and validation patterns for the 7-step incident capture workflow.
-
-**Wizard Features**:
-- **Progress Indicator**: Visual progress bar showing current step and completion status
-- **Navigation Controls**: Next/Back/Skip buttons with validation-based enabling
-- **Step Validation**: Prevent forward navigation until current step meets requirements
-- **State Persistence**: Auto-save progress with recovery after session interruption
-- **Responsive Design**: Mobile-first design optimized for tablet and phone use
+Build reusable wizard component framework that provides consistent navigation, progress tracking, and validation patterns for multi-step workflows.
 
 #### Acceptance Criteria
-- [ ] Reusable `WizardShell` component with configurable steps and validation
-- [ ] Progress indicator showing 7 steps with clear visual state (pending/current/completed)
-- [ ] Navigation controls that respect validation rules and user permissions
-- [ ] Auto-save functionality with 300ms debouncing for all form inputs
-- [ ] Session recovery that restores user to exact step and input state
-- [ ] Mobile-responsive design tested on iOS Safari and Android Chrome
-- [ ] Keyboard navigation and screen reader accessibility compliance
-
-#### Technical Implementation
-```typescript
-// Wizard Framework Structure
-interface WizardStep {
-  id: string;
-  title: string;
-  component: React.ComponentType<WizardStepProps>;
-  validator: (data: any) => ValidationResult;
-  required: boolean;
-}
-
-interface WizardConfig {
-  steps: WizardStep[];
-  onComplete: (data: any) => Promise<void>;
-  autoSave: boolean;
-  allowBackNavigation: boolean;
-}
-
-// Example: Incident capture wizard configuration
-const incidentCaptureSteps: WizardStep[] = [
-  {
-    id: "metadata",
-    title: "Incident Details",
-    component: MetadataStep,
-    validator: validateMetadata,
-    required: true,
-  },
-  {
-    id: "narrative",
-    title: "What Happened",
-    component: NarrativeStep,
-    validator: validateNarrative,
-    required: true,
-  },
-  // ... clarification steps
-];
-```
+- [x] Reusable `WizardShell` component with configurable steps and validation
+- [x] Progress indicator with clear visual state (pending/current/completed)
+- [x] Navigation controls that respect validation rules and user permissions
+- [x] Auto-save functionality with 300ms debouncing for all form inputs
+- [x] Session recovery that restores user to exact step and input state
+- [x] Mobile-responsive design tested on iOS Safari and Android Chrome
+- [x] Keyboard navigation and screen reader accessibility compliance
 
 ---
 
-### Story 2.2: Metadata & Narrative Collection
+### Story 2.2: Main Application Navigation & Layout Foundation
 
 **Priority**: CRITICAL  
 **Estimated Effort**: 1 week  
-**Dependencies**: Story 2.1 (wizard framework)
+**Status**: ✅ **COMPLETED**  
+**Dependencies**: Stories 2.0 (UI foundation) & 2.1 (wizard framework)
 
 #### Requirements
-Implement the first two core steps of incident capture: metadata collection and multi-phase narrative input with real-time validation and user guidance.
-
-**Step 1: Metadata Collection**
-- **Reporter Name**: Pre-filled from authenticated user, editable for proxy reporting
-- **Participant Name**: NDIS participant involved in incident
-- **Event Date/Time**: Date and time picker with timezone handling
-- **Location**: Text input for incident location with common location suggestions
-
-**Step 2: Multi-Phase Narrative Collection**
-- **Four Narrative Phases**: Before Event, During Event, End Event, Post-Event Support
-- **2x2 Grid Layout**: Organized layout showing relationship between narrative phases
-- **Rich Text Areas**: Large text inputs optimized for detailed descriptions
-- **Phase Requirements**: At least one phase must contain meaningful content to proceed
+Establish consistent main application navigation structure with left sidebar, top menu, and bottom menu for seamless user experience across all workflows.
 
 #### Acceptance Criteria
-- [ ] **Metadata Form**: All fields with proper validation and user-friendly error messages
-- [ ] **Date/Time Picker**: Native browser inputs with proper timezone and format handling
-- [ ] **Narrative Grid**: 2x2 responsive grid layout that works on all screen sizes
-- [ ] **Input Validation**: Real-time validation with clear success/error states
-- [ ] **Auto-Save**: Continuous saving of all inputs with visual confirmation
-- [ ] **Content Requirements**: Clear indication of which narrative phases need content
-- [ ] **Progress Tracking**: Visual indication of completion status for each phase
-
-#### User Experience Details
-```typescript
-// Metadata validation requirements
-interface IncidentMetadata {
-  reporterName: string;      // Min 2 chars, max 100 chars
-  participantName: string;   // Min 2 chars, max 100 chars
-  eventDateTime: string;     // Valid ISO datetime, not future
-  location: string;          // Min 3 chars, max 200 chars
-}
-
-// Narrative phase structure
-interface NarrativePhases {
-  beforeEvent: string;       // What led up to the incident
-  duringEvent: string;       // What happened during the incident
-  endEvent: string;          // How the incident was resolved
-  postEvent: string;         // Support provided after incident
-}
-
-// Validation rule: At least one phase must have ≥50 characters
-const validateNarrativeContent = (phases: NarrativePhases): boolean => {
-  return Object.values(phases).some(phase => phase.trim().length >= 50);
-};
-```
+- [x] Left sidebar navigation with role-based menu items for different user types
+- [x] Top header menu with user profile, notifications, and quick actions
+- [x] Bottom navigation/footer with system information and secondary links
+- [x] Responsive design that adapts sidebar to mobile (collapsible/drawer)
+- [x] Main content area that integrates with wizard and other workflows
+- [x] Navigation state persistence (active menu items, collapsed states)
+- [x] WCAG 2.1 AA accessibility compliance for all navigation elements
 
 ---
 
-### Story 2.3: AI-Powered Clarification System
+### Story 2.3: NDIS Participants Management
 
-**Priority**: HIGH  
-**Estimated Effort**: 1.5 weeks  
-**Dependencies**: Story 2.2 (narrative content), Epic 1 (AI services)
-
-#### Requirements
-Implement the intelligent clarification question system that generates 2-4 context-aware follow-up questions for each narrative phase, providing separate steps for user responses.
-
-**Steps 3-6: Clarification Questions**
-- **Step 3**: Questions about "Before Event" narrative
-- **Step 4**: Questions about "During Event" narrative  
-- **Step 5**: Questions about "End Event" narrative
-- **Step 6**: Questions about "Post-Event Support" narrative
-
-**AI Question Generation**:
-- **Context Awareness**: Questions generated based on specific narrative content
-- **Phase-Specific**: Different question types for each narrative phase
-- **Adaptive Count**: 2-4 questions per phase based on narrative complexity
-- **Optional Responses**: Users can skip any question without blocking progress
-
-#### Acceptance Criteria
-- [ ] **AI Integration**: Reliable question generation with <10 second response times
-- [ ] **Question Display**: Clear, numbered questions with generous answer spaces
-- [ ] **Optional Responses**: Skip functionality that doesn't block workflow progression
-- [ ] **Error Handling**: Graceful fallback when AI services are unavailable
-- [ ] **Question Caching**: Smart caching to avoid re-generating identical questions
-- [ ] **Progress Indication**: Clear indication of which questions have been answered
-- [ ] **Content Preservation**: Answers saved immediately and persist across sessions
-
-#### AI Integration Architecture
-```typescript
-// Question generation workflow
-const generateClarificationQuestions = async (
-  incidentId: string,
-  phase: NarrativePhase,
-  content: string
-): Promise<ClarificationQuestion[]> => {
-  // Check cache first
-  const cached = await getCachedQuestions(incidentId, phase);
-  if (cached) return cached;
-  
-  // Generate new questions via AI
-  const questions = await aiService.generateQuestions({
-    incidentContext: await getIncidentMetadata(incidentId),
-    narrativePhase: phase,
-    narrativeContent: content,
-    questionCount: determineQuestionCount(content),
-  });
-  
-  // Cache and store results
-  await cacheQuestions(incidentId, phase, questions);
-  await logAIRequest(incidentId, 'clarification_questions', questions.length);
-  
-  return questions;
-};
-
-// Example AI-generated questions structure
-interface ClarificationQuestion {
-  id: string;
-  question: string;
-  phase: NarrativePhase;
-  generatedAt: number;
-  answered: boolean;
-  answer?: string;
-}
-```
-
-#### Question Quality Standards
-- **Relevant**: Questions directly relate to narrative content provided
-- **Open-Ended**: Questions encourage detailed, descriptive responses
-- **Non-Leading**: Questions don't suggest specific answers or interpretations
-- **Respectful**: Questions handle sensitive content with appropriate language
-- **Actionable**: Questions help capture details useful for analysis and compliance
-
----
-
-### Story 2.4: Narrative Enhancement & Completion
-
-**Priority**: HIGH  
+**Priority**: CRITICAL  
 **Estimated Effort**: 1 week  
-**Dependencies**: Story 2.3 (clarification responses)
+**Dependencies**: Stories 2.0 (UI foundation), 2.1 (wizard framework), 2.2 (navigation), Epic 1 (companies, authentication)
 
 #### Requirements
-Implement the final review step that combines original narratives with clarification responses using AI enhancement, providing a comprehensive incident summary ready for analysis workflow handoff.
+Implement comprehensive NDIS participant management system with role-based access control and automatic company association for incident reporting foundation.
 
-**Step 7: Enhanced Review & Completion**
-- **Narrative Enhancement**: AI combines original narratives with clarification answers
-- **Consolidated View**: Single, comprehensive incident narrative for review
-- **Edit Capabilities**: Users can modify AI-enhanced content before submission
-- **Final Validation**: Confirm all required information is complete and accurate
-- **Workflow Handoff**: Seamless transition to analysis phase for team leaders
+**Participant Management Features**:
+- **Create Participants**: Role-restricted participant creation (team_lead+)
+- **Auto-Company Association**: Participants automatically belong to user's company
+- **Participant Listing**: Company-scoped participant directory with search
+- **Edit/Update**: Full participant record management with audit trail
+- **Validation**: Required fields, duplicate prevention, data integrity
 
 #### Acceptance Criteria
-- [ ] **AI Enhancement**: Intelligent combination of original narratives and clarification responses
-- [ ] **Review Interface**: Clean, readable presentation of enhanced narrative content
-- [ ] **Edit Functionality**: Users can modify enhanced content with change tracking
-- [ ] **Validation Summary**: Clear checklist showing completion status of all requirements
-- [ ] **Handoff Process**: Smooth transition that notifies team leaders of ready-for-analysis incidents
-- [ ] **Data Integrity**: All original content preserved alongside enhanced versions
-- [ ] **Export Preview**: Preview of final incident report format
+- [ ] **Create Participant Form**: Clean form with validation and auto-save
+- [ ] **Role-Based Access**: Only team_lead, company_admin, system_admin can create participants
+- [ ] **Auto-Association**: New participants automatically assigned to user's company
+- [ ] **Participant List**: Searchable, filterable list of company's participants
+- [ ] **Edit Functionality**: Full CRUD operations with change tracking
+- [ ] **Data Validation**: Required fields, format validation, duplicate detection
+- [ ] **Responsive Design**: Mobile-friendly participant management interface
 
-#### AI Enhancement Process
+#### Technical Implementation
 ```typescript
-// Narrative enhancement workflow
-const enhanceNarrative = async (
-  incidentId: string,
-  originalNarrative: NarrativePhases,
-  clarificationResponses: ClarificationResponse[]
-): Promise<EnhancedNarrative> => {
+// Participant data structure (missing from current schema)
+interface Participant {
+  _id: Id<"participants">;
+  company_id: Id<"companies">; // Auto-assigned from user's company
   
-  const enhancementRequest = {
-    incidentMetadata: await getIncidentMetadata(incidentId),
-    originalNarrative,
-    clarificationResponses: groupResponsesByPhase(clarificationResponses),
-    enhancementGoals: [
-      'integrate_clarification_details',
-      'improve_chronological_flow', 
-      'highlight_key_safety_factors',
-      'maintain_original_voice'
-    ]
-  };
+  // Core participant information
+  first_name: string;
+  last_name: string;
+  date_of_birth: string; // For identification
+  ndis_number: string; // NDIS participant number
   
-  const enhanced = await aiService.enhanceNarrative(enhancementRequest);
+  // Contact information
+  contact_phone: string;
+  emergency_contact: string;
   
-  // Store both original and enhanced versions
-  await storeEnhancedNarrative(incidentId, {
-    original: originalNarrative,
-    enhanced: enhanced,
-    enhancedAt: Date.now(),
-    clarificationUsed: clarificationResponses.length,
-  });
+  // Service information
+  support_level: "high" | "medium" | "low";
+  care_notes: string; // Special considerations
   
-  return enhanced;
-};
-
-// Enhanced narrative structure
-interface EnhancedNarrative {
-  consolidatedNarrative: string;      // Single comprehensive narrative
-  keyHighlights: string[];            // Important points identified by AI
-  timelineOfEvents: TimelineEntry[];  // Chronological sequence
-  safetyFactors: string[];           // Safety-related observations
-  enhancementNotes: string;          // AI explanation of enhancements made
+  // Audit trail
+  created_at: number;
+  created_by: Id<"users">;
+  updated_at: number;
+  updated_by: Id<"users">;
+  
+  // Status
+  status: "active" | "inactive" | "discharged";
 }
+
+// Role-based creation validation
+const canCreateParticipant = (userRole: UserRole): boolean => {
+  return ["system_admin", "company_admin", "team_lead"].includes(userRole);
+};
 ```
 
-#### Review Interface Requirements
-- **Side-by-Side View**: Option to compare original and enhanced narratives
-- **Highlight Changes**: Visual indication of AI-added content and modifications
-- **Section Navigation**: Easy navigation between different enhanced sections
-- **Approval Process**: Clear accept/reject/modify workflow for enhanced content
-- **Summary Statistics**: Word count, completion percentage, enhancement impact metrics
-
----
-
-## Epic Integration Points
-
-### Real-Time Collaboration
-- **Progress Sharing**: Team leaders can see capture workflow progress in real-time
-- **Handoff Notifications**: Automatic notifications when incidents are ready for analysis
-- **Status Updates**: Live status updates visible to relevant team members
-
-### Data Quality Assurance
-- **Validation Pipeline**: Multi-layer validation from input through AI processing
-- **Error Recovery**: Graceful handling of AI service failures with manual fallbacks
-- **Data Integrity**: Preservation of all original content alongside AI enhancements
-
-### Mobile Optimization
-- **Progressive Web App**: Full offline capability for initial capture
-- **Touch Optimization**: Interface optimized for touch input on tablets and phones
-- **Performance**: Fast loading and smooth interactions even on slower devices
+#### Database Schema Addition
+```sql
+-- New table needed in schema.ts
+participants: defineTable({
+  company_id: v.id("companies"), // Multi-tenant isolation
+  first_name: v.string(),
+  last_name: v.string(),
+  date_of_birth: v.string(),
+  ndis_number: v.string(), // NDIS participant identifier
+  contact_phone: v.optional(v.string()),
+  emergency_contact: v.optional(v.string()),
+  support_level: v.union(v.literal("high"), v.literal("medium"), v.literal("low")),
+  care_notes: v.optional(v.string()),
+  status: v.union(v.literal("active"), v.literal("inactive"), v.literal("discharged")),
+  created_at: v.number(),
+  created_by: v.id("users"),
+  updated_at: v.number(),
+  updated_by: v.id("users"),
+})
+  .index("by_company", ["company_id"])
+  .index("by_ndis_number", ["ndis_number"])
+  .index("by_status", ["status"])
+  .index("by_name", ["last_name", "first_name"]),
+```
 
 ---
 
 ## Epic Success Criteria
 
 ### Functional Requirements
-- [ ] **Complete Workflow**: All 7 steps implemented and fully functional
-- [ ] **AI Integration**: 95%+ success rate for question generation and enhancement
-- [ ] **Mobile Responsive**: Full functionality on iOS and Android browsers
-- [ ] **Performance**: <2 second step transitions, <10 second AI processing
+- [ ] **Complete Participant Management**: Full CRUD operations with role-based access
+- [ ] **Company Isolation**: Perfect multi-tenant data separation
+- [ ] **Data Integrity**: All participants properly associated with companies
+- [ ] **Search & Filter**: Efficient participant discovery within company scope
 
 ### User Experience Requirements
-- [ ] **Completion Rate**: >90% of started incidents reach completion in user testing
-- [ ] **Time Efficiency**: <15 minutes average completion time for typical incidents
-- [ ] **Error Rates**: <5% user errors requiring support intervention
-- [ ] **Satisfaction**: >4.5/5 user satisfaction rating from frontline workers
+- [ ] **Fast Onboarding**: <5 minutes to create participant record
+- [ ] **Role Compliance**: 100% enforcement of creation permissions
+- [ ] **Data Quality**: Zero orphaned or mis-associated participant records
+- [ ] **Usability**: Intuitive interface for non-technical staff
 
 ### Quality Assurance
-- [ ] **Data Accuracy**: 100% data integrity between capture and analysis handoff
+- [ ] **Data Validation**: Comprehensive field validation and error handling
 - [ ] **Accessibility**: WCAG 2.1 AA compliance for inclusive design
-- [ ] **Cross-Browser**: Full functionality in Safari, Chrome, Firefox, Edge
-- [ ] **Error Handling**: Graceful degradation for all failure scenarios
-
----
-
-## Risks & Mitigation
-
-### Technical Risks
-**Risk**: AI service latency affects user experience  
-**Mitigation**: Asynchronous processing with progress indicators, local caching for repeated requests
-
-**Risk**: Mobile performance issues with large forms  
-**Mitigation**: Progressive loading, efficient state management, performance testing on target devices
-
-**Risk**: Complex validation logic creates user friction  
-**Mitigation**: User testing throughout development, clear error messages, contextual help
-
-### User Experience Risks
-**Risk**: Workflow too long or complex for stressed frontline workers  
-**Mitigation**: User research with actual NDIS workers, streamlined step design, optional vs. required content
-
-**Risk**: AI-generated questions irrelevant or inappropriate  
-**Mitigation**: Comprehensive prompt testing, fallback to pre-defined questions, user feedback loops
+- [ ] **Performance**: <2 second response times for all operations
+- [ ] **Security**: Proper authorization and audit trails
 
 ---
 
 ## Dependencies & Handoffs
 
 ### ✅ From Epic 1 - DEPENDENCY STATUS: SATISFIED
-- **✅ API Layer**: 15/15 incident and narrative management APIs functional and documented
-- **✅ AI Services**: Question generation and enhancement services reliable and tested
-- **✅ Authentication**: User sessions and MVP permissions working correctly
-- **✅ TypeScript Integration**: Complete type definitions provided for frontend development
-- **✅ Real-time Features**: Collaborative editing and live updates implemented
-- **✅ Error Handling**: Comprehensive error patterns with retry logic established
+- **✅ Companies Table**: Multi-tenant company structure operational
+- **✅ User Authentication**: Role-based access control working
+- **✅ Database Infrastructure**: Convex backend ready for new tables
+- **✅ UI Foundation**: Design system and components available
 
-### To Epic 3
-- **Data Handoff**: Complete incident data ready for analysis workflow
-- **UI Patterns**: Established patterns for wizard navigation and AI interaction
-- **Test Data**: Comprehensive incident data for analysis workflow development
+### To Epic 3 (Incident Capture Workflow)
+- **Participant Selection**: Dropdown of company participants for incident metadata
+- **Auto-Population**: Reporter information from authenticated user
+- **Data Foundation**: Proper participant context for meaningful incident reports
 
 ---
 
-## Epic 1 Completion Verification
+## Technical Notes
 
-**Verification Date**: August 8, 2025  
-**Verified By**: Bob (Scrum Master), Sarah (Product Owner), James (Dev Agent)
+### Missing Schema Elements
+The current `apps/convex/schema.ts` is missing the `participants` table. Story 2.2 implementation will require:
 
-### ✅ **Story 1.5 Deliverables Confirmed**:
-- **API Documentation Suite**: Complete documentation for 15/15 APIs
-- **TypeScript Definitions**: Full frontend type safety in `apps/web/types/api.d.ts`
-- **Authentication Patterns**: MVP-ready auth hooks for immediate development
-- **Real-time Subscriptions**: Collaborative workflow patterns implemented
-- **Integration Examples**: Comprehensive query/mutation patterns with error handling
+1. **Schema Addition**: Add participants table with proper indexes
+2. **Convex Functions**: CRUD operations for participant management  
+3. **Permission Integration**: Role-based access control enforcement
+4. **UI Components**: Participant management interface components
 
-### ✅ **Development Environment Ready**:
-- **Frontend Integration**: Type-safe API calls with auto-completion
-- **Error Boundaries**: Production-ready error handling patterns
-- **Real-time Features**: Live incident updates and collaborative editing
-- **Performance**: Optimized patterns for production deployment
-
-**RECOMMENDATION**: Epic 2 development team can begin immediately with full confidence in backend infrastructure stability and frontend integration readiness.
+### Integration Points
+- **Users Table**: Already has `company_id` field for proper association
+- **Companies Table**: Already exists and functional
+- **Incidents Table**: Already has `participant_name` field (will be enhanced with participant selection)
 
 ---
 
-This epic delivers the core user experience that will define SupportSignal's value to frontline workers - transforming incident reporting from a dreaded chore into a guided, intelligent process that actually helps improve safety outcomes.
+This epic establishes the foundational entity relationships required for meaningful incident reporting in Epic 3, ensuring proper data context and multi-tenant isolation.

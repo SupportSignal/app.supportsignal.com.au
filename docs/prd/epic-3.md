@@ -1,31 +1,34 @@
-# Epic 3: Incident Analysis Workflow
+# Epic 3: Incident Capture Workflow
 
 ## Epic Overview
 
-**Goal**: Implement the complete 4-step incident analysis workflow for team leaders, featuring AI-powered contributing conditions analysis, intelligent incident classification, and comprehensive reporting capabilities.
+**Status**: **WAITING FOR EPIC 2** 🟡  
+**Epic 2 Dependency**: Entity management foundation required
+
+**Goal**: Implement the complete 7-step incident capture workflow for frontline workers, featuring intelligent narrative collection, AI-powered clarification questions, and seamless handoff to the analysis phase.
 
 **Duration**: 3-4 weeks  
-**Team Size**: 2-3 developers (full-stack focus)  
-**Dependencies**: Epic 1 (AI services, APIs), Epic 2 (incident data from capture workflow)  
-**Primary Users**: Team leaders, managers, compliance officers
+**Team Size**: 2-3 developers (frontend focus)  
+**Dependencies**: ✅ Epic 1 (database, AI services, authentication), 🟡 Epic 2 (participants, UI foundation) - **WAITING**  
+**Primary Users**: Frontline support workers, disability care providers
 
 ---
 
 ## Business Context
 
-Epic 3 completes the SupportSignal value proposition by transforming captured incident data into actionable insights, compliance-ready reports, and organizational learning opportunities. This workflow serves the analytical and oversight needs that drive safety improvements and regulatory compliance.
+Epic 3 delivers the core value proposition of SupportSignal for frontline workers - transforming chaotic, incomplete incident reporting into a guided, comprehensive process that captures critical details while minimizing cognitive load during stressful post-incident situations.
 
 **Key Business Drivers**:
-- **Regulatory Compliance**: Structured analysis meets NDIS incident reporting requirements
-- **Safety Improvement**: Systematic analysis of contributing conditions enables preventive measures
-- **Operational Efficiency**: AI-powered analysis reduces time from hours to minutes while improving quality
-- **Organizational Learning**: Consistent classification enables trend analysis and pattern recognition
+- **Compliance Assurance**: Structured workflow ensures all required incident details are captured
+- **Reduced Cognitive Load**: Progressive disclosure and validation guidance reduces mental burden
+- **Improved Data Quality**: AI-generated clarification questions capture details often missed in manual reports
+- **Time Efficiency**: Guided workflow is faster than unstructured forms while capturing more information
 
 **Success Metrics**:
-- **Analysis Completion Rate**: >95% of captured incidents receive complete analysis
-- **Time to Analysis**: <2 hours from capture completion to analysis start
-- **Analysis Quality**: Measurable improvement in depth and consistency vs. manual analysis
-- **Export Utilization**: >70% of completed analyses exported for compliance and operational use
+- **Completion Rate**: >90% of started incidents reach completion
+- **Time to Complete**: <15 minutes average for complete incident capture
+- **Data Quality**: >95% of incidents have all narrative phases completed
+- **User Satisfaction**: >4.5/5 rating from frontline workers
 
 ---
 
@@ -33,450 +36,187 @@ Epic 3 completes the SupportSignal value proposition by transforming captured in
 
 ```mermaid
 graph TD
-    A[Incident Captured] --> B[Analysis Notification]
-    B --> C[Step 1: Narrative Review]
-    C --> D[Step 2: Contributing Analysis]
-    D --> E[Step 3: Classification]
-    E --> F[Step 4: Final Review & Export]
-    F --> G[Compliance Report Generated]
+    A[Incident Occurs] --> B[Open SupportSignal]
+    B --> C[Step 1: Metadata Entry]
+    C --> D[Step 2: Multi-Phase Narrative]
+    D --> E[Step 3-6: AI Clarification]
+    E --> F[Step 7: Final Review]
+    F --> G[Submit & Handoff to Analysis]
     
-    subgraph "AI Enhancement"
-        H[AI Contributing Analysis]
-        I[AI Classification Suggestions]
-        J[Pattern Recognition]
+    subgraph "Validation & Progress"
+        H[Progress Indicator]
+        I[Step Validation]
+        J[Auto-Save]
     end
     
-    D -.-> H
-    E -.-> I
-    F -.-> J
+    C -.-> H
+    D -.-> I
+    E -.-> J
+    F -.-> H
 ```
 
 ---
 
 ## Story Breakdown
 
-### Story 3.1: Analysis Workflow Setup
+### Story 3.1: Metadata & Narrative Collection
 
 **Priority**: CRITICAL  
 **Estimated Effort**: 1 week  
-**Dependencies**: Epic 1 (analysis APIs), Epic 2 (incident data structure)
+**Dependencies**: Epic 2 (participants, wizard framework)
 
 #### Requirements
-Establish the analysis workflow foundation including navigation, data flow, and workflow state management that supports the 4-step analysis process for team leaders.
+Implement the first two core steps of incident capture: metadata collection and multi-phase narrative input with real-time validation and user guidance.
 
-**Analysis Workflow Foundation**:
-- **Incident Queue**: Dashboard showing incidents ready for analysis
-- **Workflow Navigation**: 4-step navigation system with progress tracking
-- **Data Prefetch**: Optimized loading of incident data and AI-generated content
-- **State Management**: Persistent analysis state with auto-save and recovery
-- **Role-Based Access**: Team leader permissions and incident assignment
+**Step 1: Metadata Collection**
+- **Reporter Name**: Pre-filled from authenticated user, editable for proxy reporting
+- **Participant Selection**: Dropdown of company's NDIS participants (from Epic 2)
+- **Event Date/Time**: Date and time picker with timezone handling
+- **Location**: Text input for incident location with common location suggestions
+
+**Step 2: Multi-Phase Narrative Collection**
+- **Four Narrative Phases**: Before Event, During Event, End Event, Post-Event Support
+- **2x2 Grid Layout**: Organized layout showing relationship between narrative phases
+- **Rich Text Areas**: Large text inputs optimized for detailed descriptions
+- **Phase Requirements**: At least one phase must contain meaningful content to proceed
 
 #### Acceptance Criteria
-- [ ] **Analysis Dashboard**: Queue of incidents ready for analysis with sorting and filtering
-- [ ] **Workflow Shell**: 4-step navigation system adapted from capture workflow patterns
-- [ ] **Data Loading**: Efficient loading of complete incident data including narratives and clarifications
-- [ ] **Permission Checking**: Team leaders can only access incidents they're authorized to analyze
-- [ ] **Auto-Save**: Continuous saving of analysis progress with session recovery
-- [ ] **Progress Tracking**: Visual indication of analysis completion status
-- [ ] **Notification System**: Real-time notifications when new incidents are ready for analysis
-
-#### Technical Implementation
-```typescript
-// Analysis workflow structure
-interface AnalysisWorkflow {
-  incidentId: string;
-  steps: AnalysisStep[];
-  currentStep: number;
-  completed: boolean;
-  assignedTo: string;
-  startedAt: number;
-  completedAt?: number;
-}
-
-interface AnalysisStep {
-  id: 'narrative_review' | 'contributing_analysis' | 'classification' | 'final_review';
-  title: string;
-  completed: boolean;
-  data?: any;
-}
-
-// Incident analysis dashboard query
-export const getIncidentsForAnalysis = query({
-  args: {},
-  handler: async (ctx) => {
-    const currentUser = await getCurrentUser(ctx);
-    if (!canPerformAnalysis(currentUser)) {
-      throw new ConvexError("Insufficient permissions for analysis");
-    }
-    
-    return await ctx.db
-      .query("incidents")
-      .withIndex("by_status", (q) => q.eq("captureStatus", "completed"))
-      .filter((q) => q.eq(q.field("analysisStatus"), "not_started"))
-      .collect();
-  },
-});
-```
+- [ ] **Metadata Form**: All fields with proper validation and user-friendly error messages
+- [ ] **Reporter Pre-population**: Auto-fill reporter name from authenticated user
+- [ ] **Participant Selection**: Dropdown of company participants (Epic 2 dependency)
+- [ ] **Date/Time Picker**: Native browser inputs with proper timezone and format handling
+- [ ] **Narrative Grid**: 2x2 responsive grid layout that works on all screen sizes
+- [ ] **Input Validation**: Real-time validation with clear success/error states
+- [ ] **Auto-Save**: Continuous saving of all inputs with visual confirmation
+- [ ] **Content Requirements**: Clear indication of which narrative phases need content
+- [ ] **Progress Tracking**: Visual indication of completion status for each phase
 
 ---
 
-### Story 3.2: Contributing Conditions Analysis
+### Story 3.2: AI-Powered Clarification System
 
 **Priority**: HIGH  
 **Estimated Effort**: 1.5 weeks  
-**Dependencies**: Story 3.1 (workflow setup), Epic 1 (AI analysis services)
+**Dependencies**: Story 3.1 (narrative content), Epic 1 (AI services)
 
 #### Requirements
-Implement AI-powered contributing conditions analysis that examines the complete incident narrative and generates comprehensive analysis of factors that contributed to the incident occurrence.
+Implement the intelligent clarification question system that generates 2-4 context-aware follow-up questions for each narrative phase, providing separate steps for user responses.
 
-**Step 2: Contributing Conditions Analysis**
-- **AI-Generated Analysis**: Comprehensive analysis of contributing conditions based on complete incident narrative
-- **Rich Text Editor**: Full editing capabilities for team leaders to refine AI-generated analysis
-- **Analysis Categories**: Structured analysis covering environmental, human, systemic, and procedural factors
-- **Evidence Linkage**: Clear connections between analysis points and specific narrative content
-- **Retry Mechanisms**: Ability to regenerate analysis if initial results are unsatisfactory
+**Steps 3-6: Clarification Questions**
+- **Step 3**: Questions about "Before Event" narrative
+- **Step 4**: Questions about "During Event" narrative  
+- **Step 5**: Questions about "End Event" narrative
+- **Step 6**: Questions about "Post-Event Support" narrative
 
 #### Acceptance Criteria
-- [ ] **AI Integration**: Reliable generation of contributing conditions analysis from incident narratives
-- [ ] **Rich Editor**: Full-featured text editor with formatting, lists, and structure capabilities
-- [ ] **Categorized Analysis**: Analysis organized into logical categories (environmental, human, systemic, procedural)
-- [ ] **Evidence References**: Clear citations linking analysis points to specific narrative content
-- [ ] **Regeneration**: One-click regeneration of analysis with improved prompts if needed
-- [ ] **Change Tracking**: Version history and change tracking for analysis modifications
-- [ ] **Quality Indicators**: Metrics showing analysis completeness and depth
-
-#### AI Analysis Architecture
-```typescript
-// Contributing conditions analysis structure
-interface ContributingAnalysis {
-  incidentId: string;
-  generatedAt: number;
-  analysisVersion: number;
-  categories: {
-    environmental: AnalysisPoint[];
-    human: AnalysisPoint[];
-    systemic: AnalysisPoint[];
-    procedural: AnalysisPoint[];
-  };
-  overallAssessment: string;
-  preventiveRecommendations: string[];
-  confidenceScore: number;
-}
-
-interface AnalysisPoint {
-  factor: string;
-  description: string;
-  severity: 'low' | 'medium' | 'high';
-  evidenceReferences: string[];  // References to narrative content
-  preventable: boolean;
-}
-
-// AI analysis generation
-export const generateContributingAnalysis = action({
-  args: {
-    incidentId: v.id("incidents"),
-  },
-  handler: async (ctx, { incidentId }) => {
-    // Gather complete incident data
-    const incident = await ctx.runQuery(api.incidents.getById, { id: incidentId });
-    const narrative = await ctx.runQuery(api.narratives.getConsolidated, { incidentId });
-    const clarifications = await ctx.runQuery(api.clarifications.getAnswers, { incidentId });
-    
-    // Construct comprehensive context for AI
-    const analysisContext = {
-      incidentMetadata: incident,
-      consolidatedNarrative: narrative,
-      clarificationDetails: clarifications,
-      analysisGoals: [
-        'identify_contributing_factors',
-        'assess_preventability',
-        'recommend_preventive_measures',
-        'categorize_by_factor_type'
-      ]
-    };
-    
-    // Generate AI analysis
-    const aiAnalysis = await aiService.generateContributingAnalysis(analysisContext);
-    
-    // Store analysis with version tracking
-    await ctx.runMutation(api.analysis.create, {
-      incidentId,
-      analysis: aiAnalysis,
-      generatedBy: 'ai',
-      version: 1,
-    });
-    
-    return aiAnalysis;
-  },
-});
-```
-
-#### Analysis Quality Standards
-- **Comprehensive**: Covers all relevant contributing factors identified in the narrative
-- **Evidence-Based**: Each analysis point clearly linked to specific narrative evidence
-- **Actionable**: Recommendations are specific and implementable by the organization
-- **Categorized**: Factors appropriately categorized for systematic review and action
-- **Balanced**: Acknowledges both controllable and uncontrollable contributing factors
+- [ ] **AI Integration**: Reliable question generation with <10 second response times
+- [ ] **Question Display**: Clear, numbered questions with generous answer spaces
+- [ ] **Optional Responses**: Skip functionality that doesn't block workflow progression
+- [ ] **Error Handling**: Graceful fallback when AI services are unavailable
+- [ ] **Question Caching**: Smart caching to avoid re-generating identical questions
+- [ ] **Progress Indication**: Clear indication of which questions have been answered
+- [ ] **Content Preservation**: Answers saved immediately and persist across sessions
 
 ---
 
-### Story 3.3: Incident Classification System
+### Story 3.3: Narrative Enhancement & Completion
 
 **Priority**: HIGH  
 **Estimated Effort**: 1 week  
-**Dependencies**: Story 3.2 (contributing analysis data)
+**Dependencies**: Story 3.2 (clarification responses)
 
 #### Requirements
-Implement intelligent incident classification system that uses AI to suggest incident types, severity levels, and categories while allowing team leaders to modify and validate classifications.
+Implement the final review step that combines original narratives with clarification responses using AI enhancement, providing a comprehensive incident summary ready for analysis workflow handoff.
 
-**Step 3: Incident Classification**
-- **AI Classification Suggestions**: Automated suggestions for incident type, severity, and categories
-- **Classification Management**: Interface for adding, editing, and removing classifications
-- **Severity Assessment**: Standardized severity levels with clear criteria and AI confidence scoring
-- **Category Taxonomy**: Structured classification system aligned with NDIS reporting requirements
-- **Validation Rules**: Business logic ensuring classification consistency and completeness
-
-#### Acceptance Criteria
-- [ ] **AI Suggestions**: Reliable classification suggestions with confidence scores
-- [ ] **Classification Interface**: Intuitive interface for managing multiple classification tags
-- [ ] **Severity Levels**: Clear severity scale (minor/moderate/major/critical) with objective criteria
-- [ ] **Category Management**: Hierarchical category system supporting NDIS classification requirements
-- [ ] **Confidence Scoring**: AI confidence indicators helping team leaders validate suggestions
-- [ ] **Validation Logic**: Prevents invalid classification combinations and ensures completeness
-- [ ] **Historical Patterns**: Suggestions informed by similar incidents in the organization
-
-#### Classification Data Structure
-```typescript
-// Incident classification structure
-interface IncidentClassification {
-  incidentId: string;
-  classifications: {
-    primary: ClassificationTag;
-    secondary: ClassificationTag[];
-    custom: ClassificationTag[];
-  };
-  severity: {
-    level: 'minor' | 'moderate' | 'major' | 'critical';
-    factors: SeverityFactor[];
-    aiConfidence: number;
-    manualOverride?: boolean;
-  };
-  complianceCategories: NDISCategory[];
-  classifiedAt: number;
-  classifiedBy: string;
-  aiSuggested: boolean;
-}
-
-interface ClassificationTag {
-  id: string;
-  category: string;
-  subcategory?: string;
-  description: string;
-  aiConfidence?: number;
-  validatedByUser: boolean;
-}
-
-interface SeverityFactor {
-  factor: 'injury_severity' | 'property_damage' | 'service_disruption' | 'regulatory_impact';
-  score: number;
-  description: string;
-}
-
-// NDIS-specific classification categories
-interface NDISCategory {
-  code: string;
-  title: string;
-  description: string;
-  mandatory: boolean;
-  subcategories?: NDISSubcategory[];
-}
-```
-
-#### AI Classification Logic
-- **Pattern Recognition**: Analysis of similar incidents to suggest appropriate classifications
-- **Severity Calculation**: Multi-factor analysis determining appropriate severity level
-- **Compliance Mapping**: Automatic mapping to NDIS reporting categories
-- **Confidence Scoring**: Transparent confidence levels for each classification suggestion
-- **Learning Integration**: Classification accuracy improves over time with user feedback
-
----
-
-### Story 3.4: Analysis Completion & Export
-
-**Priority**: HIGH  
-**Estimated Effort**: 1 week  
-**Dependencies**: Stories 3.1, 3.2, 3.3 (complete analysis data)
-
-#### Requirements
-Implement the final analysis review and export functionality that generates compliance-ready reports and completes the incident lifecycle with comprehensive documentation.
-
-**Step 4: Final Review & Export**
-- **Comprehensive Review**: Consolidated view of complete analysis including narratives, contributing factors, and classifications
-- **Export Functionality**: Multiple export formats (JSON, Markdown, PDF) suitable for different use cases
-- **Compliance Reports**: NDIS-formatted reports ready for regulatory submission
-- **Analysis Summary**: Executive summary highlighting key findings and recommendations
-- **Audit Trail**: Complete workflow history from capture through analysis completion
+**Step 7: Enhanced Review & Completion**
+- **Narrative Enhancement**: AI combines original narratives with clarification answers
+- **Consolidated View**: Single, comprehensive incident narrative for review
+- **Edit Capabilities**: Users can modify AI-enhanced content before submission
+- **Final Validation**: Confirm all required information is complete and accurate
+- **Workflow Handoff**: Seamless transition to analysis phase for team leaders
 
 #### Acceptance Criteria
-- [ ] **Review Interface**: Clean, comprehensive view of complete incident analysis
-- [ ] **Export Options**: JSON (data interchange), Markdown (documentation), PDF (official reports)
-- [ ] **NDIS Compliance**: Export formats specifically designed for NDIS reporting requirements
-- [ ] **Executive Summary**: Auto-generated summary highlighting key findings and recommendations
-- [ ] **Audit Trail**: Complete timeline showing all workflow steps, users, and timestamps
-- [ ] **Completion Workflow**: Clear process for marking analysis complete and archiving incident
-- [ ] **Notification System**: Automatic notifications to relevant stakeholders upon completion
-
-#### Export Format Specifications
-```typescript
-// Comprehensive incident report structure
-interface IncidentReport {
-  metadata: {
-    reportId: string;
-    generatedAt: number;
-    generatedBy: string;
-    incidentId: string;
-    reportVersion: string;
-  };
-  
-  incidentSummary: {
-    basicDetails: IncidentMetadata;
-    narrativeSummary: string;
-    keyTimeline: TimelineEntry[];
-    severity: string;
-    primaryClassification: string;
-  };
-  
-  detailedAnalysis: {
-    consolidatedNarrative: string;
-    contributingFactors: ContributingAnalysis;
-    classifications: IncidentClassification;
-    preventiveRecommendations: string[];
-  };
-  
-  complianceData: {
-    ndisReportingCategories: NDISCategory[];
-    regulatoryRequirements: ComplianceRequirement[];
-    submittalReadiness: boolean;
-  };
-  
-  auditTrail: {
-    captureWorkflow: WorkflowStep[];
-    analysisWorkflow: WorkflowStep[];
-    dataModifications: ChangeRecord[];
-    userAttributions: UserAttribution[];
-  };
-}
-
-// Export generation
-export const generateIncidentReport = action({
-  args: {
-    incidentId: v.id("incidents"),
-    format: v.union(v.literal("json"), v.literal("markdown"), v.literal("pdf")),
-  },
-  handler: async (ctx, { incidentId, format }) => {
-    // Gather all incident data
-    const completeIncident = await gatherCompleteIncidentData(ctx, incidentId);
-    
-    // Generate comprehensive report
-    const report = await buildIncidentReport(completeIncident);
-    
-    // Format according to requested output
-    const formattedReport = await formatReport(report, format);
-    
-    // Log export activity
-    await ctx.runMutation(api.activityLogs.create, {
-      action: 'incident_report_exported',
-      incidentId,
-      format,
-      timestamp: Date.now(),
-    });
-    
-    return formattedReport;
-  },
-});
-```
-
-#### Report Quality Standards
-- **Completeness**: All relevant incident data included in appropriate detail
-- **Professional Format**: Clean, readable formatting suitable for official submission
-- **Compliance-Ready**: Meets all NDIS incident reporting requirements and standards
-- **Actionable**: Clear recommendations and next steps for incident follow-up
-- **Auditable**: Complete trail of data sources, modifications, and user attributions
-
----
-
-## Epic Integration Points
-
-### Cross-Workflow Integration
-- **Seamless Handoff**: Smooth transition from capture workflow to analysis with all data intact
-- **Real-Time Updates**: Live status updates visible to capture workflow users
-- **Collaborative Features**: Ability for team leaders to request clarification from frontline workers
-
-### Organizational Learning
-- **Pattern Recognition**: AI analysis of trends across multiple incidents
-- **Recommendation Tracking**: Follow-up system for implemented preventive measures
-- **Performance Metrics**: Analytics on analysis quality, completion times, and outcomes
-
-### Compliance Integration
-- **Automated Mapping**: Incident classifications automatically mapped to regulatory requirements
-- **Submission Ready**: Exports formatted for direct submission to NDIS and other regulatory bodies
-- **Retention Management**: Automatic data retention and archival according to compliance requirements
+- [ ] **AI Enhancement**: Intelligent combination of original narratives and clarification responses
+- [ ] **Review Interface**: Clean, readable presentation of enhanced narrative content
+- [ ] **Edit Functionality**: Users can modify enhanced content with change tracking
+- [ ] **Validation Summary**: Clear checklist showing completion status of all requirements
+- [ ] **Handoff Process**: Smooth transition that notifies team leaders of ready-for-analysis incidents
+- [ ] **Data Integrity**: All original content preserved alongside enhanced versions
+- [ ] **Export Preview**: Preview of final incident report format
 
 ---
 
 ## Epic Success Criteria
 
 ### Functional Requirements
-- [ ] **Complete Analysis Workflow**: All 4 steps implemented and fully functional
-- [ ] **AI Analysis Quality**: 90%+ of AI-generated analyses require minimal team leader modification
-- [ ] **Export Functionality**: All export formats generate correctly formatted, complete reports
-- [ ] **Performance**: Analysis workflow completes in <30 minutes for typical incidents
+- [ ] **Complete Workflow**: All 7 steps implemented and fully functional
+- [ ] **AI Integration**: 95%+ success rate for question generation and enhancement
+- [ ] **Mobile Responsive**: Full functionality on iOS and Android browsers
+- [ ] **Performance**: <2 second step transitions, <10 second AI processing
 
-### Business Requirements
-- [ ] **Analysis Completion**: >95% of captured incidents receive complete analysis within 24 hours
-- [ ] **Compliance Ready**: 100% of exported reports meet NDIS submission requirements
-- [ ] **User Satisfaction**: >4.0/5 rating from team leaders for analysis workflow efficiency
-- [ ] **Quality Improvement**: Measurable improvement in analysis depth vs. baseline manual process
-
-### Technical Requirements
-- [ ] **Data Integrity**: 100% accuracy in data transfer from capture to analysis workflows
-- [ ] **AI Reliability**: <5% AI service failure rate with graceful fallback mechanisms
-- [ ] **Export Performance**: Report generation completes in <30 seconds for all formats
-- [ ] **Audit Compliance**: Complete audit trail maintained throughout analysis process
-
----
-
-## Risks & Mitigation
-
-### Technical Risks
-**Risk**: AI analysis quality inconsistent across different incident types  
-**Mitigation**: Comprehensive prompt testing across incident scenarios, feedback loops for AI improvement
-
-**Risk**: Export generation performance issues with large incident datasets  
-**Mitigation**: Efficient data aggregation, background processing for large reports, progress indicators
-
-**Risk**: Complex classification system creates user confusion  
-**Mitigation**: User testing with actual team leaders, progressive disclosure of classification options
-
-### Business Risks
-**Risk**: Analysis workflow too time-consuming reduces team leader adoption  
-**Mitigation**: Streamlined interface design, AI-powered efficiency, optional vs. required analysis components
-
-**Risk**: Export formats don't meet evolving compliance requirements  
-**Mitigation**: Flexible export system architecture, regular compliance review cycles
+### User Experience Requirements
+- [ ] **Completion Rate**: >90% of started incidents reach completion in user testing
+- [ ] **Time Efficiency**: <15 minutes average completion time for typical incidents
+- [ ] **Error Rates**: <5% user errors requiring support intervention
+- [ ] **Satisfaction**: >4.5/5 user satisfaction rating from frontline workers
 
 ---
 
 ## Dependencies & Handoffs
 
-### From Epic 1 & Epic 2
-- **Complete Incident Data**: All capture workflow data available for analysis
-- **AI Services**: Analysis and classification AI services reliable and tested
-- **User Management**: Team leader roles and permissions properly configured
+### ✅ From Epic 1 - DEPENDENCY STATUS: SATISFIED
+- **✅ API Layer**: 15/15 incident and narrative management APIs functional and documented
+- **✅ AI Services**: Question generation and enhancement services reliable and tested
+- **✅ Authentication**: User sessions and MVP permissions working correctly
 
-### To Production
-- **Complete Platform**: End-to-end incident management from capture through compliance reporting
-- **Training Materials**: Documentation and training content for team leader onboarding
-- **Support Systems**: Monitoring and support infrastructure for production deployment
+### 🟡 From Epic 2 - DEPENDENCY STATUS: PENDING
+- **🟡 Participants Table**: NDIS participant management for incident metadata
+- **🟡 Participant Selection**: Dropdown of company participants for incident reporting
+- **🟡 Wizard Framework**: Completed (Stories 2.0 & 2.1)
+- **🟡 UI Foundation**: Completed (Stories 2.0 & 2.1)
 
-This epic completes the SupportSignal platform by delivering the analytical and compliance capabilities that transform captured incident data into organizational learning and regulatory compliance - closing the loop on incident management and enabling continuous safety improvement.
+### To Epic 4 (Analysis Workflow)
+- **Data Handoff**: Complete incident data ready for analysis workflow
+- **UI Patterns**: Established patterns for wizard navigation and AI interaction
+- **Test Data**: Comprehensive incident data for analysis workflow development
+
+---
+
+## Epic 2 Integration Requirements
+
+### Critical Dependencies from Epic 2
+1. **Participants Table**: Must be implemented in `apps/convex/schema.ts`
+2. **Participant CRUD Operations**: Company-scoped participant management
+3. **Role-Based Access**: Only authorized users can create participants
+4. **Participant Selection UI**: Dropdown component for incident metadata
+
+### Integration Points
+```typescript
+// Enhanced incident metadata with participant selection
+interface IncidentMetadata {
+  reporterName: string;           // Auto-filled from auth user
+  participantId: Id<"participants">; // Selected from Epic 2 dropdown
+  participantName: string;        // Auto-populated from selection
+  eventDateTime: string;          // Date/time picker
+  location: string;              // Location input
+}
+
+// Participant selection component requirements
+const ParticipantSelector = () => {
+  const participants = useQuery("participants.listByCompany", { 
+    companyId: currentUser.company_id 
+  });
+  
+  return <SearchableDropdown 
+    options={participants}
+    onSelect={handleParticipantSelection}
+    placeholder="Select NDIS participant..."
+  />;
+};
+```
+
+---
+
+This epic delivers the core user experience that will define SupportSignal's value to frontline workers - transforming incident reporting from a dreaded chore into a guided, intelligent process that actually helps improve safety outcomes.
+
+**IMPORTANT**: Epic 3 cannot begin development until Epic 2 (Entity & Relationship Management) is completed, specifically Story 2.2 (NDIS Participants Management).
