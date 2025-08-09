@@ -92,20 +92,20 @@ export function ActiveSessionsManager({ activeSessions, sessionToken }: ActiveSe
     const session = activeSessions.find(s => s.sessionId === sessionId);
     
     if (!session) {
-      console.error('❌ IMPERSONATION: Session not found:', sessionId);
+      console.error('Session not found:', sessionId);
       return;
     }
     
     // Check if session is expired
     if (session.expires <= Date.now()) {
-      console.error('❌ IMPERSONATION: Cannot resume expired session:', sessionId);
+      console.error('Cannot resume expired session:', sessionId);
       alert('This session has expired and cannot be resumed.');
       return;
     }
     
     // Check ownership
     if (!isOwnSession(session)) {
-      console.error('❌ IMPERSONATION: Cannot resume session owned by another admin:', sessionId);
+      console.error('Cannot resume session owned by another admin:', sessionId);
       alert('You can only resume sessions that you created.');
       return;
     }
@@ -113,10 +113,9 @@ export function ActiveSessionsManager({ activeSessions, sessionToken }: ActiveSe
     try {
       setResumingSessionId(sessionId);
       const impersonationUrl = `/?impersonate_token=${sessionId}`;
-      console.log('🔄 IMPERSONATION: Resuming session via URL:', impersonationUrl);
       window.location.href = impersonationUrl;
     } catch (error) {
-      console.error('❌ IMPERSONATION: Error resuming session:', error);
+      console.error('Error resuming session:', error);
       alert('Failed to resume session. Please try again.');
       setResumingSessionId(null);
     }

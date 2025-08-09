@@ -71,27 +71,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const clearImpersonation = () => {
     if (typeof window !== 'undefined') {
       sessionStorage.removeItem('impersonation_token');
-      console.log('🧹 IMPERSONATION: Cleared stored token from sessionStorage');
     }
   };
 
   const refreshUser = async () => {
     // Prevent concurrent refresh operations
     if (refreshInProgress.current) {
-      console.log('⏸️  AUTH: Refresh already in progress, skipping...');
       return;
     }
     
     refreshInProgress.current = true;
-    console.log('🔄 AUTH: Starting refreshUser...');
     setAuthState(prev => ({ ...prev, isLoading: true }));
 
     try {
       // Check for impersonation token in URL first, then sessionStorage
       let sessionToken = authService.getSessionToken();
       let isImpersonating = false;
-      
-      console.log('🔍 AUTH: Initial session token from authService:', sessionToken?.slice(0, 8) + '...');
       
       if (typeof window !== 'undefined') {
         const urlParams = new URLSearchParams(window.location.search);
@@ -102,18 +97,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           sessionToken = impersonateToken;
           isImpersonating = true;
           
-          console.log('🎭 IMPERSONATION: Detected impersonation token from URL, switching to:', impersonateToken?.slice(0, 8) + '...');
-          
           // Store impersonation token in sessionStorage for refresh persistence
           sessionStorage.setItem('impersonation_token', impersonateToken);
-          console.log('💾 IMPERSONATION: Stored token in sessionStorage');
           
           // Clean the URL by removing the impersonate_token parameter
           urlParams.delete('impersonate_token');
           const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
           window.history.replaceState({}, '', newUrl);
-          
-          console.log('🧹 URL: Cleaned impersonate_token from URL');
         } else {
           // Check for stored impersonation token in sessionStorage
           const storedImpersonationToken = sessionStorage.getItem('impersonation_token');
@@ -122,15 +112,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Use stored impersonation token
             sessionToken = storedImpersonationToken;
             isImpersonating = true;
-            
-            console.log('🎭 IMPERSONATION: Using stored impersonation token:', storedImpersonationToken?.slice(0, 8) + '...');
-          } else {
-            console.log('👤 AUTH: No impersonation token, using regular session');
           }
         }
       }
-      
-      console.log('🎯 AUTH: About to call getCurrentUser with token:', sessionToken?.slice(0, 8) + '...');
       
       // Get user info using the session token (regular or impersonation)
       let user = null;
@@ -138,44 +122,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (sessionToken) {
         try {
           user = await convex.query(api.users.getCurrentUser, { sessionToken });
-          
-          console.log('✅ AUTH: getCurrentUser returned:', { 
-            isImpersonating, 
-            sessionToken: sessionToken?.slice(0, 8) + '...', 
-            user: user ? { id: user._id, email: user.email, name: user.name, role: user.role } : null 
-          });
         } catch (error) {
-          console.error('❌ AUTH: getCurrentUser failed:', error);
+          console.error('Authentication failed:', error);
           
           // If we have an impersonation token that failed, it might be expired/invalid
           if (isImpersonating) {
-            console.log('🧹 IMPERSONATION: Clearing invalid impersonation token');
             clearImpersonation();
             
             // Fall back to regular session token
             const regularToken = authService.getSessionToken();
             if (regularToken && regularToken !== sessionToken) {
-              console.log('🔄 AUTH: Falling back to regular session token:', regularToken?.slice(0, 8) + '...');
               sessionToken = regularToken;
               isImpersonating = false;
               
               try {
                 user = await convex.query(api.users.getCurrentUser, { sessionToken: regularToken });
-                console.log('✅ AUTH: Fallback authentication successful for user:', user?.name);
               } catch (fallbackError) {
-                console.error('❌ AUTH: Fallback authentication also failed:', fallbackError);
+                console.error('Fallback authentication also failed:', fallbackError);
                 user = null;
                 sessionToken = null;
               }
             } else {
               // No fallback available
-              console.log('❌ AUTH: No regular session token available for fallback');
               user = null;
               sessionToken = null;
             }
           } else {
             // Regular session token failed
-            console.log('❌ AUTH: Regular session token failed, clearing auth state');
             user = null;
             sessionToken = null;
           }
@@ -188,14 +161,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         sessionToken
       } : user;
 
-      console.log('🏁 AUTH: Setting final auth state');
       setAuthState({
         user: userWithSessionToken,
         sessionToken,
         isLoading: false,
       });
     } catch (error) {
-      console.error('❌ AUTH ERROR:', error);
+      console.error('Authentication error:', error);
       setAuthState({
         user: null,
         sessionToken: null,
@@ -382,7 +354,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    console.log('🚀 AUTH: AuthProvider useEffect triggered');
     refreshUser();
   }, []);
 

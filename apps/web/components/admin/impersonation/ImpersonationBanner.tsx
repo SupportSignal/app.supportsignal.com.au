@@ -62,13 +62,9 @@ export function ImpersonationBanner({ sessionToken, className }: ImpersonationBa
       });
 
       if (result.success && result.original_session_token) {
-        console.log('✅ IMPERSONATION: Exit successful, restoring original session');
-        console.log('🔄 IMPERSONATION: Original session token:', result.original_session_token.slice(0, 8) + '...');
-        
         // CRITICAL: Restore the original session token to localStorage
         if (typeof window !== 'undefined') {
           localStorage.setItem('auth_session_token', result.original_session_token);
-          console.log('💾 IMPERSONATION: Restored original session token to localStorage');
         }
         
         // Clear impersonation token from sessionStorage
