@@ -225,7 +225,7 @@ export default function AdminDashboard() {
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Access Denied</h2>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
-            You don't have permission to access administrative functions.
+            You don&apos;t have permission to access administrative functions.
           </p>
         </div>
       </div>

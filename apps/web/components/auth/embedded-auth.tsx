@@ -29,7 +29,7 @@ export function EmbeddedAuth({ className }: EmbeddedAuthProps) {
       {/* Sign Up Option */}
       <div className="mt-8 text-center">
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          Don't have an account?
+          Don&apos;t have an account?
         </p>
         <Button asChild size="lg" className="bg-teal-600 hover:bg-teal-700 text-white w-full">
           <Link href="/register">

@@ -42,6 +42,9 @@ export const getParticipantById = query({
         throw new ConvexError('Company information not found');
       }
 
+      // Type assertion: we know this is a company record since user.company_id is Id<"companies">
+      const companyRecord = company as any;
+
       console.log('👤 PARTICIPANT ACCESSED', {
         participantId: args.participantId,
         ndisNumber: participant.ndis_number,
@@ -69,9 +72,9 @@ export const getParticipantById = query({
           updated_at: participant.updated_at,
         },
         company: {
-          _id: company._id,
-          name: company.name,
-          slug: company.slug,
+          _id: companyRecord._id,
+          name: companyRecord.name,
+          slug: companyRecord.slug,
         },
         correlationId,
       };

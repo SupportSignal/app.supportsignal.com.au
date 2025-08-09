@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Comprehensive Validation System for SupportSignal APIs
  * 

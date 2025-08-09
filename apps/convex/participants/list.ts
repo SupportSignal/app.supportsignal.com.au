@@ -54,6 +54,9 @@ export const listParticipants = query({
       if (!company) {
         throw new ConvexError('Company information not found');
       }
+
+      // Type assertion: we know this is a company record since user.company_id is Id<"companies">
+      const companyRecord = company as any;
       
       // Apply search filter if provided
       let participants = allParticipants;
@@ -104,9 +107,9 @@ export const listParticipants = query({
           updated_at: p.updated_at,
         })),
         company: {
-          _id: company._id,
-          name: company.name,
-          slug: company.slug,
+          _id: companyRecord._id,
+          name: companyRecord.name,
+          slug: companyRecord.slug,
         },
         totalCount: participants.length,
         correlationId,

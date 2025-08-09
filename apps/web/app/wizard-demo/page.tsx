@@ -347,7 +347,7 @@ export default function WizardDemoPage() {
             <Card className="border border-gray-200 dark:border-gray-700">
               <CardContent className="p-8">
                 <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
-                  Thank you for completing the onboarding process. Here's the data that was collected:
+                  Thank you for completing the onboarding process. Here&apos;s the data that was collected:
                 </p>
                 
                 <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6">

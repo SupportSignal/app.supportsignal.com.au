@@ -71,12 +71,26 @@ export const NAVIGATION_CONFIG: NavigationConfig = {
             status: 'planned'
           }
         },
+      ],
+    },
+    {
+      id: 'company-admin',
+      title: 'Company Administration',
+      requiredRole: ['system_admin', 'company_admin', 'team_lead'],
+      items: [
         {
           id: 'participants',
           label: 'Participants',
           icon: '👥',
           href: '/participants',
           requiredRole: ['system_admin', 'company_admin', 'team_lead'],
+        },
+        {
+          id: 'company-management',
+          label: 'Company Management',
+          icon: '🏢',
+          href: '/company-management',
+          requiredRole: ['system_admin', 'company_admin'],
         },
       ],
     },

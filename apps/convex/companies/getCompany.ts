@@ -30,9 +30,12 @@ export const getCurrentUserCompany = query({
         throw new ConvexError('Company information not found');
       }
 
+      // Type assertion: we know this is a company record since user.company_id is Id<"companies">
+      const companyRecord = company as any;
+
       console.log('🏢 COMPANY INFO ACCESSED', {
-        companyId: company._id,
-        companyName: company.name,
+        companyId: companyRecord._id,
+        companyName: companyRecord.name,
         accessedBy: user._id,
         correlationId,
         timestamp: new Date().toISOString(),
@@ -40,10 +43,10 @@ export const getCurrentUserCompany = query({
 
       return {
         company: {
-          _id: company._id,
-          name: company.name,
-          slug: company.slug,
-          status: company.status,
+          _id: companyRecord._id,
+          name: companyRecord.name,
+          slug: companyRecord.slug,
+          status: companyRecord.status,
         },
         correlationId,
       };

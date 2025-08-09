@@ -962,7 +962,7 @@ export default function ShowcasePage() {
             <CardContent>
               <div className="bg-gray-100 rounded-md p-4 font-mono text-sm space-y-4">
                 <div>
-                  <div className="text-gray-600 mb-2">// Base UI Components</div>
+                  <div className="text-gray-600 mb-2">{/* Base UI Components */}</div>
                   <div className="space-y-1">
                     <div className="text-gray-800">
                       <span className="text-blue-600">import</span> {`{ Button }`}{' '}
@@ -990,7 +990,7 @@ export default function ShowcasePage() {
                 </div>
                 
                 <div>
-                  <div className="text-gray-600 mb-2">// SupportSignal Healthcare Components</div>
+                  <div className="text-gray-600 mb-2">{/* SupportSignal Healthcare Components */}</div>
                   <div className="space-y-1">
                     <div className="text-gray-800">
                       <span className="text-blue-600">import</span> {`{ IncidentCard, MetadataDisplay }`}{' '}

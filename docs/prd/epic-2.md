@@ -184,6 +184,85 @@ participants: defineTable({
 
 ---
 
+### Story 2.4: Company Management
+
+**Priority**: HIGH  
+**Estimated Effort**: 1 week  
+**Status**: PENDING  
+**Dependencies**: Epic 1 (companies table), Stories 2.0 (UI foundation), 2.2 (navigation)
+
+#### Requirements
+Implement comprehensive company management system allowing administrators to view, edit, and manage company information. This provides both administrative oversight and integration point with existing admin tools.
+
+**Company Management Features**:
+- **Company Information Display**: Current company details with edit capabilities
+- **Navigation Integration**: Accessible from Company Administration menu group
+- **Admin Tools Integration**: Also accessible from existing admin/company-settings path
+- **Role-Based Access**: Available to company_admin and system_admin roles
+- **Data Validation**: Company information validation and update handling
+
+#### Acceptance Criteria
+- [ ] **Company Details View**: Display current company information in readable format
+- [ ] **Edit Company Form**: Allow editing of company name, settings, and configuration
+- [ ] **Navigation Integration**: Add to new "Company Administration" navigation group
+- [ ] **Admin Tools Access**: Maintain existing admin/company-settings route integration
+- [ ] **Role-Based Access**: Only company_admin and system_admin can access/edit
+- [ ] **Data Validation**: Proper validation for company information updates
+- [ ] **Responsive Design**: Mobile-friendly company management interface
+
+#### Technical Implementation
+```typescript
+// Company management interface (extends existing company schema)
+interface CompanyManagement {
+  // Basic company information (already exists in companies table)
+  name: string;
+  domain?: string;
+  settings?: Record<string, any>;
+  
+  // Management-specific features
+  administrativeSettings: {
+    defaultParticipantStatus: "active" | "inactive";
+    incidentEscalationRules: boolean;
+    notificationPreferences: Record<string, boolean>;
+  };
+  
+  // Access control
+  canEdit: boolean; // Based on user role
+  lastUpdated: number;
+  updatedBy: Id<"users">;
+}
+
+// Navigation structure update
+const companyAdministrationGroup = {
+  id: 'company-admin',
+  title: 'Company Administration',
+  requiredRole: ['system_admin', 'company_admin', 'team_lead'],
+  items: [
+    {
+      id: 'participants',
+      label: 'Participants',
+      icon: '👥',
+      href: '/participants',
+    },
+    {
+      id: 'company-management',
+      label: 'Company Management',
+      icon: '🏢',
+      href: '/company-management',
+      requiredRole: ['system_admin', 'company_admin'],
+    },
+  ],
+};
+```
+
+#### Integration Points
+- **Existing Admin Route**: `/admin/company-settings` continues to work, redirects or shares component
+- **Navigation Menu**: New "Company Administration" group contains both Participants and Company Management
+- **Companies Table**: Leverages existing company data structure from Epic 1
+- **Authentication**: Uses existing role-based access control system
+
+---
+
 ## Epic Success Criteria
 
 ### Functional Requirements
