@@ -1,4 +1,4 @@
-import { Id } from 'convex/_generated/dataModel';
+import { Id } from '@/convex/_generated/dataModel';
 
 /**
  * NDIS Participant types for the SupportSignal application

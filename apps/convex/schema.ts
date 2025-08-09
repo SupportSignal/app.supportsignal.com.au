@@ -73,6 +73,24 @@ export default defineSchema({
     .index('by_token', ['token'])
     .index('by_user_id', ['userId']),
 
+  // System administrator impersonation sessions for testing and support
+  impersonation_sessions: defineTable({
+    admin_user_id: v.id('users'),         // System admin performing impersonation
+    target_user_id: v.id('users'),        // User being impersonated
+    session_token: v.string(),            // Unique impersonation session token
+    original_session_token: v.string(),   // Admin's original session for reverting
+    reason: v.string(),                   // Why impersonating (testing, support)
+    expires: v.number(),                  // 30-minute timeout (1800000ms)
+    is_active: v.boolean(),               // Can be terminated early
+    created_at: v.number(),
+    terminated_at: v.optional(v.number()),
+    correlation_id: v.string(),           // For audit trail correlation
+  })
+    .index('by_session_token', ['session_token'])
+    .index('by_admin_user', ['admin_user_id'])
+    .index('by_target_user', ['target_user_id'])
+    .index('by_active_sessions', ['is_active', 'expires']),
+
   // Debug logs table for synced Redis data analysis
   debug_logs: defineTable({
     id: v.string(), // Original log ID from Redis

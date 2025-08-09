@@ -14,7 +14,7 @@ import {
   SUPPORT_LEVELS,
   PARTICIPANT_STATUS 
 } from '@/types/participants';
-import { Id } from 'convex/_generated/dataModel';
+import { Id } from '@/convex/_generated/dataModel';
 
 interface ParticipantSelectorProps {
   onSelect: (participant: Participant | null) => void;

@@ -15,6 +15,7 @@ import { query, mutation, MutationCtx, QueryCtx } from './_generated/server';
 import { v } from 'convex/values';
 import { ConvexError } from 'convex/values';
 import { Id } from './_generated/dataModel';
+import { getUserFromSession } from './lib/sessionResolver';
 
 // Permission constants for type safety
 export const ROLES = {
@@ -48,6 +49,7 @@ export const PERMISSIONS = {
   // Audit and Security
   VIEW_AUDIT_LOGS: 'view_audit_logs',
   VIEW_SECURITY_LOGS: 'view_security_logs',
+  IMPERSONATE_USERS: 'impersonate_users',
   
   // Testing and Development
   SAMPLE_DATA: 'sample_data',
@@ -161,6 +163,13 @@ export const PERMISSION_REGISTRY: Record<string, PermissionDefinition> = {
     category: 'Security & Audit',
     testable: true,
   },
+  [PERMISSIONS.IMPERSONATE_USERS]: {
+    key: PERMISSIONS.IMPERSONATE_USERS,
+    label: 'Impersonate Users',
+    description: 'Temporarily impersonate other users for testing and support',
+    category: 'Security & Audit',
+    testable: true,
+  },
   [PERMISSIONS.SAMPLE_DATA]: {
     key: PERMISSIONS.SAMPLE_DATA,
     label: 'Sample Data',
@@ -190,6 +199,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     PERMISSIONS.ACCESS_LLM_FEATURES,
     PERMISSIONS.VIEW_AUDIT_LOGS,
     PERMISSIONS.VIEW_SECURITY_LOGS,
+    PERMISSIONS.IMPERSONATE_USERS,
     PERMISSIONS.SAMPLE_DATA,
   ],
   [ROLES.COMPANY_ADMIN]: [
@@ -501,21 +511,6 @@ export const createUserInvitation = mutation({
 
 // Helper Functions
 
-/**
- * Get user from session token
- */
-async function getUserFromSession(ctx: QueryCtx, sessionToken: string) {
-  const session = await ctx.db
-    .query('sessions')
-    .withIndex('by_session_token', q => q.eq('sessionToken', sessionToken))
-    .first();
-
-  if (!session || session.expires < Date.now()) {
-    return null;
-  }
-
-  return await ctx.db.get(session.userId);
-}
 
 /**
  * Check if user has specific permission

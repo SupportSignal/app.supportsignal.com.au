@@ -2,6 +2,8 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { authService, AuthState } from '../../lib/auth';
+import { convex } from '../../lib/convex';
+import { api } from '@/lib/convex-api';
 
 interface AuthContextType extends AuthState {
   login: (
@@ -16,6 +18,7 @@ interface AuthContextType extends AuthState {
   ) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  clearImpersonation: () => void;
   changePassword: (
     currentPassword: string,
     newPassword: string
@@ -52,18 +55,132 @@ interface AuthContextType extends AuthState {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  // Get initial session token immediately
+  const initialSessionToken = authService.getSessionToken();
+  
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
-    sessionToken: null,
+    sessionToken: initialSessionToken, // Use the actual token if available
     isLoading: true,
   });
 
+  // Add ref to track if refresh is in progress to prevent race conditions
+  const refreshInProgress = React.useRef(false);
+
+  // Helper function to clear impersonation session
+  const clearImpersonation = () => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('impersonation_token');
+      console.log('🧹 IMPERSONATION: Cleared stored token from sessionStorage');
+    }
+  };
+
   const refreshUser = async () => {
+    // Prevent concurrent refresh operations
+    if (refreshInProgress.current) {
+      console.log('⏸️  AUTH: Refresh already in progress, skipping...');
+      return;
+    }
+    
+    refreshInProgress.current = true;
+    console.log('🔄 AUTH: Starting refreshUser...');
     setAuthState(prev => ({ ...prev, isLoading: true }));
 
     try {
-      const user = await authService.getCurrentUser();
-      const sessionToken = authService.getSessionToken();
+      // Check for impersonation token in URL first, then sessionStorage
+      let sessionToken = authService.getSessionToken();
+      let isImpersonating = false;
+      
+      console.log('🔍 AUTH: Initial session token from authService:', sessionToken?.slice(0, 8) + '...');
+      
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const impersonateToken = urlParams.get('impersonate_token');
+        
+        if (impersonateToken) {
+          // New impersonation token from URL - use it and store in sessionStorage
+          sessionToken = impersonateToken;
+          isImpersonating = true;
+          
+          console.log('🎭 IMPERSONATION: Detected impersonation token from URL, switching to:', impersonateToken?.slice(0, 8) + '...');
+          
+          // Store impersonation token in sessionStorage for refresh persistence
+          sessionStorage.setItem('impersonation_token', impersonateToken);
+          console.log('💾 IMPERSONATION: Stored token in sessionStorage');
+          
+          // Clean the URL by removing the impersonate_token parameter
+          urlParams.delete('impersonate_token');
+          const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+          window.history.replaceState({}, '', newUrl);
+          
+          console.log('🧹 URL: Cleaned impersonate_token from URL');
+        } else {
+          // Check for stored impersonation token in sessionStorage
+          const storedImpersonationToken = sessionStorage.getItem('impersonation_token');
+          
+          if (storedImpersonationToken) {
+            // Use stored impersonation token
+            sessionToken = storedImpersonationToken;
+            isImpersonating = true;
+            
+            console.log('🎭 IMPERSONATION: Using stored impersonation token:', storedImpersonationToken?.slice(0, 8) + '...');
+          } else {
+            console.log('👤 AUTH: No impersonation token, using regular session');
+          }
+        }
+      }
+      
+      console.log('🎯 AUTH: About to call getCurrentUser with token:', sessionToken?.slice(0, 8) + '...');
+      
+      // Get user info using the session token (regular or impersonation)
+      let user = null;
+      
+      if (sessionToken) {
+        try {
+          user = await convex.query(api.users.getCurrentUser, { sessionToken });
+          
+          console.log('✅ AUTH: getCurrentUser returned:', { 
+            isImpersonating, 
+            sessionToken: sessionToken?.slice(0, 8) + '...', 
+            user: user ? { id: user._id, email: user.email, name: user.name, role: user.role } : null 
+          });
+        } catch (error) {
+          console.error('❌ AUTH: getCurrentUser failed:', error);
+          
+          // If we have an impersonation token that failed, it might be expired/invalid
+          if (isImpersonating) {
+            console.log('🧹 IMPERSONATION: Clearing invalid impersonation token');
+            clearImpersonation();
+            
+            // Fall back to regular session token
+            const regularToken = authService.getSessionToken();
+            if (regularToken && regularToken !== sessionToken) {
+              console.log('🔄 AUTH: Falling back to regular session token:', regularToken?.slice(0, 8) + '...');
+              sessionToken = regularToken;
+              isImpersonating = false;
+              
+              try {
+                user = await convex.query(api.users.getCurrentUser, { sessionToken: regularToken });
+                console.log('✅ AUTH: Fallback authentication successful for user:', user?.name);
+              } catch (fallbackError) {
+                console.error('❌ AUTH: Fallback authentication also failed:', fallbackError);
+                user = null;
+                sessionToken = null;
+              }
+            } else {
+              // No fallback available
+              console.log('❌ AUTH: No regular session token available for fallback');
+              user = null;
+              sessionToken = null;
+            }
+          } else {
+            // Regular session token failed
+            console.log('❌ AUTH: Regular session token failed, clearing auth state');
+            user = null;
+            sessionToken = null;
+          }
+        }
+      }
       
       // Add sessionToken to user object if user exists
       const userWithSessionToken = user && sessionToken ? {
@@ -71,17 +188,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         sessionToken
       } : user;
 
+      console.log('🏁 AUTH: Setting final auth state');
       setAuthState({
         user: userWithSessionToken,
         sessionToken,
         isLoading: false,
       });
-    } catch {
+    } catch (error) {
+      console.error('❌ AUTH ERROR:', error);
       setAuthState({
         user: null,
         sessionToken: null,
         isLoading: false,
       });
+    } finally {
+      // Always reset the refresh flag
+      refreshInProgress.current = false;
     }
   };
 
@@ -163,6 +285,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAuthState(prev => ({ ...prev, isLoading: true }));
 
     await authService.logout();
+
+    // Clear any stored impersonation tokens on logout
+    clearImpersonation();
 
     setAuthState({
       user: null,
@@ -257,6 +382,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    console.log('🚀 AUTH: AuthProvider useEffect triggered');
     refreshUser();
   }, []);
 
@@ -266,6 +392,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     register,
     logout,
     refreshUser,
+    clearImpersonation,
     changePassword,
     requestPasswordReset,
     resetPassword,

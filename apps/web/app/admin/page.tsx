@@ -75,6 +75,14 @@ const ADMIN_SECTIONS = [
         href: '/admin/tools',
         requiredRole: ['system_admin'],
       },
+      {
+        id: 'user-impersonation',
+        title: 'User Impersonation',
+        description: 'Impersonate users for testing and support purposes',
+        icon: '🔐',
+        href: '/admin/impersonation',
+        requiredRole: ['system_admin'],
+      },
     ],
   },
   {

@@ -26,7 +26,8 @@
       "@/lib/*": ["./lib/*"],
       "@/app/*": ["./app/*"],
       "@/ui/*": ["../../packages/ui/*"],
-      "@starter/ui": ["../../packages/ui"]
+      "@starter/ui": ["../../packages/ui"],
+      "@/convex/*": ["../convex/*"]
     }
   },
   "include": [
