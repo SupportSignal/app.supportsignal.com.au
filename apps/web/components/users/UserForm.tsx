@@ -4,7 +4,13 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@starter/ui/button';
 import { Input } from '@starter/ui/input';
 import { Label } from '@starter/ui/label';
-import { Select } from '@starter/ui/select';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@starter/ui/select';
 import { Checkbox } from '@starter/ui/checkbox';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@starter/ui/card';
 import { Alert, AlertDescription } from '@starter/ui/alert';
@@ -264,20 +270,28 @@ export function UserForm({
               onValueChange={(value) => handleInputChange('role', value)}
               disabled={isSubmitting || isProtected}
             >
-              {ROLE_OPTIONS.map(option => {
-                // Hide system_admin option if user can't create system admins
-                if (option.value === 'system_admin' && !canCreateSystemAdmin) {
-                  return null;
-                }
-                
-                const IconComponent = option.icon;
-                
-                return (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                );
-              })}
+              <SelectTrigger>
+                <SelectValue placeholder="Select a role..." />
+              </SelectTrigger>
+              <SelectContent>
+                {ROLE_OPTIONS.map(option => {
+                  // Hide system_admin option if user can't create system admins
+                  if (option.value === 'system_admin' && !canCreateSystemAdmin) {
+                    return null;
+                  }
+                  
+                  const IconComponent = option.icon;
+                  
+                  return (
+                    <SelectItem key={option.value} value={option.value}>
+                      <div className="flex items-center gap-2">
+                        <IconComponent className="h-4 w-4" />
+                        {option.label}
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
             </Select>
             
             {/* Role Description Display */}

@@ -3,7 +3,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@starter/ui/button';
 import { Input } from '@starter/ui/input';
-import { Select } from '@starter/ui/select';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@starter/ui/select';
 import { Badge } from '@starter/ui/badge';
 import { Card, CardContent } from '@starter/ui/card';
 import { 
@@ -167,11 +173,16 @@ export function UserSearchFilter({
                 value={filters.roleFilter} 
                 onValueChange={(value) => handleFilterChange('roleFilter', value)}
               >
-                {ROLE_OPTIONS.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by role..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {ROLE_OPTIONS.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
             </div>
 
@@ -206,12 +217,17 @@ export function UserSearchFilter({
                       value={filters.companyFilter || 'all'}
                       onValueChange={(value) => handleFilterChange('companyFilter', value)}
                     >
-                      <option value="all">All Companies</option>
-                      {companies.map(company => (
-                        <option key={company._id} value={company._id}>
-                          {company.name} ({company.status})
-                        </option>
-                      ))}
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select company..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Companies</SelectItem>
+                        {companies.map(company => (
+                          <SelectItem key={company._id} value={company._id}>
+                            {company.name} ({company.status})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
                     </Select>
                   </div>
                 )}
@@ -226,11 +242,16 @@ export function UserSearchFilter({
                     value={filters.llmAccessFilter}
                     onValueChange={(value) => handleFilterChange('llmAccessFilter', value)}
                   >
-                    {LLM_ACCESS_OPTIONS.map(option => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select LLM access..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LLM_ACCESS_OPTIONS.map(option => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
                   </Select>
                 </div>
               </div>

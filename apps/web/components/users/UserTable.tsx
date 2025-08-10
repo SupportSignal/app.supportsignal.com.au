@@ -3,7 +3,13 @@
 import React, { useState } from 'react';
 import { Button } from '@starter/ui/button';
 import { Input } from '@starter/ui/input';
-import { Select } from '@starter/ui/select';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@starter/ui/select';
 import { Badge } from '@starter/ui/badge';
 import { Card, CardHeader, CardTitle, CardContent } from '@starter/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@starter/ui/table';
@@ -49,6 +55,7 @@ interface UserTableProps {
   onDeleteUser?: (user: User) => void;
   showCreateButton?: boolean;
   showCompanyColumn?: boolean;
+  showSearchControls?: boolean;
   title?: string;
   className?: string;
 }
@@ -83,6 +90,7 @@ export function UserTable({
   onDeleteUser,
   showCreateButton = true,
   showCompanyColumn = false,
+  showSearchControls = true,
   title = 'User Management',
   className = ''
 }: UserTableProps) {
@@ -137,52 +145,59 @@ export function UserTable({
           )}
         </div>
 
-        {/* Search and Filter Controls */}
-        <div className="flex flex-col sm:flex-row gap-4 pt-2">
-          {/* Search */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search users by name or email..."
-              value={searchTerm}
-              onChange={(e) => onSearchChange?.(e.target.value)}
-              onFocus={() => setSearchFocused(true)}
-              onBlur={() => setSearchFocused(false)}
-              className="pl-10 pr-10"
-            />
-            {searchTerm && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearSearch}
-                className="absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2 p-0"
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            )}
-          </div>
+        {/* Search and Filter Controls - Only show if enabled */}
+        {showSearchControls && (
+          <div className="flex flex-col sm:flex-row gap-4 pt-2">
+            {/* Search */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search users by name or email..."
+                value={searchTerm}
+                onChange={(e) => onSearchChange?.(e.target.value)}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setSearchFocused(false)}
+                className="pl-10 pr-10"
+              />
+              {searchTerm && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClearSearch}
+                  className="absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2 p-0"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
 
-          {/* Role Filter */}
-          <div className="relative min-w-[180px]">
-            <Select value={roleFilter} onValueChange={onRoleFilterChange}>
-              <option value="all">All Roles</option>
-              <option value="system_admin">System Admin</option>
-              <option value="company_admin">Company Admin</option>
-              <option value="team_lead">Team Lead</option>
-              <option value="frontline_worker">Frontline Worker</option>
-            </Select>
-            {roleFilter !== 'all' && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearRoleFilter}
-                className="absolute right-8 top-1/2 h-6 w-6 -translate-y-1/2 p-0"
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            )}
+            {/* Role Filter */}
+            <div className="relative min-w-[180px]">
+              <Select value={roleFilter} onValueChange={onRoleFilterChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by role..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Roles</SelectItem>
+                  <SelectItem value="system_admin">System Admin</SelectItem>
+                  <SelectItem value="company_admin">Company Admin</SelectItem>
+                  <SelectItem value="team_lead">Team Lead</SelectItem>
+                  <SelectItem value="frontline_worker">Frontline Worker</SelectItem>
+                </SelectContent>
+              </Select>
+              {roleFilter !== 'all' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClearRoleFilter}
+                  className="absolute right-8 top-1/2 h-6 w-6 -translate-y-1/2 p-0"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </CardHeader>
 
       <CardContent>

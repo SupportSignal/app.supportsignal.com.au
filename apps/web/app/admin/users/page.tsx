@@ -281,6 +281,7 @@ export default function GlobalUserManagementPage() {
         }}
         showCreateButton={false}
         showCompanyColumn={true}
+        showSearchControls={false}
         title={`Global Users (${users?.total || 0})`}
       />
 

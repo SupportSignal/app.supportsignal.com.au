@@ -41,7 +41,7 @@ export function FooterNavigation() {
           </Link>
         </div>
 
-        {/* Right side - Version and system info */}
+        {/* Right side - System status */}
         <div className="flex items-center gap-4 text-xs">
           <div className="hidden md:flex items-center gap-2">
             <span className="inline-flex items-center gap-1">
@@ -49,7 +49,6 @@ export function FooterNavigation() {
               System Online
             </span>
           </div>
-          <span className="text-gray-500">v2.2.0</span>
         </div>
       </div>
     </footer>
