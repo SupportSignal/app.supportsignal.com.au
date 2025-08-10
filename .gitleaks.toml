@@ -24,11 +24,6 @@ id = "test-mock-values"
 regex = '''sk-or-v1-[a-f0-9]{64}'''
 path = '''tests/.*\.ts'''
 
-[[rules]]
-description = "Allow impersonation test tokens in test files"
-id = "test-impersonation-tokens"
-regex = '''m?imp_[0-9]+_[a-zA-Z0-9]+'''
-path = '''tests/.*\.(ts|tsx)$'''
 
 [[rules]]
 id = "convex-url-example"
@@ -48,14 +43,20 @@ description = "Ignore documentation examples and test fixtures"
 paths = [
     '''\.md$''',
     '''tests/.*\.ts$''',
+    '''tests/.*\.tsx$''',
     '''.*\.test\.ts$''',
+    '''.*\.test\.tsx$''',
     '''.*\.spec\.ts$''',
+    '''.*\.spec\.tsx$''',
     '''-docs\.md$''',  # Ignore consolidated docs file
     '''node_modules/''',
     '''\.git/''',
     '''dist/''',
     '''build/''',
     '''coverage/'''
+]
+regexes = [
+    '''imp_[0-9]+_[a-zA-Z0-9]+'''
 ]
 
 # Ignore specific secrets that are known placeholders
