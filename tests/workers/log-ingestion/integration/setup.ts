@@ -323,11 +323,29 @@ export class MockDurableObjectStub {
     this.resetState();
   }
 
-  async fetch(url: string, init?: RequestInit): Promise<Response> {
+  async fetch(urlOrRequest: string | Request, init?: RequestInit): Promise<Response> {
+    // Handle both URL string and Request object inputs
+    let url: string;
+    let requestInit: RequestInit | undefined = init;
+    
+    if (typeof urlOrRequest === 'string') {
+      url = urlOrRequest;
+    } else {
+      // urlOrRequest is a Request object
+      url = urlOrRequest.url;
+      // Extract request data from Request object
+      requestInit = {
+        method: urlOrRequest.method,
+        headers: urlOrRequest.headers,
+        body: await urlOrRequest.text().catch(() => undefined), // Handle potential errors
+        ...init, // Override with any additional init properties
+      };
+    }
+    
     const urlObj = new URL(url);
     const pathname = urlObj.pathname;
 
-    if (pathname === '/status' && init?.method !== 'POST') {
+    if (pathname === '/status' && requestInit?.method !== 'POST') {
       return new Response(
         JSON.stringify({
           config: this.config,
@@ -344,11 +362,11 @@ export class MockDurableObjectStub {
       );
     }
 
-    if (pathname === '/check' && init?.method === 'POST') {
-      return this.handleRateLimitCheck(init);
+    if (pathname === '/check' && requestInit?.method === 'POST') {
+      return this.handleRateLimitCheck(requestInit);
     }
 
-    if (pathname === '/reset' && init?.method === 'POST') {
+    if (pathname === '/reset' && requestInit?.method === 'POST') {
       this.resetState();
       return new Response(
         JSON.stringify({ success: true, message: 'Rate limits reset' }),
@@ -365,8 +383,8 @@ export class MockDurableObjectStub {
     });
   }
 
-  private async handleRateLimitCheck(init: RequestInit): Promise<Response> {
-    const body = JSON.parse(init.body as string);
+  private async handleRateLimitCheck(requestInit: RequestInit): Promise<Response> {
+    const body = JSON.parse(requestInit.body as string);
     const { system, trace_id } = body;
 
     // Check if window has expired

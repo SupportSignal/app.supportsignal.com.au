@@ -54,7 +54,6 @@ export default {
     'apps/workers/log-ingestion/src/**/*.ts',
     '!apps/workers/log-ingestion/src/types.ts', // Type definitions don't need coverage
     '!apps/workers/log-ingestion/src/**/index.ts', // Main entry has minimal logic
-    '!apps/workers/log-ingestion/src/rate-limiter.ts', // Has TypeScript errors - exclude temporarily
   ],
   coverageThreshold: {
     global: {

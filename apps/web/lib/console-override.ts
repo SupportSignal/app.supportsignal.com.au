@@ -70,6 +70,17 @@ const suppressedPatterns = new Set([
   'clearRedisAndSync',
   'clearRedisLogs',
 
+  // Hydration-related errors from browser extensions (password managers, etc.)
+  'Hydration failed',
+  'There was an error while hydrating',
+  'server HTML to contain a matching',
+  'Extra attributes from the server',
+  'Expected server HTML',
+  'An error occurred during hydration',
+  'data-np-intersection-state',
+  'data-np-autofill-field-type',
+  'data-np-uid',
+  
   // Add more patterns as discovered
 ]);
 

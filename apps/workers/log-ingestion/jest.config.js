@@ -6,10 +6,13 @@ export default {
   testEnvironment: 'node', // Worker environment is Node-like, not browser
   extensionsToTreatAsEsm: ['.ts'],
 
-  // Module resolution
+  // Module resolution - map to actual source files
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1',
+    '^@/(.*)$': '<rootDir>/apps/workers/log-ingestion/src/$1',
   },
+  
+  // Set rootDir to project root for consistent path resolution
+  rootDir: '../../..',
 
   // Transform configuration for TypeScript
   transform: {
@@ -21,6 +24,9 @@ export default {
           target: 'es2022',
           module: 'esnext',
           moduleResolution: 'node',
+          esModuleInterop: true,
+          allowSyntheticDefaultImports: true,
+          verbatimModuleSyntax: false, // Disable to allow ESM in tests
         },
       },
     ],
@@ -28,12 +34,12 @@ export default {
 
   // Test file patterns - now pointing to centralized tests/workers/log-ingestion/
   testMatch: [
-    '<rootDir>/../../../tests/workers/log-ingestion/**/*.test.ts',
+    '<rootDir>/tests/workers/log-ingestion/**/*.test.ts',
   ],
 
   // Setup files - setup.ts handles cross-file isolation
   setupFilesAfterEnv: [
-    '<rootDir>/../../../tests/workers/log-ingestion/integration/setup.ts',
+    '<rootDir>/tests/workers/log-ingestion/integration/setup.ts',
   ],
 
   // Optional: Force test files to run in isolation (slower but guarantees isolation)
@@ -41,11 +47,11 @@ export default {
   // maxWorkers: 1,
 
   // Coverage configuration targeting 85% for Worker logic
-  coverageDirectory: '<rootDir>/coverage',
+  coverageDirectory: '<rootDir>/apps/workers/log-ingestion/coverage',
   collectCoverageFrom: [
-    'src/**/*.ts',
-    '!src/types.ts', // Type definitions don't need coverage
-    '!src/**/index.ts', // Main entry has minimal logic
+    '<rootDir>/apps/workers/log-ingestion/src/**/*.ts',
+    '!<rootDir>/apps/workers/log-ingestion/src/types.ts', // Type definitions don't need coverage
+    '!<rootDir>/apps/workers/log-ingestion/src/**/index.ts', // Main entry has minimal logic
   ],
   coverageThreshold: {
     global: {
@@ -55,19 +61,19 @@ export default {
       lines: 85,
     },
     // Specific thresholds for critical files
-    'src/rate-limiter.ts': {
+    'apps/workers/log-ingestion/src/rate-limiter.ts': {
       statements: 90,
       branches: 85,
       functions: 90,
       lines: 90,
     },
-    'src/redis-client.ts': {
+    'apps/workers/log-ingestion/src/redis-client.ts': {
       statements: 90,
       branches: 85,
       functions: 90,
       lines: 90,
     },
-    'src/log-processor.ts': {
+    'apps/workers/log-ingestion/src/log-processor.ts': {
       statements: 95,
       branches: 90,
       functions: 95,

@@ -194,11 +194,13 @@ export async function checkRateLimit(
   system: string,
   traceId: string
 ): Promise<{ allowed: boolean; reason?: string; remaining_quota?: number }> {
-  const response = await rateLimiterDO.fetch('http://localhost/check', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ system, trace_id: traceId }),
-  });
+  const response = await rateLimiterDO.fetch(
+    new Request('http://localhost/check', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ system, trace_id: traceId }),
+    })
+  );
 
   return await response.json();
 }

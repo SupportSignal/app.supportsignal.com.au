@@ -155,6 +155,7 @@ export const create = mutation({
   args: {
     sessionToken: v.string(),
     reporter_name: v.string(),
+    participant_id: v.optional(v.id("participants")),
     participant_name: v.string(),
     event_date_time: v.string(),
     location: v.string(),
@@ -176,6 +177,7 @@ export const create = mutation({
       // Comprehensive input validation using Zod schemas
       const sanitizedInput = Sanitization.sanitizeObject({
         reporter_name: args.reporter_name,
+        participant_id: args.participant_id,
         participant_name: args.participant_name,
         event_date_time: args.event_date_time,
         location: args.location,
@@ -214,6 +216,7 @@ export const create = mutation({
       const incidentId = await ctx.db.insert("incidents", {
         company_id: user.company_id!, // User's company from authenticated session
         reporter_name: validatedData.reporter_name,
+        participant_id: validatedData.participant_id,
         participant_name: validatedData.participant_name,
         event_date_time: validatedData.event_date_time,
         location: validatedData.location,
@@ -901,6 +904,59 @@ export const subscribeToCompanyIncidents = query({
       subscribedAt: Date.now(),
       totalCount: incidents.length,
       correlationId,
+    };
+  },
+});
+
+/**
+ * Get draft incident for editing in capture workflow
+ * Simple version for incident capture forms
+ */
+export const getDraftIncident = query({
+  args: {
+    sessionToken: v.string(),
+    incidentId: v.id("incidents"),
+  },
+  handler: async (ctx, args) => {
+    // Get the incident first to check ownership context
+    const incident = await ctx.db.get(args.incidentId);
+    if (!incident) {
+      throw new ConvexError("Incident not found or you don't have access to it");
+    }
+
+    // Check permissions - users can view incidents they have access to
+    const { user, correlationId } = await requirePermission(
+      ctx,
+      args.sessionToken,
+      PERMISSIONS.EDIT_OWN_INCIDENT_CAPTURE,
+      {
+        resourceOwnerId: incident.created_by || undefined,
+        companyId: incident.company_id,
+      }
+    );
+
+    // Ensure user is in same company (multi-tenant isolation)
+    if (user.company_id !== incident.company_id) {
+      throw new ConvexError("Access denied: incident belongs to different company");
+    }
+
+    // Get incident narrative if it exists
+    const narrative = await ctx.db
+      .query("incident_narratives")
+      .withIndex("by_incident", (q) => q.eq("incident_id", args.incidentId))
+      .first();
+
+    console.log('📄 DRAFT INCIDENT ACCESSED', {
+      incidentId: args.incidentId,
+      userId: user._id,
+      hasNarrative: !!narrative,
+      correlationId,
+      timestamp: new Date().toISOString(),
+    });
+
+    return {
+      incident,
+      narrative,
     };
   },
 });
