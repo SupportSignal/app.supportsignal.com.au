@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+/* eslint-disable no-console */
+
 /**
  * =============================================================================
  * Advanced Environment Sync Script for Monorepo
@@ -24,11 +26,19 @@ const __dirname = path.dirname(__filename);
 
 // Configuration
 const ROOT_DIR = path.resolve(__dirname, '..');
-const SOURCE_FILE = path.join(ROOT_DIR, '.env.source-of-truth.local');
+
+// Auto-detect project name and construct env file path
+const PROJECT_NAME = path.basename(ROOT_DIR);
+const ENV_CONFIG_DIR = path.join(
+  process.env.HOME || process.env.USERPROFILE,
+  '.env-configs'
+);
+const SOURCE_FILE = path.join(ENV_CONFIG_DIR, `${PROJECT_NAME}.env`);
 const WEB_ENV_FILE = path.join(ROOT_DIR, 'apps/web/.env.local');
 const CONVEX_ENV_FILE = path.join(ROOT_DIR, 'apps/convex/.env.local');
 const WORKER_ENV_FILE = path.join(ROOT_DIR, 'apps/workers/log-ingestion/.dev.vars');
-const BACKUP_FILE = path.join(ROOT_DIR, '.env.backup.local');
+const BACKUP_DIR = path.join(ENV_CONFIG_DIR, 'backups', PROJECT_NAME);
+const BACKUP_FILE = path.join(BACKUP_DIR, `${PROJECT_NAME}.env.backup`);
 const CONVEX_DIR = path.join(ROOT_DIR, 'apps/convex');
 const WORKER_DIR = path.join(ROOT_DIR, 'apps/workers/log-ingestion');
 
@@ -402,7 +412,13 @@ function backupConvexEnvironment(deployment) {
         }
         
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const timestampedBackupFile = path.join(ROOT_DIR, `.env.backup.${timestamp}.local`);
+        
+        // Ensure backup directory exists
+        if (!fs.existsSync(BACKUP_DIR)) {
+            fs.mkdirSync(BACKUP_DIR, { recursive: true });
+        }
+        
+        const timestampedBackupFile = path.join(BACKUP_DIR, `${PROJECT_NAME}.env.backup.${timestamp}`);
         
         const backupContent = [
             '# =============================================================================',
@@ -440,13 +456,17 @@ function backupConvexEnvironment(deployment) {
  */
 function showExistingBackups() {
     try {
-        const backupPattern = /^\.env\.backup\..*\.local$/;
-        const files = fs.readdirSync(ROOT_DIR)
+        if (!fs.existsSync(BACKUP_DIR)) {
+            return;
+        }
+        
+        const backupPattern = new RegExp(`^${PROJECT_NAME}\\.env\\.backup\\..+$`);
+        const files = fs.readdirSync(BACKUP_DIR)
             .filter(file => backupPattern.test(file))
             .map(file => ({
                 name: file,
-                path: path.join(ROOT_DIR, file),
-                stat: fs.statSync(path.join(ROOT_DIR, file))
+                path: path.join(BACKUP_DIR, file),
+                stat: fs.statSync(path.join(BACKUP_DIR, file))
             }))
             .sort((a, b) => b.stat.mtime - a.stat.mtime);
         
@@ -463,7 +483,7 @@ function showExistingBackups() {
             if (files.length > 3) {
                 console.log(`   ... and ${files.length - 3} more`);
             }
-            console.log(`💡 To clean up old backups: rm .env.backup.*.local`);
+            console.log(`💡 To clean up old backups: rm ~/.env-configs/backups/${PROJECT_NAME}/${PROJECT_NAME}.env.backup.*`);
         }
     } catch (error) {
         // Silently ignore backup listing errors

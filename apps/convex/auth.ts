@@ -1261,7 +1261,17 @@ export const getGitHubOAuthUrl = query({
     const state = Array.from(crypto.getRandomValues(new Uint8Array(16)))
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');
+
+    // 🔍 DEBUG LOGGING - OAuth URL generation
+    console.log('🔍 GitHub OAuth URL Generation Debug');
+    console.log(
+      'NEXT_PUBLIC_APP_URL env var:',
+      process.env.NEXT_PUBLIC_APP_URL
+    );
+    console.log('GitHub Client ID exists:', !!clientId);
+
     const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/github/callback`;
+    console.log('Final redirect URI:', redirectUri);
 
     const params = new URLSearchParams({
       client_id: clientId,

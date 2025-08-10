@@ -78,6 +78,8 @@
     "schema:docs": "bun run scripts/generate-schema-manifest.ts",
     "// === ENVIRONMENT & SYNC ===": "",
     "debug:env": "node scripts/debug-env-build.cjs",
+    "env:setup": "node ./scripts/env-setup.js",
+    "env:validate": "test -f ~/.env-configs/app.supportsignal.com.au.env && echo '✅ Environment file exists' || echo '❌ Run: bun env:setup'",
     "sync": "./scripts/sync.sh",
     "sync:force": "./scripts/sync.sh --force",
     "sync-env": "node ./scripts/sync-env.js",

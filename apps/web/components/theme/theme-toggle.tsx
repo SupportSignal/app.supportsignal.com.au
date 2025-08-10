@@ -23,7 +23,7 @@ export function ThemeToggle() {
         aria-label="Toggle theme"
         className="w-9 h-9 px-0 border-white/30 text-white hover:bg-white/10 hover:text-white"
       >
-        <Sun className="h-4 w-4" />
+        <Sun className="h-4 w-4" aria-hidden="true" />
       </Button>
     );
   }
@@ -37,9 +37,9 @@ export function ThemeToggle() {
       className="w-9 h-9 px-0 border-white/30 text-white hover:bg-white/10 hover:text-white transition-all duration-200"
     >
       {theme === 'light' ? (
-        <Moon className="h-4 w-4 transition-transform duration-200 hover:rotate-12" />
+        <Moon className="h-4 w-4 transition-transform duration-200 hover:rotate-12" aria-hidden="true" />
       ) : (
-        <Sun className="h-4 w-4 transition-transform duration-200 hover:rotate-12" />
+        <Sun className="h-4 w-4 transition-transform duration-200 hover:rotate-12" aria-hidden="true" />
       )}
     </Button>
   );

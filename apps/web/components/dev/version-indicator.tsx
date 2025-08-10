@@ -159,15 +159,15 @@ export function VersionIndicator({
       case 'bottom-left':
         return 'bottom-4 left-4';
       case 'bottom-right':
-        // Position above the logging status indicator (which is at bottom-4 right-4)
-        return 'bottom-16 right-4';
+        // Position to the left of the logging status indicator (which is at bottom-4 right-4)
+        return 'bottom-4 right-20';
       case 'top-left':
         return 'top-4 left-4';
       case 'top-right':
         return 'top-4 right-4';
       default:
-        // Default position above logging status
-        return 'bottom-16 right-4';
+        // Default position to the left of logging status
+        return 'bottom-4 right-20';
     }
   };
 

@@ -66,6 +66,17 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 .env.backup*
 .env.source-of-truth*
 
+# Legacy environment files (security - prevent accidental commits)
+.env.source-of-truth.local
+.env.source-of-truth.development
+.env.source-of-truth.production
+.env-source-of-truth*
+env-source-of-truth*
+*env.source*
+*.env.local.backup
+*.env.development.backup
+*.env.production.backup
+
 # Screenshots from root directory only (prevent accidental commits)
 /*.png
 
