@@ -50,7 +50,7 @@ export function NarrativeGrid({ incidentId, onComplete, onBack }: NarrativeGridP
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Get session token for API calls
-  const sessionToken = typeof window !== 'undefined' ? localStorage.getItem('sessionToken') : null;
+  const sessionToken = typeof window !== 'undefined' ? localStorage.getItem('auth_session_token') : null;
 
   // Load existing incident data
   const incidentData = useQuery(

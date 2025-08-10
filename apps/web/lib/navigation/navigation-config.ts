@@ -39,18 +39,6 @@ export const NAVIGATION_CONFIG: NavigationConfig = {
           icon: '🚨',
           href: '/incidents',
           requiredRole: ['system_admin', 'company_admin', 'team_lead', 'frontline_worker'],
-          comingSoon: {
-            description: 'Create, track, and manage incidents with comprehensive workflow tools.',
-            features: [
-              'Incident creation and assignment',
-              'Status tracking and updates',
-              'Timeline and audit trails',
-              'Automated escalation rules',
-              'Team collaboration tools',
-              'Reporting and analytics'
-            ],
-            status: 'in-development'
-          }
         },
         {
           id: 'analysis',

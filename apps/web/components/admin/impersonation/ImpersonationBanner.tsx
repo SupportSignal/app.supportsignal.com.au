@@ -76,7 +76,7 @@ export function ImpersonationBanner({ sessionToken, className }: ImpersonationBa
         // Redirect with a full page reload to ensure clean auth state
         window.location.href = `/admin/impersonation?session_restored=true`;
       } else {
-        setError(result.error || 'Failed to end impersonation session');
+        setError('Failed to end impersonation session');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to end impersonation session');

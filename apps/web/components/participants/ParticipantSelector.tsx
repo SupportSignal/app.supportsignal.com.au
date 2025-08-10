@@ -45,7 +45,7 @@ export function ParticipantSelector({
   const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
 
   // Get session token for authenticated queries
-  const sessionToken = typeof window !== 'undefined' ? localStorage.getItem('sessionToken') : null;
+  const sessionToken = typeof window !== 'undefined' ? localStorage.getItem('auth_session_token') : null;
   
   // Fetch active participants only
   const participants = useQuery(

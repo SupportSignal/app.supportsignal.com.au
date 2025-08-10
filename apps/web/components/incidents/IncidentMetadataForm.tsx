@@ -140,7 +140,7 @@ export function IncidentMetadataForm({
     setIsSubmitting(true);
 
     try {
-      const sessionToken = localStorage.getItem('sessionToken');
+      const sessionToken = localStorage.getItem('auth_session_token');
       if (!sessionToken) {
         throw new Error('No session token found');
       }
@@ -217,9 +217,6 @@ export function IncidentMetadataForm({
 
           {/* Participant Selection */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium">
-              NDIS Participant <span className="text-red-500">*</span>
-            </Label>
             <ParticipantSelector
               onSelect={handleParticipantSelect}
               selectedParticipantId={formData.participant_id}
