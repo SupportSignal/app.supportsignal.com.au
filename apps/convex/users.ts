@@ -2,7 +2,7 @@ import { query, mutation, QueryCtx, MutationCtx } from './_generated/server';
 import { v } from 'convex/values';
 import { ConvexError } from 'convex/values';
 import { requirePermission, PERMISSIONS } from './permissions';
-import { validateUserModification, isOwnerUser, getOwnerProtectionStatus } from './lib/user-protection';
+import { validateUserModification, isOwnerUser, getOwnerProtectionStatus } from './lib/userProtection';
 import { Id } from './_generated/dataModel';
 
 /**

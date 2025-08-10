@@ -14,7 +14,7 @@ import {
   isOwnerUser, 
   getOwnerProtectionStatus,
   validateUserModification 
-} from './lib/user-protection';
+} from './lib/userProtection';
 import { Id } from './_generated/dataModel';
 
 /**
