@@ -67,7 +67,13 @@ export function UserSearchFilter({
   className = ''
 }: UserSearchFilterProps) {
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
+  const [localSearchTerm, setLocalSearchTerm] = useState(filters.searchTerm);
   const [searchDebounce, setSearchDebounce] = useState<NodeJS.Timeout>();
+
+  // Sync local search term with filters when filters change externally
+  useEffect(() => {
+    setLocalSearchTerm(filters.searchTerm);
+  }, [filters.searchTerm]);
 
   // Debounced search
   const debouncedSearchChange = useCallback((value: string) => {
@@ -95,6 +101,7 @@ export function UserSearchFilter({
 
   const handleSearchChange = (value: string) => {
     // Update local state immediately for responsive UI
+    setLocalSearchTerm(value);
     debouncedSearchChange(value);
   };
 
@@ -135,15 +142,18 @@ export function UserSearchFilter({
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search users by name or email..."
-                value={filters.searchTerm}
+                value={localSearchTerm}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 className="pl-10 pr-10"
               />
-              {filters.searchTerm && (
+              {localSearchTerm && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleFilterChange('searchTerm', '')}
+                  onClick={() => {
+                    setLocalSearchTerm('');
+                    handleFilterChange('searchTerm', '');
+                  }}
                   className="absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2 p-0"
                 >
                   <X className="h-3 w-3" />
