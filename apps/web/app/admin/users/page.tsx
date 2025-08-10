@@ -89,7 +89,7 @@ export default function GlobalUserManagementPage() {
 
   // Query all users with filters
   const users = useQuery(
-    api['admin-users'].listAllUsers,
+    api.adminUsers.listAllUsers,
     isSystemAdmin && sessionToken ? {
       sessionToken,
       searchTerm: filters.searchTerm || undefined,
@@ -102,19 +102,19 @@ export default function GlobalUserManagementPage() {
 
   // Query user statistics
   const userStats = useQuery(
-    api['admin-users'].getUserStats,
+    api.adminUsers.getUserStats,
     isSystemAdmin && sessionToken ? { sessionToken } : 'skip'
   );
 
   // Query companies for filtering
   const companies = useQuery(
-    api['admin-users'].getCompanyList,
+    api.adminUsers.getCompanyList,
     isSystemAdmin && sessionToken ? { sessionToken } : 'skip'
   );
 
   // Admin mutations
-  const promoteUserMutation = useMutation(api['admin-users'].promoteToSystemAdmin);
-  const demoteUserMutation = useMutation(api['admin-users'].demoteSystemAdmin);
+  const promoteUserMutation = useMutation(api.adminUsers.promoteToSystemAdmin);
+  const demoteUserMutation = useMutation(api.adminUsers.demoteSystemAdmin);
 
   const [loading, setLoading] = useState(false);
 
