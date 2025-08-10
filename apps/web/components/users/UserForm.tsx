@@ -270,13 +270,38 @@ export function UserForm({
                   return null;
                 }
                 
+                const IconComponent = option.icon;
+                
                 return (
                   <option key={option.value} value={option.value}>
-                    {option.label} - {option.description}
+                    {option.label}
                   </option>
                 );
               })}
             </Select>
+            
+            {/* Role Description Display */}
+            {formData.role && (
+              <div className="mt-2 p-3 bg-muted/50 rounded-md border">
+                <div className="flex items-center gap-2 mb-1">
+                  {(() => {
+                    const selectedRole = ROLE_OPTIONS.find(r => r.value === formData.role);
+                    if (!selectedRole) return null;
+                    const IconComponent = selectedRole.icon;
+                    return (
+                      <>
+                        <IconComponent className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium text-sm">{selectedRole.label}</span>
+                      </>
+                    );
+                  })()}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {ROLE_OPTIONS.find(r => r.value === formData.role)?.description}
+                </p>
+              </div>
+            )}
+            
             {errors.role && (
               <div className="text-sm text-red-600">{errors.role}</div>
             )}
