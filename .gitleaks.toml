@@ -27,7 +27,7 @@ path = '''tests/.*\.ts'''
 [[rules]]
 description = "Allow impersonation test tokens in test files"
 id = "test-impersonation-tokens"
-regex = '''imp_[0-9]+_[a-zA-Z0-9]+'''
+regex = '''m?imp_[0-9]+_[a-zA-Z0-9]+'''
 path = '''tests/.*\.(ts|tsx)$'''
 
 [[rules]]
