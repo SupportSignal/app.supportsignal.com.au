@@ -74,8 +74,10 @@ export const startImpersonation = mutation({
         throw new ConvexError('Target user not found');
       }
 
-      // Prevent impersonating other system admins
-      if (targetUser.role === 'system_admin') {
+      // Owner (david@ideasmen.com.au) can impersonate anyone, including other system admins
+      // Other system admins cannot impersonate other system admins
+      const isOwner = admin.email === 'david@ideasmen.com.au';
+      if (targetUser.role === 'system_admin' && !isOwner) {
         throw new ConvexError('Cannot impersonate other system administrators');
       }
 
@@ -285,11 +287,21 @@ export const searchUsersForImpersonation = query({
     const limit = args.limit || 20;
     const searchTerm = args.search_term?.toLowerCase() || '';
 
-    // Get all users except system admins
-    let users = await ctx.db
-      .query('users')
-      .filter(q => q.neq(q.field('role'), 'system_admin'))
-      .collect();
+    // Owner (david@ideasmen.com.au) can see all users including system admins
+    // Other system admins can only see non-system admins
+    const isOwner = admin.email === 'david@ideasmen.com.au';
+    
+    let users;
+    if (isOwner) {
+      // Owner can see all users
+      users = await ctx.db.query('users').collect();
+    } else {
+      // Other system admins can only see non-system admins
+      users = await ctx.db
+        .query('users')
+        .filter(q => q.neq(q.field('role'), 'system_admin'))
+        .collect();
+    }
 
     // Filter by search term if provided
     if (searchTerm) {
