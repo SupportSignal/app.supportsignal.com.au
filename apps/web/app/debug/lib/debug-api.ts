@@ -143,7 +143,7 @@ export const exportDebugSession = async (
 ): Promise<{ exportContent: string; metadata: Record<string, unknown> }> => {
   // Import convex client dynamically to avoid SSR issues
   const { convex } = await import('@/lib/convex');
-  const { api } = await import('@/lib/convex-api');
+  const { api } = await import('@/convex/_generated/api');
   
   try {
     const result = await convex.action(api.debugActions.exportSession, {
