@@ -251,42 +251,69 @@ export const WorkflowWizard = React.forwardRef<HTMLDivElement, WorkflowWizardPro
           </div>
         )}
 
-        {/* Step Navigation */}
-        <div className="flex items-center justify-center space-x-2 overflow-x-auto pb-2">
+        {/* Chevron-Style Step Navigation */}
+        <div className="flex items-center bg-gradient-to-r from-blue-50 to-indigo-50 border border-gray-200 rounded-lg overflow-hidden">
           {steps.map((step, index) => {
             const isActive = index === currentStepIndex;
             const isClickable = allowNonLinear || index <= currentStepIndex || step.isComplete;
+            const isLast = index === steps.length - 1;
+            const stepNumber = String(index + 1).padStart(2, '0');
             
             return (
-              <div
-                key={step.id}
-                className={cn(
-                  'flex items-center cursor-pointer transition-all duration-200',
-                  isClickable ? 'hover:opacity-80' : 'cursor-not-allowed opacity-50'
-                )}
-                onClick={() => isClickable && handleStepClick(index)}
-              >
-                <div className={cn(
-                  'flex items-center justify-center w-8 h-8 rounded-full border-2 text-sm font-semibold transition-all duration-200',
-                  step.isComplete 
-                    ? 'bg-ss-success border-ss-success text-white'
-                    : isActive 
-                      ? 'bg-ss-teal border-ss-teal text-white'
-                      : 'bg-white border-gray-300 text-gray-500'
-                )}>
-                  {step.isComplete ? (
-                    <Check className="w-4 h-4" />
-                  ) : (
-                    <span>{index + 1}</span>
+              <div key={step.id} className="flex items-center flex-1 relative">
+                {/* Step Container */}
+                <div 
+                  className={cn(
+                    'flex items-center justify-center px-4 py-3 min-h-[60px] relative flex-1 group transition-all duration-200',
+                    {
+                      'bg-emerald-500 text-white': step.isComplete,
+                      'bg-blue-500 text-white': isActive,
+                      'bg-gray-100 text-gray-600': !step.isComplete && !isActive,
+                      'hover:bg-opacity-90 cursor-pointer': isClickable,
+                      'cursor-not-allowed opacity-50': !isClickable
+                    }
+                  )}
+                  onClick={() => isClickable && handleStepClick(index)}
+                >
+                  {/* Step Content */}
+                  <div className="flex items-center justify-center space-x-3 relative z-10">
+                    {/* Step Number/Icon */}
+                    <div className={cn(
+                      'flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold',
+                      {
+                        'bg-white bg-opacity-20': step.isComplete || isActive,
+                        'bg-gray-300': !step.isComplete && !isActive
+                      }
+                    )}>
+                      {step.isComplete ? (
+                        <Check className="w-4 h-4" />
+                      ) : (
+                        stepNumber
+                      )}
+                    </div>
+                    
+                    {/* Step Title */}
+                    <span className="font-medium text-sm whitespace-nowrap">
+                      {step.title}
+                    </span>
+                  </div>
+                  
+                  {/* Chevron Arrow (except for last step) */}
+                  {!isLast && (
+                    <div className="absolute right-0 top-0 h-full w-0 z-20">
+                      <div className={cn(
+                        'absolute right-0 top-0 h-full w-4 transform translate-x-2',
+                        'border-l-[30px] border-t-[30px] border-b-[30px]',
+                        'border-t-transparent border-b-transparent',
+                        {
+                          'border-l-emerald-500': step.isComplete,
+                          'border-l-blue-500': isActive,
+                          'border-l-gray-100': !step.isComplete && !isActive
+                        }
+                      )} />
+                    </div>
                   )}
                 </div>
-                
-                {index < steps.length - 1 && (
-                  <div className={cn(
-                    'w-8 h-0.5 mx-1 transition-all duration-200',
-                    step.isComplete ? 'bg-ss-success' : 'bg-gray-300'
-                  )} />
-                )}
               </div>
             );
           })}
