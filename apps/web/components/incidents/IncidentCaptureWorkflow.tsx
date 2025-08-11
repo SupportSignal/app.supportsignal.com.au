@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { IncidentMetadataForm } from './IncidentMetadataForm';
 import { NarrativeGrid } from './NarrativeGrid';
+import { ClarificationStep } from './ClarificationStep';
 import { Card, CardContent, CardHeader, CardTitle } from '@starter/ui/card';
 import { Button } from '@starter/ui/button';
 import { Badge } from '@starter/ui/badge';
@@ -11,15 +12,21 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Id } from '@/convex/_generated/dataModel';
+import { ClarificationPhase } from '@/types/clarification';
 
 /**
  * Main Incident Capture Workflow Component
- * Implements Story 3.1 requirements for Steps 1-2 of incident capture
+ * Implements Story 3.1 & 3.2 requirements for complete incident capture workflow
  * 
  * Features:
  * - Step 1: Metadata collection (reporter, participant, date/time, location)
- * - Step 2: Multi-phase narrative collection (2x2 grid)
- * - Auto-save functionality
+ * - Step 2: Multi-phase narrative collection (2x2 grid)  
+ * - Step 3: Before Event clarification questions
+ * - Step 4: During Event clarification questions
+ * - Step 5: End Event clarification questions
+ * - Step 6: Post-Event Support clarification questions
+ * - Auto-save functionality throughout
+ * - AI-powered question generation
  * - Real-time validation
  * - Responsive design
  */
@@ -45,13 +52,45 @@ export function IncidentCaptureWorkflow() {
   };
 
   const handleNarrativeComplete = () => {
-    // For now, just redirect to incidents list
-    // In future stories, this will proceed to Steps 3-7
-    router.push('/incidents');
+    // Proceed to clarification questions (Step 3)
+    setCurrentStep(3);
   };
 
   const handleBackToMetadata = () => {
     setCurrentStep(1);
+  };
+
+  const handleBackToNarrative = () => {
+    setCurrentStep(2);
+  };
+
+  const handleClarificationNext = () => {
+    if (currentStep < 6) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      // All clarification steps completed, redirect to incidents list
+      // In future stories (3.3), this will go to Step 7 (review)
+      router.push('/incidents');
+    }
+  };
+
+  const handleClarificationPrevious = () => {
+    if (currentStep > 3) {
+      setCurrentStep(currentStep - 1);
+    } else {
+      setCurrentStep(2); // Back to narrative
+    }
+  };
+
+  // Get clarification phase for current step
+  const getCurrentClarificationPhase = (): ClarificationPhase => {
+    switch (currentStep) {
+      case 3: return "before_event";
+      case 4: return "during_event";
+      case 5: return "end_event";
+      case 6: return "post_event";
+      default: return "before_event";
+    }
   };
 
   if (isLoading) {
@@ -68,7 +107,7 @@ export function IncidentCaptureWorkflow() {
     return null; // Will redirect
   }
 
-  // Define wizard steps for Story 3.1
+  // Define wizard steps for Stories 3.1 & 3.2
   const steps = [
     {
       id: 1,
@@ -81,17 +120,40 @@ export function IncidentCaptureWorkflow() {
       id: 2,
       title: 'Narrative Collection',
       description: 'Detailed incident description',
-      completed: false, // Will be set based on narrative completion
+      completed: currentStep > 2,
       current: currentStep === 2,
     },
-    // Steps 3-7 will be added in future stories
     {
       id: 3,
-      title: 'AI Questions',
-      description: 'Coming in next release',
-      completed: false,
-      current: false,
-      disabled: true,
+      title: 'Before Event',
+      description: 'Clarification questions',
+      completed: currentStep > 3,
+      current: currentStep === 3,
+      disabled: currentStep < 3,
+    },
+    {
+      id: 4,
+      title: 'During Event',
+      description: 'Clarification questions',
+      completed: currentStep > 4,
+      current: currentStep === 4,
+      disabled: currentStep < 4,
+    },
+    {
+      id: 5,
+      title: 'End Event',
+      description: 'Clarification questions',
+      completed: currentStep > 5,
+      current: currentStep === 5,
+      disabled: currentStep < 5,
+    },
+    {
+      id: 6,
+      title: 'Post-Event',
+      description: 'Clarification questions',
+      completed: currentStep > 6,
+      current: currentStep === 6,
+      disabled: currentStep < 6,
     },
   ];
 
@@ -179,8 +241,19 @@ export function IncidentCaptureWorkflow() {
             />
           )}
 
-          {/* Error State */}
-          {currentStep === 2 && !incidentId && (
+          {/* Steps 3-6: Clarification Questions */}
+          {(currentStep >= 3 && currentStep <= 6) && incidentId && (
+            <ClarificationStep
+              incident_id={incidentId}
+              phase={getCurrentClarificationPhase()}
+              onNext={handleClarificationNext}
+              onPrevious={handleClarificationPrevious}
+              canProceed={true}
+            />
+          )}
+
+          {/* Error State - Missing Incident */}
+          {(currentStep === 2 || (currentStep >= 3 && currentStep <= 6)) && !incidentId && (
             <Card>
               <CardContent className="p-6 text-center">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">

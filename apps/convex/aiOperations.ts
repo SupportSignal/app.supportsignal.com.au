@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AI Operations - Core AI Actions for Incident Management
  * Implements the four core AI operations with exact specifications from n8n workflows

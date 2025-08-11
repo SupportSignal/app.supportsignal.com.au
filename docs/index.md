@@ -79,6 +79,7 @@ Following BMAD methodology, these documents form the foundation:
 - **[Cost-Effective Logging](./technical-guides/cost-effective-logging-in-convex-agentic-systems.md)** - Legacy Convex logging strategies (superseded by Worker system)
 - **[Dev Error Pipeline](./technical-guides/dev-error-pipeline.md)** - Chrome DevTools to Claude Code integration
 - **[Convex Components Guide](./technical-guides/convex-components-guide.md)** - Convex architecture patterns and component examples
+- **[React + Convex Development Patterns KDD](./technical-guides/react-convex-patterns-kdd.md)** - **Critical patterns** - Avoid useEffect recursion, proper data flow, anti-patterns to prevent
 - **[Authentication Architecture](./technical-guides/authentication-architecture.md)** - Complete authentication system architecture and security patterns
 - **[Cloudflare Pages Setup](./technical-guides/cloudflare-pages-setup.md)** - Step-by-step Cloudflare Pages deployment guide
 - **[Cloudflare Pages Troubleshooting](./technical-guides/cloudflare-pages-deployment-troubleshooting.md)** - Systematic troubleshooting for deployment issues
@@ -153,6 +154,7 @@ Cross-story insights and knowledge capture:
 - **[Technology Lessons](./lessons-learned/technology/)** - Technology-specific learnings
 - **[Process Lessons](./lessons-learned/process/)** - Development workflow insights
 - **[Anti-Patterns](./lessons-learned/anti-patterns/)** - Approaches to avoid
+  - **[React + Convex Patterns KDD](./technical-guides/react-convex-patterns-kdd.md)** - Critical anti-patterns that cause useEffect recursion and performance issues
 
 #### [Peer Reviews](./peer-reviews/)
 

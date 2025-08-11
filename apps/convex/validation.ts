@@ -30,13 +30,14 @@ export const ValidationSchemas = {
       .refine(val => !isNaN(Date.parse(val)), "Invalid date format"),
     location: z.string().trim().min(1, "Location is required").max(200, "Location too long"),
   }),
-  
+
+  // Incident status validation
   incidentStatus: z.object({
     capture_status: z.enum(["draft", "in_progress", "completed"]).optional(),
     analysis_status: z.enum(["not_started", "in_progress", "completed"]).optional(),
   }).refine(
-    data => data.capture_status || data.analysis_status,
-    "At least one status field must be provided"
+    data => data.capture_status !== undefined || data.analysis_status !== undefined,
+    { message: "At least one status field must be provided" }
   ),
   
   // Narrative validation

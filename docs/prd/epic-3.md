@@ -5,10 +5,10 @@
 **Status**: **WAITING FOR EPIC 2** 🟡  
 **Epic 2 Dependency**: Entity management foundation required
 
-**Goal**: Implement the complete 7-step incident capture workflow for frontline workers, featuring intelligent narrative collection, AI-powered clarification questions, and seamless handoff to the analysis phase.
+**Goal**: Implement the complete 7-step incident capture workflow for frontline workers, featuring intelligent narrative collection, AI-powered clarification questions, comprehensive prompt management, and seamless handoff to the analysis phase.
 
-**Duration**: 3-4 weeks  
-**Team Size**: 2-3 developers (frontend focus)  
+**Duration**: 4-5 weeks  
+**Team Size**: 2-3 developers (frontend focus + AI specialist for Story 3.4)  
 **Dependencies**: ✅ Epic 1 (database, AI services, authentication), 🟡 Epic 2 (participants, UI foundation) - **WAITING**  
 **Primary Users**: Frontline support workers, disability care providers
 
@@ -143,6 +143,41 @@ Implement the final review step that combines original narratives with clarifica
 - [ ] **Handoff Process**: Smooth transition that notifies team leaders of ready-for-analysis incidents
 - [ ] **Data Integrity**: All original content preserved alongside enhanced versions
 - [ ] **Export Preview**: Preview of final incident report format
+
+---
+
+### Story 3.4: AI Prompt Management & Template System
+
+**Priority**: MEDIUM  
+**Estimated Effort**: 1 week  
+**Dependencies**: Story 3.2 (AI clarification system)
+
+#### Requirements
+Implement a comprehensive AI prompt management system that allows administrators to customize, version, and optimize the prompts used for clarification question generation and narrative enhancement. This ensures consistent, high-quality AI interactions while providing flexibility for different organizational needs.
+
+**Core Functionality**:
+- **Prompt Template Library**: Centralized repository of all AI prompts used in the incident workflow
+- **Version Management**: Track prompt evolution with rollback capabilities
+- **A/B Testing Framework**: Compare prompt effectiveness and automatically optimize
+- **Organization Customization**: Company-specific prompt variations for industry requirements
+- **Performance Analytics**: Track prompt effectiveness, response quality, and user satisfaction
+
+**Management Interface**:
+- **Prompt Editor**: Rich text editor with template variable support
+- **Testing Sandbox**: Preview and test prompt changes before deployment  
+- **Performance Dashboard**: Real-time analytics on prompt performance metrics
+- **Change Management**: Approval workflow for prompt modifications
+- **Template Categories**: Organize prompts by workflow step and incident type
+
+#### Acceptance Criteria
+- [ ] **Template Management**: CRUD operations for prompt templates with version control
+- [ ] **Variable System**: Support for dynamic variables (participant name, incident type, etc.)
+- [ ] **A/B Testing**: Automated testing framework comparing prompt variants
+- [ ] **Performance Metrics**: Track response quality, generation time, and user engagement
+- [ ] **Admin Interface**: Intuitive management dashboard for non-technical administrators
+- [ ] **API Integration**: Seamless integration with existing AI services in Stories 3.2-3.3
+- [ ] **Backup & Recovery**: Automated backup system with easy restoration of previous versions
+- [ ] **Multi-tenant Support**: Company-specific prompt customizations without affecting other organizations
 
 ---
 

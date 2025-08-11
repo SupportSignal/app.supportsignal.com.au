@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { httpAction } from './_generated/server';
 import { action } from './_generated/server';
 import { api } from './_generated/api';

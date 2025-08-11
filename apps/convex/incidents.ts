@@ -4,8 +4,10 @@ import { v } from "convex/values";
 import { ConvexError } from "convex/values";
 import { requirePermission, PERMISSIONS } from './permissions';
 import { Id } from './_generated/dataModel';
+import { internal } from './_generated/api';
 import { 
   ValidationHelpers, 
+  ValidationSchemas,
   ValidationError, 
   ErrorTypes, 
   ErrorLogging, 
@@ -302,7 +304,7 @@ export const updateStatus = mutation({
     try {
       // Validate status update input using Zod schemas
       const statusUpdateData = ValidationHelpers.validateInput(
-        ValidationHelpers.ValidationSchemas.incidentStatus,
+        ValidationSchemas.incidentStatus,
         {
           capture_status: args.capture_status,
           analysis_status: args.analysis_status,
@@ -590,6 +592,7 @@ export const getIncidentNarrative = query({
 // Create or update incident narrative
 export const upsertIncidentNarrative = mutation({
   args: {
+    sessionToken: v.optional(v.string()),
     incident_id: v.id("incidents"),
     before_event: v.string(),
     during_event: v.string(),
@@ -597,8 +600,33 @@ export const upsertIncidentNarrative = mutation({
     post_event: v.string(),
   },
   handler: async (ctx, args) => {
-    // TODO: Add authentication and authorization checks
-    
+    // Authentication and authorization checks
+    if (!args.sessionToken) {
+      throw new ConvexError('Session token required');
+    }
+
+    // Get the incident to verify access
+    const incident = await ctx.db.get(args.incident_id);
+    if (!incident) {
+      throw new ConvexError('Incident not found');
+    }
+
+    // Verify user has permission to edit this incident
+    const { user } = await requirePermission(
+      ctx,
+      args.sessionToken,
+      PERMISSIONS.EDIT_OWN_INCIDENT_CAPTURE,
+      {
+        resourceOwnerId: incident.created_by || undefined,
+        companyId: incident.company_id,
+      }
+    );
+
+    // Ensure user is in same company as the incident
+    if (user.company_id !== incident.company_id) {
+      throw new ConvexError('Access denied: incident belongs to different company');
+    }
+
     const existingNarrative = await ctx.db
       .query("incident_narratives")
       .withIndex("by_incident", (q) => q.eq("incident_id", args.incident_id))
@@ -958,5 +986,185 @@ export const getDraftIncident = query({
       incident,
       narrative,
     };
+  },
+});
+
+// AI Clarification Helper Functions
+
+/**
+ * Log AI request for monitoring and debugging
+ */
+export const logAiRequest = mutation({
+  args: {
+    correlation_id: v.string(),
+    operation: v.string(),
+    model: v.string(),
+    prompt_template: v.string(),
+    input_data: v.any(),
+    output_data: v.optional(v.any()),
+    processing_time_ms: v.number(),
+    tokens_used: v.optional(v.number()),
+    cost_usd: v.optional(v.number()),
+    success: v.boolean(),
+    error_message: v.optional(v.string()),
+    user_id: v.optional(v.id("users")),
+    incident_id: v.optional(v.id("incidents")),
+    created_at: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const logId = await ctx.db.insert("ai_request_logs", {
+      correlation_id: args.correlation_id,
+      operation: args.operation,
+      model: args.model,
+      prompt_template: args.prompt_template,
+      input_data: args.input_data,
+      output_data: args.output_data,
+      processing_time_ms: args.processing_time_ms,
+      tokens_used: args.tokens_used,
+      cost_usd: args.cost_usd,
+      success: args.success,
+      error_message: args.error_message,
+      user_id: args.user_id,
+      incident_id: args.incident_id,
+      created_at: args.created_at,
+    });
+
+    return logId;
+  },
+});
+
+/**
+ * Create hash for narrative content caching
+ */
+export const createNarrativeHash = mutation({
+  args: {
+    content: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Simple hash for content comparison using string hashing (Convex-compatible)
+    let hash = 0;
+    for (let i = 0; i < args.content.length; i++) {
+      const char = args.content.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    // Convert to positive hex string
+    const hashString = Math.abs(hash).toString(16).padStart(8, '0');
+    return hashString.substring(0, 32);
+  },
+});
+
+/**
+ * Update incident narrative hash for caching
+ */
+export const updateIncidentNarrativeHash = mutation({
+  args: {
+    incident_id: v.id("incidents"),
+    narrative_hash: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.incident_id, {
+      narrative_hash: args.narrative_hash,
+      updated_at: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
+/**
+ * Update incident progress status based on clarification completion
+ */
+export const updateIncidentProgressStatus = mutation({
+  args: {
+    incident_id: v.id("incidents"),
+    phase: v.union(
+      v.literal("before_event"),
+      v.literal("during_event"),
+      v.literal("end_event"),
+      v.literal("post_event")
+    ),
+    questions_completed: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const incident = await ctx.db.get(args.incident_id);
+    if (!incident) {
+      throw new ConvexError("Incident not found");
+    }
+
+    // For now, just track that questions are being generated/answered
+    // In future iterations, this could update more granular progress tracking
+    await ctx.db.patch(args.incident_id, {
+      questions_generated: true,
+      updated_at: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
+/**
+ * Get incident by ID (internal helper for AI functions)
+ */
+export const getIncidentById = query({
+  args: {
+    sessionToken: v.string(),
+    incident_id: v.id("incidents"),
+  },
+  handler: async (ctx, args) => {
+    // Authenticate user
+    const user = await ctx.runQuery(internal.auth.verifySession, {
+      sessionToken: args.sessionToken,
+    });
+
+    if (!user) {
+      throw new ConvexError("Authentication required");
+    }
+
+    const incident = await ctx.db.get(args.incident_id);
+    if (!incident) {
+      return null;
+    }
+
+    // Check company access
+    if (user.company_id !== incident.company_id) {
+      console.error('🚫 COMPANY ACCESS MISMATCH', {
+        userId: user._id,
+        userCompanyId: user.company_id,
+        incidentId: args.incident_id,
+        incidentCompanyId: incident.company_id,
+        timestamp: new Date().toISOString()
+      });
+      throw new ConvexError(`Access denied: incident belongs to different company (user: ${user.company_id}, incident: ${incident.company_id})`);
+    }
+
+    return incident;
+  },
+});
+
+/**
+ * Get incident narrative by incident ID (internal helper)
+ */
+export const getIncidentNarrativeByIncidentId = query({
+  args: {
+    sessionToken: v.string(),
+    incident_id: v.id("incidents"),
+  },
+  handler: async (ctx, args) => {
+    // Authenticate user
+    const user = await ctx.runQuery(internal.auth.verifySession, {
+      sessionToken: args.sessionToken,
+    });
+
+    if (!user) {
+      throw new ConvexError("Authentication required");
+    }
+
+    const narrative = await ctx.db
+      .query("incident_narratives")
+      .withIndex("by_incident", (q) => q.eq("incident_id", args.incident_id))
+      .first();
+
+    return narrative;
   },
 });

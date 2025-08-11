@@ -104,6 +104,52 @@ This document outlines established patterns for React, Next.js, and UI developme
 
 **Rationale**: Simple, performant local state management
 
+### React + Convex Integration Patterns
+
+**Context**: Proper integration of React hooks with Convex for data flow and actions
+**Implementation**:
+
+- **User-Driven Actions**: Actions triggered by user interactions (button clicks), not automatic effects
+- **Trust Convex Reactivity**: Let `useQuery` handle UI updates when server data changes
+- **Stable useEffect Dependencies**: Only include external data in dependencies, never state variables that the effect updates
+- **Minimal State Duplication**: Don't duplicate server data in local state if Convex can manage it
+- **Conditional Queries**: Use `"skip"` pattern for conditional data fetching
+
+**Example**:
+```typescript
+// ✅ CORRECT: User-driven action flow
+const [isLoading, setIsLoading] = useState(false);
+const existingData = useQuery(api.getData, sessionToken ? { sessionToken } : "skip");
+const triggerAction = useAction(api.processData);
+
+const handleUserAction = useCallback(async () => {
+  setIsLoading(true);
+  try {
+    await triggerAction({ sessionToken, data });
+    // Let useQuery reactively update UI - no manual state setting
+  } catch (error) {
+    setError(error.message);
+  } finally {
+    setIsLoading(false);
+  }
+}, [triggerAction, sessionToken]);
+
+// ✅ CORRECT: Stable effect for UI synchronization
+useEffect(() => {
+  if (existingData) {
+    setLocalUIState(existingData); // Only sync UI state
+  }
+}, [existingData]); // Only external data dependencies
+```
+
+**Rationale**: 
+- Prevents useEffect recursion loops
+- Follows Convex's reactive architecture properly
+- Maintains clean separation between server and UI state
+- Ensures predictable, maintainable data flow
+
+**Critical Reference**: See [React + Convex Patterns KDD](../technical-guides/react-convex-patterns-kdd.md) for comprehensive anti-patterns and debugging guidance.
+
 ## File Organization Patterns
 
 ### Component Co-location
@@ -291,8 +337,42 @@ export const ConsoleLogger = {
 - Use Zustand or context for deeply nested state
 - Consider component composition over complex prop passing
 
+### useEffect + Convex Actions (CRITICAL ANTI-PATTERN)
+
+**❌ NEVER DO THIS**:
+```typescript
+// Creates infinite recursion loops
+useEffect(() => {
+  if (shouldGenerate && !error) {
+    generateAction(...); // Anti-pattern!
+  }
+}, [shouldGenerate, error, generateAction]); // error dependency causes loops
+```
+
+**Why Wrong**: 
+- Actions should be user-triggered, not automatic
+- State variables in dependencies create re-render cycles
+- Fights against Convex's reactive architecture
+
+**✅ CORRECT ALTERNATIVE**: User-driven actions with manual triggers
+
+### State Variables in useEffect Dependencies
+
+**❌ PROBLEMATIC**:
+```typescript
+const [error, setError] = useState(null);
+useEffect(() => {
+  if (condition && !error) {
+    setError('something'); // Causes re-render → infinite loop risk
+  }
+}, [condition, error]); // error dependency is the problem
+```
+
+**✅ CORRECT**: Only external data dependencies, use refs for internal tracking
+
 ## Related Documentation
 
-- [Backend Patterns](backend-patterns.md) - For API integration patterns
+- [Backend Patterns](backend-patterns.md) - For API integration patterns  
 - [Testing Patterns](testing-patterns.md) - For frontend testing approaches
 - [Architecture Patterns](architecture-patterns.md) - For overall system design
+- **[React + Convex Patterns KDD](../technical-guides/react-convex-patterns-kdd.md)** - **CRITICAL** - Comprehensive guide to avoid useEffect recursion and data flow anti-patterns
