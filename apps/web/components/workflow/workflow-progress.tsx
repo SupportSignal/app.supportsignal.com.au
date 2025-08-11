@@ -190,12 +190,80 @@ export const WorkflowProgress: React.FC<WorkflowProgressProps> = ({
   }
 
   return (
-    <div className={cn('bg-healthcare-surface', className)}>
+    <div className={cn('bg-white rounded-lg overflow-hidden', className)}>
+      {/* Chevron-Style Connected Workflow */}
+      <div className="flex items-center bg-gradient-to-r from-blue-50 to-indigo-50 border border-gray-200 rounded-lg overflow-hidden">
+        {steps.map((step, index) => {
+          const stepStyles = getStepStyles(step, index);
+          const IconComponent = getStepIcon(step);
+          const isLast = index === steps.length - 1;
+          const stepNumber = String(index + 1).padStart(2, '0');
+          
+          return (
+            <div key={step.id} className="flex items-center flex-1 relative">
+              {/* Step Container */}
+              <div 
+                className={cn(
+                  'flex items-center justify-center px-4 py-3 min-h-[60px] relative flex-1 group transition-all duration-200',
+                  {
+                    'bg-emerald-500 text-white': step.status === 'completed',
+                    'bg-blue-500 text-white': step.status === 'in_progress', 
+                    'bg-gray-100 text-gray-600': step.status === 'pending',
+                    'hover:bg-opacity-90': onStepClick,
+                    'cursor-pointer': onStepClick
+                  }
+                )}
+                onClick={() => onStepClick?.(step.id)}
+              >
+                {/* Step Content */}
+                <div className="flex items-center justify-center space-x-3 relative z-10">
+                  {/* Step Number/Icon */}
+                  <div className={cn(
+                    'flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold',
+                    {
+                      'bg-white bg-opacity-20': step.status === 'completed' || step.status === 'in_progress',
+                      'bg-gray-300': step.status === 'pending'
+                    }
+                  )}>
+                    {step.status === 'completed' ? (
+                      <CheckCircle2 className="w-4 h-4" />
+                    ) : (
+                      stepNumber
+                    )}
+                  </div>
+                  
+                  {/* Step Title */}
+                  <span className="font-medium text-sm whitespace-nowrap">
+                    {step.title}
+                  </span>
+                </div>
+                
+                {/* Chevron Arrow (except for last step) */}
+                {!isLast && (
+                  <div className="absolute right-0 top-0 h-full w-0 z-20">
+                    <div className={cn(
+                      'absolute right-0 top-0 h-full w-4 transform translate-x-2',
+                      'border-l-[30px] border-t-[30px] border-b-[30px]',
+                      'border-t-transparent border-b-transparent',
+                      {
+                        'border-l-emerald-500': step.status === 'completed',
+                        'border-l-blue-500': step.status === 'in_progress',
+                        'border-l-gray-100': step.status === 'pending'
+                      }
+                    )} />
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      
       {/* Progress Summary */}
       {!isCompact && (
-        <div className="mb-ss-lg">
+        <div className="mt-4 px-4">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-healthcare-primary text-healthcare-lg">
+            <h3 className="font-semibold text-gray-700 text-sm">
               Workflow Progress
             </h3>
             <div className="flex items-center gap-2">
@@ -227,69 +295,6 @@ export const WorkflowProgress: React.FC<WorkflowProgressProps> = ({
         </div>
       )}
 
-      {/* Step Timeline */}
-      <div className={cn(
-        isVertical ? 'space-y-4' : 'flex items-center justify-between'
-      )}>
-        {steps.map((step, index) => {
-          const styles = getStepStyles(step, index);
-          const StepIcon = getStepIcon(step);
-          const isLast = index === steps.length - 1;
-
-          return (
-            <div 
-              key={step.id} 
-              className="flex items-center"
-              onClick={() => onStepClick?.(step.id)}
-            >
-              <div className="flex flex-col items-center">
-                {/* Step Icon */}
-                <div className={styles.iconContainer}>
-                  <StepIcon className="w-4 h-4" />
-                </div>
-
-                {/* Step Content */}
-                {showStepDetails && (
-                  <div className="text-center mt-2 max-w-24">
-                    <h4 className="font-medium text-healthcare-xs text-healthcare-primary leading-tight">
-                      {step.title}
-                    </h4>
-                    
-                    {!isCompact && step.description && (
-                      <p className="text-healthcare-xs text-gray-600 mt-1 leading-tight">
-                        {step.description}
-                      </p>
-                    )}
-                    
-                    {/* Status Badge */}
-                    {step.status === 'in_progress' && (
-                      <StatusBadge 
-                        status="in_progress" 
-                        size="sm" 
-                        variant="outline"
-                        customLabel="Active"
-                        className="mt-1"
-                      />
-                    )}
-                    
-                    {/* Estimates */}
-                    {showEstimates && step.estimatedTime && (
-                      <div className="text-healthcare-xs text-gray-500 mt-1">
-                        Est. {step.estimatedTime}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Connector Arrow */}
-              {!isLast && !isVertical && (
-                <ArrowRight className="w-4 h-4 text-gray-300 mx-2" />
-              )}
-            </div>
-          );
-        })}
-      </div>
 
       {/* Summary Stats */}
       {!isCompact && !isMinimal && (

@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Id } from '@/convex/_generated/dataModel';
 import { ClarificationPhase } from '@/types/clarification';
+import { cn } from '@/lib/utils';
 
 /**
  * Main Incident Capture Workflow Component
@@ -193,32 +194,61 @@ export function IncidentCaptureWorkflow() {
               Report a new incident with detailed documentation
             </p>
             
-            {/* Progress Steps */}
-            <div className="flex items-center space-x-4 mt-4">
-              {steps.map((step, index) => (
-                <div key={step.id} className="flex items-center">
-                  <div className={`flex items-center space-x-2 ${
-                    step.current ? 'text-blue-600' : 
-                    step.completed ? 'text-green-600' : 
-                    step.disabled ? 'text-gray-400' : 'text-gray-500'
-                  }`}>
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
-                      step.current ? 'bg-blue-100 text-blue-600' :
-                      step.completed ? 'bg-green-100 text-green-600' :
-                      step.disabled ? 'bg-gray-100 text-gray-400' : 'bg-gray-100 text-gray-500'
-                    }`}>
-                      {step.completed ? '✓' : step.id}
-                    </div>
-                    <div className="hidden md:block">
-                      <div className="font-medium">{step.title}</div>
-                      <div className="text-xs text-gray-500">{step.description}</div>
+            {/* Chevron-Style Progress Steps */}
+            <div className="flex items-center bg-gradient-to-r from-blue-50 to-indigo-50 border border-gray-200 rounded-lg overflow-hidden mt-6">
+              {steps.map((step, index) => {
+                const isLast = index === steps.length - 1;
+                const stepNumber = String(step.id).padStart(2, '0');
+                
+                return (
+                  <div key={step.id} className="flex items-center flex-1 relative">
+                    {/* Step Container */}
+                    <div className={cn(
+                      'flex items-center justify-center px-4 py-3 min-h-[60px] relative flex-1 group transition-all duration-200',
+                      {
+                        'bg-emerald-500 text-white': step.completed,
+                        'bg-blue-500 text-white': step.current,
+                        'bg-gray-100 text-gray-600': !step.completed && !step.current,
+                      }
+                    )}>
+                      {/* Step Content */}
+                      <div className="flex items-center justify-center space-x-3 relative z-10">
+                        {/* Step Number/Icon */}
+                        <div className={cn(
+                          'flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold',
+                          {
+                            'bg-white bg-opacity-20': step.completed || step.current,
+                            'bg-gray-300': !step.completed && !step.current
+                          }
+                        )}>
+                          {step.completed ? '✓' : stepNumber}
+                        </div>
+                        
+                        {/* Step Title */}
+                        <span className="font-medium text-sm whitespace-nowrap">
+                          {step.title}
+                        </span>
+                      </div>
+                      
+                      {/* Chevron Arrow (except for last step) */}
+                      {!isLast && (
+                        <div className="absolute right-0 top-0 h-full w-0 z-20">
+                          <div className={cn(
+                            'absolute right-0 top-0 h-full w-4 transform translate-x-2',
+                            'border-l-[30px] border-t-[30px] border-b-[30px]',
+                            'border-t-transparent border-b-transparent',
+                            {
+                              'border-l-emerald-500': step.completed,
+                              'border-l-blue-500': step.current,
+                              'border-l-gray-100': !step.completed && !step.current
+                            }
+                          )} />
+                        </div>
+                      )}
                     </div>
                   </div>
-                  {index < steps.length - 1 && (
-                    <div className="w-8 h-0.5 bg-gray-300 mx-2 hidden md:block"></div>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardHeader>
         </Card>
