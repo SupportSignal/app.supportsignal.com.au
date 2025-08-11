@@ -142,10 +142,7 @@ function shouldSuppressMessage(level: string, args: unknown[]): boolean {
   // Check against suppression patterns
   for (const pattern of suppressedPatterns) {
     if (message.includes(pattern)) {
-      // Log suppression locally for debugging
-      originalConsole.log(
-        `🔇 Suppressed log: ${pattern} in "${message.substring(0, 100)}..."`
-      );
+      // Suppress without local logging (reduces browser console noise)
       return true;
     }
   }

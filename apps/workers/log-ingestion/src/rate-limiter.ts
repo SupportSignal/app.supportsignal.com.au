@@ -2,15 +2,15 @@
 
 import type { RateLimitConfig, RateLimitState } from './types';
 
-// Rate limiting configuration based on cost constraints
+// Rate limiting configuration for development debugging
 const RATE_LIMIT_CONFIG: RateLimitConfig = {
-  global_limit: 1000, // 1000 logs/hour total
+  global_limit: 5000, // 5000 logs/hour total (5x increase for debugging)
   system_quotas: {
-    browser: 400, // 40% = 400 logs/hour
-    convex: 300, // 30% = 300 logs/hour
-    worker: 300, // 30% = 300 logs/hour
+    browser: 2000, // 40% = 2000 logs/hour (33 logs/minute)
+    convex: 1500, // 30% = 1500 logs/hour (25 logs/minute)
+    worker: 1500, // 30% = 1500 logs/hour (25 logs/minute)
   },
-  per_trace_limit: 100, // 100 logs/hour per trace_id
+  per_trace_limit: 500, // 500 logs/hour per trace_id (8 logs/minute per trace)
   window_ms: 60 * 60 * 1000, // 1 hour window
 };
 

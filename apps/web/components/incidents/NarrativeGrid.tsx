@@ -10,6 +10,8 @@ import { Button } from '@starter/ui/button';
 import { Alert, AlertDescription } from '@starter/ui/alert';
 import { Badge } from '@starter/ui/badge';
 import { SampleDataButton } from './SampleDataButton';
+import { AutoSaveIndicator } from '@/components/ui/auto-save-indicator';
+import { useAutoSave } from '@/hooks/useAutoSave';
 import { Id } from '@/convex/_generated/dataModel';
 
 interface NarrativeGridProps {
@@ -47,12 +49,42 @@ export function NarrativeGrid({ incidentId, onComplete, onBack }: NarrativeGridP
 
   const [errors, setErrors] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
-  const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
-  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Get session token for API calls
   const sessionToken = typeof window !== 'undefined' ? localStorage.getItem('auth_session_token') : null;
+
+  // Convex mutations
+  const upsertNarrative = useMutation(api.narratives.upsert);
+
+  // Auto-save hook
+  const { autoSaveState, triggerSave } = useAutoSave(
+    narrativeData,
+    async (data) => {
+      if (!sessionToken) throw new Error('No session token');
+      
+      await upsertNarrative({
+        sessionToken,
+        incident_id: incidentId,
+        before_event: data.before_event,
+        during_event: data.during_event,
+        end_event: data.end_event,
+        post_event: data.post_event,
+      });
+    },
+    {
+      debounceMs: 3000,
+      enabled: !!sessionToken && !!incidentId,
+      onSuccess: () => {
+        console.log('💾 AUTO-SAVE COMPLETED', {
+          incidentId,
+          timestamp: new Date().toISOString(),
+        });
+      },
+      onError: (error) => {
+        console.warn('Auto-save failed:', error);
+      },
+    }
+  );
 
   // Load existing incident data
   const incidentData = useQuery(
@@ -60,7 +92,6 @@ export function NarrativeGrid({ incidentId, onComplete, onBack }: NarrativeGridP
     sessionToken ? { sessionToken, incidentId } : 'skip'
   );
 
-  const upsertNarrative = useMutation(api.incidents.upsertIncidentNarrative);
   const updateStatus = useMutation(api.incidents.updateStatus);
 
   // Load existing narrative data when available
@@ -75,42 +106,11 @@ export function NarrativeGrid({ incidentId, onComplete, onBack }: NarrativeGridP
     }
   }, [incidentData]);
 
-  // Auto-save functionality
-  const triggerAutoSave = () => {
-    if (autoSaveTimeoutRef.current) {
-      clearTimeout(autoSaveTimeoutRef.current);
-    }
-
-    autoSaveTimeoutRef.current = setTimeout(async () => {
-      if (hasChanges && sessionToken) {
-        try {
-          await upsertNarrative({
-            sessionToken,
-            incident_id: incidentId,
-            before_event: narrativeData.before_event,
-            during_event: narrativeData.during_event,
-            end_event: narrativeData.end_event,
-            post_event: narrativeData.post_event,
-          });
-          setLastSaveTime(new Date());
-          setHasChanges(false);
-          console.log('💾 AUTO-SAVE COMPLETED', {
-            incidentId,
-            timestamp: new Date().toISOString(),
-          });
-        } catch (error) {
-          console.warn('Auto-save failed:', error);
-        }
-      }
-    }, 3000); // Auto-save after 3 seconds of inactivity
-  };
-
   // Handle narrative field changes
   const handleNarrativeChange = (field: keyof NarrativeData, value: string) => {
     setNarrativeData(prev => ({ ...prev, [field]: value }));
-    setHasChanges(true);
     setErrors('');
-    triggerAutoSave();
+    // Auto-save will be triggered automatically by useAutoSave hook when narrativeData changes
   };
 
   // Validate narratives
@@ -186,14 +186,6 @@ export function NarrativeGrid({ incidentId, onComplete, onBack }: NarrativeGridP
     narrative.trim().length >= 50
   );
 
-  // Cleanup auto-save timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (autoSaveTimeoutRef.current) {
-        clearTimeout(autoSaveTimeoutRef.current);
-      }
-    };
-  }, []);
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6">
@@ -207,7 +199,13 @@ export function NarrativeGrid({ incidentId, onComplete, onBack }: NarrativeGridP
                 (Detailed Description)
               </span>
             </div>
-            <SampleDataButton
+            <div className="flex items-center gap-4">
+              {/* Auto-save Status Indicator */}
+              <AutoSaveIndicator 
+                autoSaveState={autoSaveState} 
+                variant="status-bar" 
+              />
+              <SampleDataButton
               onDataFilled={(scenarioData) => {
                 // Fill narrative fields with sample data
                 if (scenarioData.narratives) {
@@ -217,7 +215,6 @@ export function NarrativeGrid({ incidentId, onComplete, onBack }: NarrativeGridP
                     end_event: scenarioData.narratives.end_event || '',
                     post_event: scenarioData.narratives.post_event || '',
                   });
-                  setHasChanges(true);
                   console.log(`Narrative filled with sample data:`, scenarioData);
                 }
               }}
@@ -225,6 +222,7 @@ export function NarrativeGrid({ incidentId, onComplete, onBack }: NarrativeGridP
               variant="ghost"
               size="sm"
             />
+            </div>
           </CardTitle>
           <p className="text-sm text-gray-600">
             Provide detailed descriptions for each phase of the incident. At least one phase must contain meaningful content.
@@ -232,22 +230,6 @@ export function NarrativeGrid({ incidentId, onComplete, onBack }: NarrativeGridP
         </CardHeader>
       </Card>
 
-      {/* Auto-save Status */}
-      {hasChanges && (
-        <Alert>
-          <AlertDescription className="text-blue-600">
-            <span className="animate-pulse">💾</span> Auto-saving changes...
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {lastSaveTime && !hasChanges && (
-        <Alert>
-          <AlertDescription className="text-green-600">
-            ✓ Saved at {lastSaveTime.toLocaleTimeString()}
-          </AlertDescription>
-        </Alert>
-      )}
 
       {/* Narrative Grid */}
       <form onSubmit={handleSubmit}>

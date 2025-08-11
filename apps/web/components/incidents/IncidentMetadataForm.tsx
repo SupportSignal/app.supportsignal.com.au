@@ -66,8 +66,59 @@ export function IncidentMetadataForm({
   const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
   const [currentIncidentId, setCurrentIncidentId] = useState<Id<"incidents"> | null>(existingIncidentId || null);
 
+
+
   const createIncident = useMutation(api.incidents.create);
   const generateRandomData = useMutation(api.incidents.createSampleData.generateRandomIncidentMetadata);
+
+  // Load existing incident data if editing
+  const sessionToken = typeof window !== 'undefined' ? localStorage.getItem('auth_session_token') : null;
+  const existingIncident = useQuery(
+    api.incidents.getDraftIncident,
+    existingIncidentId && sessionToken ? { sessionToken, incidentId: existingIncidentId } : 'skip'
+  );
+
+
+  // Load existing incident data into form when available
+  useEffect(() => {
+    if (existingIncident?.incident) {
+      const incident = existingIncident.incident;
+      
+      const newFormData = {
+        reporter_name: incident.reporter_name || user.name,
+        participant_id: incident.participant_id,
+        participant_name: incident.participant_name || '',
+        event_date_time: incident.event_date_time || new Date().toISOString().slice(0, 16),
+        location: incident.location || '',
+      };
+
+      setFormData(newFormData);
+
+      // If there's a participant, create the participant object for the selector
+      if (incident.participant_id && incident.participant_name) {
+        
+        const [firstName, ...lastNameParts] = incident.participant_name.split(' ');
+        const participantData = {
+          _id: incident.participant_id,
+          first_name: firstName,
+          last_name: lastNameParts.join(' '),
+          ndis_number: '',
+          support_level: 'medium' as const, // Default support level
+          contact_phone: '',
+          care_notes: '',
+          status: 'active' as const,
+          company_id: user.company_id,
+          created_at: Date.now(),
+          updated_at: Date.now(),
+        } as Participant;
+
+        setSelectedParticipant(participantData);
+      } else {
+        setSelectedParticipant(null);
+      }
+    }
+  }, [existingIncident, user.name]);
+
 
   // Handle random sample data generation using centralized service
   const handleRandomSample = async () => {
@@ -109,7 +160,6 @@ export function IncidentMetadataForm({
           event_date_time: undefined 
         }));
 
-        console.log('✅ Sample data generated via centralized service:', result);
       }
     } catch (error) {
       console.error('Failed to generate random sample data:', error);
@@ -121,11 +171,12 @@ export function IncidentMetadataForm({
   const handleParticipantSelect = (participant: Participant | null) => {
     setSelectedParticipant(participant);
     if (participant) {
-      setFormData(prev => ({
-        ...prev,
+      const updatedFormData = {
+        ...formData,
         participant_id: participant._id,
         participant_name: `${participant.first_name} ${participant.last_name}`,
-      }));
+      };
+      setFormData(updatedFormData);
       // Clear participant errors when valid selection is made
       setErrors(prev => ({ ...prev, participant_name: undefined }));
     } else {
@@ -185,6 +236,7 @@ export function IncidentMetadataForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    
     if (!validateForm()) {
       return;
     }
@@ -197,23 +249,24 @@ export function IncidentMetadataForm({
         throw new Error('No session token found');
       }
 
-      const incidentId = await createIncident({
-        sessionToken,
-        reporter_name: formData.reporter_name.trim(),
-        participant_id: formData.participant_id,
-        participant_name: formData.participant_name.trim(),
-        event_date_time: formData.event_date_time,
-        location: formData.location.trim(),
-      });
+      let incidentId = currentIncidentId;
 
-      console.log('📝 INCIDENT METADATA CREATED', {
-        incidentId,
-        participantSelected: !!formData.participant_id,
-        timestamp: new Date().toISOString(),
-      });
+      // If we have an existing incident, use it; otherwise create a new one
+      if (!incidentId) {
+        const incidentData = {
+          sessionToken,
+          reporter_name: formData.reporter_name.trim(),
+          participant_id: formData.participant_id,
+          participant_name: formData.participant_name.trim(),
+          event_date_time: formData.event_date_time,
+          location: formData.location.trim(),
+        };
+        
+        incidentId = await createIncident(incidentData);
 
-      // Store the incident ID for sample data button
-      setCurrentIncidentId(incidentId);
+        // Store the incident ID for future use
+        setCurrentIncidentId(incidentId);
+      }
 
       // Proceed to next step
       onComplete(incidentId);
@@ -284,7 +337,7 @@ export function IncidentMetadataForm({
           <div className="space-y-2">
             <ParticipantSelector
               onSelect={handleParticipantSelect}
-              selectedParticipantId={formData.participant_id}
+              selectedParticipant={selectedParticipant}
               placeholder="Search and select NDIS participant..."
               required
               errorMessage={errors.participant_name}

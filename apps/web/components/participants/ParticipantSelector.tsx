@@ -18,7 +18,7 @@ import { Id } from '@/convex/_generated/dataModel';
 
 interface ParticipantSelectorProps {
   onSelect: (participant: Participant | null) => void;
-  selectedParticipantId?: Id<"participants"> | null;
+  selectedParticipant?: Participant | null;
   placeholder?: string;
   required?: boolean;
   disabled?: boolean;
@@ -33,7 +33,7 @@ interface ParticipantSelectorProps {
  */
 export function ParticipantSelector({ 
   onSelect,
-  selectedParticipantId,
+  selectedParticipant,
   placeholder = "Select NDIS participant...",
   required = false,
   disabled = false,
@@ -42,7 +42,6 @@ export function ParticipantSelector({
 }: ParticipantSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
 
   // Get session token for authenticated queries
   const sessionToken = typeof window !== 'undefined' ? localStorage.getItem('auth_session_token') : null;
@@ -58,39 +57,15 @@ export function ParticipantSelector({
     } : 'skip'
   );
 
-  // Get selected participant details if we have an ID but no participant object
-  const selectedParticipantData = useQuery(
-    api.participants.getById.getParticipantById,
-    sessionToken && selectedParticipantId && !selectedParticipant ? {
-      sessionToken,
-      participantId: selectedParticipantId,
-    } : 'skip'
-  );
-
-  // Update selected participant when data is available
-  useEffect(() => {
-    if (selectedParticipantData?.participant && !selectedParticipant) {
-      setSelectedParticipant(selectedParticipantData.participant);
-    }
-  }, [selectedParticipantData, selectedParticipant]);
-
-  // Clear selection when selectedParticipantId is null
-  useEffect(() => {
-    if (selectedParticipantId === null) {
-      setSelectedParticipant(null);
-      setSearchQuery('');
-    }
-  }, [selectedParticipantId]);
+  // Component is now fully controlled - no internal state sync needed
 
   const handleParticipantSelect = (participant: Participant) => {
-    setSelectedParticipant(participant);
     setSearchQuery('');
     setIsOpen(false);
     onSelect(participant);
   };
 
   const handleClear = () => {
-    setSelectedParticipant(null);
     setSearchQuery('');
     onSelect(null);
   };
@@ -126,17 +101,19 @@ export function ParticipantSelector({
                     <span className="font-semibold">
                       {selectedParticipant.first_name} {selectedParticipant.last_name}
                     </span>
-                    <Badge 
-                      variant="outline"
-                      className={`
-                        text-xs
-                        ${SUPPORT_LEVELS[selectedParticipant.support_level].color === 'red' ? 'border-red-300 text-red-700' : ''}
-                        ${SUPPORT_LEVELS[selectedParticipant.support_level].color === 'orange' ? 'border-orange-300 text-orange-700' : ''}
-                        ${SUPPORT_LEVELS[selectedParticipant.support_level].color === 'green' ? 'border-green-300 text-green-700' : ''}
-                      `}
-                    >
-                      {SUPPORT_LEVELS[selectedParticipant.support_level].label}
-                    </Badge>
+                    {selectedParticipant.support_level && SUPPORT_LEVELS[selectedParticipant.support_level] && (
+                      <Badge 
+                        variant="outline"
+                        className={`
+                          text-xs
+                          ${SUPPORT_LEVELS[selectedParticipant.support_level].color === 'red' ? 'border-red-300 text-red-700' : ''}
+                          ${SUPPORT_LEVELS[selectedParticipant.support_level].color === 'orange' ? 'border-orange-300 text-orange-700' : ''}
+                          ${SUPPORT_LEVELS[selectedParticipant.support_level].color === 'green' ? 'border-green-300 text-green-700' : ''}
+                        `}
+                      >
+                        {SUPPORT_LEVELS[selectedParticipant.support_level].label}
+                      </Badge>
+                    )}
                   </div>
                   
                   <div className="text-sm text-gray-600 space-y-1">
@@ -217,7 +194,10 @@ export function ParticipantSelector({
                         {participant.first_name} {participant.last_name}
                       </div>
                       <div className="text-sm text-gray-600">
-                        NDIS: {participant.ndis_number} • {SUPPORT_LEVELS[participant.support_level].label} Support
+                        NDIS: {participant.ndis_number}
+                        {participant.support_level && SUPPORT_LEVELS[participant.support_level] && (
+                          <> • {SUPPORT_LEVELS[participant.support_level].label} Support</>
+                        )}
                       </div>
                       {participant.contact_phone && (
                         <div className="text-xs text-gray-500">
@@ -226,17 +206,19 @@ export function ParticipantSelector({
                       )}
                     </div>
                     
-                    <Badge 
-                      variant="outline"
-                      className={`
-                        text-xs ml-2
-                        ${SUPPORT_LEVELS[participant.support_level].color === 'red' ? 'border-red-300 text-red-700' : ''}
-                        ${SUPPORT_LEVELS[participant.support_level].color === 'orange' ? 'border-orange-300 text-orange-700' : ''}
-                        ${SUPPORT_LEVELS[participant.support_level].color === 'green' ? 'border-green-300 text-green-700' : ''}
-                      `}
-                    >
-                      {SUPPORT_LEVELS[participant.support_level].label}
-                    </Badge>
+                    {participant.support_level && SUPPORT_LEVELS[participant.support_level] && (
+                      <Badge 
+                        variant="outline"
+                        className={`
+                          text-xs ml-2
+                          ${SUPPORT_LEVELS[participant.support_level].color === 'red' ? 'border-red-300 text-red-700' : ''}
+                          ${SUPPORT_LEVELS[participant.support_level].color === 'orange' ? 'border-orange-300 text-orange-700' : ''}
+                          ${SUPPORT_LEVELS[participant.support_level].color === 'green' ? 'border-green-300 text-green-700' : ''}
+                        `}
+                      >
+                        {SUPPORT_LEVELS[participant.support_level].label}
+                      </Badge>
+                    )}
                   </div>
                 </button>
               ))

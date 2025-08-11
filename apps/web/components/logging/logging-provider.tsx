@@ -16,15 +16,13 @@ export function LoggingProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize console override on mount
   useEffect(() => {
-    // Set the logging flag on window for the console override to check
-    if (typeof window !== 'undefined') {
-      window.CLAUDE_LOGGING_ENABLED = isDevelopment ? 'true' : 'false';
+    // Only enable logging in development environment
+    if (typeof window !== 'undefined' && isDevelopment) {
+      window.CLAUDE_LOGGING_ENABLED = 'true'; // Enable for development debugging
       // Make ConsoleLogger globally available for debugging
       (window as any).ConsoleLogger = ConsoleLogger;
-    }
 
-    // Initialize console override for development
-    if (isDevelopment) {
+      // Initialize console override
       initializeConsoleOverride();
 
       // Log initialization status

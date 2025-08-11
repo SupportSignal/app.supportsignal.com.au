@@ -47,6 +47,7 @@ export function IncidentCaptureWorkflow() {
   }, [user, isLoading, router]);
 
   const handleMetadataComplete = (newIncidentId: Id<"incidents">) => {
+    console.log('🐛 Metadata complete, setting incident ID:', newIncidentId);
     setIncidentId(newIncidentId);
     setCurrentStep(2);
   };
@@ -57,6 +58,7 @@ export function IncidentCaptureWorkflow() {
   };
 
   const handleBackToMetadata = () => {
+    console.log('🐛 Going back to metadata with incident ID:', incidentId);
     setCurrentStep(1);
   };
 
@@ -231,6 +233,11 @@ export function IncidentCaptureWorkflow() {
               existingIncidentId={incidentId}
             />
           )}
+          
+          {/* Debug info */}
+          <div className="fixed bottom-4 right-4 bg-black text-white p-2 text-xs rounded opacity-50">
+            Step: {currentStep} | IncidentId: {incidentId || 'none'}
+          </div>
 
           {/* Step 2: Narrative Grid */}
           {currentStep === 2 && incidentId && (

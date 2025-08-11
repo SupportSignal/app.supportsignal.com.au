@@ -27,10 +27,13 @@ import { AdminPageHeader } from '@/components/layout/admin-page-header';
 import { IncidentCard, MetadataDisplay } from '@/components/incident';
 import { StatusBadge } from '@/components/shared';
 import { WorkflowProgress } from '@/components/workflow';
-import { NarrativePhaseEditor, EnhancementIndicator, AutoSaveStatus, NarrativeProgress } from '@/components/narrative';
+import { NarrativePhaseEditor, EnhancementIndicator, NarrativeProgress } from '@/components/narrative';
+import { AutoSaveIndicator } from '@/components/ui/auto-save-indicator';
+import { useAutoSave } from '@/hooks/useAutoSave';
 import { ConditionsEditor, ClassificationDisplay, ConfidenceIndicator, AnalysisWorkflow } from '@/components/analysis';
 import { UserProfile, PermissionIndicator, SessionStatus, WorkflowWizard } from '@/components/user';
 import { LiveStatusIndicator, CollaborationBadge, NotificationCenter, RealTimeSubscriptionManager } from '@/components/realtime';
+import { AutoSaveDemo } from '@/components/demo/AutoSaveDemo';
 
 // Sample Data Definitions for Showcase Playground
 const sampleParticipants = [
@@ -1367,25 +1370,60 @@ export default function ShowcasePage() {
 
             {/* Auto-save Status Component */}
             <Card>
-              <CardContent className="p-6 space-y-4">
-                <h3 className="font-semibold text-healthcare-primary mb-4">Auto-save Status</h3>
+              <CardContent className="p-6 space-y-6">
+                <h3 className="font-semibold text-healthcare-primary mb-4">Auto-save System</h3>
                 
-                <AutoSaveStatus 
-                  status="saved"
-                  lastSaved={new Date(Date.now() - 30000)}
-                  variant="compact"
-                />
+                {/* Interactive Demo */}
+                <div className="border rounded-lg p-4 bg-gray-50">
+                  <h4 className="font-medium mb-3">Interactive Demo</h4>
+                  <AutoSaveDemo />
+                </div>
                 
-                <AutoSaveStatus 
-                  status="saving"
-                  variant="compact"
-                />
-                
-                <AutoSaveStatus 
-                  status="error"
-                  error="Network connection lost"
-                  variant="compact"
-                />
+                {/* Static Examples */}
+                <div className="space-y-3">
+                  <h4 className="font-medium">Visual Variants</h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="border rounded p-3">
+                      <p className="text-sm font-medium mb-2">Status Bar</p>
+                      <AutoSaveIndicator 
+                        autoSaveState={{
+                          isSaving: false,
+                          lastSaveTime: new Date(Date.now() - 30000),
+                          error: null,
+                          hasUnsavedChanges: false,
+                        }}
+                        variant="status-bar" 
+                      />
+                    </div>
+                    
+                    <div className="border rounded p-3">
+                      <p className="text-sm font-medium mb-2">Saving State</p>
+                      <AutoSaveIndicator 
+                        autoSaveState={{
+                          isSaving: true,
+                          lastSaveTime: null,
+                          error: null,
+                          hasUnsavedChanges: true,
+                        }}
+                        variant="inline" 
+                      />
+                    </div>
+                    
+                    <div className="border rounded p-3">
+                      <p className="text-sm font-medium mb-2">Error State</p>
+                      <AutoSaveIndicator 
+                        autoSaveState={{
+                          isSaving: false,
+                          lastSaveTime: null,
+                          error: "Network error",
+                          hasUnsavedChanges: false,
+                        }}
+                        variant="badge" 
+                      />
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
@@ -1673,7 +1711,7 @@ export default function ShowcasePage() {
                       </span>
                     </div>
                     <div className="text-gray-800">
-                      <span className="text-blue-600">import</span> {`{ AutoSaveStatus, NarrativeProgress }`}{' '}
+                      <span className="text-blue-600">import</span> {`{ AutoSaveIndicator, NarrativeProgress }`}{' '}
                       <span className="text-blue-600">from</span>{' '}
                       <span className="text-green-600">
                         &quot;@/components/narrative&quot;

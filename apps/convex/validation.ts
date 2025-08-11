@@ -25,6 +25,7 @@ export const ValidationSchemas = {
   // Incident validation
   incidentBasicInfo: z.object({
     reporter_name: z.string().trim().min(1, "Reporter name is required").max(100, "Reporter name too long"),
+    participant_id: z.string().optional(), // Optional participant ID from database
     participant_name: z.string().trim().min(1, "Participant name is required").max(100, "Participant name too long"),
     event_date_time: z.string()
       .refine(val => !isNaN(Date.parse(val)), "Invalid date format"),

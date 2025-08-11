@@ -13,6 +13,8 @@ import { Select } from '@starter/ui/select';
 import { Textarea } from '@starter/ui/textarea';
 import { Alert } from '@starter/ui/alert';
 import { Badge } from '@starter/ui/badge';
+import { AutoSaveIndicator } from '@/components/ui/auto-save-indicator';
+import { useAutoSave } from '@/hooks/useAutoSave';
 import { 
   ParticipantFormData, 
   ParticipantValidationErrors,
@@ -114,20 +116,42 @@ export function ParticipantForm({
   const [errors, setErrors] = useState<ParticipantValidationErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [autoSaveStatus, setAutoSaveStatus] = useState<string>('');
 
-  // Auto-save functionality (for edit mode)
-  useEffect(() => {
-    if (mode === 'edit' && participant) {
-      const timeoutId = setTimeout(() => {
-        // Auto-save implementation would go here
-        setAutoSaveStatus('Draft saved');
-        setTimeout(() => setAutoSaveStatus(''), 2000);
-      }, 2000);
-
-      return () => clearTimeout(timeoutId);
+  // Auto-save functionality using reusable hook
+  const { autoSaveState, triggerSave } = useAutoSave(
+    formData,
+    async (data) => {
+      // Only auto-save in edit mode and when we have authentication
+      if (mode !== 'edit' || !participant || !user?.sessionToken) {
+        throw new Error('Auto-save not available in current mode');
+      }
+      
+      const updateRequest: UpdateParticipantRequest & { sessionToken: string } = {
+        sessionToken: user.sessionToken,
+        participantId: participant._id,
+        first_name: data.first_name.trim(),
+        last_name: data.last_name.trim(),
+        date_of_birth: data.date_of_birth,
+        ndis_number: data.ndis_number.replace(/\s/g, ''),
+        contact_phone: data.contact_phone.trim() || undefined,
+        emergency_contact: data.emergency_contact.trim() || undefined,
+        support_level: data.support_level,
+        care_notes: data.care_notes.trim() || undefined,
+      };
+      
+      await updateParticipant(updateRequest);
+    },
+    {
+      debounceMs: 3000, // 3 second delay for participant forms
+      enabled: mode === 'edit' && !!participant && !!user?.sessionToken,
+      onSuccess: () => {
+        console.log('✅ Participant auto-saved successfully');
+      },
+      onError: (error) => {
+        console.warn('❌ Participant auto-save failed:', error);
+      },
     }
-  }, [formData, mode, participant]);
+  );
 
   // Form validation
   const validateForm = (): boolean => {
@@ -270,8 +294,11 @@ export function ParticipantForm({
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           {mode === 'create' ? 'Create New Participant' : 'Edit Participant'}
-          {autoSaveStatus && (
-            <span className="text-sm text-green-600 font-normal">{autoSaveStatus}</span>
+          {mode === 'edit' && (
+            <AutoSaveIndicator 
+              autoSaveState={autoSaveState} 
+              variant="status-bar" 
+            />
           )}
         </CardTitle>
         <div className="mt-2 flex items-center gap-2">
