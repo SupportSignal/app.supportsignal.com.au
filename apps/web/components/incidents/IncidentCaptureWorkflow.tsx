@@ -114,21 +114,21 @@ export function IncidentCaptureWorkflow() {
     {
       id: 1,
       title: 'Incident Details',
-      description: 'Basic incident information',
+      description: '',
       completed: !!incidentId,
       current: currentStep === 1,
     },
     {
       id: 2,
       title: 'Narrative Collection',
-      description: 'Detailed incident description',
+      description: '',
       completed: currentStep > 2,
       current: currentStep === 2,
     },
     {
       id: 3,
       title: 'Before Event',
-      description: 'Clarification questions',
+      description: '',
       completed: currentStep > 3,
       current: currentStep === 3,
       disabled: currentStep < 3,
@@ -136,7 +136,7 @@ export function IncidentCaptureWorkflow() {
     {
       id: 4,
       title: 'During Event',
-      description: 'Clarification questions',
+      description: '',
       completed: currentStep > 4,
       current: currentStep === 4,
       disabled: currentStep < 4,
@@ -144,7 +144,7 @@ export function IncidentCaptureWorkflow() {
     {
       id: 5,
       title: 'End Event',
-      description: 'Clarification questions',
+      description: '',
       completed: currentStep > 5,
       current: currentStep === 5,
       disabled: currentStep < 5,
@@ -152,7 +152,7 @@ export function IncidentCaptureWorkflow() {
     {
       id: 6,
       title: 'Post-Event',
-      description: 'Clarification questions',
+      description: '',
       completed: currentStep > 6,
       current: currentStep === 6,
       disabled: currentStep < 6,

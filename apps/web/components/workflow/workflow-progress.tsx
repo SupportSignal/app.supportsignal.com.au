@@ -255,7 +255,7 @@ export const WorkflowProgress: React.FC<WorkflowProgressProps> = ({
                       {step.title}
                     </h4>
                     
-                    {!isCompact && (
+                    {!isCompact && step.description && (
                       <p className="text-healthcare-xs text-gray-600 mt-1 leading-tight">
                         {step.description}
                       </p>
