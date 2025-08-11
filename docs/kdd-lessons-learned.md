@@ -184,6 +184,158 @@ const getStatus = (
 
 **Continue these patterns in future stories.**
 
+## Sample Data Architecture Patterns (Epic 3 Development)
+
+### Architectural Coupling Violation
+
+**❌ What Happened:**
+
+- Mixed sample data business logic with UI component code
+- Created tightly-coupled `SampleDataButton` with embedded scenario data
+- Duplicated sample data definitions across frontend and backend systems
+- User feedback: "You put a whole lot of sample data logic into the sample data button... we should separate the data creation from the actual control."
+
+**✅ Prevention:**
+
+- **Separate UI from Data**: UI components should be generic and consume data via props/APIs
+- **Centralize Data Logic**: All sample data definitions should exist in backend with single source of truth
+- **Use Generic Components**: Create reusable UI components that work with any data structure
+- **Follow Cross-Cutting Pattern**: Backend services should support multiple use cases via configuration
+
+**Impact:** User identified architectural flaw requiring immediate refactor to prevent technical debt
+
+### Generic vs Specific Component Design
+
+**❌ Wrong Approach:**
+```typescript
+// Tightly-coupled component with embedded data
+export function SampleDataButton() {
+  const scenarios = [ /* hardcoded scenarios */ ];
+  return <DropdownMenu>{scenarios.map(...)}</DropdownMenu>;
+}
+```
+
+**✅ Correct Approach:**
+```typescript
+// Generic component consuming external data
+export function SampleDataButton({ 
+  options, 
+  onOptionSelect, 
+  variant = "simple" | "dropdown" 
+}) {
+  return <DropdownMenu>{options.map(...)}</DropdownMenu>;
+}
+
+// Centralized data provider
+const scenarios = getIncidentScenarios(participantFirstName);
+<SampleDataButton options={scenarios} onOptionSelect={handleSelect} />
+```
+
+### Sample Data UI Styling Standards
+
+**✅ Preferred Button Style (Established Pattern):**
+
+```css
+/* Consistent styling across all sample data buttons */
+text-xs text-gray-500 hover:text-white hover:bg-ss-teal 
+border-b border-dashed border-gray-300 rounded-none 
+hover:border-ss-teal transition-all duration-200
+```
+
+**Rationale:** 
+- Subtle gray text indicates administrative/testing function
+- Teal hover provides clear interactive feedback
+- Dashed underline suggests "development/sample" nature
+- Consistent across all administrative functions
+
+### Cross-Cutting Backend Service Pattern
+
+**✅ Successful Implementation:**
+
+```typescript
+// Single backend service supports multiple forms
+export const generateRandomIncidentMetadata = mutation({
+  args: {
+    sessionToken: v.string(),
+    excludeFields: v.optional(v.array(v.string())), // 🔑 Configurable
+  },
+  handler: async (ctx, args) => {
+    // Permission checking, database access, centralized logic
+    return { success: true, data: result, metadata: {...} };
+  }
+});
+
+// Any component can use this pattern
+const result = await generateRandomData({
+  sessionToken,
+  excludeFields: ['reporter_name'] // Customize per use case
+});
+```
+
+**Benefits:**
+- **No Code Duplication**: One service, multiple consumers
+- **Database-Driven**: Uses real company participants, not hardcoded data
+- **Permission-Secured**: Consistent `SAMPLE_DATA` permission model
+- **Configurable**: `excludeFields` allows per-component customization
+
+### Data Architecture Lessons
+
+**Single Source of Truth Principle:**
+
+- ❌ **Wrong**: Frontend components maintain local sample data
+- ❌ **Wrong**: Duplicate scenario definitions in multiple locations
+- ✅ **Correct**: Backend defines all sample data, frontend consumes via API
+- ✅ **Correct**: Centralized data with dynamic participant interpolation
+
+**Separation of Concerns:**
+
+- **Data Layer**: Backend services handle generation, validation, permissions
+- **Business Logic**: Centralized scenario definitions with interpolation utilities  
+- **UI Layer**: Generic components focused only on presentation and interaction
+- **Integration Layer**: Clean interfaces between layers via well-defined APIs
+
+### Implementation Quality Metrics
+
+**Epic 3 Sample Data Work:**
+- **Architectural Refactor**: Required due to coupling violation
+- **User Satisfaction**: High after addressing separation of concerns
+- **Code Reusability**: Generic components + centralized data = high reuse potential
+- **Maintainability**: Single source of truth eliminates drift risk
+
+**Success Patterns:**
+- User-driven architectural feedback prevented technical debt
+- Playground approach allowed UI pattern evaluation before production
+- Centralized backend service with configuration flexibility
+- Generic UI components with consistent styling standards
+
+**Time Investment:**
+- Initial tightly-coupled approach: ~2 hours
+- Architectural refactor: ~1 hour  
+- **Net Benefit**: Prevented future maintenance issues, improved system design
+
+### Showcase-Application Synchronization Drift
+
+**❌ What Happened:**
+
+- Created components directly in application without updating showcase
+- Showcase became outdated and out of sync with production components
+- Lost design system consistency and component discoverability
+- No systematic process to maintain showcase as single source of UI truth
+
+**✅ Prevention:**
+
+- **Component-First Development**: Create components in showcase first, then import to application
+- **Bidirectional Updates**: When creating components in application, backport to showcase
+- **Showcase Maintenance**: Regular showcase review and updates as part of epic completion
+- **Design System Governance**: Establish showcase as authoritative component library
+
+**Impact:** Design system degradation, component duplication risk, reduced discoverability
+
+**Future Consideration:** 
+- Dedicated epic task to sync showcase with current application components
+- Process establishment for maintaining showcase-application parity
+- Component audit to identify application components missing from showcase
+
 ---
 
 _Last Updated: Story 3.3 completion_

@@ -325,6 +325,125 @@ export const fillIncidentWithSampleData = mutation({
 });
 
 /**
+ * Generate random form data for incident metadata
+ * Cross-cutting sample data capability for any form that needs random incident data
+ */
+export const generateRandomIncidentMetadata = mutation({
+  args: {
+    sessionToken: v.string(),
+    excludeFields: v.optional(v.array(v.string())), // Fields to exclude from generation
+  },
+  handler: async (ctx, args) => {
+    try {
+      // Verify user has sample data permission
+      const { user, correlationId } = await requirePermission(
+        ctx,
+        args.sessionToken,
+        PERMISSIONS.SAMPLE_DATA,
+        { errorMessage: 'Sample data access required' }
+      );
+
+      if (!user.company_id) {
+        throw new ConvexError('User must be associated with a company to generate sample data');
+      }
+
+      // Predefined locations for random selection
+      const sampleLocations = [
+        "Community center - Main activity hall",
+        "Participant's residence - Living room", 
+        "Day program center - Group room 2",
+        "Supported accommodation - Unit 3B",
+        "Respite care facility - Recreation area",
+        "Support office - Meeting room",
+        "Local park - Playground area",
+        "Shopping center - Food court",
+        "Medical center - Waiting area",
+        "Transport vehicle - Community bus"
+      ];
+
+      // Generate random date within last 5 days during business hours
+      const generateRandomDate = (): string => {
+        const now = new Date();
+        const daysAgo = Math.floor(Math.random() * 5); // 0-4 days ago
+        const hoursAgo = Math.floor(Math.random() * 12) + 8; // 8-19 (8am to 7pm)
+        const minutesAgo = Math.floor(Math.random() * 60);
+        
+        const date = new Date(now);
+        date.setDate(date.getDate() - daysAgo);
+        date.setHours(hoursAgo, minutesAgo, 0, 0);
+        
+        return date.toISOString().slice(0, 16); // Format for datetime-local input
+      };
+
+      // Get random participant from company
+      const participants = await ctx.db
+        .query("participants")
+        .withIndex("by_company", (q) => q.eq("company_id", user.company_id))
+        .filter((q) => q.eq(q.field("status"), "active"))
+        .collect();
+
+      if (participants.length === 0) {
+        throw new ConvexError('No active participants found for random selection');
+      }
+
+      const randomParticipant = participants[Math.floor(Math.random() * participants.length)];
+      const randomLocation = sampleLocations[Math.floor(Math.random() * sampleLocations.length)];
+      const randomDate = generateRandomDate();
+
+      // Build result excluding requested fields
+      const excludeFields = args.excludeFields || [];
+      const result: any = {};
+
+      if (!excludeFields.includes('participant_id')) {
+        result.participant_id = randomParticipant._id;
+      }
+      if (!excludeFields.includes('participant_name')) {
+        result.participant_name = `${randomParticipant.first_name} ${randomParticipant.last_name}`;
+      }
+      if (!excludeFields.includes('location')) {
+        result.location = randomLocation;
+      }
+      if (!excludeFields.includes('event_date_time')) {
+        result.event_date_time = randomDate;
+      }
+
+      console.log('🎲 RANDOM FORM DATA GENERATED', {
+        companyId: user.company_id,
+        generatedBy: user._id,
+        participantSelected: randomParticipant.first_name,
+        location: randomLocation,
+        date: randomDate,
+        excludedFields: excludeFields,
+        correlationId,
+        timestamp: new Date().toISOString(),
+      });
+
+      return {
+        success: true,
+        data: result,
+        metadata: {
+          participant: {
+            id: randomParticipant._id,
+            name: `${randomParticipant.first_name} ${randomParticipant.last_name}`,
+            ndis_number: randomParticipant.ndis_number,
+          },
+          location: randomLocation,
+          date: randomDate,
+          generatedAt: new Date().toISOString(),
+        },
+        correlationId,
+      };
+    } catch (error) {
+      console.error('Error generating random incident metadata:', error);
+      if (error instanceof ConvexError) {
+        throw error;
+      }
+      throw new ConvexError(`Failed to generate random form data: ${(error as Error).message}`);
+    }
+  },
+});
+
+/**
  * Get available scenario types
  */
 export const getAvailableScenarioTypes = mutation({

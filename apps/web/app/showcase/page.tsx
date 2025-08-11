@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { Button } from '@starter/ui';
@@ -13,6 +13,15 @@ import {
   CardTitle,
 } from '@starter/ui';
 import { Input } from '@starter/ui';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from '@starter/ui/dropdown-menu';
+import { TestTube, ChevronDown } from 'lucide-react';
 import { ThemeToggle } from '../../components/theme/theme-toggle';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
 import { IncidentCard, MetadataDisplay } from '@/components/incident';
@@ -22,6 +31,141 @@ import { NarrativePhaseEditor, EnhancementIndicator, AutoSaveStatus, NarrativePr
 import { ConditionsEditor, ClassificationDisplay, ConfidenceIndicator, AnalysisWorkflow } from '@/components/analysis';
 import { UserProfile, PermissionIndicator, SessionStatus, WorkflowWizard } from '@/components/user';
 import { LiveStatusIndicator, CollaborationBadge, NotificationCenter, RealTimeSubscriptionManager } from '@/components/realtime';
+
+// Sample Data Definitions for Showcase Playground
+const sampleParticipants = [
+  {
+    first_name: 'Emma',
+    last_name: 'Johnson',
+    ndis_number: 'NDIS12345001',
+    support_level: 'medium',
+  },
+  {
+    first_name: 'Michael',
+    last_name: 'Chen',
+    ndis_number: 'NDIS12345002',
+    support_level: 'high',
+  },
+  {
+    first_name: 'Sarah',
+    last_name: 'Williams',
+    ndis_number: 'NDIS12345003',
+    support_level: 'low',
+  },
+  {
+    first_name: 'James',
+    last_name: 'Brown',
+    ndis_number: 'NDIS12345004',
+    support_level: 'medium',
+  },
+  {
+    first_name: 'Rachel',
+    last_name: 'Davis',
+    ndis_number: 'NDIS12345005',
+    support_level: 'high',
+  }
+];
+
+const getRecentDate = (daysAgo: number, hour: number, minute: number = 0) => {
+  const date = new Date();
+  date.setDate(date.getDate() - daysAgo);
+  date.setHours(hour, minute, 0, 0);
+  return date.toISOString().slice(0, 16);
+};
+
+const incidentScenarios = [
+  {
+    id: 'medication_error',
+    icon: '💊',
+    participant_name: 'Emma Johnson',
+    reporter_name: 'Staff Member',
+    event_date_time: getRecentDate(0, 14, 30),
+    location: 'Participant\'s residence - Kitchen area',
+    severity: 'medium',
+    tags: ['medication', 'administration', 'oversight', 'monitoring'],
+    description: 'Medication administration error with monitoring protocol',
+    narratives: {
+      before_event: 'Emma was scheduled to receive her afternoon medications at 2:30 PM as per her medication chart. The support worker arrived at 2:25 PM and began preparing medications. Emma was in the living room watching television and appeared in good spirits.',
+      during_event: 'At 2:30 PM, the support worker administered what they believed to be Emma\'s prescribed Paracetamol 500mg. However, upon checking the medication chart immediately after administration, they realized they had given Emma two tablets instead of the prescribed one tablet.',
+      end_event: 'The medication error was identified within 2 minutes of administration. Emma showed no immediate adverse reactions - her vital signs appeared normal, she was alert and responsive, and complained of no symptoms.',
+      post_event: 'The on-call nurse advised monitoring Emma for the next 4 hours for any signs of overdose symptoms. Emma remained stable throughout the monitoring period. A review of medication procedures has been scheduled.'
+    }
+  },
+  {
+    id: 'injury',
+    icon: '🩹',
+    participant_name: 'Michael Chen',
+    reporter_name: 'Support Coordinator',
+    event_date_time: getRecentDate(1, 16, 45),
+    location: 'Community center - Main activity hall',
+    severity: 'high',
+    tags: ['fall', 'head_injury', 'transfer', 'wheelchair', 'hospital'],
+    description: 'Participant fall with head injury requiring hospital assessment',
+    narratives: {
+      before_event: 'Michael was attending his weekly social group activity at the community center. He had arrived at 3:00 PM in his wheelchair, transported by community transport. Michael was in good spirits and excited about the craft activity planned for the session.',
+      during_event: 'At approximately 4:45 PM, Michael attempted to transfer from his wheelchair to a regular chair to participate in the craft activity. Despite staff assistance and following the transfer procedure, Michael lost his balance during the transfer and fell backward, hitting his head on the corner of a nearby table.',
+      end_event: 'Michael was immediately assessed by the first aid qualified staff member. He remained conscious and alert but had a visible bump on the back of his head and complained of headache. Michael was kept still while emergency services were called at 4:50 PM.',
+      post_event: 'Ambulance arrived at 5:10 PM. Michael was transported to the hospital for assessment and CT scan. The scan showed no serious injury, but he was advised to rest and monitor for concussion symptoms. Michael returned home that evening with instructions for 24-hour observation.'
+    }
+  },
+  {
+    id: 'behavioral',
+    icon: '😤',
+    participant_name: 'Sarah Williams',
+    reporter_name: 'Team Leader',
+    event_date_time: getRecentDate(2, 10, 15),
+    location: 'Day program center - Group room 2',
+    severity: 'medium',
+    tags: ['verbal_aggression', 'de-escalation', 'sleep_issues', 'behavior_support'],
+    description: 'Verbal aggression incident with de-escalation response',
+    narratives: {
+      before_event: 'Sarah arrived at the day program at 9:00 AM as usual. She seemed slightly agitated during the morning greeting but participated in the breakfast routine. Sarah mentioned she had difficulty sleeping the previous night and was feeling tired.',
+      during_event: 'During the group discussion at 10:15 AM, Sarah became increasingly agitated when another participant disagreed with her weekend suggestion. Sarah raised her voice and began using inappropriate language directed at the other participant and staff.',
+      end_event: 'Staff implemented the de-escalation protocol, removing other participants from the immediate area and speaking calmly to Sarah. After approximately 10 minutes, Sarah began to calm down. She was offered the opportunity to take a break in a quiet space.',
+      post_event: 'Sarah spent 30 minutes in the quiet room with a support worker, using breathing techniques to calm down. She was then able to rejoin the group for the next activity. A behavior support meeting was scheduled for the following week.'
+    }
+  },
+  {
+    id: 'environmental',
+    icon: '🚰',
+    participant_name: 'James Brown',
+    reporter_name: 'Facility Manager',
+    event_date_time: getRecentDate(3, 7, 30),
+    location: 'Supported accommodation - Unit 3B bathroom',
+    severity: 'medium',
+    tags: ['water_damage', 'maintenance', 'relocation', 'routine_disruption'],
+    description: 'Water pipe burst causing accommodation disruption',
+    narratives: {
+      before_event: 'James was getting ready for his morning routine in his supported accommodation unit. The overnight support worker had completed the shift handover and noted everything was normal. James had slept well and was looking forward to attending his job placement.',
+      during_event: 'At 7:30 AM, a pipe burst in the bathroom wall while James was getting ready. Water began flowing rapidly from behind the toilet, flooding the bathroom floor and beginning to spread into the bedroom area. James immediately called for help.',
+      end_event: 'The support worker immediately turned off the water supply at the main valve and called maintenance services. James was moved to the living area to ensure his safety while the water was contained. No injuries occurred, but James was distressed about his routine being disrupted.',
+      post_event: 'Emergency maintenance arrived within 45 minutes and repaired the burst pipe. Professional cleaning services were arranged to address the water damage. James was relocated to a temporary unit for 24 hours while repairs were completed.'
+    }
+  },
+  {
+    id: 'medical_emergency',
+    icon: '🚨',
+    participant_name: 'Rachel Davis',
+    reporter_name: 'Support Worker',
+    event_date_time: getRecentDate(1, 19, 20),
+    location: 'Participant\'s home - Living room',
+    severity: 'high',
+    tags: ['seizure', 'epilepsy', 'medication', 'monitoring', 'medical_protocol'],
+    description: 'Seizure incident with established medical protocols',
+    narratives: {
+      before_event: 'Rachel was having dinner at home with her support worker present. She had eaten well and was in good spirits, discussing plans for the weekend. Rachel has a history of epilepsy but her seizures have been well-controlled with medication for the past 6 months.',
+      during_event: 'At 7:20 PM, while watching television, Rachel suddenly experienced a tonic-clonic seizure. The support worker immediately implemented the seizure management protocol, ensuring Rachel\'s safety by clearing the area and placing her in the recovery position.',
+      end_event: 'The seizure ended at 7:23 PM. Rachel remained unconscious for 2 minutes post-seizure, which is typical for her seizure pattern. She gradually regained consciousness and was confused but responsive. The support worker continued to monitor her vital signs.',
+      post_event: 'The support worker contacted Rachel\'s on-call doctor at 7:30 PM to report the seizure. As this was Rachel\'s first seizure in 6 months, the doctor advised monitoring but no immediate hospital visit was required. Rachel\'s seizure log was updated and her neurologist was notified.'
+    }
+  }
+];
+
+const severityColors = {
+  low: 'text-green-600 bg-green-100',
+  medium: 'text-yellow-600 bg-yellow-100',
+  high: 'text-red-600 bg-red-100',
+};
 
 // Mock incident data for component demonstrations
 const mockIncident = {
@@ -222,6 +366,510 @@ const mockWizardSteps = [
     estimatedTime: 5,
   },
 ];
+
+// Working Sample Data Playground Component
+function SampleDataPlayground() {
+  // Pattern 1: Simple Button State
+  const [participantFields, setParticipantFields] = useState({
+    first_name: '',
+    last_name: '',
+    ndis_number: ''
+  });
+
+  // Pattern 2: Random Selection State  
+  const [incidentMetadata, setIncidentMetadata] = useState({
+    reporter_name: '',
+    participant_name: '',
+    location: '',
+    event_date_time: ''
+  });
+
+  // Pattern 3: Rich Dropdown State
+  const [narrativeSections, setNarrativeSections] = useState({
+    before_event: '',
+    during_event: '',
+    end_event: '',
+    post_event: ''
+  });
+  const [selectedScenario, setSelectedScenario] = useState(null);
+
+  // Pattern 1: Load Sample Participants (bulk creation simulation)
+  const handleLoadParticipants = () => {
+    // Simulate loading the first participant for display
+    const firstParticipant = sampleParticipants[0];
+    setParticipantFields({
+      first_name: firstParticipant.first_name,
+      last_name: firstParticipant.last_name,
+      ndis_number: firstParticipant.ndis_number
+    });
+  };
+
+  // Pattern 2: Random Sample Selection
+  const handleRandomSample = () => {
+    const randomScenario = incidentScenarios[Math.floor(Math.random() * incidentScenarios.length)];
+    setIncidentMetadata({
+      reporter_name: randomScenario.reporter_name,
+      participant_name: randomScenario.participant_name,
+      location: randomScenario.location,
+      event_date_time: randomScenario.event_date_time
+    });
+  };
+
+  // Pattern 3: Rich Dropdown Selection
+  const handleScenarioSelect = (scenario) => {
+    setSelectedScenario(scenario);
+    setNarrativeSections({
+      before_event: scenario.narratives.before_event,
+      during_event: scenario.narratives.during_event,
+      end_event: scenario.narratives.end_event,
+      post_event: scenario.narratives.post_event
+    });
+  };
+
+  const clearAllData = () => {
+    setParticipantFields({ first_name: '', last_name: '', ndis_number: '' });
+    setIncidentMetadata({ reporter_name: '', participant_name: '', location: '', event_date_time: '' });
+    setNarrativeSections({ before_event: '', during_event: '', end_event: '', post_event: '' });
+    setSelectedScenario(null);
+  };
+
+  return (
+    <section className="mb-16">
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-semibold text-ss-navy mb-2">
+              Sample Data UI Patterns - Working Playground
+            </h2>
+            <p className="text-gray-600">
+              Interactive sample data loading patterns with real functionality for evaluation and testing
+            </p>
+          </div>
+          <Button 
+            variant="outline" 
+            onClick={clearAllData}
+            className="text-red-600 border-red-200 hover:bg-red-50"
+          >
+            🗑️ Clear All Data
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {/* Pattern 1: Simple Button (Working) */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Pattern 1: Simple Load Button</CardTitle>
+            <CardDescription>
+              Basic sample data loading (participants page pattern)
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-gray-50 p-4 rounded-lg border-2 border-dashed border-gray-200">
+              <p className="text-sm text-gray-600 mb-3">Participant form fields:</p>
+              <div className="space-y-2">
+                <Input 
+                  placeholder="First Name" 
+                  value={participantFields.first_name}
+                  onChange={(e) => setParticipantFields(prev => ({ ...prev, first_name: e.target.value }))}
+                  className="bg-white" 
+                />
+                <Input 
+                  placeholder="Last Name" 
+                  value={participantFields.last_name}
+                  onChange={(e) => setParticipantFields(prev => ({ ...prev, last_name: e.target.value }))}
+                  className="bg-white" 
+                />
+                <Input 
+                  placeholder="NDIS Number" 
+                  value={participantFields.ndis_number}
+                  onChange={(e) => setParticipantFields(prev => ({ ...prev, ndis_number: e.target.value }))}
+                  className="bg-white" 
+                />
+              </div>
+            </div>
+            
+            {/* Preferred Style: Underlined with teal hover effect */}
+            <Button 
+              variant="ghost"
+              size="sm"
+              className="w-full text-xs text-gray-500 hover:text-white hover:bg-ss-teal border-b border-dashed border-gray-300 rounded-none hover:border-ss-teal transition-all duration-200"
+              onClick={handleLoadParticipants}
+            >
+              Load Sample Data
+            </Button>
+            
+            <div className="text-xs text-gray-500 space-y-1 bg-blue-50 p-2 rounded">
+              <div><strong>Simulates:</strong> Creating 5 participants, showing first one</div>
+              <div><strong>Real Use:</strong> Bulk backend creation with database insertion</div>
+              <div><strong>Best For:</strong> Initial system setup, testing data creation</div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Pattern 2: Random Selection (Working) */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Pattern 2: Random Sample Button</CardTitle>
+            <CardDescription>
+              Random selection from array (incident step 1 pattern)
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-gray-50 p-4 rounded-lg border-2 border-dashed border-gray-200">
+              <p className="text-sm text-gray-600 mb-3">Incident metadata fields:</p>
+              <div className="grid grid-cols-2 gap-2">
+                <Input 
+                  placeholder="Reporter Name" 
+                  value={incidentMetadata.reporter_name}
+                  onChange={(e) => setIncidentMetadata(prev => ({ ...prev, reporter_name: e.target.value }))}
+                  className="bg-white text-xs" 
+                />
+                <Input 
+                  placeholder="Participant" 
+                  value={incidentMetadata.participant_name}
+                  onChange={(e) => setIncidentMetadata(prev => ({ ...prev, participant_name: e.target.value }))}
+                  className="bg-white text-xs" 
+                />
+                <Input 
+                  placeholder="Location" 
+                  value={incidentMetadata.location}
+                  onChange={(e) => setIncidentMetadata(prev => ({ ...prev, location: e.target.value }))}
+                  className="bg-white text-xs" 
+                />
+                <Input 
+                  placeholder="Date/Time" 
+                  type="datetime-local"
+                  value={incidentMetadata.event_date_time}
+                  onChange={(e) => setIncidentMetadata(prev => ({ ...prev, event_date_time: e.target.value }))}
+                  className="bg-white text-xs" 
+                />
+              </div>
+            </div>
+            
+            {/* Preferred Style: Underlined with teal hover effect */}
+            <Button 
+              variant="ghost"
+              size="sm"
+              className="w-full text-xs text-gray-500 hover:text-white hover:bg-ss-teal border-b border-dashed border-gray-300 rounded-none hover:border-ss-teal transition-all duration-200"
+              onClick={handleRandomSample}
+            >
+              Random Sample
+            </Button>
+            
+            <div className="text-xs text-gray-500 space-y-1 bg-yellow-50 p-2 rounded">
+              <div><strong>Pattern:</strong> Quick random data for fast form testing</div>
+              <div><strong>Real Use:</strong> Development workflow, QA testing</div>
+              <div><strong>Best For:</strong> Rapid iteration, form validation testing</div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Pattern 3: Rich Dropdown (Working) */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Pattern 3: Rich Dropdown Selection</CardTitle>
+            <CardDescription>
+              User choice with preview (incident step 2 pattern)
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-gray-50 p-4 rounded-lg border-2 border-dashed border-gray-200">
+              <p className="text-sm text-gray-600 mb-3">Narrative form sections:</p>
+              <div className="grid grid-cols-2 gap-2">
+                <textarea 
+                  placeholder="Before Event..." 
+                  value={narrativeSections.before_event}
+                  onChange={(e) => setNarrativeSections(prev => ({ ...prev, before_event: e.target.value }))}
+                  className="h-16 p-2 bg-white border rounded text-xs resize-none"
+                />
+                <textarea 
+                  placeholder="During Event..." 
+                  value={narrativeSections.during_event}
+                  onChange={(e) => setNarrativeSections(prev => ({ ...prev, during_event: e.target.value }))}
+                  className="h-16 p-2 bg-white border rounded text-xs resize-none"
+                />
+                <textarea 
+                  placeholder="End Event..." 
+                  value={narrativeSections.end_event}
+                  onChange={(e) => setNarrativeSections(prev => ({ ...prev, end_event: e.target.value }))}
+                  className="h-16 p-2 bg-white border rounded text-xs resize-none"
+                />
+                <textarea 
+                  placeholder="Post Event..." 
+                  value={narrativeSections.post_event}
+                  onChange={(e) => setNarrativeSections(prev => ({ ...prev, post_event: e.target.value }))}
+                  className="h-16 p-2 bg-white border rounded text-xs resize-none"
+                />
+              </div>
+            </div>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                {/* Preferred Style: Underlined with teal hover effect */}
+                <Button 
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-between text-left text-xs text-gray-500 hover:text-white hover:bg-ss-teal border-b border-dashed border-gray-300 rounded-none hover:border-ss-teal transition-all duration-200"
+                >
+                  <div className="flex items-center gap-2">
+                    <span>
+                      {selectedScenario ? `${selectedScenario.icon} ${selectedScenario.participant_name}` : 'Sample Scenarios'}
+                    </span>
+                  </div>
+                  <ChevronDown className="h-3 w-3 opacity-60" />
+                </Button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent align="end" className="w-96">
+                <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">
+                  Fill Narrative with Sample Scenario
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+
+                {incidentScenarios.map((scenario) => (
+                  <DropdownMenuItem
+                    key={scenario.id}
+                    onClick={() => handleScenarioSelect(scenario)}
+                    className="flex flex-col items-start p-3 cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2 w-full">
+                      <span className="text-base">{scenario.icon}</span>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm">{scenario.participant_name}</span>
+                          <span className={`text-xs font-medium px-2 py-1 rounded ${severityColors[scenario.severity]}`}>
+                            {scenario.severity}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5 leading-tight">
+                          {scenario.description}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-1 mt-2 w-full">
+                      {scenario.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="inline-block bg-muted px-1.5 py-0.5 rounded text-xs text-muted-foreground"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {selectedScenario && (
+              <div className="bg-blue-50 border border-blue-200 rounded p-3 text-xs">
+                <div className="flex items-center gap-2 mb-2">
+                  <span>{selectedScenario.icon}</span>
+                  <span className="font-medium">{selectedScenario.participant_name} - {selectedScenario.id.replace('_', ' ')}</span>
+                  <span className={`px-2 py-1 rounded text-xs ${severityColors[selectedScenario.severity]}`}>
+                    {selectedScenario.severity}
+                  </span>
+                </div>
+                <div className="text-gray-600 mb-2">{selectedScenario.description}</div>
+                <div className="flex flex-wrap gap-1">
+                  {selectedScenario.tags.map((tag) => (
+                    <span key={tag} className="bg-gray-100 px-1.5 py-0.5 rounded text-xs">{tag}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            <div className="text-xs text-gray-500 space-y-1 bg-green-50 p-2 rounded">
+              <div><strong>Pattern:</strong> Rich selection with detailed preview</div>
+              <div><strong>Real Use:</strong> Training scenarios, demo presentations</div>
+              <div><strong>Best For:</strong> Educational content, informed decision making</div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Pattern Analysis */}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Design Pattern Analysis - Live Comparison</CardTitle>
+          <CardDescription>
+            Evaluate each pattern by testing them above, then use this analysis for implementation decisions
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <h4 className="font-semibold text-healthcare-primary mb-3">Pattern Strengths</h4>
+              <div className="space-y-3 text-sm">
+                <div>
+                  <div className="font-medium text-ss-teal">Simple Button</div>
+                  <div className="text-gray-600">• Fastest for bulk operations<br/>• No decision fatigue<br/>• Clear single action</div>
+                </div>
+                <div>
+                  <div className="font-medium text-ss-cta-blue">Random Selection</div>
+                  <div className="text-gray-600">• Good for quick testing<br/>• Lightweight implementation<br/>• Variety without choice</div>
+                </div>
+                <div>
+                  <div className="font-medium text-ss-navy">Rich Dropdown</div>
+                  <div className="text-gray-600">• Informed decisions<br/>• Rich context display<br/>• Professional appearance</div>
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold text-healthcare-primary mb-3">Use Case Mapping</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span>Bulk data setup:</span>
+                  <span className="font-medium text-ss-teal">Simple Button</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Quick testing:</span>
+                  <span className="font-medium text-ss-cta-blue">Random Selection</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Demo scenarios:</span>
+                  <span className="font-medium text-ss-navy">Rich Dropdown</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Form filling:</span>
+                  <span className="font-medium text-ss-cta-blue">Random/Dropdown</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Training/Education:</span>
+                  <span className="font-medium text-ss-navy">Rich Dropdown</span>
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold text-healthcare-primary mb-3">Unified Approach</h4>
+              <div className="space-y-2 text-sm text-gray-600">
+                <p><strong>Recommendation:</strong> Context-driven pattern selection</p>
+                <p>• <strong>Management pages:</strong> Simple buttons for bulk operations</p>
+                <p>• <strong>Form fields:</strong> Dropdown with preview for specific selection</p>
+                <p>• <strong>Quick actions:</strong> Random selection for rapid testing</p>
+                <p>• <strong>Implementation:</strong> Single unified component with variant prop</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Button Style Variations */}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Sample Data Button Style Variations</CardTitle>
+          <CardDescription>
+            Administrative/testing buttons that should be subtle and non-distracting to customers
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            
+            {/* Row 1 */}
+            {/* Preferred Style: Underlined with teal hover */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-center">Preferred Style</h4>
+              <Button 
+                variant="ghost"
+                size="sm"
+                className="w-full text-xs text-gray-500 hover:text-white hover:bg-ss-teal border-b border-dashed border-gray-300 rounded-none hover:border-ss-teal transition-all duration-200"
+              >
+                Sample Data
+              </Button>
+              <p className="text-xs text-gray-500 text-center">Underlined + teal hover</p>
+            </div>
+
+            {/* Variation 1: Ghost with subtle badge - CURRENT IMPLEMENTATION */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-center">1. Subtle Badge</h4>
+              <Button 
+                variant="ghost"
+                size="sm"
+                className="w-full text-xs text-gray-400 hover:text-gray-600 hover:bg-gray-50 border border-dashed border-gray-200 hover:border-gray-300"
+              >
+                <span className="w-2 h-2 bg-blue-400 rounded-full mr-2 opacity-60"></span>
+                Sample Data
+              </Button>
+              <p className="text-xs text-gray-500 text-center">Current implementation - very subtle</p>
+            </div>
+
+            {/* Variation 2: Minimal icon corner */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-center">2. Corner Icon</h4>
+              <div className="relative">
+                <Button 
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                >
+                  Sample Data
+                </Button>
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-blue-400 rounded-full opacity-50"></span>
+              </div>
+              <p className="text-xs text-gray-500 text-center">Small indicator in corner</p>
+            </div>
+
+            {/* Variation 3: Underlined text style */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-center">3. Underlined</h4>
+              <Button 
+                variant="ghost"
+                size="sm"
+                className="w-full text-xs text-gray-400 hover:text-gray-600 border-b border-dashed border-gray-300 rounded-none hover:border-gray-400"
+              >
+                Sample Data
+              </Button>
+              <p className="text-xs text-gray-500 text-center">Underlined link style</p>
+            </div>
+
+            {/* Row 2 - Visual break */}
+            <div className="md:col-span-3 border-t border-gray-200 my-2"></div>
+
+            {/* Variation 4: Faded with opacity */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-center">4. Opacity</h4>
+              <Button 
+                variant="outline"
+                size="sm"
+                className="w-full text-xs opacity-30 hover:opacity-70 border-gray-200 text-gray-500"
+              >
+                Sample Data
+              </Button>
+              <p className="text-xs text-gray-500 text-center">Low opacity, hover reveals</p>
+            </div>
+
+            {/* Variation 5: Text-only with icon */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-center">5. Text Only</h4>
+              <button 
+                className="w-full text-xs text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-50 rounded transition-colors"
+              >
+                ⚡ Sample Data
+              </button>
+              <p className="text-xs text-gray-500 text-center">Plain text with subtle icon</p>
+            </div>
+
+          </div>
+
+          {/* Usage Context */}
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+            <h4 className="font-medium text-sm mb-2">Design Context</h4>
+            <div className="text-xs text-gray-600 space-y-1">
+              <p><strong>Purpose:</strong> Administrative/testing buttons for system admins, testers, sales reps</p>
+              <p><strong>Visibility:</strong> Should be subtle, non-distracting to customers</p>
+              <p><strong>Discovery:</strong> Known to authorized users, minimal visual interference</p>
+              <p><strong>Behavior:</strong> Quick access without drawing attention</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </section>
+  );
+}
 
 // Note: metadata export removed since this is now a client component
 // Metadata is handled by layout or individual page head elements
@@ -941,6 +1589,9 @@ export default function ShowcasePage() {
             </Card>
           </div>
         </section>
+
+        {/* Sample Data UI Patterns - Working Playground */}
+        <SampleDataPlayground />
 
         {/* Component Import Guide */}
         <section>

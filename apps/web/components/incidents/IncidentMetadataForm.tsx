@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useMutation } from 'convex/react';
+import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Card, CardHeader, CardTitle, CardContent } from '@starter/ui/card';
 import { Input } from '@starter/ui/input';
@@ -67,6 +67,55 @@ export function IncidentMetadataForm({
   const [currentIncidentId, setCurrentIncidentId] = useState<Id<"incidents"> | null>(existingIncidentId || null);
 
   const createIncident = useMutation(api.incidents.create);
+  const generateRandomData = useMutation(api.incidents.createSampleData.generateRandomIncidentMetadata);
+
+  // Handle random sample data generation using centralized service
+  const handleRandomSample = async () => {
+    const sessionToken = localStorage.getItem('auth_session_token');
+    if (!sessionToken) {
+      console.warn('No session token available for sample data generation');
+      return;
+    }
+
+    try {
+      const result = await generateRandomData({
+        sessionToken,
+        excludeFields: ['reporter_name'] // Don't update reporter name as requested
+      });
+
+      if (result.success && result.data) {
+        // Update form with centralized sample data
+        setFormData(prev => ({
+          ...prev,
+          ...result.data
+        }));
+
+        // Update selected participant for the selector using metadata
+        if (result.metadata?.participant) {
+          const participant = {
+            _id: result.metadata.participant.id,
+            first_name: result.metadata.participant.name.split(' ')[0],
+            last_name: result.metadata.participant.name.split(' ').slice(1).join(' '),
+            ndis_number: result.metadata.participant.ndis_number,
+          };
+          setSelectedParticipant(participant as Participant);
+        }
+
+        // Clear any existing errors for updated fields
+        setErrors(prev => ({ 
+          ...prev, 
+          participant_name: undefined,
+          location: undefined,
+          event_date_time: undefined 
+        }));
+
+        console.log('✅ Sample data generated via centralized service:', result);
+      }
+    } catch (error) {
+      console.error('Failed to generate random sample data:', error);
+      // Could add user-facing error handling here
+    }
+  };
 
   // Handle participant selection
   const handleParticipantSelect = (participant: Participant | null) => {
@@ -194,21 +243,14 @@ export function IncidentMetadataForm({
               (Required Information)
             </span>
           </div>
-          <SampleDataButton
-            onDataFilled={(scenarioData) => {
-              // Fill form fields with sample data
-              setFormData(prev => ({
-                ...prev,
-                participant_name: scenarioData.participant_name,
-                reporter_name: scenarioData.reporter_name,
-                event_date_time: scenarioData.event_date_time,
-                location: scenarioData.location,
-              }));
-              console.log(`Form filled with sample data:`, scenarioData);
-            }}
+          <Button 
             variant="ghost"
             size="sm"
-          />
+            className="text-xs text-gray-500 hover:text-white hover:bg-ss-teal border-b border-dashed border-gray-300 rounded-none hover:border-ss-teal transition-all duration-200"
+            onClick={handleRandomSample}
+          >
+            Random Sample
+          </Button>
         </CardTitle>
       </CardHeader>
       <CardContent>

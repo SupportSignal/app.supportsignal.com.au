@@ -57,7 +57,7 @@ const interpolateParticipantName = (text: string, participantFirstName: string):
 const getIncidentScenarios = (participantFirstName?: string): ScenarioType[] => [
   {
     type: "medication_error",
-    participant: participantFirstName ? `${participantFirstName} Johnson` : "Emma Johnson",
+    participant: participantFirstName ? participantFirstName : "Emma Johnson",
     severity: "medium",
     tags: ["medication", "administration", "oversight", "monitoring"],
     description: "Medication administration error with monitoring protocol",
@@ -76,7 +76,7 @@ const getIncidentScenarios = (participantFirstName?: string): ScenarioType[] => 
   },
   {
     type: "injury",
-    participant: participantFirstName ? `${participantFirstName} Chen` : "Michael Chen",
+    participant: participantFirstName ? participantFirstName : "Michael Chen",
     severity: "high",
     tags: ["fall", "head_injury", "transfer", "wheelchair", "hospital"],
     description: "Participant fall with head injury requiring hospital assessment",
@@ -95,7 +95,7 @@ const getIncidentScenarios = (participantFirstName?: string): ScenarioType[] => 
   },
   {
     type: "behavioral",
-    participant: participantFirstName ? `${participantFirstName} Williams` : "Sarah Williams",
+    participant: participantFirstName ? participantFirstName : "Sarah Williams",
     severity: "medium",
     tags: ["verbal_aggression", "de-escalation", "sleep_issues", "behavior_support"],
     description: "Verbal aggression incident with de-escalation response",
@@ -114,7 +114,7 @@ const getIncidentScenarios = (participantFirstName?: string): ScenarioType[] => 
   },
   {
     type: "environmental",
-    participant: participantFirstName ? `${participantFirstName} Brown` : "James Brown",
+    participant: participantFirstName ? participantFirstName : "James Brown",
     severity: "medium",
     tags: ["water_damage", "maintenance", "relocation", "routine_disruption"],
     description: "Water pipe burst causing accommodation disruption",
@@ -133,7 +133,7 @@ const getIncidentScenarios = (participantFirstName?: string): ScenarioType[] => 
   },
   {
     type: "medical_emergency",
-    participant: participantFirstName ? `${participantFirstName} Davis` : "Rachel Davis",
+    participant: participantFirstName ? participantFirstName : "Rachel Davis",
     severity: "high",
     tags: ["seizure", "epilepsy", "medication", "monitoring", "medical_protocol"],
     description: "Seizure incident with established medical protocols",
@@ -191,13 +191,11 @@ export function SampleDataButton({
           variant={variant}
           size={size}
           className={cn(
-            "gap-1.5 text-xs text-muted-foreground hover:text-foreground",
-            "opacity-60 hover:opacity-100 transition-opacity",
+            "text-xs text-gray-500 hover:text-white hover:bg-ss-teal border-b border-dashed border-gray-300 rounded-none hover:border-ss-teal transition-all duration-200",
             className
           )}
         >
-          <TestTube className="h-3 w-3" />
-          Sample
+          Sample Scenarios
           <ChevronDown className="h-3 w-3" />
         </Button>
       </DropdownMenuTrigger>
