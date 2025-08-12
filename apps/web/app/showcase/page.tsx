@@ -26,7 +26,6 @@ import { ThemeToggle } from '../../components/theme/theme-toggle';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
 import { IncidentCard, MetadataDisplay } from '@/components/incident';
 import { StatusBadge } from '@/components/shared';
-import { WorkflowProgress } from '@/components/workflow';
 import { NarrativePhaseEditor, EnhancementIndicator, NarrativeProgress } from '@/components/narrative';
 import { AutoSaveIndicator } from '@/components/ui/auto-save-indicator';
 import { useAutoSave } from '@/hooks/useAutoSave';
@@ -889,7 +888,7 @@ export default function ShowcasePage() {
           <ThemeToggle />
         </AdminPageHeader>
 
-        <main className="max-w-4xl mx-auto">
+        <main className="max-w-7xl mx-auto">
           {/* SupportSignal Button Components Section */}
         <section className="mb-ss-3xl">
           <Card className="dark:bg-card dark:border-border">
@@ -1286,28 +1285,52 @@ export default function ShowcasePage() {
 
           <Card>
             <CardContent className="p-6">
-              <WorkflowProgress 
-                incident={{
-                  _id: 'incident_789' as any,
-                  _creationTime: Date.now(),
-                  company_id: 'company_123' as any,
-                  reporter_name: 'Lisa Chen',
-                  participant_name: 'Alex Thompson',
-                  event_date_time: new Date().toISOString(),
-                  location: 'Day Program - Art Therapy Room',
-                  capture_status: 'in_progress' as const,
-                  analysis_status: 'not_started' as const,
-                  overall_status: 'capture_pending' as const,
-                  created_at: Date.now() - 1800000,
-                  created_by: 'user_789' as any,
-                  updated_at: Date.now() - 900000,
-                  questions_generated: true,
-                  narrative_enhanced: false,
-                  analysis_generated: false,
-                }}
-                showStepDetails={true}
+              <WorkflowWizard
+                steps={[
+                  {
+                    id: 'incident-reported',
+                    title: 'Incident Reported',
+                    description: 'Basic incident details captured',
+                    isComplete: true,
+                    estimatedTime: 2
+                  },
+                  {
+                    id: 'narrative-collection',
+                    title: 'Narrative Collection',
+                    description: 'Multi-phase incident narrative',
+                    isComplete: true,
+                    estimatedTime: 12
+                  },
+                  {
+                    id: 'ai-questions',
+                    title: 'AI Questions',
+                    description: 'Clarification questions generated',
+                    isComplete: true,
+                    estimatedTime: 1
+                  },
+                  {
+                    id: 'ai-enhancement',
+                    title: 'AI Enhancement',
+                    description: 'Narrative enhanced with AI',
+                    isComplete: false,
+                    estimatedTime: 2
+                  },
+                  {
+                    id: 'analysis-phase',
+                    title: 'Analysis Phase',
+                    description: 'Team lead analysis begins',
+                    isComplete: false,
+                    estimatedTime: 8
+                  }
+                ]}
+                currentStepIndex={3}
+                onStepChange={() => {}}
+                onComplete={() => {}}
+                onStepComplete={() => {}}
+                title="Healthcare Workflow Progress"
+                description="Visual progress tracking for incident capture and analysis workflows"
+                readonly={true}
                 showEstimates={true}
-                variant="full"
               />
             </CardContent>
           </Card>
@@ -1619,7 +1642,7 @@ export default function ShowcasePage() {
                   onComplete={() => {}}
                   onStepComplete={() => {}}
                   title="Incident Reporting Wizard"
-                  variant="minimal"
+                  readonly={true}
                   showProgress={true}
                   showEstimates={true}
                 />
@@ -1697,10 +1720,10 @@ export default function ShowcasePage() {
                       </span>
                     </div>
                     <div className="text-gray-800">
-                      <span className="text-blue-600">import</span> {`{ WorkflowProgress }`}{' '}
+                      <span className="text-blue-600">import</span> {`{ WorkflowWizard }`}{' '}
                       <span className="text-blue-600">from</span>{' '}
                       <span className="text-green-600">
-                        &quot;@/components/workflow&quot;
+                        &quot;@/components/user&quot;
                       </span>
                     </div>
                     <div className="text-gray-800">

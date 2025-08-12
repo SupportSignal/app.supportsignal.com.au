@@ -1,5 +1,5 @@
-export { WorkflowProgress } from './workflow-progress';
-export type { WorkflowProgressProps, WorkflowStep } from './workflow-progress';
+// WorkflowProgress has been unified into WorkflowWizard (variant="display-only")
+// Use: import { WorkflowWizard } from '@/components/user';
 
 export { WizardShell, useWizard } from './wizard-shell';
 export type {

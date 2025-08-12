@@ -54,7 +54,29 @@ export function NarrativeGrid({ incidentId, onComplete, onBack }: NarrativeGridP
   const sessionToken = typeof window !== 'undefined' ? localStorage.getItem('auth_session_token') : null;
 
   // Convex mutations
-  const upsertNarrative = useMutation(api.narratives.upsert);
+  const createNarrative = useMutation(api.narratives.create);
+  const updateNarrative = useMutation(api.narratives.update);
+
+  // Upsert function that tries update first, then create
+  const upsertNarrative = async (data: NarrativeData & { sessionToken: string; incident_id: Id<"incidents"> }) => {
+    try {
+      // Try to update first
+      await updateNarrative(data);
+    } catch (error: any) {
+      // If narrative doesn't exist, create it first then update
+      if (error?.message?.includes('Narrative not found')) {
+        await createNarrative({
+          sessionToken: data.sessionToken,
+          incident_id: data.incident_id,
+        });
+        
+        // Now update with the data
+        await updateNarrative(data);
+      } else {
+        throw error; // Re-throw other errors
+      }
+    }
+  };
 
   // Auto-save hook
   const { autoSaveState, triggerSave } = useAutoSave(

@@ -55,7 +55,7 @@ export interface WorkflowWizardProps {
   showHelp?: boolean;
   allowNonLinear?: boolean;
   autoSave?: boolean;
-  variant?: 'full' | 'compact' | 'minimal';
+  readonly?: boolean;
   className?: string;
 }
 
@@ -75,7 +75,7 @@ export const WorkflowWizard = React.forwardRef<HTMLDivElement, WorkflowWizardPro
   showHelp = true,
   allowNonLinear = false,
   autoSave = false,
-  variant = 'full',
+  readonly = false,
   className,
 }, ref) => {
   const [validationError, setValidationError] = React.useState<string | null>(null);
@@ -160,51 +160,6 @@ export const WorkflowWizard = React.forwardRef<HTMLDivElement, WorkflowWizardPro
     }
   };
 
-  if (variant === 'minimal') {
-    return (
-      <div ref={ref} className={cn('space-y-4', className)}>
-        {/* Progress */}
-        <div className="flex items-center justify-between">
-          <h3 className="text-healthcare-base font-semibold text-healthcare-primary">
-            {title}
-          </h3>
-          <Badge className="bg-ss-teal text-white">
-            Step {currentStepIndex + 1} of {totalSteps}
-          </Badge>
-        </div>
-        
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div 
-            className="bg-ss-teal h-2 rounded-full transition-all duration-500"
-            style={{ width: `${progressPercentage}%` }}
-          />
-        </div>
-        
-        {/* Navigation */}
-        <div className="flex items-center justify-between">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handlePrevious}
-            disabled={!canGoPrevious}
-          >
-            <ChevronLeft className="w-4 h-4 mr-1" />
-            Previous
-          </Button>
-          
-          <Button
-            size="sm"
-            onClick={isLastStep ? handleComplete : handleNext}
-            className="bg-ss-teal hover:bg-ss-teal-deep"
-            disabled={!currentStep.isComplete && !isLastStep}
-          >
-            {isLastStep ? 'Complete' : 'Next'}
-            {!isLastStep && <ChevronRight className="w-4 h-4 ml-1" />}
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <Card ref={ref} className={cn('', className)}>
@@ -235,92 +190,72 @@ export const WorkflowWizard = React.forwardRef<HTMLDivElement, WorkflowWizardPro
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {/* Progress Bar */}
-        {showProgress && (
-          <div>
-            <div className="flex items-center justify-between text-healthcare-sm text-gray-600 mb-2">
-              <span>Progress: {Math.round(progressPercentage)}%</span>
-              <span>{completedSteps} of {totalSteps} completed</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div 
-                className="bg-ss-teal h-3 rounded-full transition-all duration-500"
-                style={{ width: `${progressPercentage}%` }}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Chevron-Style Step Navigation */}
-        <div className="flex items-center bg-gradient-to-r from-blue-50 to-indigo-50 border border-gray-200 rounded-lg overflow-hidden">
+        {/* Unified Step Navigation - Clean Design with Green Background */}
+        <div className="flex items-center bg-gradient-to-r from-ss-teal/10 to-ss-teal/20 border border-ss-teal/30 rounded-lg overflow-hidden">
           {steps.map((step, index) => {
             const isActive = index === currentStepIndex;
-            const isClickable = allowNonLinear || index <= currentStepIndex || step.isComplete;
+            const isClickable = !readonly && (allowNonLinear || index <= currentStepIndex || step.isComplete);
             const isLast = index === steps.length - 1;
             const stepNumber = String(index + 1).padStart(2, '0');
             
             return (
-              <div key={step.id} className="flex items-center flex-1 relative">
-                {/* Step Container */}
+              <div key={step.id} className="relative flex-1">
+                {/* Step Container - Transparent to show green background */}
                 <div 
                   className={cn(
-                    'flex items-center justify-center px-4 py-3 min-h-[60px] relative flex-1 group transition-all duration-200',
+                    'flex items-center justify-center px-4 py-3 min-h-[60px] w-full bg-transparent',
                     {
-                      'bg-emerald-500 text-white': step.isComplete,
-                      'bg-blue-500 text-white': isActive,
-                      'bg-gray-100 text-gray-600': !step.isComplete && !isActive,
-                      'hover:bg-opacity-90 cursor-pointer': isClickable,
-                      'cursor-not-allowed opacity-50': !isClickable
+                      'hover:bg-white/20 cursor-pointer transition-colors duration-200': isClickable && !readonly,
+                      'cursor-default': readonly,
+                      'cursor-not-allowed opacity-50': !isClickable && !readonly
                     }
                   )}
-                  onClick={() => isClickable && handleStepClick(index)}
+                  onClick={() => !readonly && isClickable && handleStepClick(index)}
                 >
-                  {/* Step Content */}
-                  <div className="flex items-center justify-center space-x-3 relative z-10">
-                    {/* Step Number/Icon */}
+                  {/* Step Content - Horizontal Layout (Circle Left, Text Right) */}
+                  <div className="flex items-center w-full px-4 py-3 text-sm font-medium">
+                    {/* Step Number/Icon - Green circle outlines */}
                     <div className={cn(
-                      'flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold',
+                      'flex items-center justify-center w-7 h-7 flex-shrink-0 rounded-full text-xs font-medium mr-3 border',
                       {
-                        'bg-white bg-opacity-20': step.isComplete || isActive,
-                        'bg-gray-300': !step.isComplete && !isActive
+                        // Completed: Green filled circle with white checkmark
+                        'bg-ss-teal border-ss-teal text-white': step.isComplete,
+                        // Active: White circle with green outline and green text
+                        'bg-white border-ss-teal text-ss-teal': isActive && !step.isComplete,
+                        // Future: Transparent background with green outline and green text
+                        'bg-transparent border-ss-teal text-ss-teal': !step.isComplete && !isActive
                       }
                     )}>
                       {step.isComplete ? (
-                        <Check className="w-4 h-4" />
+                        <Check className="w-3 h-3" />
                       ) : (
                         stepNumber
                       )}
                     </div>
                     
-                    {/* Step Title */}
-                    <span className="font-medium text-sm whitespace-nowrap">
+                    {/* Step Title - Green text */}
+                    <span className="font-medium text-sm leading-tight text-ss-teal">
                       {step.title}
                     </span>
                   </div>
-                  
-                  {/* Chevron Arrow (except for last step) */}
-                  {!isLast && (
-                    <div className="absolute right-0 top-0 h-full w-0 z-20">
-                      <div className={cn(
-                        'absolute right-0 top-0 h-full w-4 transform translate-x-2',
-                        'border-l-[30px] border-t-[30px] border-b-[30px]',
-                        'border-t-transparent border-b-transparent',
-                        {
-                          'border-l-emerald-500': step.isComplete,
-                          'border-l-blue-500': isActive,
-                          'border-l-gray-100': !step.isComplete && !isActive
-                        }
-                      )} />
-                    </div>
-                  )}
                 </div>
+
+                {/* Original SVG Chevron Separator - Restored from reference */}
+                {!isLast && (
+                  <div className="absolute right-0 top-0 h-full w-5" aria-hidden="true">
+                    <svg className="h-full w-full text-gray-400" viewBox="0 0 22 80" fill="none" preserveAspectRatio="none">
+                      <path d="M0 -2L20 40L0 82" vectorEffect="non-scaling-stroke" stroke="currentColor" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
 
-        {/* Current Step */}
-        <Card className="border-l-4 border-l-ss-teal bg-ss-teal/5">
+        {/* Current Step - Only show in interactive mode */}
+        {!readonly && (
+          <Card className="border-l-4 border-l-ss-teal bg-ss-teal/5">
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
               <div className="flex-1">
@@ -397,107 +332,6 @@ export const WorkflowWizard = React.forwardRef<HTMLDivElement, WorkflowWizardPro
             )}
           </CardContent>
         </Card>
-
-        {/* Step Actions */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            {onCancel && (
-              <Button
-                variant="outline"
-                onClick={onCancel}
-              >
-                <X className="w-4 h-4 mr-1" />
-                Cancel
-              </Button>
-            )}
-            
-            {onSave && (
-              <Button
-                variant="outline"
-                onClick={onSave}
-              >
-                <Save className="w-4 h-4 mr-1" />
-                Save Progress
-              </Button>
-            )}
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            {currentStep.isSkippable && onStepSkip && (
-              <Button
-                variant="outline"
-                onClick={handleSkipStep}
-              >
-                Skip Step
-                <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-            )}
-            
-            <Button
-              variant="outline"
-              onClick={handlePrevious}
-              disabled={!canGoPrevious}
-            >
-              <ChevronLeft className="w-4 h-4 mr-1" />
-              Previous
-            </Button>
-            
-            {!currentStep.isComplete && (
-              <Button
-                onClick={handleCompleteStep}
-                className="bg-ss-success hover:bg-ss-success/90"
-              >
-                <CheckCircle className="w-4 h-4 mr-1" />
-                Complete Step
-              </Button>
-            )}
-            
-            <Button
-              onClick={isLastStep ? handleComplete : handleNext}
-              className="bg-ss-teal hover:bg-ss-teal-deep"
-              disabled={!currentStep.isComplete && !isLastStep}
-            >
-              {isLastStep ? (
-                <>
-                  <Check className="w-4 h-4 mr-1" />
-                  Complete Workflow
-                </>
-              ) : (
-                <>
-                  Next Step
-                  <ChevronRight className="w-4 h-4 ml-1" />
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
-
-        {/* Summary */}
-        {variant === 'full' && (
-          <div className="pt-4 border-t border-gray-200">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-              <div className="p-3 bg-ss-success/5 rounded-lg">
-                <div className="text-healthcare-lg font-semibold text-ss-success">
-                  {completedSteps}
-                </div>
-                <div className="text-healthcare-xs text-gray-600">Completed</div>
-              </div>
-              
-              <div className="p-3 bg-ss-cta-blue/5 rounded-lg">
-                <div className="text-healthcare-lg font-semibold text-ss-cta-blue">
-                  {totalSteps - completedSteps}
-                </div>
-                <div className="text-healthcare-xs text-gray-600">Remaining</div>
-              </div>
-              
-              <div className="p-3 bg-ss-alert/5 rounded-lg">
-                <div className="text-healthcare-lg font-semibold text-ss-alert">
-                  {Math.round(progressPercentage)}%
-                </div>
-                <div className="text-healthcare-xs text-gray-600">Progress</div>
-              </div>
-            </div>
-          </div>
         )}
       </CardContent>
     </Card>
