@@ -1108,3 +1108,149 @@ This methodology should be applied to all API testing scenarios:
 4. **Distinguish between missing functionality vs configuration issues**
 
 This discovery significantly improves Story completion assessment accuracy and prevents wasted development effort on non-existent gaps.
+
+### 13. Story 3.4 Authentication Pattern Security Violation (2025-08-12)
+
+#### Critical Security Architecture Violation
+
+**The Problem**: During AI Prompt Templates implementation, a **fundamental authentication pattern violation** occurred that caused runtime authentication errors and exposed gaps in architecture pattern adherence.
+
+**Root Cause**: Failed to follow established session-based authentication patterns, instead using generic Convex `ctx.auth.getUserIdentity()` approach.
+
+#### The Critical Error Pattern
+
+**Initial Implementation (WRONG)**:
+```typescript
+// ❌ INCORRECT: Generic Convex authentication
+const identity = await ctx.auth.getUserIdentity();
+if (!identity) {
+  throw new Error("Not authenticated");
+}
+```
+
+**Correct Implementation (RIGHT)**:
+```typescript
+// ✅ CORRECT: Established session token pattern
+const { user } = await requirePermission(
+  ctx,
+  sessionToken,
+  PERMISSIONS.SYSTEM_CONFIGURATION
+);
+```
+
+#### Impact and User Feedback
+
+**Runtime Error**:
+```
+[CONVEX Q(promptTemplates:getSystemPromptTemplates)] [Request ID: c2e73ff9d536d290] 
+Server Error Uncaught Error: Not authenticated at validateSystemAdmin
+```
+
+**User Response**: 
+> "How could you make such a fundamental mistake? Have you not read the documentation around building these systems?"
+
+#### Systematic Correction Required
+
+**Scope of Fix**:
+- **Backend Functions**: 10+ functions required sessionToken parameter addition
+- **Frontend Components**: 3 React components needed auth context integration
+- **Service Layer**: React hooks updated to pass session tokens
+- **File Naming**: Convex module naming requirements (hyphens → underscores)
+
+#### Key Architecture Lessons
+
+**1. Documentation-First Development**:
+```bash
+# MANDATORY pattern review before new features
+grep -r "sessionToken" apps/convex/
+grep -r "requirePermission" apps/convex/
+cat docs/technical-guides/authentication-architecture.md
+```
+
+**2. Authentication Pattern Consistency**:
+- **Rule**: Never implement authenticated functions without following established patterns
+- **Pattern**: Always use `sessionToken` parameter + `requirePermission()` middleware
+- **Validation**: Check existing functions for authentication patterns before implementing
+
+**3. Security Pattern Discovery Protocol**:
+Before implementing any authenticated feature:
+- [ ] **Read authentication architecture documentation**
+- [ ] **Survey existing authenticated functions**
+- [ ] **Follow established permission constants**
+- [ ] **Match existing function signatures**
+- [ ] **Test authentication systematically**
+
+#### Prevention Strategy
+
+**Pre-Implementation Checklist**:
+```typescript
+// Template for new authenticated functions
+export const newFunction = mutation({
+  args: {
+    sessionToken: v.string(),  // MANDATORY
+    // ... other args
+  },
+  handler: async (ctx, args) => {
+    // MANDATORY authentication pattern
+    const { user } = await requirePermission(
+      ctx, 
+      args.sessionToken, 
+      PERMISSIONS.REQUIRED_PERMISSION
+    );
+    // ... business logic
+  }
+});
+```
+
+**Testing Requirements**:
+```typescript
+// MANDATORY authentication tests
+describe('New Function Authentication', () => {
+  test('requires valid session token', () => {
+    expect(() => newFunction({})).toThrow('Authentication required');
+  });
+  
+  test('requires correct permissions', () => {
+    expect(() => newFunction({ sessionToken: wrongRoleToken }))
+      .toThrow('Insufficient permissions');
+  });
+  
+  test('works with correct authentication', () => {
+    const result = await newFunction({ sessionToken: systemAdminToken });
+    expect(result).toBeDefined();
+  });
+});
+```
+
+#### Technical Debt Impact
+
+**Debt Created**:
+- Authentication pattern violation across 10+ functions
+- Frontend integration gaps in 3+ components
+- File naming compliance issues (Convex requirements)
+
+**Debt Resolved**:
+- Systematic authentication pattern compliance
+- Proper role-based access control throughout feature
+- Complete integration with established architecture
+
+#### Long-term Learning
+
+**Critical Insight**: In established codebases, **pattern consistency is a security requirement**, not a style preference. Architecture pattern violations can introduce critical security vulnerabilities.
+
+**Process Improvement**: 
+- Always survey existing patterns before implementing new features
+- Authentication architecture review is mandatory for all secure features
+- User feedback on "fundamental mistakes" indicates need for better pattern discovery protocols
+
+#### Future Application
+
+This lesson applies to all future feature development:
+1. **Pattern Discovery First**: Review existing implementations before starting
+2. **Documentation Review**: Read architecture guides as prerequisite  
+3. **Systematic Testing**: Authentication testing is non-negotiable
+4. **User Experience**: Architecture violations cause user frustration and system instability
+
+**Reference Documentation**:
+- **[Story 3.4 Authentication Security Pattern KDD](./story-3.4-authentication-security-pattern-kdd.md)** - Detailed analysis of this violation
+- **[AI Prompt Template Implementation KDD](./ai-prompt-template-implementation-kdd.md)** - Complete feature implementation documentation

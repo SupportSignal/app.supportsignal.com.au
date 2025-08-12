@@ -467,4 +467,49 @@ export default defineSchema({
     .index("by_user", ["user_id"])
     .index("by_incident", ["incident_id"])
     .index("by_success", ["success"]),
+
+  // AI Prompt Templates - System-level management (Story 3.4)
+  ai_prompt_templates: defineTable({
+    name: v.string(), // "generate_clarification_questions", "enhance_narrative"
+    description: v.string(), // Human-readable description
+    category: v.union(
+      v.literal("clarification_questions"),
+      v.literal("narrative_enhancement"),
+      v.literal("general")
+    ),
+    prompt_template: v.string(), // Template with variable placeholders
+    variables: v.array(v.object({
+      name: v.string(), // Variable name (e.g., "participant_name")
+      description: v.string(), // Description for system admin
+      type: v.union(v.literal("string"), v.literal("number"), v.literal("boolean")),
+      required: v.boolean(),
+      default_value: v.optional(v.string()),
+    })),
+    version: v.number(), // Simple version numbering
+    is_active: v.boolean(), // Active/inactive status
+    created_by: v.id("users"), // System administrator only
+    created_at: v.number(),
+    updated_at: v.number(),
+  })
+    .index("by_name", ["name"])
+    .index("by_category", ["category"])
+    .index("by_active", ["is_active"])
+    .index("by_created_by", ["created_by"]),
+
+  // Prompt Usage Logs (for basic tracking)
+  prompt_usage_logs: defineTable({
+    prompt_template_id: v.id("ai_prompt_templates"),
+    user_id: v.optional(v.id("users")),
+    company_id: v.id("companies"),
+    usage_context: v.string(), // "clarification_generation", "narrative_enhancement"
+    variables_used: v.any(), // The actual variables substituted
+    resolved_prompt: v.string(), // Final prompt after variable substitution
+    ai_model_used: v.optional(v.string()),
+    error_message: v.optional(v.string()),
+    processing_time_ms: v.number(),
+    created_at: v.number(),
+  })
+    .index("by_template", ["prompt_template_id"])
+    .index("by_company", ["company_id"])
+    .index("by_context", ["usage_context"]),
 });

@@ -83,6 +83,14 @@ const ADMIN_SECTIONS = [
         href: '/admin/impersonation',
         requiredRole: ['system_admin'],
       },
+      {
+        id: 'ai-prompt-templates',
+        title: 'AI Prompt Templates',
+        description: 'Manage AI prompt templates for incident processing and analysis',
+        icon: '🤖',
+        href: '/admin/ai-prompts',
+        requiredRole: ['system_admin'],
+      },
     ],
   },
   {
