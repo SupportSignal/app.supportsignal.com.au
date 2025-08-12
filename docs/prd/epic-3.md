@@ -146,38 +146,71 @@ Implement the final review step that combines original narratives with clarifica
 
 ---
 
-### Story 3.4: AI Prompt Management & Template System
+### Story 3.4: Core AI Prompt Management Foundation
 
-**Priority**: MEDIUM  
-**Estimated Effort**: 1 week  
+**Priority**: HIGH  
+**Estimated Effort**: 3-4 days  
 **Dependencies**: Story 3.2 (AI clarification system)
 
 #### Requirements
-Implement a comprehensive AI prompt management system that allows administrators to customize, version, and optimize the prompts used for clarification question generation and narrative enhancement. This ensures consistent, high-quality AI interactions while providing flexibility for different organizational needs.
+Implement the core AI prompt management foundation that provides essential prompt storage, basic CRUD operations, and integration capabilities needed to support Stories 3.2 and 3.3. This establishes the fundamental infrastructure for managing AI prompts without advanced features.
 
 **Core Functionality**:
-- **Prompt Template Library**: Centralized repository of all AI prompts used in the incident workflow
-- **Version Management**: Track prompt evolution with rollback capabilities
-- **A/B Testing Framework**: Compare prompt effectiveness and automatically optimize
-- **Organization Customization**: Company-specific prompt variations for industry requirements
-- **Performance Analytics**: Track prompt effectiveness, response quality, and user satisfaction
+- **Prompt Template Storage**: Database schema and basic CRUD operations for AI prompts
+- **Basic Version Management**: Simple versioning with active/inactive status
+- **Template Variables**: Support for dynamic variables (participant name, incident type, etc.)
+- **Company Isolation**: Company-specific prompt customizations and security
+- **Basic Admin Interface**: Simple prompt management interface (no rich text editor required)
 
-**Management Interface**:
-- **Prompt Editor**: Rich text editor with template variable support
-- **Testing Sandbox**: Preview and test prompt changes before deployment  
-- **Performance Dashboard**: Real-time analytics on prompt performance metrics
-- **Change Management**: Approval workflow for prompt modifications
-- **Template Categories**: Organize prompts by workflow step and incident type
+**Integration Requirements**:
+- **API Integration**: Seamless integration with existing AI services in Stories 3.2-3.3
+- **Prompt Resolution**: Runtime prompt loading and variable substitution
+- **Default Templates**: Seed default prompts for clarification questions and narrative enhancement
 
 #### Acceptance Criteria
-- [ ] **Template Management**: CRUD operations for prompt templates with version control
-- [ ] **Variable System**: Support for dynamic variables (participant name, incident type, etc.)
+- [ ] **Basic Template Management**: CRUD operations for prompt templates with simple versioning
+- [ ] **Variable System**: Support for dynamic variables in prompt templates
+- [ ] **Company Isolation**: Multi-tenant prompt management without cross-company access
+- [ ] **Simple Admin Interface**: Basic prompt management interface (text areas, not rich editor)
+- [ ] **API Integration**: Integration with existing AI services for prompt retrieval
+- [ ] **Default Seeding**: System includes default prompt templates for incident workflows
+- [ ] **Runtime Resolution**: Prompt loading and variable substitution during AI calls
+
+---
+
+### Story 3.5: Advanced Prompt Management & Analytics
+
+**Priority**: MEDIUM  
+**Estimated Effort**: 4-5 days  
+**Dependencies**: Story 3.4 (Core prompt management foundation)
+
+#### Requirements
+Enhance the basic prompt management system with advanced capabilities including A/B testing, performance analytics, testing sandbox, and workflow management. These features optimize prompt effectiveness and provide comprehensive management capabilities.
+
+**Advanced Functionality**:
+- **A/B Testing Framework**: Compare prompt effectiveness and automatically optimize
+- **Performance Analytics**: Track prompt effectiveness, response quality, and user satisfaction
+- **Testing Sandbox**: Preview and test prompt changes before deployment
+- **Change Management**: Approval workflow for prompt modifications
+- **Rich Analytics Dashboard**: Real-time analytics on prompt performance metrics
+- **Advanced Version Control**: Full version history with rollback capabilities
+- **Template Categories**: Advanced organization by workflow step and incident type
+
+**Management Interface Enhancements**:
+- **Rich Text Editor**: Enhanced prompt editing with syntax highlighting and validation
+- **Performance Dashboard**: Comprehensive analytics and reporting interface
+- **Batch Operations**: Bulk import/export and management operations
+- **Backup & Recovery**: Automated backup system with easy restoration
+
+#### Acceptance Criteria
 - [ ] **A/B Testing**: Automated testing framework comparing prompt variants
-- [ ] **Performance Metrics**: Track response quality, generation time, and user engagement
-- [ ] **Admin Interface**: Intuitive management dashboard for non-technical administrators
-- [ ] **API Integration**: Seamless integration with existing AI services in Stories 3.2-3.3
-- [ ] **Backup & Recovery**: Automated backup system with easy restoration of previous versions
-- [ ] **Multi-tenant Support**: Company-specific prompt customizations without affecting other organizations
+- [ ] **Performance Metrics**: Comprehensive tracking of response quality and user engagement
+- [ ] **Testing Sandbox**: Safe environment for testing prompt changes before deployment
+- [ ] **Rich Text Editor**: Enhanced editing interface with template variable support
+- [ ] **Analytics Dashboard**: Real-time performance metrics and reporting
+- [ ] **Change Management**: Approval workflow for prompt modifications
+- [ ] **Backup & Recovery**: Automated backup system with version restoration
+- [ ] **Advanced Analytics**: Detailed prompt effectiveness and optimization recommendations
 
 ---
 

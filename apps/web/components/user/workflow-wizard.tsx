@@ -240,10 +240,10 @@ export const WorkflowWizard = React.forwardRef<HTMLDivElement, WorkflowWizardPro
                   </div>
                 </div>
 
-                {/* Original SVG Chevron Separator - Restored from reference */}
+                {/* Original SVG Chevron Separator - Green color */}
                 {!isLast && (
                   <div className="absolute right-0 top-0 h-full w-5" aria-hidden="true">
-                    <svg className="h-full w-full text-gray-400" viewBox="0 0 22 80" fill="none" preserveAspectRatio="none">
+                    <svg className="h-full w-full text-ss-teal" viewBox="0 0 22 80" fill="none" preserveAspectRatio="none">
                       <path d="M0 -2L20 40L0 82" vectorEffect="non-scaling-stroke" stroke="currentColor" strokeLinejoin="round" />
                     </svg>
                   </div>
