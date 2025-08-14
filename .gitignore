@@ -1,7 +1,7 @@
 # Dependencies
 node_modules/
 .pnpm-debug.log*
-
+1-workflow.json
 # Bun
 bun.lockb
 
