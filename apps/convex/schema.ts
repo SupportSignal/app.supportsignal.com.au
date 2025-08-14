@@ -29,6 +29,7 @@ export default defineSchema({
     // Simplified role hierarchy for SupportSignal (snake_case)
     role: v.union(
       v.literal("system_admin"),
+      v.literal("demo_admin"),
       v.literal("company_admin"), 
       v.literal("team_lead"),
       v.literal("frontline_worker")

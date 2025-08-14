@@ -24,7 +24,7 @@ export interface UserProfile {
   profile_image_url?: string;
   
   // Role-based access control
-  role: "system_admin" | "company_admin" | "team_lead" | "frontline_worker";
+  role: "system_admin" | "demo_admin" | "company_admin" | "team_lead" | "frontline_worker";
   has_llm_access: boolean;
   
   // Company context

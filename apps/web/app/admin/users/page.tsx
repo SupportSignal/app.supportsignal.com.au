@@ -37,7 +37,7 @@ interface User {
   _id: string;
   name: string;
   email: string;
-  role: 'system_admin' | 'company_admin' | 'team_lead' | 'frontline_worker';
+  role: 'system_admin' | 'demo_admin' | 'company_admin' | 'team_lead' | 'frontline_worker';
   has_llm_access?: boolean;
   company_id?: string;
   companyName?: string;

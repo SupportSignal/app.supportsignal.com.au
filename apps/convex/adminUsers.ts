@@ -245,6 +245,7 @@ export const demoteSystemAdmin = mutation({
     sessionToken: v.string(),
     userId: v.id('users'),
     newRole: v.union(
+      v.literal("demo_admin"),
       v.literal("company_admin"), 
       v.literal("team_lead"),
       v.literal("frontline_worker")
@@ -335,6 +336,7 @@ export const getUserStats = query({
     // Calculate role distribution
     const roleStats = {
       system_admin: 0,
+      demo_admin: 0,
       company_admin: 0,
       team_lead: 0,
       frontline_worker: 0,

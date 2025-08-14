@@ -33,22 +33,26 @@ export const createUser = mutation({
   args: {
     role: v.union(
       v.literal('system_admin'),
+      v.literal('demo_admin'),
       v.literal('company_admin'), 
       v.literal('team_lead'),
       v.literal('frontline_worker')
     )
   },
   handler: async (ctx, { role }) => {
-    // Get user data from Support Signal users
+    // Get user data from Support Signal users based on role
     let userData;
     if (role === 'system_admin') {
-      userData = SUPPORT_SIGNAL_USERS.system_admin;
+      userData = TEST_USERS_DATA['support-signal'].find(u => u.role === 'system_admin');
+    } else if (role === 'demo_admin') {
+      // For demo_admin, we'll create a generic user (can be manually updated later)
+      userData = { name: 'Demo Admin', email: 'demo_admin@supportsignal.com.au', role: 'demo_admin' };
     } else if (role === 'company_admin') {
-      userData = SUPPORT_SIGNAL_USERS.company_admin_1; // Default to Rony
+      userData = TEST_USERS_DATA['support-signal'].find(u => u.role === 'company_admin') || TEST_USERS_DATA['support-signal'][1]; // Default to Rony
     } else if (role === 'team_lead') {
-      userData = SUPPORT_SIGNAL_USERS.team_lead;
+      userData = TEST_USERS_DATA['support-signal'].find(u => u.role === 'team_lead');
     } else if (role === 'frontline_worker') {
-      userData = SUPPORT_SIGNAL_USERS.frontline_worker_1; // Default to Michael
+      userData = TEST_USERS_DATA['support-signal'].find(u => u.role === 'frontline_worker');
     }
 
     const email = userData?.email || `${role}@supportsignal.com.au`;
@@ -96,7 +100,7 @@ export const createUser = mutation({
       password: HASHED_PASSWORD,
       role,
       company_id: company._id,
-      has_llm_access: role === 'system_admin' || role === 'company_admin' || role === 'team_lead',
+      has_llm_access: role === 'system_admin' || role === 'demo_admin' || role === 'company_admin' || role === 'team_lead',
     });
 
     return {
@@ -163,7 +167,7 @@ export const createAllTestUsers = mutation({
           }
 
           // Create user
-          const has_llm_access = userData.role === 'system_admin' || userData.role === 'company_admin' || userData.role === 'team_lead';
+          const has_llm_access = userData.role === 'system_admin' || userData.role === 'demo_admin' || userData.role === 'company_admin' || userData.role === 'team_lead';
           
           const userId = await ctx.db.insert('users', {
             name: userData.name,

@@ -21,6 +21,7 @@ import {
   Shield, 
   Crown,
   Users,
+  TestTube,
   Filter,
   X 
 } from 'lucide-react';
@@ -29,7 +30,7 @@ interface User {
   _id: string;
   name: string;
   email: string;
-  role: 'system_admin' | 'company_admin' | 'team_lead' | 'frontline_worker';
+  role: 'system_admin' | 'demo_admin' | 'company_admin' | 'team_lead' | 'frontline_worker';
   has_llm_access?: boolean;
   company_id?: string;
   companyName?: string;
@@ -62,6 +63,7 @@ interface UserTableProps {
 
 const ROLE_LABELS = {
   system_admin: 'System Admin',
+  demo_admin: 'Demo Admin',
   company_admin: 'Company Admin', 
   team_lead: 'Team Lead',
   frontline_worker: 'Frontline Worker'
@@ -69,6 +71,7 @@ const ROLE_LABELS = {
 
 const ROLE_COLORS = {
   system_admin: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+  demo_admin: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
   company_admin: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
   team_lead: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
   frontline_worker: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
@@ -112,6 +115,8 @@ export function UserTable({
     switch (role) {
       case 'system_admin':
         return <Crown className="h-3 w-3" />;
+      case 'demo_admin':
+        return <TestTube className="h-3 w-3" />;
       case 'company_admin':
         return <Shield className="h-3 w-3" />;
       case 'team_lead':

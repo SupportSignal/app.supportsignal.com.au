@@ -129,6 +129,7 @@ export const createUser = mutation({
     email: v.string(),
     role: v.union(
       v.literal("system_admin"),
+      v.literal("demo_admin"),
       v.literal("company_admin"), 
       v.literal("team_lead"),
       v.literal("frontline_worker")
@@ -285,6 +286,7 @@ export const updateRole = mutation({
     userId: v.id('users'),
     newRole: v.union(
       v.literal("system_admin"),
+      v.literal("demo_admin"),
       v.literal("company_admin"), 
       v.literal("team_lead"),
       v.literal("frontline_worker")

@@ -14,6 +14,7 @@ import {
   AlertDialogContent, 
   AlertDialogHeader, 
   AlertDialogTitle,
+  AlertDialogDescription,
   AlertDialogTrigger,
   AlertDialogCancel,
   AlertDialogAction
@@ -31,7 +32,7 @@ interface User {
   _id: string;
   name: string;
   email: string;
-  role: 'system_admin' | 'company_admin' | 'team_lead' | 'frontline_worker';
+  role: 'system_admin' | 'demo_admin' | 'company_admin' | 'team_lead' | 'frontline_worker';
   has_llm_access?: boolean;
   company_id?: string;
   protection?: {
@@ -222,6 +223,12 @@ export default function UsersPage() {
       {/* Create User Dialog */}
       <AlertDialog open={showCreateForm} onOpenChange={setShowCreateForm}>
         <AlertDialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Create New User</AlertDialogTitle>
+            <AlertDialogDescription>
+              Create a new user account for your company with specified role and permissions.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
           <UserForm
             onSubmit={handleCreateUser}
             onCancel={() => setShowCreateForm(false)}
@@ -235,6 +242,14 @@ export default function UsersPage() {
       {/* Edit User Dialog */}
       <AlertDialog open={!!editingUser} onOpenChange={(open: boolean) => !open && setEditingUser(null)}>
         <AlertDialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {editingUser ? `Edit User: ${editingUser.name}` : 'Edit User'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Update user account details, role assignments, and permissions.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
           {editingUser && (
             <UserForm
               user={editingUser}
@@ -256,6 +271,9 @@ export default function UsersPage() {
               <AlertCircle className="h-5 w-5 text-red-600" />
               Confirm Delete User
             </AlertDialogTitle>
+            <AlertDialogDescription>
+              This action will permanently remove the user from the system and cannot be undone.
+            </AlertDialogDescription>
           </AlertDialogHeader>
           
           {deleteConfirm && (

@@ -20,6 +20,7 @@ import {
   Shield, 
   Crown, 
   Users, 
+  TestTube,
   AlertCircle,
   X,
   Save,
@@ -29,7 +30,7 @@ import {
 interface UserFormData {
   name: string;
   email: string;
-  role: 'system_admin' | 'company_admin' | 'team_lead' | 'frontline_worker';
+  role: 'system_admin' | 'demo_admin' | 'company_admin' | 'team_lead' | 'frontline_worker';
   has_llm_access: boolean;
 }
 
@@ -38,7 +39,7 @@ interface UserFormProps {
     _id: string;
     name: string;
     email: string;
-    role: 'system_admin' | 'company_admin' | 'team_lead' | 'frontline_worker';
+    role: 'system_admin' | 'demo_admin' | 'company_admin' | 'team_lead' | 'frontline_worker';
     has_llm_access?: boolean;
     protection?: {
       isProtected: boolean;
@@ -71,6 +72,12 @@ const ROLE_OPTIONS = [
     label: 'Company Admin',
     icon: Shield,
     description: 'Full company user and data management'
+  },
+  { 
+    value: 'demo_admin', 
+    label: 'Demo Admin',
+    icon: TestTube,
+    description: 'Company admin with demonstration and testing capabilities'
   },
   { 
     value: 'system_admin', 

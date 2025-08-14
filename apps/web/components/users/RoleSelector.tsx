@@ -10,11 +10,12 @@ import {
   Users, 
   Shield, 
   Crown, 
+  TestTube,
   Check,
   AlertCircle 
 } from 'lucide-react';
 
-type Role = 'system_admin' | 'company_admin' | 'team_lead' | 'frontline_worker';
+type Role = 'system_admin' | 'demo_admin' | 'company_admin' | 'team_lead' | 'frontline_worker';
 
 interface RoleOption {
   value: Role;
@@ -79,12 +80,26 @@ const ROLE_OPTIONS: RoleOption[] = [
     bgColor: 'bg-blue-50 hover:bg-blue-100 border-blue-200'
   },
   {
+    value: 'demo_admin',
+    label: 'Demo Admin',
+    icon: TestTube,
+    description: 'Company admin with demonstration and testing capabilities',
+    permissions: [
+      'All Company Admin permissions',
+      'Access sample data for demos',
+      'Testing and demonstration features',
+      'Full company scope access'
+    ],
+    color: 'text-purple-700',
+    bgColor: 'bg-purple-50 hover:bg-purple-100 border-purple-200'
+  },
+  {
     value: 'system_admin',
     label: 'System Administrator',
     icon: Crown,
     description: 'Global system access and cross-company management',
     permissions: [
-      'All Company Admin permissions',
+      'All Demo Admin permissions',
       'Manage all companies',
       'System configuration',
       'User impersonation',
