@@ -34,11 +34,30 @@ export const NAVIGATION_CONFIG: NavigationConfig = {
       requiredRole: ['system_admin', 'company_admin', 'team_lead', 'frontline_worker'],
       items: [
         {
+          id: 'new-incident',
+          label: 'New Incident',
+          icon: '🚨',
+          href: '/new-incident',
+          requiredRole: ['system_admin', 'company_admin', 'team_lead', 'frontline_worker'],
+        },
+        {
           id: 'incidents',
           label: 'Incidents',
-          icon: '🚨',
+          icon: '📋',
           href: '/incidents',
           requiredRole: ['system_admin', 'company_admin', 'team_lead', 'frontline_worker'],
+          comingSoon: {
+            description: 'View, manage, and track all incidents across your organization.',
+            features: [
+              'Incident dashboard with filtering and search',
+              'Status tracking and workflow management',
+              'Incident timeline and history',
+              'Bulk actions and batch operations',
+              'Export and reporting capabilities',
+              'Real-time notifications and updates'
+            ],
+            status: 'planned'
+          }
         },
         {
           id: 'analysis',

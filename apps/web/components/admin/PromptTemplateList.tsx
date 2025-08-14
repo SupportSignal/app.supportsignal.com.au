@@ -6,33 +6,39 @@ import { Badge } from '@starter/ui/badge';
 import { Button } from '@starter/ui/button';
 import { Input } from '@starter/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@starter/ui/select';
-import { useSystemPromptTemplates } from '@/lib/prompts/prompt-template-service';
-import { AIPromptTemplate, TEMPLATE_CATEGORIES, CATEGORY_LABELS } from '@/types/prompt-templates';
+import { useAllPrompts } from '@/lib/prompts/prompt-template-service';
+import { AIPromptTemplate, TEMPLATE_CATEGORIES, CATEGORY_LABELS, AIPrompt } from '@/types/prompt-templates';
 import { useAuth } from '@/components/auth/auth-provider';
-import { Search, Plus, Edit, Trash2, Eye, Play } from 'lucide-react';
+import { Search, Eye } from 'lucide-react';
 
 interface PromptTemplateListProps {
-  onEdit?: (template: AIPromptTemplate) => void;
   onPreview?: (template: AIPromptTemplate) => void;
-  onTest?: (template: AIPromptTemplate) => void;
-  onDelete?: (template: AIPromptTemplate) => void;
-  onCreate?: () => void;
 }
 
 export function PromptTemplateList({ 
-  onEdit, 
-  onPreview, 
-  onTest, 
-  onDelete, 
-  onCreate 
+  onPreview
 }: PromptTemplateListProps) {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
   
-  const templates = useSystemPromptTemplates(user?.sessionToken, filterCategory === 'all' ? undefined : filterCategory);
-  const loading = templates === undefined;
-  const error = templates === null;
+  const rawPrompts = useAllPrompts(user?.sessionToken, filterCategory === 'all' ? undefined : filterCategory);
+  const loading = rawPrompts === undefined;
+  const error = rawPrompts === null;
+
+  // Transform ai_prompts data to AIPromptTemplate format for compatibility
+  const templates: AIPromptTemplate[] = React.useMemo(() => {
+    if (!rawPrompts) return [];
+    
+    return rawPrompts.map((prompt: AIPrompt): AIPromptTemplate => ({
+      ...prompt,
+      name: prompt.prompt_name,
+      category: (prompt.subsystem as any) || 'general',
+      variables: [], // ai_prompts doesn't store structured variables like the old system
+      version: parseFloat(prompt.prompt_version?.replace('v', '') || '1.0') || 1.0,
+      updated_at: prompt.created_at, // Use created_at as updated_at since we don't track updates yet
+    }));
+  }, [rawPrompts]);
 
   // Filter templates based on search and category
   const filteredTemplates = React.useMemo(() => {
@@ -40,7 +46,7 @@ export function PromptTemplateList({
     
     return templates.filter(template => {
       const matchesSearch = template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           template.description.toLowerCase().includes(searchTerm.toLowerCase());
+                           (template.description || '').toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesCategory = filterCategory === 'all' || template.category === filterCategory;
       
@@ -79,20 +85,6 @@ export function PromptTemplateList({
 
   return (
     <div className="space-y-6">
-      {/* Header and Controls */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">AI Prompt Templates</h2>
-          <p className="text-gray-600">Manage system prompt templates for AI operations</p>
-        </div>
-        
-        {onCreate && (
-          <Button onClick={onCreate} className="flex items-center gap-2">
-            <Plus size={16} />
-            Create Template
-          </Button>
-        )}
-      </div>
 
       {/* Search and Filter Controls */}
       <div className="flex flex-col sm:flex-row gap-4">
@@ -149,9 +141,9 @@ export function PromptTemplateList({
                       <CardTitle className="text-lg">{template.name}</CardTitle>
                       <Badge 
                         variant="outline" 
-                        className={getStatusColor(template.is_active)}
+                        className={getStatusColor(template.is_active !== false)}
                       >
-                        {template.is_active ? 'Active' : 'Inactive'}
+                        {template.is_active !== false ? 'Active' : 'Inactive'}
                       </Badge>
                       <Badge variant="secondary">
                         {CATEGORY_LABELS[template.category]}
@@ -161,9 +153,9 @@ export function PromptTemplateList({
                       {template.description}
                     </p>
                     <div className="flex flex-wrap gap-4 text-xs text-gray-500">
-                      <span>Version: {template.version}</span>
-                      <span>Variables: {template.variables.length}</span>
-                      <span>Updated: {new Date(template.updated_at).toLocaleDateString()}</span>
+                      <span>Version: {template.prompt_version}</span>
+                      <span>Model: {template.ai_model || 'Not specified'}</span>
+                      <span>Created: {new Date(template.created_at).toLocaleDateString()}</span>
                     </div>
                   </div>
                   
@@ -177,42 +169,6 @@ export function PromptTemplateList({
                       >
                         <Eye size={14} />
                         Preview
-                      </Button>
-                    )}
-                    
-                    {onTest && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onTest(template)}
-                        className="flex items-center gap-1"
-                      >
-                        <Play size={14} />
-                        Test
-                      </Button>
-                    )}
-                    
-                    {onEdit && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onEdit(template)}
-                        className="flex items-center gap-1"
-                      >
-                        <Edit size={14} />
-                        Edit
-                      </Button>
-                    )}
-                    
-                    {onDelete && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onDelete(template)}
-                        className="flex items-center gap-1 text-red-600 border-red-200 hover:bg-red-50"
-                      >
-                        <Trash2 size={14} />
-                        Delete
                       </Button>
                     )}
                   </div>
@@ -231,20 +187,27 @@ export function PromptTemplateList({
                   </div>
                 </div>
                 
-                {/* Variables Summary */}
-                {template.variables.length > 0 && (
-                  <div className="mt-3">
-                    <div className="text-xs font-medium text-gray-700 mb-2">Variables ({template.variables.length}):</div>
-                    <div className="flex flex-wrap gap-2">
-                      {template.variables.map(variable => (
-                        <Badge key={variable.name} variant="outline" className="text-xs">
-                          {variable.name}
-                          {variable.required && <span className="text-red-500 ml-1">*</span>}
-                        </Badge>
-                      ))}
-                    </div>
+                {/* Template Metadata */}
+                <div className="mt-3">
+                  <div className="text-xs font-medium text-gray-700 mb-2">Template Details:</div>
+                  <div className="flex flex-wrap gap-2">
+                    {template.workflow_step && (
+                      <Badge variant="outline" className="text-xs">
+                        Step: {template.workflow_step}
+                      </Badge>
+                    )}
+                    {template.subsystem && (
+                      <Badge variant="outline" className="text-xs">
+                        System: {template.subsystem}
+                      </Badge>
+                    )}
+                    {template.max_tokens && (
+                      <Badge variant="outline" className="text-xs">
+                        Max Tokens: {template.max_tokens}
+                      </Badge>
+                    )}
                   </div>
-                )}
+                </div>
               </CardContent>
             </Card>
           ))

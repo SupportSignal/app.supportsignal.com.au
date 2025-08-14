@@ -1,10 +1,13 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { useAction } from 'convex/react';
+import { api } from '@/convex/_generated/api';
 import { useAuth } from '@/components/auth/auth-provider';
 import { IncidentMetadataForm } from './IncidentMetadataForm';
 import { NarrativeGrid } from './NarrativeGrid';
 import { ClarificationStep } from './ClarificationStep';
+import { EnhancedReviewStep } from './EnhancedReviewStep';
 import { WorkflowWizard, WizardStep } from '@/components/user/workflow-wizard';
 import { Card, CardContent } from '@starter/ui/card';
 import { Button } from '@starter/ui/button';
@@ -25,6 +28,7 @@ import { ClarificationPhase } from '@/types/clarification';
  * - Step 4: During Event clarification questions
  * - Step 5: End Event clarification questions
  * - Step 6: Post-Event Support clarification questions
+ * - Step 7: Enhanced Review & Submit - AI narrative enhancement and workflow completion
  * - Auto-save functionality throughout
  * - AI-powered question generation
  * - Real-time validation
@@ -35,6 +39,9 @@ export function IncidentCaptureWorkflow() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0); // 0-based indexing for WorkflowWizard
   const [incidentId, setIncidentId] = useState<Id<"incidents"> | null>(null);
+  
+  // Convex action for batch question generation
+  const generateAllQuestions = useAction(api.aiClarification.generateAllClarificationQuestions);
 
   // Check authentication and authorization
   useEffect(() => {
@@ -58,9 +65,43 @@ export function IncidentCaptureWorkflow() {
     setCurrentStep(1);
   };
 
-  const handleNarrativeComplete = () => {
+  const handleNarrativeComplete = async (narrativeData: {
+    before_event: string;
+    during_event: string;
+    end_event: string;
+    post_event: string;
+  }) => {
     console.log('🐛 Narrative collection completed');
     setCompletedSteps(prev => new Set(prev).add('narrative'));
+
+    // 🚀 Proactive Question Generation (Story 3.2.5)
+    if (user?.sessionToken && incidentId) {
+      console.log('🤖 Starting proactive question generation for all phases...');
+      try {
+        const result = await generateAllQuestions({
+          sessionToken: user.sessionToken,
+          incident_id: incidentId,
+          narrative: narrativeData,
+        });
+
+        console.log('✅ Proactive question generation completed:', {
+          success: result.success,
+          total_questions: result.total_questions_generated,
+          successful_phases: result.successful_phases,
+          failed_phases: result.failed_phases,
+        });
+
+        if (result.success) {
+          console.log('🎯 Questions will appear automatically as user navigates to Steps 3-6');
+        } else {
+          console.warn('⚠️ Some or all question generation failed - manual fallback will be available');
+        }
+      } catch (error) {
+        console.error('❌ Proactive question generation failed:', error);
+        console.log('🔧 Manual generation buttons will be available as fallback');
+      }
+    }
+
     // Auto-advance to next step
     setCurrentStep(2);
   };
@@ -81,7 +122,7 @@ export function IncidentCaptureWorkflow() {
     console.log('🐛 Step completed:', stepId);
     setCompletedSteps(prev => new Set(prev).add(stepId));
     
-    // Auto-advance logic for clarification steps
+    // Auto-advance logic for clarification and review steps
     if (['before_event', 'during_event', 'end_event', 'post_event'].includes(stepId)) {
       const stepIndex = wizardSteps.findIndex(step => step.id === stepId);
       if (stepIndex < wizardSteps.length - 1) {
@@ -90,10 +131,20 @@ export function IncidentCaptureWorkflow() {
     }
   };
 
+  // Handle enhanced review completion
+  const handleEnhancedReviewComplete = (data: { success: boolean; handoff_id?: string }) => {
+    console.log('🐛 Enhanced review completed:', data);
+    if (data.success) {
+      setCompletedSteps(prev => new Set(prev).add('enhanced_review'));
+      // Show success and redirect
+      handleWorkflowComplete();
+    }
+  };
+
   // Handle workflow completion
   const handleWorkflowComplete = () => {
-    console.log('🐛 Workflow completed, redirecting to incidents');
-    router.push('/incidents');
+    console.log('🐛 Workflow completed, redirecting to dashboard');
+    router.push('/dashboard');
   };
 
   // Transform incident state into generic wizard steps (created fresh each render)
@@ -112,12 +163,11 @@ export function IncidentCaptureWorkflow() {
       isComplete: completedSteps.has('metadata'),
       canNavigateBack: false,
       validation: () => completedSteps.has('metadata') || 'Please complete the incident details first',
-      estimatedTime: 3,
     },
     {
       id: 'narrative',
       title: 'Narrative Collection', 
-      description: 'Collect detailed narrative using the 2x2 grid approach',
+      description: 'Document what happened before, during, at the end, and after the incident',
       component: incidentId ? (
         <NarrativeGrid
           incidentId={incidentId}
@@ -128,7 +178,6 @@ export function IncidentCaptureWorkflow() {
       isComplete: completedSteps.has('narrative'),
       canNavigateBack: true,
       validation: () => completedSteps.has('narrative') || 'Please complete the narrative collection',
-      estimatedTime: 12,
       dependencies: ['metadata'],
     },
     {
@@ -139,7 +188,7 @@ export function IncidentCaptureWorkflow() {
         <ClarificationStep
           incident_id={incidentId}
           phase="before_event"
-          onNext={() => {}} // WorkflowWizard will handle navigation
+          onNext={() => handleStepComplete('before_event')}
           onPrevious={() => {}} // WorkflowWizard will handle navigation
           canProceed={true}
         />
@@ -147,7 +196,6 @@ export function IncidentCaptureWorkflow() {
       isComplete: completedSteps.has('before_event'),
       canNavigateBack: true,
       validation: () => completedSteps.has('before_event') || 'Please complete the before event questions',
-      estimatedTime: 4,
       dependencies: ['narrative'],
     },
     {
@@ -158,7 +206,7 @@ export function IncidentCaptureWorkflow() {
         <ClarificationStep
           incident_id={incidentId}
           phase="during_event"
-          onNext={() => {}}
+          onNext={() => handleStepComplete('during_event')}
           onPrevious={() => {}}
           canProceed={true}
         />
@@ -166,7 +214,6 @@ export function IncidentCaptureWorkflow() {
       isComplete: completedSteps.has('during_event'),
       canNavigateBack: true,
       validation: () => completedSteps.has('during_event') || 'Please complete the during event questions',
-      estimatedTime: 5,
       dependencies: ['before_event'],
     },
     {
@@ -177,7 +224,7 @@ export function IncidentCaptureWorkflow() {
         <ClarificationStep
           incident_id={incidentId}
           phase="end_event"
-          onNext={() => {}}
+          onNext={() => handleStepComplete('end_event')}
           onPrevious={() => {}}
           canProceed={true}
         />
@@ -185,7 +232,6 @@ export function IncidentCaptureWorkflow() {
       isComplete: completedSteps.has('end_event'),
       canNavigateBack: true,
       validation: () => completedSteps.has('end_event') || 'Please complete the end event questions',
-      estimatedTime: 3,
       dependencies: ['during_event'],
     },
     {
@@ -196,7 +242,7 @@ export function IncidentCaptureWorkflow() {
         <ClarificationStep
           incident_id={incidentId}
           phase="post_event"
-          onNext={() => {}}
+          onNext={() => handleStepComplete('post_event')}
           onPrevious={() => {}}
           canProceed={true}
         />
@@ -204,8 +250,23 @@ export function IncidentCaptureWorkflow() {
       isComplete: completedSteps.has('post_event'),
       canNavigateBack: true,
       validation: () => completedSteps.has('post_event') || 'Please complete the post-event questions',
-      estimatedTime: 4,
       dependencies: ['end_event'],
+    },
+    {
+      id: 'enhanced_review',
+      title: 'Review & Submit',
+      description: 'AI-enhanced narrative review and final submission for analysis workflow',
+      component: incidentId ? (
+        <EnhancedReviewStep
+          incident_id={incidentId}
+          onComplete={handleEnhancedReviewComplete}
+          onPrevious={() => setCurrentStep(5)} // Go back to post_event step
+        />
+      ) : null,
+      isComplete: completedSteps.has('enhanced_review'),
+      canNavigateBack: true,
+      validation: () => completedSteps.has('enhanced_review') || 'Please complete the enhanced review and submission',
+      dependencies: ['post_event'],
     },
   ];
 
@@ -257,7 +318,7 @@ export function IncidentCaptureWorkflow() {
           onComplete={handleWorkflowComplete}
           onStepComplete={handleStepComplete}
           showProgress={true}
-          showEstimates={true}
+          showEstimates={false}
           showHelp={true}
           allowNonLinear={false}
           autoSave={false}

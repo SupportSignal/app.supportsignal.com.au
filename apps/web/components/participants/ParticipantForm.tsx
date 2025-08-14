@@ -21,7 +21,8 @@ import {
   CreateParticipantRequest,
   UpdateParticipantRequest,
   Participant,
-  SUPPORT_LEVELS 
+  SUPPORT_LEVELS,
+  PARTICIPANT_STATUS
 } from '@/types/participants';
 
 interface ParticipantFormProps {
@@ -74,6 +75,7 @@ export function ParticipantForm({
       emergency_contact: 'Jane Smith - Sister',
       support_level: 'medium' as const,
       care_notes: 'Requires assistance with mobility. Uses wheelchair. Prefers morning activities.',
+      status: 'active' as const,
     },
     {
       first_name: 'Sarah',
@@ -84,6 +86,7 @@ export function ParticipantForm({
       emergency_contact: 'Mike Johnson - Brother',
       support_level: 'high' as const,
       care_notes: 'Has anxiety disorder. Needs calm environment. Medication at 2pm daily.',
+      status: 'active' as const,
     },
     {
       first_name: 'David',
@@ -94,6 +97,7 @@ export function ParticipantForm({
       emergency_contact: 'Lisa Wilson - Wife',
       support_level: 'low' as const,
       care_notes: 'Independent living. Weekly check-ins only.',
+      status: 'inactive' as const,
     },
   ];
 
@@ -111,6 +115,7 @@ export function ParticipantForm({
     emergency_contact: participant?.emergency_contact || '',
     support_level: participant?.support_level || 'medium',
     care_notes: participant?.care_notes || '',
+    status: participant?.status || 'active',
   });
 
   const [errors, setErrors] = useState<ParticipantValidationErrors>({});
@@ -256,6 +261,7 @@ export function ParticipantForm({
           emergency_contact: formData.emergency_contact.trim() || undefined,
           support_level: formData.support_level,
           care_notes: formData.care_notes.trim() || undefined,
+          status: formData.status,
         };
 
         const result = await createParticipant(createRequest);
@@ -274,6 +280,7 @@ export function ParticipantForm({
           emergency_contact: formData.emergency_contact.trim() || undefined,
           support_level: formData.support_level,
           care_notes: formData.care_notes.trim() || undefined,
+          status: formData.status,
         };
 
         const result = await updateParticipant(updateRequest);
@@ -443,6 +450,34 @@ export function ParticipantForm({
                   </label>
                 ))}
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="status">Participant Status *</Label>
+              <div className="space-y-2">
+                {Object.values(PARTICIPANT_STATUS).map((status) => (
+                  <label key={status.value} className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      name="status"
+                      value={status.value}
+                      checked={formData.status === status.value}
+                      onChange={(e) => handleInputChange('status', e.target.value)}
+                      className="text-primary"
+                    />
+                    <div className="flex items-center space-x-2">
+                      <span className="text-lg">{status.icon}</span>
+                      <div>
+                        <span className="font-medium">{status.label}</span>
+                        <p className="text-sm text-gray-500">{status.description}</p>
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+              {errors.status && (
+                <p className="text-sm text-red-500">{errors.status}</p>
+              )}
             </div>
 
             <div className="space-y-2">

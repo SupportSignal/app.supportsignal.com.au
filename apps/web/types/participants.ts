@@ -42,6 +42,7 @@ export interface CreateParticipantRequest {
   emergency_contact?: string;
   support_level: "high" | "medium" | "low";
   care_notes?: string;
+  status: "active" | "inactive" | "discharged";
 }
 
 export interface UpdateParticipantRequest {
@@ -54,6 +55,7 @@ export interface UpdateParticipantRequest {
   emergency_contact?: string;
   support_level?: "high" | "medium" | "low";
   care_notes?: string;
+  status?: "active" | "inactive" | "discharged";
 }
 
 export interface ParticipantListFilters {
@@ -82,6 +84,7 @@ export interface ParticipantFormData {
   emergency_contact: string;
   support_level: "high" | "medium" | "low";
   care_notes: string;
+  status: "active" | "inactive" | "discharged";
 }
 
 export interface ParticipantValidationErrors {
@@ -93,6 +96,7 @@ export interface ParticipantValidationErrors {
   emergency_contact?: string;
   support_level?: string;
   care_notes?: string;
+  status?: string;
 }
 
 // For Epic 3 integration - participant selection in incident capture

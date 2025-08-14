@@ -44,7 +44,7 @@ export default function HomePage() {
                   </Link>
                 </Button>
                 <Button asChild size="lg" variant="outline">
-                  <Link href="/incidents">
+                  <Link href="/new-incident">
                     <Shield className="w-5 h-5 mr-2" />
                     Report Incident
                   </Link>
@@ -61,7 +61,7 @@ export default function HomePage() {
               Your workspace tools:
             </h2>
             <div className="grid md:grid-cols-3 gap-6">
-              <Link href="/incidents" className="group">
+              <Link href="/new-incident" className="group">
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-teal-300 dark:hover:border-teal-600 transition-colors">
                   <Shield className="w-8 h-8 text-teal-600 mb-3" />
                   <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Report Incident</h3>

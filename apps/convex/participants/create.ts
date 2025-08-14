@@ -19,6 +19,7 @@ export const createParticipant = mutation({
     emergency_contact: v.optional(v.string()),
     support_level: v.union(v.literal("high"), v.literal("medium"), v.literal("low")),
     care_notes: v.optional(v.string()),
+    status: v.union(v.literal("active"), v.literal("inactive"), v.literal("discharged")),
   },
   handler: async (ctx, args) => {
     try {
@@ -86,7 +87,7 @@ export const createParticipant = mutation({
         emergency_contact: args.emergency_contact?.trim(),
         support_level: args.support_level,
         care_notes: args.care_notes?.trim(),
-        status: "active",
+        status: args.status,
         created_at: Date.now(),
         created_by: user._id,
         updated_at: Date.now(),

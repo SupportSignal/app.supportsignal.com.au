@@ -3,19 +3,17 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { PromptTemplateList } from '@/components/admin/PromptTemplateList';
-import { PromptTemplateForm } from '@/components/admin/PromptTemplateForm';
 import { TemplateSeederInterface } from '@/components/admin/TemplateSeederInterface';
-import { AIPromptTemplate, CreatePromptTemplateForm } from '@/types/prompt-templates';
+import { AIPromptTemplate } from '@/types/prompt-templates';
 import { Button } from '@starter/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@starter/ui/card';
-import { ArrowLeft, Plus, Settings } from 'lucide-react';
+import { ArrowLeft, Settings } from 'lucide-react';
 
-type ViewMode = 'list' | 'create' | 'edit' | 'seeder';
+type ViewMode = 'list' | 'seeder';
 
 export default function AIPromptsAdminPage() {
   const { user } = useAuth();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
-  const [selectedTemplate, setSelectedTemplate] = useState<AIPromptTemplate | undefined>();
 
   // Access control - only system admins
   if (!user || user.role !== 'system_admin') {
@@ -31,42 +29,9 @@ export default function AIPromptsAdminPage() {
     );
   }
 
-  const handleCreate = () => {
-    setSelectedTemplate(undefined);
-    setViewMode('create');
-  };
-
-  const handleEdit = (template: AIPromptTemplate) => {
-    setSelectedTemplate(template);
-    setViewMode('edit');
-  };
-
-  const handleSave = (template: AIPromptTemplate) => {
-    // Template saved successfully, return to list
-    setViewMode('list');
-    setSelectedTemplate(undefined);
-  };
-
-  const handleCancel = () => {
-    setViewMode('list');
-    setSelectedTemplate(undefined);
-  };
-
-  const handlePreview = (template: AIPromptTemplate | CreatePromptTemplateForm) => {
+  const handlePreview = (template: AIPromptTemplate) => {
     // TODO: Implement preview functionality
     alert(`Preview functionality not yet implemented for: ${template.name}`);
-  };
-
-  const handleTest = (template: AIPromptTemplate) => {
-    // TODO: Implement test functionality
-    alert(`Test functionality not yet implemented for: ${template.name}`);
-  };
-
-  const handleDelete = (template: AIPromptTemplate) => {
-    // TODO: Implement delete functionality
-    if (confirm(`Are you sure you want to delete the template "${template.name}"?`)) {
-      alert('Delete functionality not yet implemented');
-    }
   };
 
   const handleOpenSeeder = () => {
@@ -95,7 +60,7 @@ export default function AIPromptsAdminPage() {
           {viewMode !== 'list' && (
             <Button
               variant="outline"
-              onClick={handleCancel}
+              onClick={() => setViewMode('list')}
               className="flex items-center gap-2"
             >
               <ArrowLeft size={16} />
@@ -104,24 +69,14 @@ export default function AIPromptsAdminPage() {
           )}
           
           {viewMode === 'list' && (
-            <>
-              <Button
-                variant="outline"
-                onClick={handleOpenSeeder}
-                className="flex items-center gap-2"
-              >
-                <Settings size={16} />
-                System Setup
-              </Button>
-              
-              <Button
-                onClick={handleCreate}
-                className="flex items-center gap-2"
-              >
-                <Plus size={16} />
-                Create Template
-              </Button>
-            </>
+            <Button
+              variant="outline"
+              onClick={handleOpenSeeder}
+              className="flex items-center gap-2"
+            >
+              <Settings size={16} />
+              Template Management
+            </Button>
           )}
         </div>
       </div>
@@ -130,19 +85,6 @@ export default function AIPromptsAdminPage() {
       <div className="min-h-96">
         {viewMode === 'list' && (
           <PromptTemplateList
-            onEdit={handleEdit}
-            onPreview={handlePreview}
-            onTest={handleTest}
-            onDelete={handleDelete}
-            onCreate={handleCreate}
-          />
-        )}
-
-        {(viewMode === 'create' || viewMode === 'edit') && (
-          <PromptTemplateForm
-            template={selectedTemplate}
-            onSave={handleSave}
-            onCancel={handleCancel}
             onPreview={handlePreview}
           />
         )}
@@ -178,19 +120,19 @@ export default function AIPromptsAdminPage() {
             <div className="flex items-start gap-2">
               <span className="text-blue-600 font-medium">1.</span>
               <div>
-                <strong>First Time Setup:</strong> Click &ldquo;System Setup&rdquo; to seed the system with default AI prompt templates for incident processing.
+                <strong>First Time Setup:</strong> Click &ldquo;Template Management&rdquo; to seed the system with hardcoded AI prompt templates for incident processing.
               </div>
             </div>
             <div className="flex items-start gap-2">
               <span className="text-blue-600 font-medium">2.</span>
               <div>
-                <strong>Template Management:</strong> Create, edit, and organize prompt templates by category (Clarification Questions, Narrative Enhancement, General).
+                <strong>Template System:</strong> Templates are defined in code and seeded into the database. Templates include clarification questions, narrative enhancement, and mock data generation.
               </div>
             </div>
             <div className="flex items-start gap-2">
               <span className="text-blue-600 font-medium">3.</span>
               <div>
-                <strong>Variable System:</strong> Use &ldquo;{`{{variable_name}}`}&rdquo; syntax in templates for dynamic content substitution during AI processing.
+                <strong>Variable Substitution:</strong> Templates use &ldquo;{`{{variable_name}}`}&rdquo; syntax for dynamic content substitution during AI processing.
               </div>
             </div>
           </CardContent>

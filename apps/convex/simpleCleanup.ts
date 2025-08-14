@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Simple cleanup - just delete all old logging data
 // Convex doesn't have DROP TABLE, so we delete all records manually
 

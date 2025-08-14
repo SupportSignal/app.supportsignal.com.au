@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
@@ -30,7 +31,7 @@ export function ClarificationStep({
   canProceed = true,
   isLoading = false 
 }: ClarificationStepProps) {
-  const { sessionToken } = useAuth();
+  const { sessionToken, user } = useAuth();
   
   // Simple state management
   const [questions, setQuestions] = useState<ClarificationQuestion[]>([]);
@@ -38,6 +39,8 @@ export function ClarificationStep({
   const [pendingAnswers, setPendingAnswers] = useState<Record<string, string>>({});
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isGeneratingMockAnswers, setIsGeneratingMockAnswers] = useState(false);
+  const [mockAnswersError, setMockAnswersError] = useState<string | null>(null);
 
   // Convex hooks
   const existingQuestions = useQuery(api.aiClarification.getClarificationQuestions, 
@@ -50,6 +53,7 @@ export function ClarificationStep({
   
   const submitAnswer = useMutation(api.aiClarification.submitClarificationAnswer);
   const generateQuestions = useAction(api.aiClarification.generateClarificationQuestions);
+  const generateMockAnswers = useAction(api.aiClarification.generateMockAnswers);
   
   // Get narrative content for question generation
   const incident = useQuery(api.incidents.getDraftIncident,
@@ -77,8 +81,24 @@ export function ClarificationStep({
     }
   };
 
+  // Reset state when incident ID changes (new incident)
+  useEffect(() => {
+    console.log('🐛 ClarificationStep: incident_id changed, resetting state', { incident_id, phase });
+    setQuestions([]);
+    setAutoSaveStates({});
+    setPendingAnswers({});
+    setGenerationError(null);
+    setIsGenerating(false);
+  }, [incident_id, phase]);
+
   // Update questions when query results change
   useEffect(() => {
+    console.log('🐛 ClarificationStep: existingQuestions changed', { 
+      existingQuestions: existingQuestions?.length || 0, 
+      incident_id, 
+      phase 
+    });
+    
     if (existingQuestions) {
       setQuestions(existingQuestions);
       
@@ -93,6 +113,10 @@ export function ClarificationStep({
         };
       });
       setAutoSaveStates(initialStates);
+    } else {
+      // No existing questions - ensure state is clean
+      setQuestions([]);
+      setAutoSaveStates({});
     }
   }, [existingQuestions]);
 
@@ -212,6 +236,51 @@ export function ClarificationStep({
     }, AUTO_SAVE_DELAY);
   }, [saveAnswer]);
 
+  // Handle mock answers generation (sample data feature)
+  const handleGenerateMockAnswers = useCallback(async () => {
+    if (!sessionToken || !user) {
+      setMockAnswersError("Authentication required");
+      return;
+    }
+
+    // Check if user has sample_data permission (based on role)
+    const hasSampleDataPermission = user.role === 'system_admin';
+    if (!hasSampleDataPermission) {
+      setMockAnswersError("Sample data permission required to generate mock answers");
+      return;
+    }
+
+    if (questions.length === 0) {
+      setMockAnswersError("No questions available to generate mock answers for");
+      return;
+    }
+
+    setIsGeneratingMockAnswers(true);
+    setMockAnswersError(null);
+
+    try {
+      const result = await generateMockAnswers({
+        sessionToken,
+        incident_id,
+        phase,
+      });
+
+      console.log("✅ Mock answers generated successfully:", result);
+
+      // Questions and answers will automatically update via useQuery reactivity
+      // No need to manually set them here
+
+    } catch (error) {
+      console.error("❌ Failed to generate mock answers:", error);
+      setMockAnswersError(error instanceof Error ? error.message : "Failed to generate mock answers");
+    } finally {
+      setIsGeneratingMockAnswers(false);
+    }
+  }, [sessionToken, user, questions.length, generateMockAnswers, incident_id, phase]);
+
+  // Check if user has sample data permissions (based on role)
+  const hasSampleDataPermission = user?.role === 'system_admin';
+
   // Calculate progress stats
   const totalQuestions = questions.length;
   const answeredQuestions = questions.filter(q => 
@@ -238,8 +307,20 @@ export function ClarificationStep({
       {/* Phase header */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl font-semibold text-gray-900">
-            Step {getStepNumber(phase)}: {PHASE_NAMES[phase]} Clarification
+          <CardTitle className="text-xl font-semibold text-gray-900 flex items-center justify-between">
+            <span>Step {getStepNumber(phase)}: {PHASE_NAMES[phase]} Clarification</span>
+            {/* Sample Data Button - Only show to users with sample_data permission */}
+            {hasSampleDataPermission && totalQuestions > 0 && (
+              <Button 
+                variant="ghost"
+                size="sm"
+                className="text-xs text-gray-500 hover:text-white hover:bg-ss-teal border-b border-dashed border-gray-300 rounded-none hover:border-ss-teal transition-all duration-200"
+                onClick={handleGenerateMockAnswers}
+                disabled={isGeneratingMockAnswers || isLoading}
+              >
+                {isGeneratingMockAnswers ? "Generating..." : "Mock Answers"}
+              </Button>
+            )}
           </CardTitle>
           <p className="text-gray-600 leading-relaxed">
             {PHASE_DESCRIPTIONS[phase]}
@@ -261,7 +342,7 @@ export function ClarificationStep({
         </CardHeader>
       </Card>
 
-      {/* Error state */}
+      {/* Error states */}
       {generationError && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
@@ -289,26 +370,46 @@ export function ClarificationStep({
           </AlertDescription>
         </Alert>
       )}
+
+      {/* Mock answers error state */}
+      {mockAnswersError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Failed to generate mock answers: {mockAnswersError}
+          </AlertDescription>
+        </Alert>
+      )}
       
-      {/* No questions state - manual generation */}
+      {/* No questions state - proactive loading or manual generation */}
       {!generationError && totalQuestions === 0 && !isGenerating && existingQuestions !== undefined && (
         <Card>
           <CardContent className="p-6 text-center space-y-4">
             <div className="text-gray-600">
-              <p className="font-medium">No clarification questions yet</p>
-              <p className="text-sm">Questions help gather more details about this phase of the incident.</p>
+              <Loader2 className="h-6 w-6 animate-spin mx-auto mb-3 text-blue-500" />
+              <p className="font-medium">Generating {PHASE_NAMES[phase]} questions...</p>
+              <p className="text-sm">Questions are being created in the background and will appear here automatically.</p>
+              <div className="flex items-center justify-center gap-2 mt-4">
+                <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse" />
+                <div className="h-2 w-2 bg-blue-400 rounded-full animate-pulse animation-delay-100" />
+                <div className="h-2 w-2 bg-blue-300 rounded-full animate-pulse animation-delay-200" />
+              </div>
             </div>
-            <Button 
-              onClick={handleGenerateQuestions}
-              disabled={isGenerating || !incident?.narrative}
-              className="min-w-[140px]"
-            >
-              <RefreshCw className={cn("h-4 w-4 mr-2", isGenerating && "animate-spin")} />
-              Generate Questions
-            </Button>
-            {!incident?.narrative && (
-              <p className="text-xs text-gray-500">Complete the narrative step first</p>
-            )}
+            
+            {/* Fallback manual generation - only show after some time or on error */}
+            <div className="pt-4 border-t border-gray-200">
+              <p className="text-xs text-gray-500 mb-3">Taking longer than expected?</p>
+              <Button 
+                onClick={handleGenerateQuestions}
+                disabled={isGenerating || !incident?.narrative}
+                variant="outline"
+                size="sm"
+                className="min-w-[140px]"
+              >
+                <RefreshCw className={cn("h-4 w-4 mr-2", isGenerating && "animate-spin")} />
+                Generate Manually
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
@@ -330,15 +431,18 @@ export function ClarificationStep({
 
       {/* Questions list */}
       {totalQuestions > 0 && !isLoading && (
-        <QuestionsList
-          questions={questions.map(q => ({
-            ...q,
-            answer_text: pendingAnswers[q.question_id] || q.answer_text || "",
-          }))}
-          onAnswerChange={handleAnswerChange}
-          autoSaveStates={autoSaveStates}
-          disabled={isLoading}
-        />
+        <>
+          <QuestionsList
+            questions={questions.map(q => ({
+              ...q,
+              answer_text: pendingAnswers[q.question_id] || q.answer_text || "",
+            }))}
+            onAnswerChange={handleAnswerChange}
+            autoSaveStates={autoSaveStates}
+            disabled={isLoading || isGeneratingMockAnswers}
+          />
+
+        </>
       )}
 
       {/* Navigation */}

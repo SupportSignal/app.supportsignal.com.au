@@ -65,6 +65,7 @@ export function IncidentMetadataForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
   const [currentIncidentId, setCurrentIncidentId] = useState<Id<"incidents"> | null>(existingIncidentId || null);
+  const [sampleDataError, setSampleDataError] = useState<string | null>(null);
 
 
 
@@ -163,7 +164,13 @@ export function IncidentMetadataForm({
       }
     } catch (error) {
       console.error('Failed to generate random sample data:', error);
-      // Could add user-facing error handling here
+      
+      // Show user-friendly error with guidance
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate sample data';
+      setSampleDataError(errorMessage);
+      
+      // Clear error after 10 seconds
+      setTimeout(() => setSampleDataError(null), 10000);
     }
   };
 
@@ -307,6 +314,40 @@ export function IncidentMetadataForm({
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {/* Sample Data Error Alert */}
+        {sampleDataError && (
+          <Alert className="mb-6 border-orange-200 bg-orange-50">
+            <AlertDescription className="text-orange-800">
+              <div className="flex items-start gap-3">
+                <span className="text-orange-600">⚠️</span>
+                <div className="flex-1">
+                  <p className="font-medium mb-2">Sample Data Generation Failed</p>
+                  <p className="text-sm mb-3">{sampleDataError}</p>
+                  <div className="text-sm">
+                    <strong>Quick Fix:</strong> Go to{' '}
+                    <a 
+                      href="/participants" 
+                      className="text-orange-700 underline hover:text-orange-900"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Participants page
+                    </a>{' '}
+                    → Click &quot;Sample Data&quot; button → Return here and try again.
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSampleDataError(null)}
+                  className="text-orange-600 hover:text-orange-800 ml-2"
+                  aria-label="Dismiss"
+                >
+                  ✕
+                </button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Reporter Name */}
           <div className="space-y-2">
@@ -421,21 +462,6 @@ export function IncidentMetadataForm({
             </Button>
           </div>
 
-          {/* Progress Indicator */}
-          <div className="mt-4 pt-4 border-t">
-            <div className="flex items-center justify-between text-sm text-gray-600">
-              <span>Step 1 of 7</span>
-              <div className="flex space-x-1">
-                <div className="w-8 h-1 bg-blue-600 rounded"></div>
-                <div className="w-8 h-1 bg-gray-300 rounded"></div>
-                <div className="w-8 h-1 bg-gray-300 rounded"></div>
-                <div className="w-8 h-1 bg-gray-300 rounded"></div>
-                <div className="w-8 h-1 bg-gray-300 rounded"></div>
-                <div className="w-8 h-1 bg-gray-300 rounded"></div>
-                <div className="w-8 h-1 bg-gray-300 rounded"></div>
-              </div>
-            </div>
-          </div>
         </form>
       </CardContent>
     </Card>

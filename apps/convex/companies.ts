@@ -2,6 +2,7 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { ConvexError } from "convex/values";
+import { api } from "./_generated/api";
 
 // Get company by ID with proper access control
 export const getCompanyById = query({
@@ -123,5 +124,98 @@ export const getCompanyStats = query({
       incidentCount: incidentCount.length,
       activeIncidents: incidentCount.filter(i => i.overall_status !== "completed").length,
     };
+  },
+});
+
+// Seed both test companies
+export const seedTestCompanies = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const results = [];
+    
+    const companiesData = [
+      {
+        name: "Support Signal",
+        slug: "support-signal",
+        contact_email: "admin@supportsignal.com.au",
+        description: "Primary application company"
+      },
+      {
+        name: "NDIS Test Company", 
+        slug: "ndis-test",
+        contact_email: "admin@ndis.com.au",
+        description: "Test company for multi-tenant scenarios"
+      }
+    ];
+
+    for (const companyData of companiesData) {
+      try {
+        // Check if company already exists
+        const existingCompany = await ctx.db
+          .query("companies")
+          .withIndex("by_slug", (q) => q.eq("slug", companyData.slug))
+          .first();
+
+        if (existingCompany) {
+          results.push({
+            success: true,
+            action: "exists",
+            message: `${companyData.name} already exists`,
+            companyId: existingCompany._id,
+            name: existingCompany.name,
+            slug: existingCompany.slug
+          });
+          continue;
+        }
+
+        // Create company
+        const companyId = await ctx.db.insert("companies", {
+          name: companyData.name,
+          slug: companyData.slug,
+          contact_email: companyData.contact_email,
+          status: "active",
+          created_at: Date.now(),
+        });
+
+        results.push({
+          success: true,
+          action: "created",
+          message: `Created ${companyData.name}`,
+          companyId,
+          name: companyData.name,
+          slug: companyData.slug
+        });
+
+      } catch (error) {
+        results.push({
+          success: false,
+          message: `Failed to create ${companyData.name}: ${error.message}`,
+          name: companyData.name,
+          error: error.message
+        });
+      }
+    }
+
+    return {
+      success: true,
+      message: "Test companies seed complete",
+      results,
+      summary: {
+        total: results.length,
+        created: results.filter(r => r.action === "created").length,
+        existed: results.filter(r => r.action === "exists").length,
+        failed: results.filter(r => !r.success).length
+      }
+    };
+  },
+});
+
+// Individual company seeders for backward compatibility
+export const seedSupportSignalCompany = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const result = await ctx.runMutation(api.companies.seedTestCompanies, {});
+    const supportSignalResult = result.results.find(r => r.slug === "support-signal");
+    return supportSignalResult || { success: false, message: "Support Signal company not found in results" };
   },
 });

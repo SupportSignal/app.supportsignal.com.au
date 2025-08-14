@@ -11,12 +11,14 @@ export default defineSchema({
   // Multi-tenant companies table for SupportSignal
   companies: defineTable({
     name: v.string(), // "Support Signal", "ABC NDIS Provider"
+    slug: v.string(), // URL-friendly identifier: "support-signal", "ndis-test"
     contact_email: v.string(), // Primary contact
     status: v.union(v.literal("active"), v.literal("trial"), v.literal("suspended")),
     created_at: v.number(),
     created_by: v.optional(v.id("users")), // Temporarily optional for seed data - should be required in production
   })
-    .index("by_status", ["status"]),
+    .index("by_status", ["status"])
+    .index("by_slug", ["slug"]),
 
   // User authentication table with multi-tenant support
   users: defineTable({
@@ -34,6 +36,8 @@ export default defineSchema({
     has_llm_access: v.optional(v.boolean()), // LLM access control flag
     // Multi-tenant company association
     company_id: v.optional(v.id("companies")), // Which company they belong to
+    // Timestamps
+    created_at: v.optional(v.number()), // When user was created
   })
     .index('by_email', ['email'])
     .index('by_company', ['company_id']),
@@ -223,10 +227,31 @@ export default defineSchema({
     questions_generated: v.boolean(),
     narrative_enhanced: v.boolean(),
     analysis_generated: v.boolean(),
+    
+    // Enhancement completion fields (Story 3.3)
+    enhanced_narrative_id: v.optional(v.id("enhanced_narratives")),
+    workflow_completed_at: v.optional(v.number()),
+    submitted_by: v.optional(v.id("users")),
+    submitted_at: v.optional(v.number()),
+    handoff_status: v.optional(v.union(
+      v.literal("draft"),
+      v.literal("ready_for_analysis"),
+      v.literal("in_analysis"),
+      v.literal("analysis_complete")
+    )),
+    completion_checklist: v.optional(v.object({
+      metadata_complete: v.boolean(),
+      narratives_complete: v.boolean(),
+      clarifications_complete: v.boolean(),
+      enhancement_complete: v.boolean(),
+      validation_passed: v.boolean(),
+    })),
   })
     .index("by_company", ["company_id"])
     .index("by_status", ["overall_status"])
-    .index("by_created", ["created_at"]),
+    .index("by_created", ["created_at"])
+    .index("by_handoff_status", ["handoff_status"])
+    .index("by_enhanced_narrative", ["enhanced_narrative_id"]),
 
   // Multi-phase incident narratives
   incident_narratives: defineTable({
@@ -512,4 +537,40 @@ export default defineSchema({
     .index("by_template", ["prompt_template_id"])
     .index("by_company", ["company_id"])
     .index("by_context", ["usage_context"]),
+
+  // Enhanced Narratives Storage (Story 3.3)
+  enhanced_narratives: defineTable({
+    incident_id: v.id("incidents"),
+    original_content: v.string(), // Combined original narratives
+    clarification_responses: v.string(), // Combined clarification answers
+    enhanced_content: v.string(), // AI-enhanced combined narrative
+    enhancement_version: v.number(), // Version tracking for edits
+    ai_model: v.optional(v.string()), // "claude/claude-3-sonnet"
+    enhancement_prompt: v.optional(v.string()),
+    processing_time_ms: v.number(),
+    quality_score: v.optional(v.number()), // AI-assessed quality metrics
+    user_edited: v.boolean(), // Track if user modified AI content
+    user_edits: v.optional(v.string()), // Store user modifications
+    created_at: v.number(),
+    updated_at: v.number(),
+  })
+    .index("by_incident", ["incident_id"])
+    .index("by_version", ["incident_id", "enhancement_version"]),
+
+  // Workflow Handoff Notifications (Story 3.3)
+  workflow_handoffs: defineTable({
+    incident_id: v.id("incidents"),
+    from_workflow: v.string(), // "incident_capture"
+    to_workflow: v.string(), // "incident_analysis"
+    handoff_data: v.any(), // Enhanced narrative and completion summary
+    team_leader_notified: v.boolean(),
+    notification_sent_at: v.optional(v.number()),
+    handoff_accepted: v.boolean(),
+    handoff_accepted_by: v.optional(v.id("users")),
+    handoff_accepted_at: v.optional(v.number()),
+    created_at: v.number(),
+  })
+    .index("by_incident", ["incident_id"])
+    .index("by_to_workflow", ["to_workflow"])
+    .index("by_team_leader_notification", ["team_leader_notified"]),
 });

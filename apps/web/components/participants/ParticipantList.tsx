@@ -174,13 +174,13 @@ export function ParticipantList({
               {/* Sample Data Button - only for system_admin */}
               {user?.role === 'system_admin' && (
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onClick={handleCreateSampleData}
                   disabled={isSampleDataLoading}
-                  className="whitespace-nowrap"
+                  className="text-xs text-gray-500 hover:text-white hover:bg-ss-teal border-b border-dashed border-gray-300 rounded-none hover:border-ss-teal transition-all duration-200 whitespace-nowrap"
                 >
-                  {isSampleDataLoading ? 'Creating...' : '🧪 Sample Data'}
+                  {isSampleDataLoading ? 'Creating...' : 'Sample Data'}
                 </Button>
               )}
 

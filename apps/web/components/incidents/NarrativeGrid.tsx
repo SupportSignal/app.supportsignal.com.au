@@ -16,7 +16,7 @@ import { Id } from '@/convex/_generated/dataModel';
 
 interface NarrativeGridProps {
   incidentId: Id<"incidents">;
-  onComplete: () => void;
+  onComplete: (narrativeData: NarrativeData) => void;
   onBack: () => void;
 }
 
@@ -188,9 +188,8 @@ export function NarrativeGrid({ incidentId, onComplete, onBack }: NarrativeGridP
         timestamp: new Date().toISOString(),
       });
 
-      // For Story 3.1, complete the workflow here
-      // In future stories (3.2, 3.3), this will proceed to AI clarification steps
-      onComplete();
+      // For Story 3.2+, pass narrative data to trigger proactive question generation
+      onComplete(narrativeData);
     } catch (error) {
       console.error('Failed to save narratives:', error);
       setErrors(error instanceof Error ? error.message : 'Failed to save narratives');
@@ -420,24 +419,6 @@ export function NarrativeGrid({ incidentId, onComplete, onBack }: NarrativeGridP
           </div>
         </div>
 
-        {/* Progress Indicator */}
-        <div className="mt-4 pt-4 border-t">
-          <div className="flex items-center justify-between text-sm text-gray-600">
-            <span>Step 2 of 7</span>
-            <div className="flex space-x-1">
-              <div className="w-8 h-1 bg-blue-600 rounded"></div>
-              <div className="w-8 h-1 bg-blue-600 rounded"></div>
-              <div className="w-8 h-1 bg-gray-300 rounded"></div>
-              <div className="w-8 h-1 bg-gray-300 rounded"></div>
-              <div className="w-8 h-1 bg-gray-300 rounded"></div>
-              <div className="w-8 h-1 bg-gray-300 rounded"></div>
-              <div className="w-8 h-1 bg-gray-300 rounded"></div>
-            </div>
-            <span className="text-xs text-gray-500">
-              Steps 3-7 coming in next release
-            </span>
-          </div>
-        </div>
       </form>
     </div>
   );

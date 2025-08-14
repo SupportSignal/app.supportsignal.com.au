@@ -141,7 +141,7 @@ export const generateQuestionsForPhase = action({
 
     try {
       // Get active prompt template
-      const prompt = await ctx.runQuery(internal.lib.ai.promptManager.getActivePrompt, {
+      const prompt = await ctx.runQuery(internal.promptManager.getActivePrompt, {
         prompt_name: "generate_clarification_questions",
         subsystem: "incidents",
       });
@@ -206,7 +206,7 @@ export const generateQuestionsForPhase = action({
       });
 
       // Update prompt usage statistics
-      await ctx.runMutation(internal.lib.ai.promptManager.updatePromptUsage, {
+      await ctx.runMutation(internal.promptManager.updatePromptUsage, {
         prompt_name: prompt.prompt_name,
         response_time_ms: processingTime,
         success: aiSuccess,

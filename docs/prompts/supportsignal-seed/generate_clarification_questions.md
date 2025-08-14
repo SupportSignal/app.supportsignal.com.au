@@ -18,9 +18,9 @@
 ## Input Variables
 
 - `participant_name` - NDIS participant name (required)
+- `reporter_name` - Name of person reporting incident (required)
 - `event_date_time` - Date and time of incident (required)
 - `incident_location` - Location where incident occurred (optional, default: "unspecified location")
-- `reporter_name` - Name of person reporting incident (required)
 - `narrative_phase` - Phase of narrative being clarified (required)
 - `existing_narrative` - Current narrative content for the phase (required)
 

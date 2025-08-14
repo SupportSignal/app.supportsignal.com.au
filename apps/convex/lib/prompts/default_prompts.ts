@@ -152,6 +152,92 @@ Provide the enhanced narrative as a single, well-structured paragraph or series 
     ]
   },
   {
+    name: "generate_mock_answers",
+    description: "Generate realistic mock answers for clarification questions about an NDIS incident report",
+    category: "sample_data" as const,
+    prompt_template: `You are generating realistic mock answers for clarification questions about an NDIS incident report.
+
+**Incident Context:**
+- **Participant**: {{participant_name}}
+- **Reporter**: {{reporter_name}}
+- **Location**: {{incident_location}}
+- **Date/Time**: {{event_date_time}}
+
+**Phase**: {{narrative_phase}} phase of the incident
+
+**Original Narrative for Context:**
+{{existing_narrative}}
+
+**Clarification Questions to Answer:**
+{{questions_to_answer}}
+
+**Your Task:**
+Generate realistic, detailed answers to the clarification questions provided. The answers should:
+
+1. **Be consistent** with the narrative and incident context
+2. **Sound authentic** like they come from someone who witnessed the incident  
+3. **Include specific details** that would be helpful for incident documentation
+4. **Use professional but conversational tone** appropriate for NDIS reporting
+5. **Vary in length** - some brief, some more detailed as appropriate
+6. **Respect participant dignity** and use person-first language
+
+**Output Format:**
+Provide answers as a JSON array:
+[
+  {
+    "question": "The original question text",
+    "answer": "Detailed, realistic answer here"
+  }
+]
+
+Ensure all answers are factual, helpful, and maintain the professional standards expected in NDIS incident reporting.`,
+    variables: [
+      {
+        name: "participant_name",
+        description: "NDIS participant name",
+        type: "string" as const,
+        required: true,
+      },
+      {
+        name: "reporter_name", 
+        description: "Name of person reporting incident",
+        type: "string" as const,
+        required: true,
+      },
+      {
+        name: "incident_location",
+        description: "Location where incident occurred",
+        type: "string" as const,
+        required: false,
+        default_value: "unspecified location"
+      },
+      {
+        name: "event_date_time",
+        description: "Date and time of incident",
+        type: "string" as const,
+        required: true,
+      },
+      {
+        name: "narrative_phase",
+        description: "Phase of narrative (before_event, during_event, end_event, post_event)",
+        type: "string" as const,
+        required: true,
+      },
+      {
+        name: "existing_narrative",
+        description: "Original narrative content for context",
+        type: "string" as const,
+        required: true,
+      },
+      {
+        name: "questions_to_answer",
+        description: "JSON array or text list of clarification questions to answer",
+        type: "string" as const,
+        required: true,
+      }
+    ]
+  },
+  {
     name: "system_test_template",
     description: "Simple template for testing prompt management system functionality",
     category: "general" as const,

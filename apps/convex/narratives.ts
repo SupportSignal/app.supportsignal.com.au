@@ -22,7 +22,13 @@ export const create = mutation({
       .first();
 
     if (existingNarrative) {
-      throw new ConvexError("Narrative already exists for this incident");
+      // Return existing narrative ID instead of throwing error (idempotent operation)
+      console.log('📝 NARRATIVE ALREADY EXISTS', {
+        narrativeId: existingNarrative._id,
+        incidentId: args.incident_id,
+        timestamp: new Date().toISOString(),
+      });
+      return existingNarrative._id;
     }
 
     // Get the incident to validate access

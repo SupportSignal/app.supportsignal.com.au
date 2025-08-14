@@ -1,7 +1,21 @@
 'use client';
 
-import { IncidentCaptureWorkflow } from '@/components/incidents/IncidentCaptureWorkflow';
+import { ComingSoonPage } from '@/components/layout/coming-soon-page';
+import { NAVIGATION_CONFIG } from '@/lib/navigation/navigation-config';
 
 export default function IncidentsPage() {
-  return <IncidentCaptureWorkflow />;
+  // Find the incidents configuration from navigation
+  const workflowSection = NAVIGATION_CONFIG.sections.find(section => section.id === 'workflows');
+  const incidentsConfig = workflowSection?.items.find(item => item.id === 'incidents');
+  
+  return (
+    <ComingSoonPage
+      title={incidentsConfig?.label || 'Incidents'}
+      description={incidentsConfig?.comingSoon?.description}
+      icon={incidentsConfig?.icon}
+      expectedFeatures={incidentsConfig?.comingSoon?.features}
+      backUrl="/dashboard"
+      backLabel="Back to Dashboard"
+    />
+  );
 }

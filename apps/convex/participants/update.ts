@@ -19,6 +19,7 @@ export const updateParticipant = mutation({
     emergency_contact: v.optional(v.string()),
     support_level: v.optional(v.union(v.literal("high"), v.literal("medium"), v.literal("low"))),
     care_notes: v.optional(v.string()),
+    status: v.optional(v.union(v.literal("active"), v.literal("inactive"), v.literal("discharged"))),
   },
   handler: async (ctx, args) => {
     try {
@@ -116,6 +117,10 @@ export const updateParticipant = mutation({
           throw new ConvexError('Care notes must not exceed 500 characters');
         }
         updateData.care_notes = args.care_notes?.trim();
+      }
+
+      if (args.status !== undefined) {
+        updateData.status = args.status;
       }
 
       // Update participant record

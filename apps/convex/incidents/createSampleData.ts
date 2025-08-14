@@ -375,7 +375,7 @@ export const generateRandomIncidentMetadata = mutation({
         return date.toISOString().slice(0, 16); // Format for datetime-local input
       };
 
-      // Get random participant from company
+      // Get random participant from company - must have real participants for proper data integrity
       const participants = await ctx.db
         .query("participants")
         .withIndex("by_company", (q) => q.eq("company_id", user.company_id))
@@ -383,10 +383,13 @@ export const generateRandomIncidentMetadata = mutation({
         .collect();
 
       if (participants.length === 0) {
-        throw new ConvexError('No active participants found for random selection');
+        throw new ConvexError('No participants available for sample data generation. Please create sample participants first by going to the Participants page and clicking the "🧪 Sample Data" button, then return here to try again.');
       }
 
+      // Use real participant data for proper incident assignment
       const randomParticipant = participants[Math.floor(Math.random() * participants.length)];
+      const participantName = `${randomParticipant.first_name} ${randomParticipant.last_name}`;
+      const participantId = randomParticipant._id;
       const randomLocation = sampleLocations[Math.floor(Math.random() * sampleLocations.length)];
       const randomDate = generateRandomDate();
 
@@ -394,11 +397,11 @@ export const generateRandomIncidentMetadata = mutation({
       const excludeFields = args.excludeFields || [];
       const result: any = {};
 
-      if (!excludeFields.includes('participant_id')) {
-        result.participant_id = randomParticipant._id;
+      if (!excludeFields.includes('participant_id') && participantId) {
+        result.participant_id = participantId;
       }
       if (!excludeFields.includes('participant_name')) {
-        result.participant_name = `${randomParticipant.first_name} ${randomParticipant.last_name}`;
+        result.participant_name = participantName;
       }
       if (!excludeFields.includes('location')) {
         result.location = randomLocation;
@@ -410,7 +413,8 @@ export const generateRandomIncidentMetadata = mutation({
       console.log('🎲 RANDOM FORM DATA GENERATED', {
         companyId: user.company_id,
         generatedBy: user._id,
-        participantSelected: randomParticipant.first_name,
+        participantSelected: participantName,
+        hasRealParticipants: participants.length > 0,
         location: randomLocation,
         date: randomDate,
         excludedFields: excludeFields,
@@ -423,13 +427,14 @@ export const generateRandomIncidentMetadata = mutation({
         data: result,
         metadata: {
           participant: {
-            id: randomParticipant._id,
-            name: `${randomParticipant.first_name} ${randomParticipant.last_name}`,
-            ndis_number: randomParticipant.ndis_number,
+            id: participantId,
+            name: participantName,
+            ndis_number: participantId ? participants.find(p => p._id === participantId)?.ndis_number : 'N/A (Sample)',
           },
           location: randomLocation,
           date: randomDate,
           generatedAt: new Date().toISOString(),
+          hasRealParticipants: participants.length > 0,
         },
         correlationId,
       };

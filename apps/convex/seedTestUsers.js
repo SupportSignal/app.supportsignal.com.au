@@ -11,6 +11,24 @@ import { v } from 'convex/values';
 // Pre-hashed password for "password" (bcrypt rounds=12)
 const HASHED_PASSWORD = '$2b$12$LHfLmOGHqPHFE8V1RdrydepoVCGbAM59lIJiiLzXz.BYgAGDu3k4K';
 
+// All test users data for both companies
+const TEST_USERS_DATA = {
+  'support-signal': [
+    { name: 'David Cruwys', email: 'david@ideasmen.com.au', role: 'system_admin' },
+    { name: 'Rony Kirollos', email: 'rony@kiros.com.au', role: 'company_admin' },
+    { name: 'Angela Harvey', email: 'angela@supportingpotential.com.au', role: 'company_admin' },
+    { name: 'Sarah Thompson', email: 'sarah@supportsignal.com.au', role: 'team_lead' },
+    { name: 'Michael Chen', email: 'michael@supportsignal.com.au', role: 'frontline_worker' },
+    { name: 'Emma Rodriguez', email: 'emma@supportsignal.com.au', role: 'frontline_worker' }
+  ],
+  'ndis-test': [
+    { name: 'System Admin', email: 'system_admin@ndis.com.au', role: 'system_admin' },
+    { name: 'Company Admin', email: 'company_admin@ndis.com.au', role: 'company_admin' },
+    { name: 'Team Lead', email: 'team_lead@ndis.com.au', role: 'team_lead' },
+    { name: 'Frontline Worker', email: 'frontline_worker@ndis.com.au', role: 'frontline_worker' }
+  ]
+};
+
 export const createUser = mutation({
   args: {
     role: v.union(
@@ -21,22 +39,34 @@ export const createUser = mutation({
     )
   },
   handler: async (ctx, { role }) => {
-    const email = `${role}@ndis.com.au`;
-    const name = role.split('_').map(word => 
+    // Get user data from Support Signal users
+    let userData;
+    if (role === 'system_admin') {
+      userData = SUPPORT_SIGNAL_USERS.system_admin;
+    } else if (role === 'company_admin') {
+      userData = SUPPORT_SIGNAL_USERS.company_admin_1; // Default to Rony
+    } else if (role === 'team_lead') {
+      userData = SUPPORT_SIGNAL_USERS.team_lead;
+    } else if (role === 'frontline_worker') {
+      userData = SUPPORT_SIGNAL_USERS.frontline_worker_1; // Default to Michael
+    }
+
+    const email = userData?.email || `${role}@supportsignal.com.au`;
+    const name = userData?.name || role.split('_').map(word => 
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
 
-    // Find or create the NDIS test company
+    // Find or create Support Signal company
     let company = await ctx.db
       .query('companies')
-      .filter((q) => q.eq(q.field('slug'), 'ndis-test'))
+      .filter((q) => q.eq(q.field('slug'), 'support-signal'))
       .first();
 
     if (!company) {
       const companyId = await ctx.db.insert('companies', {
-        name: 'NDIS Test Company',
-        slug: 'ndis-test',
-        contact_email: 'admin@ndis.com.au',
+        name: 'Support Signal',
+        slug: 'support-signal',
+        contact_email: 'admin@supportsignal.com.au',
         status: 'active',
         created_at: Date.now(),
       });
@@ -84,30 +114,108 @@ export const createUser = mutation({
 export const createAllTestUsers = mutation({
   args: {},
   handler: async (ctx) => {
-    const roles = ['system_admin', 'company_admin', 'team_lead', 'frontline_worker'];
     const results = [];
+    const companySummary = [];
 
-    for (const role of roles) {
-      try {
-        const result = await createUser(ctx, { role });
-        results.push(result);
-      } catch (error) {
+    // Process both companies
+    for (const [companySlug, users] of Object.entries(TEST_USERS_DATA)) {
+      // Find company
+      const company = await ctx.db
+        .query('companies')
+        .filter((q) => q.eq(q.field('slug'), companySlug))
+        .first();
+
+      if (!company) {
         results.push({
           success: false,
-          message: `Failed to create ${role}@ndis.com.au: ${error.message}`,
-          role
+          message: `Company ${companySlug} not found. Run companies:seedTestCompanies first.`,
+          company_slug: companySlug
         });
+        continue;
+      }
+
+      companySummary.push({
+        name: company.name,
+        slug: company.slug,
+        users_to_create: users.length
+      });
+
+      // Create users for this company
+      for (const userData of users) {
+        try {
+          // Check if user already exists
+          const existingUser = await ctx.db
+            .query('users')
+            .filter((q) => q.eq(q.field('email'), userData.email.toLowerCase()))
+            .first();
+
+          if (existingUser) {
+            results.push({
+              success: false,
+              action: 'exists',
+              message: `User ${userData.email} already exists`,
+              email: userData.email,
+              name: userData.name,
+              role: existingUser.role,
+              company_slug: companySlug
+            });
+            continue;
+          }
+
+          // Create user
+          const has_llm_access = userData.role === 'system_admin' || userData.role === 'company_admin' || userData.role === 'team_lead';
+          
+          const userId = await ctx.db.insert('users', {
+            name: userData.name,
+            email: userData.email.toLowerCase(),
+            password: HASHED_PASSWORD,
+            role: userData.role,
+            company_id: company._id,
+            has_llm_access,
+            created_at: Date.now(),
+          });
+
+          results.push({
+            success: true,
+            action: 'created',
+            message: `Created user: ${userData.email}`,
+            userId,
+            email: userData.email,
+            name: userData.name,
+            role: userData.role,
+            company_slug: companySlug,
+            password: 'password'
+          });
+
+        } catch (error) {
+          results.push({
+            success: false,
+            action: 'error',
+            message: `Failed to create ${userData.email}: ${error.message}`,
+            email: userData.email,
+            name: userData.name,
+            role: userData.role,
+            company_slug: companySlug,
+            error: error.message
+          });
+        }
       }
     }
 
     return {
       success: true,
-      message: 'Batch user creation complete',
+      message: 'All test users creation complete',
+      companies: companySummary,
       results,
       summary: {
         total: results.length,
-        created: results.filter(r => r.success).length,
-        failed: results.filter(r => !r.success).length
+        created: results.filter(r => r.action === 'created').length,
+        existed: results.filter(r => r.action === 'exists').length,
+        failed: results.filter(r => r.action === 'error').length,
+        by_company: {
+          'support-signal': results.filter(r => r.company_slug === 'support-signal').length,
+          'ndis-test': results.filter(r => r.company_slug === 'ndis-test').length
+        }
       }
     };
   }
