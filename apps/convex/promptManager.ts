@@ -1,6 +1,35 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
 import { requirePermission, PERMISSIONS } from "./permissions";
+import { ConvexError } from "convex/values";
+
+// Process template with variable substitution (moved from aiPromptTemplates.ts)
+export function processTemplate(template: string, variables: Record<string, any>): {
+  processedTemplate: string;
+  substitutions: Record<string, string>;
+} {
+  const substitutions: Record<string, string> = {};
+  
+  // Replace {{ variable }} patterns with actual values
+  const processedTemplate = template.replace(/\{\{\s*([^}]+)\s*\}\}/g, (match, variableName) => {
+    const trimmedName = variableName.trim();
+    
+    if (variables.hasOwnProperty(trimmedName)) {
+      const value = String(variables[trimmedName] || '');
+      substitutions[trimmedName] = value;
+      return value;
+    } else {
+      // Keep placeholder if variable not provided
+      substitutions[trimmedName] = match;
+      return match;
+    }
+  });
+
+  return {
+    processedTemplate,
+    substitutions,
+  };
+}
 
 // Get active prompt template by name
 export const getActivePrompt = query({
@@ -22,6 +51,48 @@ export const getActivePrompt = query({
       .first();
 
     return prompt;
+  },
+});
+
+// Get processed prompt with variable substitution (replaces aiPromptTemplates.getProcessedPrompt)
+export const getProcessedPrompt = query({
+  args: {
+    prompt_name: v.string(),
+    variables: v.any(),
+    subsystem: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const prompt = await ctx.db
+      .query("ai_prompts")
+      .withIndex("by_name", (q) => q.eq("prompt_name", args.prompt_name))
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("is_active"), true),
+          args.subsystem ? q.eq(q.field("subsystem"), args.subsystem) : true
+        )
+      )
+      .order("desc")
+      .first();
+
+    if (!prompt) {
+      throw new ConvexError(`Prompt not found: ${args.prompt_name}`);
+    }
+
+    const { processedTemplate, substitutions } = processTemplate(
+      prompt.prompt_template,
+      args.variables
+    );
+
+    return {
+      name: prompt.prompt_name,
+      version: prompt.prompt_version,
+      processedTemplate,
+      originalTemplate: prompt.prompt_template,
+      substitutions,
+      model: prompt.ai_model || 'openai/gpt-4.1-nano',
+      maxTokens: prompt.max_tokens,
+      temperature: prompt.temperature,
+    };
   },
 });
 
@@ -153,7 +224,7 @@ Generate questions as a JSON array with this format:
     description: "Generate clarification questions based on incident narrative to gather additional details",
     workflow_step: "clarification_questions",
     subsystem: "incidents",
-    ai_model: "claude-3-haiku-20240307",
+    ai_model: "anthropic/claude-3-haiku",
     max_tokens: 1000,
     temperature: 0.3,
     is_active: true,
@@ -195,7 +266,7 @@ Provide the enhanced narrative as a single, well-structured paragraph or series 
     description: "Enhance incident narrative by combining original content with clarification responses",
     workflow_step: "narrative_enhancement",
     subsystem: "incidents",
-    ai_model: "claude-3-haiku-20240307",
+    ai_model: "anthropic/claude-3-haiku",
     max_tokens: 2000,
     temperature: 0.1,
     is_active: true,
@@ -237,7 +308,7 @@ Output as JSON:
     description: "Generate realistic mock answers for clarification questions about an NDIS incident report",
     workflow_step: "sample_data_generation",
     subsystem: "incidents",
-    ai_model: "claude-3-haiku-20240307",
+    ai_model: "anthropic/claude-3-haiku",
     max_tokens: 2000,
     temperature: 0.7,
     is_active: true,

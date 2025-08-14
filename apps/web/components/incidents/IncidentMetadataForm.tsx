@@ -10,7 +10,6 @@ import { Label } from '@starter/ui/label';
 import { Button } from '@starter/ui/button';
 import { Alert, AlertDescription } from '@starter/ui/alert';
 import { ParticipantSelector } from '@/components/participants/ParticipantSelector';
-import { SampleDataButton } from './SampleDataButton';
 import { Id } from '@/convex/_generated/dataModel';
 import { Participant } from '@/types/participants';
 
@@ -120,7 +119,6 @@ export function IncidentMetadataForm({
     }
   }, [existingIncident, user.name]);
 
-
   // Handle random sample data generation using centralized service
   const handleRandomSample = async () => {
     const sessionToken = localStorage.getItem('auth_session_token');
@@ -173,6 +171,20 @@ export function IncidentMetadataForm({
       setTimeout(() => setSampleDataError(null), 10000);
     }
   };
+
+  // Listen for sample data trigger from Developer Tools Bar
+  useEffect(() => {
+    const handleSampleDataEvent = (event: CustomEvent) => {
+      if (event.detail.type === 'form') {
+        handleRandomSample();
+      }
+    };
+
+    window.addEventListener('triggerSampleData', handleSampleDataEvent as EventListener);
+    return () => {
+      window.removeEventListener('triggerSampleData', handleSampleDataEvent as EventListener);
+    };
+  }, []);
 
   // Handle participant selection
   const handleParticipantSelect = (participant: Participant | null) => {
@@ -303,14 +315,6 @@ export function IncidentMetadataForm({
               (Required Information)
             </span>
           </div>
-          <Button 
-            variant="ghost"
-            size="sm"
-            className="text-xs text-gray-500 hover:text-white hover:bg-ss-teal border-b border-dashed border-gray-300 rounded-none hover:border-ss-teal transition-all duration-200"
-            onClick={handleRandomSample}
-          >
-            Random Sample
-          </Button>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -445,7 +449,10 @@ export function IncidentMetadataForm({
           </div>
 
           {/* Form Actions */}
-          <div className="flex justify-end space-x-3 pt-6 border-t">
+          <div className="flex justify-between items-center pt-6 border-t">
+            {/* Empty div for consistent spacing since there's no Previous on Step 1 */}
+            <div></div>
+            
             <Button
               type="submit"
               disabled={!isFormValid || isSubmitting}

@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { v } from "convex/values";
 import { query, mutation, action } from "./_generated/server";
-import { internal } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import { requirePermission, PERMISSIONS } from "./permissions";
 
@@ -653,54 +653,49 @@ export const generateMockAnswers = action({
       .replace(/\{\{phase_narrative\}\}/g, narrativeForContext)
       .replace(/\{\{questions\}\}/g, JSON.stringify(questionsForPrompt, null, 2));
 
-    // Generate mock answers (using mock data since AI service is not implemented)
+    // Generate AI-powered mock answers using the proper AI service
     const startTime = Date.now();
-    const mockAnswersCorrelationId = `mock-answers-${args.incident_id}-${args.phase}-${Date.now()}`;
     
-    // Create realistic mock answers based on questions and narrative context
-    const mockAnswers = questions.map((question, index) => {
-      const mockResponses = {
-        before_event: [
-          "The participant seemed a bit agitated earlier in the morning, but nothing out of the ordinary. They had their usual breakfast and were engaged with activities.",
-          "The environment was fairly calm with the regular daily routine. There were about 8 other participants in the common area at the time.",
-          "We had their regular support strategies in place - the visual schedule was posted and their preferred staff member Sarah was on duty.",
-          "The participant had slept well the night before according to their sleep log, and took their morning medication as scheduled."
-        ],
-        during_event: [
-          "I immediately approached calmly and used their preferred de-escalation techniques. I maintained appropriate distance and spoke in a calm, low voice.",
-          "The participant initially became more upset when others tried to help, but responded better when we cleared some space and I used their communication cards.",
-          "We moved other participants to a safe distance and ensured there were no sharp objects nearby. The area was secured within about 2 minutes.",
-          "The incident lasted approximately 15 minutes from start to finish. The participant gradually calmed down when we played their preferred music."
-        ],
-        end_event: [
-          "Playing their favorite calming music and offering their comfort item (a soft blue blanket) helped bring the situation under control.",
-          "The participant's breathing slowed down and they stopped the repetitive movements. They accepted a drink of water and sat down in their preferred chair.",
-          "We did a quick visual check for any injuries - none were observed. The area was safe and all other participants were accounted for.",
-          "It took about 5 minutes for the participant to fully return to baseline after the main incident ended."
-        ],
-        post_event: [
-          "We offered their preferred comfort items and allowed them to rest in their room for about 30 minutes with soft music playing.",
-          "I stayed nearby to monitor their mood and comfort level. They were able to communicate their needs clearly within an hour of the incident.",
-          "We documented the incident immediately and will review their behavior support plan with the team tomorrow to see if any adjustments are needed.",
-          "The participant was able to participate in afternoon activities as usual and seemed back to their normal self by dinner time."
-        ]
-      };
-
-      const responses = mockResponses[args.phase as keyof typeof mockResponses] || ["This is a sample response to help demonstrate the system."];
-      const answerText = responses[index % responses.length] || responses[0];
-
-      return {
-        question_id: question.question_id,
-        question: question.question_text,
-        answer: answerText
-      };
+    // Map phase names to match aiOperations.ts expected format
+    const phaseMapping = {
+      'before_event': 'beforeEvent',
+      'during_event': 'duringEvent', 
+      'end_event': 'endOfEvent',
+      'post_event': 'postEventSupport'
+    };
+    
+    const mappedPhase = phaseMapping[args.phase as keyof typeof phaseMapping];
+    
+    // Call the real AI service with proper parameters
+    const aiResult = await ctx.runAction(api.aiOperations.generateMockAnswers, {
+      participant_name: incident.participant_name || "",
+      reporter_name: incident.reporter_name || "",
+      location: incident.location || "",
+      phase: mappedPhase,
+      phase_narrative: narrativeForContext,
+      questions: JSON.stringify(questionsForPrompt),
+      incident_id: args.incident_id,
+      user_id: user._id,
     });
 
-    // Simulate AI processing time
-    await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 2000));
+    // aiOperations.generateMockAnswers returns { mock_answers: { output }, metadata }
+    if (!aiResult.mock_answers || !aiResult.mock_answers.output) {
+      throw new Error(`AI service failed: No mock answers returned`);
+    }
+
+    // Parse AI response to extract answers
+    let parsedAnswers;
+    try {
+      parsedAnswers = JSON.parse(aiResult.mock_answers.output);
+      if (!Array.isArray(parsedAnswers)) {
+        throw new Error("AI response is not an array");
+      }
+    } catch (error) {
+      console.error("Failed to parse AI response:", aiResult.mock_answers.output);
+      throw new Error(`Invalid AI response format: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
     
     const processingTime = Date.now() - startTime;
-    const parsedAnswers = mockAnswers;
 
     // Store the mock answers
     const storedAnswers = [];
@@ -734,27 +729,17 @@ export const generateMockAnswers = action({
       });
     }
 
-    // Log the AI request for monitoring
-    await ctx.runMutation(internal.incidents.logAiRequest, {
-      correlation_id: mockAnswersCorrelationId,
-      operation: "generateMockAnswers",
-      model: prompt.ai_model || "mock-service",
-      prompt_template: prompt.prompt_name,
-      input_data: {
-        phase: args.phase,
-        questions_count: questions.length,
-        incident_id: args.incident_id,
-      },
-      output_data: {
-        answers_generated: storedAnswers.length,
-        question_ids: storedAnswers.map(a => a.question_id),
-      },
+    // AI request is already logged by aiOperations.generateMockAnswers, 
+    // but we can add supplementary logging for the clarification context
+    console.log(`🤖 AI-GENERATED MOCK ANSWERS`, {
+      phase: args.phase,
+      questions_count: questions.length,
+      answers_generated: storedAnswers.length,
       processing_time_ms: processingTime,
-      success: storedAnswers.length > 0,
-      error_message: undefined,
-      user_id: user._id,
+      ai_model: aiResult.model,
+      correlation_id: aiResult.correlationId,
       incident_id: args.incident_id,
-      created_at: Date.now(),
+      user_id: user._id,
     });
 
     // Update prompt usage statistics
@@ -764,15 +749,18 @@ export const generateMockAnswers = action({
       success: storedAnswers.length > 0,
     });
 
-    console.log(`✅ Generated ${storedAnswers.length} mock answers for ${args.phase} phase`);
+    console.log(`✅ Generated ${storedAnswers.length} AI-powered answers for ${args.phase} phase using ${aiResult.model}`);
 
     return {
       success: true,
       phase: args.phase,
       generated_count: storedAnswers.length,
       answers: storedAnswers,
-      correlation_id: mockAnswersCorrelationId,
+      correlation_id: aiResult.correlationId,
       processing_time_ms: processingTime,
+      ai_model: aiResult.model,
+      tokens_used: aiResult.tokensUsed,
+      cost: aiResult.cost,
     };
   },
 });

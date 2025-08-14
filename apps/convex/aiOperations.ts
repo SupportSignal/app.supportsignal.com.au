@@ -98,8 +98,8 @@ export const generateClarificationQuestions = action({
       }
 
       // Get processed prompt template
-      const processedPrompt = await ctx.runQuery(api.aiPromptTemplates.getProcessedPrompt, {
-        promptName: "generate_clarification_questions",
+      const processedPrompt = await ctx.runQuery(api.promptManager.getProcessedPrompt, {
+        prompt_name: "generate_clarification_questions",
         variables: {
           participant_name: args.participant_name,
           reporter_name: args.reporter_name,
@@ -271,8 +271,8 @@ export const enhanceNarrativeContent = action({
         .join('\n\n');
 
       // Get processed prompt template
-      const processedPrompt = await ctx.runQuery(api.aiPromptTemplates.getProcessedPrompt, {
-        promptName: "enhance_narrative_content",
+      const processedPrompt = await ctx.runQuery(api.promptManager.getProcessedPrompt, {
+        prompt_name: "enhance_narrative_content",
         variables: {
           phase: args.phase,
           instruction: args.instruction,
@@ -407,8 +407,8 @@ export const analyzeContributingConditions = action({
       }
 
       // Get processed prompt template
-      const processedPrompt = await ctx.runQuery(api.aiPromptTemplates.getProcessedPrompt, {
-        promptName: "analyze_contributing_conditions",
+      const processedPrompt = await ctx.runQuery(api.promptManager.getProcessedPrompt, {
+        prompt_name: "analyze_contributing_conditions",
         variables: {
           reporter_name: args.reporter_name,
           participant_name: args.participant_name,
@@ -553,8 +553,8 @@ export const generateMockAnswers = action({
       }
 
       // Get processed prompt template
-      const processedPrompt = await ctx.runQuery(api.aiPromptTemplates.getProcessedPrompt, {
-        promptName: "generate_mock_answers",
+      const processedPrompt = await ctx.runQuery(api.promptManager.getProcessedPrompt, {
+        prompt_name: "generate_mock_answers",
         variables: {
           participant_name: args.participant_name,
           reporter_name: args.reporter_name,

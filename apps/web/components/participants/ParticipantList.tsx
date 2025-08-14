@@ -175,7 +175,7 @@ export function ParticipantList({
               {user?.role === 'system_admin' && (
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="xs"
                   onClick={handleCreateSampleData}
                   disabled={isSampleDataLoading}
                   className="text-xs text-gray-500 hover:text-white hover:bg-ss-teal border-b border-dashed border-gray-300 rounded-none hover:border-ss-teal transition-all duration-200 whitespace-nowrap"

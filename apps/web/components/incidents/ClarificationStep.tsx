@@ -309,18 +309,6 @@ export function ClarificationStep({
         <CardHeader>
           <CardTitle className="text-xl font-semibold text-gray-900 flex items-center justify-between">
             <span>Step {getStepNumber(phase)}: {PHASE_NAMES[phase]} Clarification</span>
-            {/* Sample Data Button - Only show to users with sample_data permission */}
-            {hasSampleDataPermission && totalQuestions > 0 && (
-              <Button 
-                variant="ghost"
-                size="sm"
-                className="text-xs text-gray-500 hover:text-white hover:bg-ss-teal border-b border-dashed border-gray-300 rounded-none hover:border-ss-teal transition-all duration-200"
-                onClick={handleGenerateMockAnswers}
-                disabled={isGeneratingMockAnswers || isLoading}
-              >
-                {isGeneratingMockAnswers ? "Generating..." : "Mock Answers"}
-              </Button>
-            )}
           </CardTitle>
           <p className="text-gray-600 leading-relaxed">
             {PHASE_DESCRIPTIONS[phase]}
@@ -468,16 +456,19 @@ export function ClarificationStep({
               <span>All questions are optional</span>
             </div>
             
-            <Button
-              onClick={onNext}
-              disabled={!canProceed || isLoading}
-              className="min-w-[120px]"
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : null}
-              Next Step
-            </Button>
+            <div className="flex items-center gap-3">
+              
+              <Button
+                onClick={onNext}
+                disabled={!canProceed || isLoading}
+                className="min-w-[120px]"
+              >
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : null}
+                Next Step
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
