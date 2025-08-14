@@ -240,7 +240,7 @@ export class MultiProviderAIManager {
         name: 'OpenRouter',
         apiKey: openrouterApiKey,
         baseUrl: 'https://openrouter.ai/api/v1',
-        models: ['openai/gpt-4.1-nano', 'openai/gpt-4', 'openai/gpt-4o-mini'],
+        models: ['openai/gpt-4.1-nano', 'openai/gpt-4', 'openai/gpt-4o-mini', 'anthropic/claude-3-haiku'],
         priority: 1,
         enabled: true,
       }));

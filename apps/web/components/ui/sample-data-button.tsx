@@ -29,7 +29,7 @@ interface SampleDataButtonProps {
   // Button configuration
   buttonText?: string;
   variant?: 'simple' | 'dropdown';
-  size?: 'sm' | 'default' | 'lg';
+  size?: 'xs' | 'sm' | 'default' | 'lg';
   className?: string;
   disabled?: boolean;
   
@@ -63,7 +63,7 @@ const severityColors = {
 export function SampleDataButton({
   buttonText = "Sample Data",
   variant = "simple",
-  size = "sm",
+  size = "xs",
   className,
   disabled = false,
   onClick,

@@ -80,7 +80,7 @@ Generate questions as a JSON array with this format:
     name: "enhance_narrative",
     description: "Enhance incident narrative by combining original content with clarification responses",
     category: "narrative_enhancement" as const,
-    prompt_template: `You are an expert NDIS incident documentation specialist. Your task is to create a comprehensive, well-structured incident narrative by combining original observations with additional clarification details.
+    prompt_template: `You are an expert NDIS incident documentation specialist. Your task is to create enhanced narrative sections by naturally integrating original observations with clarification responses.
 
 **Incident Overview:**
 - **Participant**: {{participant_name}}
@@ -88,29 +88,37 @@ Generate questions as a JSON array with this format:
 - **Location**: {{incident_location}}
 - **Reporter**: {{reporter_name}}
 
-**Original Narrative:**
-{{existing_narrative}}
+**Original Narrative ({{narrative_phase}} phase):**
+{{phase_original_narrative}}
 
-**Additional Details from Clarifications:**
-{{clarification_responses}}
+**Clarification Responses ({{narrative_phase}} phase):**
+{{phase_clarification_responses}}
 
 **Your Task:**
-Create an enhanced, comprehensive narrative that:
-1. **Integrates** original content with clarification responses seamlessly
-2. **Maintains** chronological flow and factual accuracy
-3. **Preserves** the reporter's voice and observations
-4. **Adds** clarified details in appropriate context
-5. **Ensures** professional, respectful language throughout
+Create an enhanced narrative for the {{narrative_phase}} phase that:
 
-**Guidelines:**
-- Keep the participant's dignity and privacy central
-- Use clear, professional language suitable for NDIS reporting
-- Maintain factual accuracy - don't infer beyond provided information
-- Structure content logically (chronological or thematic as appropriate)
-- Ensure all important details from both sources are included
+1. **Preserves Original Meaning**: Keep the reporter's original observations and tone intact
+2. **Light Grammar Improvements**: Fix only basic grammar, spelling, and sentence structure issues
+3. **Natural Integration**: Weave clarification responses seamlessly into the narrative flow
+4. **Maintains Authenticity**: Should read as if the reporter wrote it correctly the first time
+5. **No Hallucinations**: Use only information provided - do not add assumptions or interpretations
+
+**Enhancement Guidelines:**
+- **Grammar Only**: Focus on fixing grammar, not rewriting content
+- **Voice Preservation**: Maintain the reporter's original tone and perspective
+- **Natural Flow**: Integrate Q&A responses as natural narrative elements
+- **Factual Accuracy**: Only use provided information, no inferences
+- **Professional Language**: Ensure appropriate language for NDIS reporting
+- **Participant Dignity**: Keep participant respect and privacy central
+
+**Integration Approach:**
+- Start with the original narrative as the foundation
+- Add clarification details where they naturally fit chronologically
+- Fix grammar and sentence structure while preserving meaning
+- Ensure the result flows as a unified, well-written narrative
 
 **Output Format:**
-Provide the enhanced narrative as a single, well-structured paragraph or series of paragraphs. Do not include headers, bullets, or JSON formatting - just the enhanced narrative text.`,
+Provide only the enhanced narrative text for the {{narrative_phase}} phase. Do not include headers, bullets, or explanations - just the improved narrative that combines original content with clarifications naturally.`,
     variables: [
       {
         name: "participant_name",
@@ -138,14 +146,20 @@ Provide the enhanced narrative as a single, well-structured paragraph or series 
         required: true,
       },
       {
-        name: "existing_narrative",
-        description: "Original narrative content to be enhanced",
+        name: "narrative_phase",
+        description: "Phase of the narrative being enhanced (before_event, during_event, end_event, post_event)",
         type: "string" as const,
         required: true,
       },
       {
-        name: "clarification_responses",
-        description: "Additional details gathered through clarification questions",
+        name: "phase_original_narrative",
+        description: "Original narrative content for this specific phase",
+        type: "string" as const,
+        required: true,
+      },
+      {
+        name: "phase_clarification_responses",
+        description: "Clarification responses specific to this phase only",
         type: "string" as const,
         required: true,
       }

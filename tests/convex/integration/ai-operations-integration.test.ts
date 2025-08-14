@@ -108,7 +108,7 @@ Output as JSON with before_event, during_event, end_of_event, post_event_support
 
       // Verify database interactions
       expect(mockContext.runQuery).toHaveBeenCalledWith(
-        'aiPromptTemplates/getProcessedPrompt',
+        'promptManager/getProcessedPrompt',
         expect.objectContaining({
           promptName: 'generate_clarification_questions',
           variables: expect.objectContaining({
@@ -194,7 +194,7 @@ Instruction: ${enhanceArgs.instruction}`,
 
       // Verify database query was called correctly
       expect(mockContext.runQuery).toHaveBeenCalledWith(
-        'aiPromptTemplates/getProcessedPrompt',
+        'promptManager/getProcessedPrompt',
         expect.objectContaining({
           promptName: 'enhance_narrative_content',
           variables: expect.objectContaining({
@@ -264,7 +264,7 @@ Identify immediate contributing conditions...`,
 
       // Verify comprehensive incident data was passed to template
       expect(mockContext.runQuery).toHaveBeenCalledWith(
-        'aiPromptTemplates/getProcessedPrompt',
+        'promptManager/getProcessedPrompt',
         expect.objectContaining({
           promptName: 'analyze_contributing_conditions',
           variables: expect.objectContaining({
@@ -344,7 +344,7 @@ Provide realistic JSON response with answers array...`,
 
       // Verify comprehensive mock generation data passed
       expect(mockContext.runQuery).toHaveBeenCalledWith(
-        'aiPromptTemplates/getProcessedPrompt',
+        'promptManager/getProcessedPrompt',
         expect.objectContaining({
           promptName: 'generate_mock_answers',
           variables: expect.objectContaining({

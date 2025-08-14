@@ -21,6 +21,8 @@ import {
   History,
   FileText
 } from 'lucide-react';
+import { OriginalContentCollapse } from './OriginalContentCollapse';
+import { QADisplayCollapse } from './QADisplayCollapse';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import type { Id } from '@/convex/_generated/dataModel';
@@ -251,6 +253,19 @@ export function EnhancedNarrativeDisplay({
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Collapsible Original Content and Q&A Sections */}
+      <div className="space-y-4">
+        <OriginalContentCollapse 
+          originalContent={JSON.parse(enhancedNarrative.original_content)}
+          defaultCollapsed={true}
+        />
+        
+        <QADisplayCollapse 
+          clarificationResponses={JSON.parse(enhancedNarrative.clarification_responses)}
+          defaultCollapsed={true}
+        />
+      </div>
     </div>
   );
 }

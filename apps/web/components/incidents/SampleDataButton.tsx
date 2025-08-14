@@ -18,7 +18,7 @@ interface SampleDataButtonProps {
   onDataFilled?: (scenarioData: any) => void;
   className?: string;
   variant?: "ghost" | "outline" | "secondary";
-  size?: "sm" | "default" | "lg";
+  size?: "xs" | "sm" | "default" | "lg";
   participantFirstName?: string; // For name interpolation in narratives
 }
 

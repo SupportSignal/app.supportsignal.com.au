@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { useAction } from 'convex/react';
+import { useAction, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useAuth } from '@/components/auth/auth-provider';
 import { IncidentMetadataForm } from './IncidentMetadataForm';
 import { NarrativeGrid } from './NarrativeGrid';
 import { ClarificationStep } from './ClarificationStep';
-import { EnhancedReviewStep } from './EnhancedReviewStep';
+import { EnhancedReviewStepNew } from './EnhancedReviewStepNew';
+import { ConsolidatedReportStep } from './ConsolidatedReportStep';
 import { WorkflowWizard, WizardStep } from '@/components/user/workflow-wizard';
 import { Card, CardContent } from '@starter/ui/card';
 import { Button } from '@starter/ui/button';
@@ -16,6 +17,8 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Id } from '@/convex/_generated/dataModel';
 import { ClarificationPhase } from '@/types/clarification';
+import { DeveloperToolsBar } from './DeveloperToolsBar';
+import { WorkflowImportResult } from '@/types/workflowData';
 
 /**
  * Main Incident Capture Workflow Component
@@ -28,7 +31,8 @@ import { ClarificationPhase } from '@/types/clarification';
  * - Step 4: During Event clarification questions
  * - Step 5: End Event clarification questions
  * - Step 6: Post-Event Support clarification questions
- * - Step 7: Enhanced Review & Submit - AI narrative enhancement and workflow completion
+ * - Step 7: Enhanced Review - AI narrative enhancement and quality review
+ * - Step 8: Consolidated Report - Complete incident overview and workflow submission
  * - Auto-save functionality throughout
  * - AI-powered question generation
  * - Real-time validation
@@ -131,12 +135,22 @@ export function IncidentCaptureWorkflow() {
     }
   };
 
-  // Handle enhanced review completion
+  // Handle enhanced review completion (Step 7)
   const handleEnhancedReviewComplete = (data: { success: boolean; handoff_id?: string }) => {
     console.log('🐛 Enhanced review completed:', data);
     if (data.success) {
       setCompletedSteps(prev => new Set(prev).add('enhanced_review'));
-      // Show success and redirect
+      // Advance to consolidated report step
+      setCurrentStep(7); // Step 8 (0-based indexing)
+    }
+  };
+
+  // Handle consolidated report completion (Step 8)
+  const handleConsolidatedReportComplete = (data: { success: boolean; handoff_id?: string }) => {
+    console.log('🐛 Consolidated report completed:', data);
+    if (data.success) {
+      setCompletedSteps(prev => new Set(prev).add('consolidated_report'));
+      // Complete workflow and redirect
       handleWorkflowComplete();
     }
   };
@@ -145,6 +159,98 @@ export function IncidentCaptureWorkflow() {
   const handleWorkflowComplete = () => {
     console.log('🐛 Workflow completed, redirecting to dashboard');
     router.push('/dashboard');
+  };
+
+  // Developer Tools Bar handlers
+  const handleExportComplete = (filename: string) => {
+    console.log('🚀 Workflow exported successfully:', filename);
+  };
+
+  const handleImportComplete = (result: WorkflowImportResult) => {
+    console.log('🚀 Workflow imported successfully:', result);
+    if (result.success && result.incident_id) {
+      setIncidentId(result.incident_id);
+      // Update completed steps based on import
+      const importedSteps = new Set<string>();
+      if (result.created_step >= 1) importedSteps.add('metadata');
+      if (result.created_step >= 2) importedSteps.add('narrative');
+      if (result.created_step >= 3) importedSteps.add('before_event');
+      if (result.created_step >= 4) importedSteps.add('during_event');
+      if (result.created_step >= 5) importedSteps.add('end_event');
+      if (result.created_step >= 6) importedSteps.add('post_event');
+      if (result.created_step >= 7) importedSteps.add('enhanced_review');
+      if (result.created_step >= 8) importedSteps.add('consolidated_report');
+      setCompletedSteps(importedSteps);
+    }
+  };
+
+  const handleStepNavigate = (step: number) => {
+    // Convert 1-based step to 0-based index
+    setCurrentStep(step - 1);
+  };
+
+  // Convex action for Q&A sample data  
+  const generateMockAnswers = useAction(api.aiClarification.generateMockAnswers);
+
+  // Sample data handlers for Developer Tools Bar
+  const handleFillForm = () => {
+    // Navigate to step 1 if not already there
+    if (currentStep !== 0) {
+      setCurrentStep(0);
+    }
+    // The form component will handle its own sample data generation via existing functionality
+    // We trigger it by dispatching a custom event that the form can listen to
+    window.dispatchEvent(new CustomEvent('triggerSampleData', { detail: { type: 'form' } }));
+  };
+
+  const handleFillNarrative = () => {
+    // Navigate to step 2 if not already there
+    if (currentStep !== 1) {
+      setCurrentStep(1);
+    }
+    // Use the same approach as the form - dispatch an event for the narrative component to handle
+    window.dispatchEvent(new CustomEvent('triggerSampleData', { detail: { type: 'narrative' } }));
+  };
+
+  const handleFillQA = async () => {
+    if (!user?.sessionToken || !incidentId) {
+      console.warn('Cannot fill Q&A: missing session token or incident ID');
+      return;
+    }
+
+    // Navigate to current Q&A step (3-6) or first Q&A step if not in range
+    if (currentStep < 2 || currentStep > 5) {
+      setCurrentStep(2); // Go to first Q&A step (before_event)
+    }
+
+    try {
+      const currentPhase = getCurrentPhase();
+      const result = await generateMockAnswers({
+        sessionToken: user.sessionToken,
+        incident_id: incidentId,
+        phase: currentPhase
+      });
+
+      if (result.success) {
+        console.log('✅ Mock answers generated for phase:', currentPhase, result);
+        // The Q&A component will automatically refresh via useQuery
+      } else {
+        console.error('❌ Failed to generate mock answers:', result);
+      }
+    } catch (error) {
+      console.error('❌ Error generating mock answers:', error);
+    }
+  };
+
+  // Helper to get current phase for Q&A
+  const getCurrentPhase = (): ClarificationPhase => {
+    switch (currentStep) {
+      case 2: return 'before_event';
+      case 3: return 'during_event';
+      case 4: return 'end_event';
+      case 5: return 'post_event';
+      default: return 'before_event';
+    }
   };
 
   // Transform incident state into generic wizard steps (created fresh each render)
@@ -189,7 +295,7 @@ export function IncidentCaptureWorkflow() {
           incident_id={incidentId}
           phase="before_event"
           onNext={() => handleStepComplete('before_event')}
-          onPrevious={() => {}} // WorkflowWizard will handle navigation
+          onPrevious={() => setCurrentStep(1)} // Go back to narrative step
           canProceed={true}
         />
       ) : null,
@@ -207,7 +313,7 @@ export function IncidentCaptureWorkflow() {
           incident_id={incidentId}
           phase="during_event"
           onNext={() => handleStepComplete('during_event')}
-          onPrevious={() => {}}
+          onPrevious={() => setCurrentStep(2)} // Go back to before_event step
           canProceed={true}
         />
       ) : null,
@@ -225,7 +331,7 @@ export function IncidentCaptureWorkflow() {
           incident_id={incidentId}
           phase="end_event"
           onNext={() => handleStepComplete('end_event')}
-          onPrevious={() => {}}
+          onPrevious={() => setCurrentStep(3)} // Go back to during_event step
           canProceed={true}
         />
       ) : null,
@@ -243,7 +349,7 @@ export function IncidentCaptureWorkflow() {
           incident_id={incidentId}
           phase="post_event"
           onNext={() => handleStepComplete('post_event')}
-          onPrevious={() => {}}
+          onPrevious={() => setCurrentStep(4)} // Go back to end_event step
           canProceed={true}
         />
       ) : null,
@@ -254,10 +360,10 @@ export function IncidentCaptureWorkflow() {
     },
     {
       id: 'enhanced_review',
-      title: 'Review & Submit',
-      description: 'AI-enhanced narrative review and final submission for analysis workflow',
+      title: 'Enhanced Review',
+      description: 'AI-enhanced narrative review and quality assessment',
       component: incidentId ? (
-        <EnhancedReviewStep
+        <EnhancedReviewStepNew
           incident_id={incidentId}
           onComplete={handleEnhancedReviewComplete}
           onPrevious={() => setCurrentStep(5)} // Go back to post_event step
@@ -265,8 +371,24 @@ export function IncidentCaptureWorkflow() {
       ) : null,
       isComplete: completedSteps.has('enhanced_review'),
       canNavigateBack: true,
-      validation: () => completedSteps.has('enhanced_review') || 'Please complete the enhanced review and submission',
+      validation: () => completedSteps.has('enhanced_review') || 'Please complete the enhanced review',
       dependencies: ['post_event'],
+    },
+    {
+      id: 'consolidated_report',
+      title: 'Complete Report',
+      description: 'Comprehensive incident overview and final submission for analysis workflow',
+      component: incidentId ? (
+        <ConsolidatedReportStep
+          incident_id={incidentId}
+          onComplete={handleConsolidatedReportComplete}
+          onPrevious={() => setCurrentStep(6)} // Go back to enhanced_review step
+        />
+      ) : null,
+      isComplete: completedSteps.has('consolidated_report'),
+      canNavigateBack: true,
+      validation: () => completedSteps.has('consolidated_report') || 'Please review and submit the complete incident report',
+      dependencies: ['enhanced_review'],
     },
   ];
 
@@ -322,6 +444,19 @@ export function IncidentCaptureWorkflow() {
           showHelp={true}
           allowNonLinear={false}
           autoSave={false}
+        />
+
+        {/* Developer Tools Bar - Only visible to authorized users */}
+        <DeveloperToolsBar
+          user={user}
+          currentStep={currentStep + 1} // Convert to 1-based for display
+          incidentId={incidentId}
+          onExportComplete={handleExportComplete}
+          onImportComplete={handleImportComplete}
+          onStepNavigate={handleStepNavigate}
+          onFillForm={handleFillForm}
+          onFillNarrative={handleFillNarrative}
+          onFillQA={handleFillQA}
         />
 
         {/* Debug info */}

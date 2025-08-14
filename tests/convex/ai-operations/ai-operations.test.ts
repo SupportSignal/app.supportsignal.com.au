@@ -10,7 +10,7 @@ import {
   enhanceNarrativeContent,
   analyzeContributingConditions,
   generateMockAnswers,
-} from '@/ai-operations';
+} from '@/aiOperations';
 import {
   MOCK_INCIDENT_DATA,
   MOCK_AI_RESPONSES,
@@ -30,8 +30,8 @@ jest.mock('@/ai-multi-provider', () => ({
 // Mock the API for Convex operations
 jest.mock('@/_generated/api', () => ({
   api: {
-    aiPromptTemplates: {
-      getProcessedPrompt: 'aiPromptTemplates/getProcessedPrompt',
+    promptManager: {
+      getProcessedPrompt: 'promptManager/getProcessedPrompt',
     },
     aiLogging: {
       logAIRequest: 'aiLogging/logAIRequest',
@@ -43,8 +43,8 @@ jest.mock('@/_generated/api', () => ({
 }));
 
 const mockApi = {
-  aiPromptTemplates: {
-    getProcessedPrompt: 'aiPromptTemplates/getProcessedPrompt',
+  promptManager: {
+    getProcessedPrompt: 'promptManager/getProcessedPrompt',
   },
   aiLogging: {
     logAIRequest: 'aiLogging/logAIRequest',
@@ -197,7 +197,7 @@ describe('AI Operations', () => {
       expect(mockContext.runMutation).toHaveBeenCalledWith(
         mockApi.prompts.recordPromptUsage,
         expect.objectContaining({
-          promptName: 'generate_clarification_questions',
+          prompt_name: 'generate_clarification_questions',
           promptVersion: 'v1.0.0',
           responseTime: 1250,
           successful: true,
@@ -298,9 +298,9 @@ describe('AI Operations', () => {
       await enhanceNarrativeContent(mockContext, enhanceArgs);
 
       expect(mockContext.runQuery).toHaveBeenCalledWith(
-        mockApi.aiPromptTemplates.getProcessedPrompt,
+        mockApi.promptManager.getProcessedPrompt,
         expect.objectContaining({
-          promptName: 'enhance_narrative_content',
+          prompt_name: 'enhance_narrative_content',
           variables: expect.objectContaining({
             phase: 'during_event',
             instruction: enhanceArgs.instruction,
@@ -356,9 +356,9 @@ describe('AI Operations', () => {
       await analyzeContributingConditions(mockContext, analyzeArgs);
 
       expect(mockContext.runQuery).toHaveBeenCalledWith(
-        mockApi.aiPromptTemplates.getProcessedPrompt,
+        mockApi.promptManager.getProcessedPrompt,
         expect.objectContaining({
-          promptName: 'analyze_contributing_conditions',
+          prompt_name: 'analyze_contributing_conditions',
           variables: expect.objectContaining({
             reporter_name: MOCK_INCIDENT_DATA.reporter_name,
             participant_name: MOCK_INCIDENT_DATA.participant_name,

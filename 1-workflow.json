@@ -1,0 +1,388 @@
+{
+  "clarification_workflow": {
+    "before_event": {
+      "answers": [
+        {
+          "answer_text": "From what I observed, Michael seemed a bit on edge in the hours leading up to the incident. He was pacing around the living room more than usual and seemed a bit fidgety. I noticed he was clenching his fists at times, which is sometimes a sign of increased anxiety or frustration for him. However, he wasn't outwardly aggressive or hostile - just seemed a bit more agitated than his typical calm demeanor.",
+          "answered_at": 1755184341214,
+          "answered_by": "k171bq4nnbcbzwgvvwd6nxgby97nhdw6",
+          "character_count": 405,
+          "is_complete": true,
+          "question_id": "before_event_q1",
+          "word_count": 73
+        },
+        {
+          "answer_text": "There were a few environmental factors that may have contributed to the situation. The TV was on quite loudly in the background, which I know can sometimes be overstimulating for Michael. And there were a few visitors in and out of the home during that time, which can also be disruptive for him. From what I recall, there weren't any major schedule changes that day, but the increased activity and noise level in the home seemed to be making Michael a bit more on edge.",
+          "answered_at": 1755184341261,
+          "answered_by": "k171bq4nnbcbzwgvvwd6nxgby97nhdw6",
+          "character_count": 470,
+          "is_complete": true,
+          "question_id": "before_event_q2",
+          "word_count": 85
+        },
+        {
+          "answer_text": "We do have a number of support strategies in place for Michael, and they are generally implemented quite well. He has a sensory corner set up in the living room with some fidget toys and noise-cancelling headphones that he can use to self-regulate when feeling overwhelmed. And the staff are trained to watch for signs of escalation and use de-escalation techniques like redirection and offering calming activities. However, in this particular situation, it seems the environmental factors were just too much for the typical strategies to be fully effective in preventing the incident.",
+          "answered_at": 1755184341304,
+          "answered_by": "k171bq4nnbcbzwgvvwd6nxgby97nhdw6",
+          "character_count": 585,
+          "is_complete": true,
+          "question_id": "before_event_q3",
+          "word_count": 93
+        }
+      ],
+      "phase": "before_event",
+      "phase_complete": true,
+      "questions": [
+        {
+          "ai_model": "claude-3-haiku-20240307",
+          "generated_at": 1755183729415,
+          "prompt_version": "v1.0.0",
+          "question_id": "before_event_q1",
+          "question_order": 1,
+          "question_text": "What was the participant's mood or demeanor in the hours leading up to the incident?"
+        },
+        {
+          "ai_model": "claude-3-haiku-20240307",
+          "generated_at": 1755184376451,
+          "prompt_version": "v1.0.0",
+          "question_id": "before_event_q1",
+          "question_order": 1,
+          "question_text": "What was the participant's mood or demeanor in the hours leading up to the incident?"
+        },
+        {
+          "ai_model": "claude-3-haiku-20240307",
+          "generated_at": 1755183729432,
+          "prompt_version": "v1.0.0",
+          "question_id": "before_event_q2",
+          "question_order": 2,
+          "question_text": "Were there any environmental factors (noise, crowding, schedule changes) that might have contributed to the situation?"
+        },
+        {
+          "ai_model": "claude-3-haiku-20240307",
+          "generated_at": 1755184376471,
+          "prompt_version": "v1.0.0",
+          "question_id": "before_event_q2",
+          "question_order": 2,
+          "question_text": "Were there any environmental factors (noise, crowding, schedule changes) that might have contributed to the situation?"
+        },
+        {
+          "ai_model": "claude-3-haiku-20240307",
+          "generated_at": 1755183729459,
+          "prompt_version": "v1.0.0",
+          "question_id": "before_event_q3",
+          "question_order": 3,
+          "question_text": "What support strategies were in place, and how were they being implemented?"
+        },
+        {
+          "ai_model": "claude-3-haiku-20240307",
+          "generated_at": 1755184376488,
+          "prompt_version": "v1.0.0",
+          "question_id": "before_event_q3",
+          "question_order": 3,
+          "question_text": "What support strategies were in place, and how were they being implemented?"
+        }
+      ]
+    },
+    "during_event": {
+      "answers": [
+        {
+          "answer_text": "The staff members acted quickly to intervene. One staff member approached Michael slowly and in a non-threatening manner, speaking to him in a gentle tone and trying to redirect his attention. The other staff member moved any potentially dangerous objects out of reach. They worked together to create a calm environment and avoid further escalation of the situation.",
+          "answered_at": 1755184394028,
+          "answered_by": "k171bq4nnbcbzwgvvwd6nxgby97nhdw6",
+          "character_count": 366,
+          "is_complete": true,
+          "question_id": "during_event_q1",
+          "word_count": 58
+        },
+        {
+          "answer_text": "At first, Michael seemed to resist the staff members' attempts to calm him down. He paced back and forth, raising his voice and gesturing wildly. However, as the staff members maintained a non-confrontational stance and continued to speak to him in a soothing manner, Michael's demeanor began to shift. He eventually sat down and allowed the staff members to provide him with some reassurance and support.",
+          "answered_at": 1755184394114,
+          "answered_by": "k171bq4nnbcbzwgvvwd6nxgby97nhdw6",
+          "character_count": 405,
+          "is_complete": true,
+          "question_id": "during_event_q2",
+          "word_count": 66
+        },
+        {
+          "answer_text": "The staff members took several measures to protect everyone involved during the incident. They maintained a safe distance from Michael, while still being present to provide support and de-escalation. They also ensured that the living room was free of any potential weapons or hazards. One staff member remained on the phone with emergency services, ready to provide further assistance if necessary. The staff members' focus was on creating a calm and secure environment until the situation could be resolved.",
+          "answered_at": 1755184394190,
+          "answered_by": "k171bq4nnbcbzwgvvwd6nxgby97nhdw6",
+          "character_count": 508,
+          "is_complete": true,
+          "question_id": "during_event_q3",
+          "word_count": 79
+        }
+      ],
+      "phase": "during_event",
+      "phase_complete": true,
+      "questions": [
+        {
+          "ai_model": "claude-3-haiku-20240307",
+          "generated_at": 1755183729676,
+          "prompt_version": "v1.0.0",
+          "question_id": "during_event_q1",
+          "question_order": 1,
+          "question_text": "What specific actions did staff members take during the incident?"
+        },
+        {
+          "ai_model": "claude-3-haiku-20240307",
+          "generated_at": 1755184377827,
+          "prompt_version": "v1.0.0",
+          "question_id": "during_event_q1",
+          "question_order": 1,
+          "question_text": "What specific actions did staff members take during the incident?"
+        },
+        {
+          "ai_model": "claude-3-haiku-20240307",
+          "generated_at": 1755183729690,
+          "prompt_version": "v1.0.0",
+          "question_id": "during_event_q2",
+          "question_order": 2,
+          "question_text": "How did the participant respond to different intervention attempts?"
+        },
+        {
+          "ai_model": "claude-3-haiku-20240307",
+          "generated_at": 1755184377842,
+          "prompt_version": "v1.0.0",
+          "question_id": "during_event_q2",
+          "question_order": 2,
+          "question_text": "How did the participant respond to different intervention attempts?"
+        },
+        {
+          "ai_model": "claude-3-haiku-20240307",
+          "generated_at": 1755183729704,
+          "prompt_version": "v1.0.0",
+          "question_id": "during_event_q3",
+          "question_order": 3,
+          "question_text": "What safety measures were implemented to protect everyone involved?"
+        },
+        {
+          "ai_model": "claude-3-haiku-20240307",
+          "generated_at": 1755184377856,
+          "prompt_version": "v1.0.0",
+          "question_id": "during_event_q3",
+          "question_order": 3,
+          "question_text": "What safety measures were implemented to protect everyone involved?"
+        }
+      ]
+    },
+    "end_event": {
+      "answers": [
+        {
+          "answer_text": "Once the situation had calmed down, I encouraged Michael to take some deep breaths and we talked through what had happened. I reminded him of the coping strategies we had practiced previously, and suggested he try some light stretching to help release the tension. With a bit of time and support, Michael was able to regain his composure and the incident came to a peaceful conclusion.",
+          "answered_at": 1755184403353,
+          "answered_by": "k171bq4nnbcbzwgvvwd6nxgby97nhdw6",
+          "character_count": 385,
+          "is_complete": true,
+          "question_id": "end_event_q1",
+          "word_count": 66
+        },
+        {
+          "answer_text": "As the incident drew to a close, I noticed Michael's demeanor shift noticeably. The initial agitation and distress gave way to a more subdued, reflective state. He seemed relieved that the situation had been resolved, though still a bit shaken. His body language became more relaxed, and he made more eye contact as we discussed next steps.",
+          "answered_at": 1755184403398,
+          "answered_by": "k171bq4nnbcbzwgvvwd6nxgby97nhdw6",
+          "character_count": 340,
+          "is_complete": true,
+          "question_id": "end_event_q2",
+          "word_count": 57
+        },
+        {
+          "answer_text": "Thankfully, there were no immediate safety concerns that needed to be addressed once the incident had concluded. Michael had not become physically aggressive, and there was no damage to the property or risk of harm. I did a quick scan of the area to ensure everything was in order, but the living room was calm and secure. My main focus at that point was providing reassurance to Michael and helping him regain a sense of control and safety in his own home.",
+          "answered_at": 1755184403440,
+          "answered_by": "k171bq4nnbcbzwgvvwd6nxgby97nhdw6",
+          "character_count": 457,
+          "is_complete": true,
+          "question_id": "end_event_q3",
+          "word_count": 82
+        }
+      ],
+      "phase": "end_event",
+      "phase_complete": true,
+      "questions": [
+        {
+          "ai_model": "claude-3-haiku-20240307",
+          "generated_at": 1755183730023,
+          "prompt_version": "v1.0.0",
+          "question_id": "end_event_q1",
+          "question_order": 1,
+          "question_text": "What specific action or intervention helped bring the incident to a close?"
+        },
+        {
+          "ai_model": "claude-3-haiku-20240307",
+          "generated_at": 1755184376802,
+          "prompt_version": "v1.0.0",
+          "question_id": "end_event_q1",
+          "question_order": 1,
+          "question_text": "What specific action or intervention helped bring the incident to a close?"
+        },
+        {
+          "ai_model": "claude-3-haiku-20240307",
+          "generated_at": 1755183730038,
+          "prompt_version": "v1.0.0",
+          "question_id": "end_event_q2",
+          "question_order": 2,
+          "question_text": "How did the participant's demeanor change as the incident concluded?"
+        },
+        {
+          "ai_model": "claude-3-haiku-20240307",
+          "generated_at": 1755184376818,
+          "prompt_version": "v1.0.0",
+          "question_id": "end_event_q2",
+          "question_order": 2,
+          "question_text": "How did the participant's demeanor change as the incident concluded?"
+        },
+        {
+          "ai_model": "claude-3-haiku-20240307",
+          "generated_at": 1755183730052,
+          "prompt_version": "v1.0.0",
+          "question_id": "end_event_q3",
+          "question_order": 3,
+          "question_text": "Were there any immediate safety concerns that needed to be addressed?"
+        },
+        {
+          "ai_model": "claude-3-haiku-20240307",
+          "generated_at": 1755184376832,
+          "prompt_version": "v1.0.0",
+          "question_id": "end_event_q3",
+          "question_order": 3,
+          "question_text": "Were there any immediate safety concerns that needed to be addressed?"
+        }
+      ]
+    },
+    "post_event": {
+      "answers": [
+        {
+          "answer_text": "Immediately after the incident, I provided Michael with a calm and reassuring presence. I sat with him in the living room, speaking in a gentle tone to help him feel safe and supported. I offered him a glass of water and encouraged him to take some deep breaths to help him relax. I also contacted his emergency contact, David Cruwys, to inform him of the situation and ensure Michael had the support he needed.",
+          "answered_at": 1755184413771,
+          "answered_by": "k171bq4nnbcbzwgvvwd6nxgby97nhdw6",
+          "character_count": 411,
+          "is_complete": true,
+          "question_id": "post_event_q1",
+          "word_count": 74
+        },
+        {
+          "answer_text": "I closely monitored Michael's physical and emotional wellbeing in the aftermath of the incident. I checked him for any injuries or signs of distress, and regularly asked him how he was feeling. I also kept a close eye on his body language and facial expressions to gauge his emotional state. Throughout this time, I maintained a calm and empathetic demeanor, reassuring Michael and providing a sense of stability. I also contacted his support coordinator to ensure his care plan could be updated to address any emerging needs.",
+          "answered_at": 1755184413846,
+          "answered_by": "k171bq4nnbcbzwgvvwd6nxgby97nhdw6",
+          "character_count": 526,
+          "is_complete": true,
+          "question_id": "post_event_q2",
+          "word_count": 87
+        },
+        {
+          "answer_text": "Based on my observations and discussions with Michael, I believe some modifications to his support plan may be warranted. Specifically, I think it would be beneficial to include more strategies for managing stress and emotional regulation, as well as potentially increasing the frequency of counseling or therapy sessions. I will be sure to document my recommendations and share them with Michael's support coordinator so they can be considered and incorporated as appropriate.",
+          "answered_at": 1755184413895,
+          "answered_by": "k171bq4nnbcbzwgvvwd6nxgby97nhdw6",
+          "character_count": 477,
+          "is_complete": true,
+          "question_id": "post_event_q3",
+          "word_count": 72
+        }
+      ],
+      "phase": "post_event",
+      "phase_complete": true,
+      "questions": [
+        {
+          "ai_model": "claude-3-haiku-20240307",
+          "generated_at": 1755183729159,
+          "prompt_version": "v1.0.0",
+          "question_id": "post_event_q1",
+          "question_order": 1,
+          "question_text": "What immediate support was provided to the participant after the incident?"
+        },
+        {
+          "ai_model": "claude-3-haiku-20240307",
+          "generated_at": 1755184376715,
+          "prompt_version": "v1.0.0",
+          "question_id": "post_event_q1",
+          "question_order": 1,
+          "question_text": "What immediate support was provided to the participant after the incident?"
+        },
+        {
+          "ai_model": "claude-3-haiku-20240307",
+          "generated_at": 1755183729174,
+          "prompt_version": "v1.0.0",
+          "question_id": "post_event_q2",
+          "question_order": 2,
+          "question_text": "How was the participant's physical and emotional wellbeing monitored?"
+        },
+        {
+          "ai_model": "claude-3-haiku-20240307",
+          "generated_at": 1755184376730,
+          "prompt_version": "v1.0.0",
+          "question_id": "post_event_q2",
+          "question_order": 2,
+          "question_text": "How was the participant's physical and emotional wellbeing monitored?"
+        },
+        {
+          "ai_model": "claude-3-haiku-20240307",
+          "generated_at": 1755183729187,
+          "prompt_version": "v1.0.0",
+          "question_id": "post_event_q3",
+          "question_order": 3,
+          "question_text": "Were any modifications made to the participant's support plan as a result of this incident?"
+        },
+        {
+          "ai_model": "claude-3-haiku-20240307",
+          "generated_at": 1755184376744,
+          "prompt_version": "v1.0.0",
+          "question_id": "post_event_q3",
+          "question_order": 3,
+          "question_text": "Were any modifications made to the participant's support plan as a result of this incident?"
+        }
+      ]
+    }
+  },
+  "completion_status": {
+    "analysis_generated": false,
+    "completed_steps": [
+      "metadata",
+      "narrative",
+      "before_event",
+      "during_event",
+      "end_event",
+      "post_event"
+    ],
+    "current_step": 6,
+    "narrative_enhanced": false,
+    "questions_generated": true,
+    "total_progress": 75
+  },
+  "exported_at": 1755184417718,
+  "exported_by": "k171bq4nnbcbzwgvvwd6nxgby97nhdw6",
+  "metadata": {
+    "capture_status": "in_progress",
+    "company_id": "kd7fsc5w06yfdsbb2hxqpd67ps7nhdn7",
+    "created_at": 1755183721115,
+    "created_by": "k171bq4nnbcbzwgvvwd6nxgby97nhdw6",
+    "event_date_time": "2025-08-13T16:08",
+    "export_step": 6,
+    "export_timestamp": 1755184417718,
+    "incident_id": "m974r5393trc8xawmtpt0kfzh57nn3fq",
+    "location": "Participant's residence - Living room",
+    "overall_status": "capture_pending",
+    "participant_id": "nd7c01v3qqyakdwn4pbhkff6rx7nke4a",
+    "participant_name": "Michael Chen",
+    "reporter_name": "David Cruwys"
+  },
+  "narrative_data": {
+    "before_event": "The participant arrived at the day program at 9:00 AM as usual. They seemed slightly agitated during the morning greeting but participated in the breakfast routine. The participant mentioned they had difficulty sleeping the previous night and were feeling tired. The morning activity was a group discussion about weekend plans, which the participant initially engaged with positively.",
+    "created_at": 1755183725758,
+    "during_event": "During the group discussion at 10:15 AM, the participant became increasingly agitated when another participant disagreed with their weekend suggestion. The participant raised their voice and began using inappropriate language directed at the other participant and staff. When a staff member attempted to de-escalate the situation, the participant became more aggressive, shouting and making threatening gestures but did not make physical contact.",
+    "end_event": "Staff implemented the de-escalation protocol, removing other participants from the immediate area and speaking calmly to the participant. After approximately 10 minutes, the participant began to calm down. They were offered the opportunity to take a break in a quiet space, which they accepted. The participant expressed remorse about their behavior and explained they were frustrated about their sleep issues.",
+    "post_event": "The participant spent 30 minutes in the quiet room with a support worker, using breathing techniques to calm down. They were then able to rejoin the group for the next activity. A behavior support meeting was scheduled for the following week to review the participant's support strategies. The participant's sleep issues were noted for discussion with their healthcare team.",
+    "updated_at": 1755184375645,
+    "version": 6
+  },
+  "participant_details": {
+    "care_notes": "Complex needs requiring 24/7 supervision. Has mobility issues and requires wheelchair assistance.",
+    "contact_phone": "0434 567 890",
+    "date_of_birth": "1988-07-22",
+    "emergency_contact": "Susan Chen (Sister) - 0445 678 901",
+    "first_name": "Michael",
+    "last_name": "Chen",
+    "ndis_number": "123456002",
+    "support_level": "high"
+  },
+  "version": "1.0"
+}

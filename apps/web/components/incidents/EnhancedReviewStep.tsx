@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useQuery, useMutation } from 'convex/react';
+import { useQuery, useMutation, useAction } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useAuth } from '@/components/auth/auth-provider';
 import { Button } from '@starter/ui/button';
@@ -49,9 +49,8 @@ export function EnhancedReviewStep({
     } : "skip"
   );
 
-  // Mutations
-  const generateEnhancement = useMutation(api.aiEnhancement.enhanceIncidentNarrative);
-  const submitForAnalysis = useMutation(api.aiEnhancement.submitIncidentForAnalysis);
+  // Actions
+  const generateEnhancement = useAction(api.aiEnhancement.enhanceIncidentNarrative);
 
   // Auto-generate enhancement if not exists
   useEffect(() => {
@@ -87,44 +86,14 @@ export function EnhancedReviewStep({
     }
   };
 
-  const handleSubmitIncident = async () => {
-    if (!user?.sessionToken || !enhancedNarrative) {
-      toast.error("Cannot submit - missing authentication or enhancement");
+  const handleContinueToReport = () => {
+    if (!enhancedNarrative) {
+      toast.error("Please generate the enhanced narrative first");
       return;
     }
 
-    // Validate completion before submitting
-    if (!workflowValidation?.all_complete) {
-      toast.error("Cannot submit - workflow not complete");
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const result = await submitForAnalysis({
-        sessionToken: user.sessionToken,
-        incident_id,
-        enhanced_narrative_id: enhancedNarrative._id
-      });
-
-      if (result.success) {
-        toast.success("Incident submitted for analysis workflow");
-        onComplete({ 
-          success: true, 
-          handoff_id: result.handoff_id 
-        });
-      } else {
-        toast.error("Failed to submit incident");
-        onComplete({ success: false });
-      }
-    } catch (error) {
-      console.error("Incident submission failed:", error);
-      toast.error("Failed to submit incident. Please try again.");
-      onComplete({ success: false });
-    } finally {
-      setIsSubmitting(false);
-    }
+    toast.success("Enhanced review completed");
+    onComplete({ success: true });
   };
 
   // Loading state
@@ -152,8 +121,8 @@ export function EnhancedReviewStep({
             Review the AI-enhanced narrative and complete your incident report
           </p>
         </div>
-        <Badge variant={workflowValidation.all_complete ? "default" : "secondary"}>
-          {workflowValidation.all_complete ? "Ready to Submit" : "Incomplete"}
+        <Badge variant={enhancedNarrative ? "default" : "secondary"}>
+          {enhancedNarrative ? "Enhanced" : "Pending Enhancement"}
         </Badge>
       </div>
 
@@ -251,31 +220,13 @@ export function EnhancedReviewStep({
         </Button>
 
         <div className="flex items-center gap-2">
-          {!workflowValidation.all_complete && (
-            <Alert className="mr-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription className="text-sm">
-                Complete all required steps before submitting
-              </AlertDescription>
-            </Alert>
-          )}
-          
           <Button
-            onClick={handleSubmitIncident}
-            disabled={!workflowValidation.all_complete || !enhancedNarrative || isSubmitting}
+            onClick={handleContinueToReport}
+            disabled={!enhancedNarrative}
             className="flex items-center gap-2"
           >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Submitting...
-              </>
-            ) : (
-              <>
-                <Send className="h-4 w-4" />
-                Submit for Analysis
-              </>
-            )}
+            <Send className="h-4 w-4" />
+            Continue to Complete Report
           </Button>
         </div>
       </div>
