@@ -14,6 +14,45 @@ This document captures extensive challenges and solutions encountered while impl
 
 **Local tests passing ≠ CI working**. This mistake was made repeatedly, causing user frustration and wasted time. See Section 7 for detailed analysis.
 
+## ⚠️ CRITICAL ADDITION: Schema-Code Synchronization Crisis (Story 3.3)
+
+**Root Cause**: Database schemas and backend code evolved independently, creating cascading failures across the application.
+
+### Problem Categories Identified
+
+1. **API Contract Violations** (4 incidents)
+   - Missing `scenarioType` parameter in function calls
+   - Missing `updated_by` field in incidents schema
+   - Missing `version` field in narratives inserts
+   - Missing `narrative_hash` field in narratives schema
+
+2. **Architectural Anti-Patterns** (2 incidents)
+   - Broken frontend event system vs backend function calls
+   - Frontend data access without server context
+
+3. **Type System Gaps** (2 incidents)
+   - `v.number()` vs `v.float64()` mismatches
+   - Session token naming inconsistencies (`session_token` vs `sessionToken`)
+
+### Critical Prevention Strategies
+
+**Schema Validation Pipeline** - Add to CI:
+```bash
+bun run schema:validate    # Verify schema-code sync
+bun run schema:coverage    # Check database operations
+```
+
+**Type-Safe Database Operations**:
+```typescript
+// Instead of raw inserts
+await ctx.db.insert("incidents", rawData);
+
+// Use type-safe operations
+await ctx.db.insert("incidents", data satisfies InsertIncident);
+```
+
+**Architecture Decision**: Data lives on server, frontend is view layer only. No hybrid frontend/backend data access patterns.
+
 ## Background Context
 
 **Story**: 1.9 - Comprehensive Testing Infrastructure  

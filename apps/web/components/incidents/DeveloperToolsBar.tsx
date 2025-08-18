@@ -11,6 +11,14 @@
 import React, { useState, useMemo } from 'react';
 import { Button } from '@starter/ui/button';
 import { Separator } from '@starter/ui/separator';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from '@starter/ui/dropdown-menu';
 import { 
   Download, 
   Upload, 
@@ -25,6 +33,50 @@ import { cn } from '@/lib/utils';
 import { DeveloperToolsBarProps, ToolsBarButtonStates } from '@/types/workflowData';
 import { WorkflowExportButton } from './WorkflowExportButton';
 import { WorkflowImportButton } from './WorkflowImportButton';
+
+// Narrative scenario options that match backend createSampleData scenarios
+const NARRATIVE_SCENARIOS = [
+  {
+    type: 'medication_error',
+    icon: '💊',
+    name: 'Medication Error',
+    participant: 'Emma Johnson',
+    description: 'Medication administration error with monitoring protocol',
+    severity: 'medium'
+  },
+  {
+    type: 'injury',
+    icon: '🩹',
+    name: 'Injury/Fall',
+    participant: 'Michael Chen',
+    description: 'Participant fall with head injury requiring hospital assessment',
+    severity: 'high'
+  },
+  {
+    type: 'behavioral',
+    icon: '😤',
+    name: 'Behavioral',
+    participant: 'Sarah Williams',
+    description: 'Verbal aggression incident with de-escalation response',
+    severity: 'medium'
+  },
+  {
+    type: 'environmental',
+    icon: '🚰',
+    name: 'Environmental',
+    participant: 'James Brown',
+    description: 'Water pipe burst causing accommodation disruption',
+    severity: 'medium'
+  },
+  {
+    type: 'medical_emergency',
+    icon: '🚨',
+    name: 'Medical Emergency',
+    participant: 'Rachel Davis',
+    description: 'Seizure incident with established medical protocols',
+    severity: 'high'
+  },
+] as const;
 
 /**
  * Check if user has sample data permissions based on multiple criteria
@@ -80,10 +132,11 @@ export function DeveloperToolsBar({
   onFillQA
 }: DeveloperToolsBarProps & {
   onFillForm?: () => void;
-  onFillNarrative?: () => void;
+  onFillNarrative?: (scenarioType?: string) => void;
   onFillQA?: () => void;
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isNarrativeDropdownOpen, setIsNarrativeDropdownOpen] = useState(false);
   
   // Calculate button states (must be before conditional returns)
   const buttonStates = useMemo(() => 
@@ -114,13 +167,21 @@ export function DeveloperToolsBar({
     onFillForm?.();
   };
 
-  const handleFillNarrative = () => {
-    onFillNarrative?.();
+  const handleFillNarrative = (scenarioType?: string) => {
+    onFillNarrative?.(scenarioType);
+    setIsNarrativeDropdownOpen(false); // Close dropdown after selection
   };
 
   const handleFillQA = () => {
     onFillQA?.();
   };
+
+  // Severity color mapping
+  const severityColors = {
+    low: "text-green-600",
+    medium: "text-yellow-600", 
+    high: "text-red-600",
+  } as const;
 
   return (
     <div className="border-t border-gray-200 bg-gray-50/50 px-4 py-2">
@@ -161,17 +222,57 @@ export function DeveloperToolsBar({
               Fill Form
             </Button>
 
-            {/* Fill Narrative Button - Active on Step 2 */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className={buttonStates.fillNarrative ? buttonClassName : disabledButtonClassName}
-              onClick={buttonStates.fillNarrative ? handleFillNarrative : undefined}
-              disabled={!buttonStates.fillNarrative}
-            >
-              <FileText className="h-3 w-3" />
-              Fill Narrative
-            </Button>
+            {/* Fill Narrative Dropdown - Active on Step 2 */}
+            <DropdownMenu open={isNarrativeDropdownOpen} onOpenChange={setIsNarrativeDropdownOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={buttonStates.fillNarrative ? buttonClassName : disabledButtonClassName}
+                  disabled={!buttonStates.fillNarrative}
+                >
+                  <FileText className="h-3 w-3" />
+                  Fill Narrative
+                  <ChevronDown className="h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              
+              <DropdownMenuContent align="end" className="w-80">
+                <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">
+                  Select Incident Scenario
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                
+                {NARRATIVE_SCENARIOS.map((scenario) => (
+                  <DropdownMenuItem
+                    key={scenario.type}
+                    onClick={() => handleFillNarrative(scenario.type)}
+                    className="flex flex-col items-start p-3 cursor-pointer"
+                    disabled={!buttonStates.fillNarrative}
+                  >
+                    <div className="flex items-center gap-2 w-full">
+                      <span className="text-base">{scenario.icon}</span>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm">{scenario.name}</span>
+                          <span className={cn("text-xs font-medium", severityColors[scenario.severity as keyof typeof severityColors])}>
+                            {scenario.severity}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5 leading-tight">
+                          {scenario.participant} - {scenario.description}
+                        </p>
+                      </div>
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+
+                <DropdownMenuSeparator />
+                <div className="px-3 py-2 text-xs text-muted-foreground">
+                  💡 Scenarios populate all narrative phases with realistic incident data
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* Fill Q&A Button - Active on Steps 3-6 */}
             <Button

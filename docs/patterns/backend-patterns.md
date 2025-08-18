@@ -527,7 +527,70 @@ await client.action(api.loggingAction.processLogs, payload);
 
 **Rationale**: Validates system behavior under realistic conditions
 
+## Type-Safe Database Operations
+
+### Schema-Code Synchronization Pattern
+
+**Context**: Preventing schema-code drift that leads to TypeScript cascade failures
+**Implementation**:
+
+- Use strict type unions that exclude problematic ActionCtx combinations
+- Implement runtime schema validation before database operations
+- Add automated schema-code alignment verification
+
+**Example**:
+```typescript
+// ✅ Type-safe context patterns
+export const getUserFromSession = async (
+  ctx: QueryCtx,  // Restrict to QueryCtx only
+  sessionToken: string
+): Promise<UserWithSession | null> => {
+  // Runtime validation before database access
+  if (!sessionToken || typeof sessionToken !== 'string') {
+    throw new ConvexError('Invalid session token format');
+  }
+  
+  const session = await ctx.db
+    .query("userSessions")
+    .withIndex("by_token", q => q.eq("sessionToken", sessionToken))
+    .first();
+    
+  return session ? { ...session, user: await ctx.db.get(session.userId) } : null;
+};
+
+// ❌ Avoid complex type unions that cause TypeScript crashes
+export const requirePermission = (
+  ctx: QueryCtx | MutationCtx | ActionCtx,  // This pattern caused issues
+  permission: string
+) => { /* ... */ };
+```
+
+**Prevention Pipeline**:
+1. **Pre-commit Schema Validation**: Run schema sync checks before commits
+2. **CI Schema Validation**: Include `bunx convex run validation:checkSchemaSync` in CI
+3. **Type Generation Verification**: Ensure generated types match schema definitions
+4. **Runtime Type Checking**: Validate data types at API boundaries
+
+**Error Pattern Recognition**:
+- "Type instantiation is excessively deep" errors indicate type union complexity
+- Missing field errors suggest schema-code misalignment
+- ActionCtx integration issues often cascade through the entire codebase
+
+**Rationale**: Prevents development environment crashes and production schema validation failures through systematic type safety enforcement.
+
 ## Anti-Patterns to Avoid
+
+### Schema-Code Synchronization Anti-Patterns
+
+**Critical Anti-Pattern**: Complex Context Type Unions
+- Avoid `QueryCtx | MutationCtx | ActionCtx` patterns - they cause TypeScript cascade failures
+- Use specific context types for each function
+- Don't mix ActionCtx with other context types in utility functions
+
+**Critical Anti-Pattern**: Unvalidated Database Mutations
+- Never perform database operations without runtime validation
+- Don't assume frontend validation is sufficient
+- Validate all field types match schema expectations
 
 ### Database Access from Actions
 
