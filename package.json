@@ -14,6 +14,7 @@
     "build": "node scripts/debug-env-build.cjs && turbo build",
     "build:debug": "node scripts/debug-env-build.cjs",
     "dev": "turbo dev",
+    "dev:web-only": "cd apps/web && bun dev",
     "web:dev": "cd apps/web && bun dev",
     "clean": "turbo clean",
     "typecheck": "turbo typecheck",
