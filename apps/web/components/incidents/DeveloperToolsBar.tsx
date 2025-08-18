@@ -63,16 +63,16 @@ export function DeveloperToolsBar({
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   
-  // Check permissions - return null if no access
-  if (!user || !hasSampleDataPermissions(user.role)) {
-    return null;
-  }
-
-  // Calculate button states
+  // Calculate button states (must be before conditional returns)
   const buttonStates = useMemo(() => 
     calculateButtonStates(currentStep, !!incidentId), 
     [currentStep, incidentId]
   );
+  
+  // Check permissions - return null if no access
+  if (!user || !hasSampleDataPermissions(user.role)) {
+    return null;
+  }
 
   // Common button styling
   const buttonClassName = cn(
