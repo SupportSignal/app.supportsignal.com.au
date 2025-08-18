@@ -5,7 +5,7 @@ import { v } from 'convex/values';
 import { action } from './_generated/server';
 import { api, internal } from './_generated/api';
 import { getConfig } from './lib/config';
-import { withAuthAction } from './lib/auth';
+// withAuthAction removed - actions now handle authentication manually
 import crypto from 'crypto';
 
 /**
@@ -17,15 +17,25 @@ export const generateResponse = action({
     sessionId: v.id('chat_sessions'),
     message: v.string(),
     model: v.optional(v.string()),
-    sessionToken: v.optional(v.string()),
+    sessionToken: v.string(),
   },
-  handler: withAuthAction(async (ctx, args): Promise<{
+  handler: async (ctx, args): Promise<{
     response: string;
     model: string;
     tokensUsed: number;
     has_llm_access: boolean;
     fallbackMessage: string | null;
   }> => {
+    // Verify authentication using API functions for actions
+    const session = await ctx.runQuery(api.auth.findSessionByToken, { sessionToken: args.sessionToken }) as any;
+    if (!session || session.expires < Date.now()) {
+      throw new Error("Invalid session token");
+    }
+    
+    const user = await ctx.runQuery(api.auth.getUserById, { id: session.userId }) as any;
+    if (!user) {
+      throw new Error("User not found");
+    }
     const correlationId = crypto.randomUUID();
     
     try {
@@ -34,13 +44,13 @@ export const generateResponse = action({
         has_llm_access: boolean;
         fallbackMessage: string | null;
       } = await ctx.runQuery(api.auth.checkUserLLMAccess, {
-        userId: ctx.session.userId,
+        userId: user._id,
       });
 
       if (!accessCheck.has_llm_access) {
         // Log access denial
         await ctx.runMutation(api.auth.logAccessEvent, {
-          userId: ctx.session.userId,
+          userId: user._id,
           eventType: 'access_denied',
           details: 'LLM access requested but user lacks permission',
         });
@@ -51,7 +61,7 @@ export const generateResponse = action({
         // Store message in database
         await ctx.runMutation(internal.agent.createChatMessage, {
           sessionId: args.sessionId,
-          userId: ctx.session.userId,
+          userId: user._id,
           role: 'assistant',
           content: fallbackResponse,
           correlationId,
@@ -69,7 +79,7 @@ export const generateResponse = action({
 
       // User has LLM access - proceed with AI generation
       await ctx.runMutation(api.auth.logAccessEvent, {
-        userId: ctx.session.userId,
+        userId: user._id,
         eventType: 'access_granted',
         details: 'LLM access granted for message generation',
       });
@@ -95,7 +105,7 @@ export const generateResponse = action({
       // Store response in database
       await ctx.runMutation(internal.agent.createChatMessage, {
         sessionId: args.sessionId,
-        userId: ctx.session.userId,
+        userId: user._id,
         role: 'assistant',
         content: response.content,
         correlationId,
@@ -120,7 +130,7 @@ export const generateResponse = action({
       
       await ctx.runMutation(internal.agent.createChatMessage, {
         sessionId: args.sessionId,
-        userId: ctx.session.userId,
+        userId: user._id,
         role: 'assistant',
         content: fallbackResponse,
         correlationId,
@@ -253,15 +263,26 @@ function generateFallbackResponse(message: string): string {
 export const createOrGetChatSession = action({
   args: {
     title: v.optional(v.string()),
-    sessionToken: v.optional(v.string()),
+    sessionToken: v.string(),
   },
-  handler: withAuthAction(async (ctx, args): Promise<{
+  handler: async (ctx, args): Promise<{
     _id: string;
     userId: string;
     title?: string;
     created_at: number;
     updated_at: number;
   }> => {
+    // Verify authentication using API functions for actions
+    const session = await ctx.runQuery(api.auth.findSessionByToken, { sessionToken: args.sessionToken }) as any;
+    if (!session || session.expires < Date.now()) {
+      throw new Error("Invalid session token");
+    }
+    
+    const user = await ctx.runQuery(api.auth.getUserById, { id: session.userId }) as any;
+    if (!user) {
+      throw new Error("User not found");
+    }
+    
     const correlationId = crypto.randomUUID();
     
     // Look for existing session for user (most recent)
@@ -272,7 +293,7 @@ export const createOrGetChatSession = action({
       created_at: number;
       updated_at: number;
     }> = await ctx.runQuery(api.agent.getUserChatSessions, {
-      userId: ctx.session.userId,
+      userId: user._id,
       limit: 1,
     });
 
@@ -282,14 +303,14 @@ export const createOrGetChatSession = action({
 
     // Create new session
     const sessionId: string = await ctx.runMutation(internal.agent.createChatSession, {
-      userId: ctx.session.userId,
+      userId: user._id,
       title: args.title || 'New Chat',
       correlationId,
     });
 
     return {
       _id: sessionId,
-      userId: ctx.session.userId,
+      userId: user._id,
       title: args.title || 'New Chat',
       created_at: Date.now(),
       updated_at: Date.now(),
