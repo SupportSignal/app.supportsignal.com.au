@@ -128,6 +128,8 @@ jobs:
 
       - name: Run E2E tests
         if: steps.check-e2e.outputs.e2e_exists == 'true'
+        env:
+          NODE_ENV: development
         run: bun run test:e2e
 
       - name: Skip E2E tests
