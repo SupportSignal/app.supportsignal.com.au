@@ -83,6 +83,6 @@ export default defineConfig({
     command: process.env.CI ? 'bun run dev:web-only' : 'bun run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
+    timeout: 180 * 1000, // Increased timeout for CI environments
   },
 })
