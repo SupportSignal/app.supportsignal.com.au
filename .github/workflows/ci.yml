@@ -126,6 +126,11 @@ jobs:
         if: steps.check-e2e.outputs.e2e_exists == 'true'
         run: bun run test:e2e:install
 
+      - name: Generate Convex API files for E2E tests
+        if: steps.check-e2e.outputs.e2e_exists == 'true'
+        run: |
+          cd apps/convex && bun run build
+
       - name: Run E2E tests
         if: steps.check-e2e.outputs.e2e_exists == 'true'
         env:
