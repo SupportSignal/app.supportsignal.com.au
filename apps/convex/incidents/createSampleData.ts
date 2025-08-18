@@ -9,6 +9,20 @@ import { requirePermission, PERMISSIONS } from '../permissions';
  * Requires SAMPLE_DATA permission (system_admin only)
  */
 
+// Helper function to interpolate participant name in narrative text
+function interpolateParticipantName(text: string, participantFirstName: string): string {
+  // Replace hardcoded names with the participant's first name
+  const hardcodedNames = ['Emma', 'Michael', 'Sarah', 'James', 'Rachel'];
+  let interpolatedText = text;
+  
+  hardcodedNames.forEach(name => {
+    const nameRegex = new RegExp(`\\b${name}\\b`, 'g');
+    interpolatedText = interpolatedText.replace(nameRegex, participantFirstName);
+  });
+  
+  return interpolatedText;
+}
+
 // Sample incident scenarios with complete narrative data
 const incidentScenarios = [
   {
@@ -181,6 +195,7 @@ export const createSampleIncidentScenarios = mutation({
           narrative_hash: `sample_${scenarioData.scenario_type}_${Date.now()}`,
           created_at: now,
           updated_at: now,
+          version: 1, // Initial version for new narrative
         });
 
         createdIncidents.push({
@@ -260,15 +275,27 @@ export const fillIncidentWithSampleData = mutation({
 
       const now = Date.now();
 
-      // Update the incident with scenario data
+      // Get existing participant name from the form and extract first name for interpolation
+      const existingParticipantName = incident.participant_name || '';
+      const participantFirstName = existingParticipantName.split(' ')[0] || 'Participant';
+
+      // Update the incident with scenario data but PRESERVE the participant name from form
       await ctx.db.patch(args.incidentId, {
-        participant_name: scenario.participant_name,
+        // DON'T overwrite participant_name - keep what user entered in form
         reporter_name: scenario.reporter_name,
         event_date_time: scenario.event_date_time,
         location: scenario.location,
         updated_at: now,
         updated_by: user._id,
       });
+
+      // Interpolate participant name into all narrative content
+      const interpolatedNarratives = {
+        before_event: interpolateParticipantName(scenario.narrative.before_event, participantFirstName),
+        during_event: interpolateParticipantName(scenario.narrative.during_event, participantFirstName),
+        end_event: interpolateParticipantName(scenario.narrative.end_event, participantFirstName),
+        post_event: interpolateParticipantName(scenario.narrative.post_event, participantFirstName),
+      };
 
       // Check if narrative already exists
       const existingNarrative = await ctx.db
@@ -277,32 +304,36 @@ export const fillIncidentWithSampleData = mutation({
         .first();
 
       if (existingNarrative) {
-        // Update existing narrative
+        // Update existing narrative with interpolated content
         await ctx.db.patch(existingNarrative._id, {
-          before_event: scenario.narrative.before_event,
-          during_event: scenario.narrative.during_event,
-          end_event: scenario.narrative.end_event,
-          post_event: scenario.narrative.post_event,
+          before_event: interpolatedNarratives.before_event,
+          during_event: interpolatedNarratives.during_event,
+          end_event: interpolatedNarratives.end_event,
+          post_event: interpolatedNarratives.post_event,
           narrative_hash: `sample_fill_${args.scenarioType}_${Date.now()}`,
           updated_at: now,
         });
       } else {
-        // Create new narrative
+        // Create new narrative with interpolated content
         await ctx.db.insert("incident_narratives", {
           incident_id: args.incidentId,
-          before_event: scenario.narrative.before_event,
-          during_event: scenario.narrative.during_event,
-          end_event: scenario.narrative.end_event,
-          post_event: scenario.narrative.post_event,
+          before_event: interpolatedNarratives.before_event,
+          during_event: interpolatedNarratives.during_event,
+          end_event: interpolatedNarratives.end_event,
+          post_event: interpolatedNarratives.post_event,
           narrative_hash: `sample_fill_${args.scenarioType}_${Date.now()}`,
           created_at: now,
           updated_at: now,
+          version: 1, // Initial version for new narrative
         });
       }
 
       console.log('📝 INCIDENT FILLED WITH SAMPLE DATA', {
         incidentId: args.incidentId,
         scenarioType: args.scenarioType,
+        participantName: existingParticipantName,
+        participantFirstName: participantFirstName,
+        interpolationApplied: participantFirstName !== 'Participant',
         filledBy: user._id,
         correlationId,
         timestamp: new Date().toISOString(),
@@ -542,6 +573,7 @@ export const createIncidentWithSampleData = mutation({
         during_event: scenario.narrative.during_event,
         end_event: scenario.narrative.end_event,
         post_event: scenario.narrative.post_event,
+        version: 1, // Initial version for new narrative,
         narrative_hash: `sample_create_${args.scenarioType}_${Date.now()}`,
         created_at: now,
         updated_at: now,
