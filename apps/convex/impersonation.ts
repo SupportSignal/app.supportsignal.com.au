@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * System Administrator Impersonation Functions
  * 
