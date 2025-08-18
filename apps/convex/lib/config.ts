@@ -62,16 +62,21 @@ function validateApiKey(key: string, keyName: string): void {
 export function loadConfig(): AppConfig {
   const environment = (process.env.NODE_ENV as 'development' | 'production' | 'test') || 'development';
   
+  // In CI/test environments, make API keys optional to allow backend startup
+  const isTestEnvironment = environment === 'test' || process.env.CI === 'true';
+  
   // LLM Configuration
-  const openRouterApiKey = getEnvVar('OPENROUTER_API_KEY', true);
+  const openRouterApiKey = getEnvVar('OPENROUTER_API_KEY', !isTestEnvironment, isTestEnvironment ? 'test-key-for-ci' : undefined);
   const defaultModel = getEnvVar('LLM_MODEL', false, 'anthropic/claude-3-haiku');
   const fallbackModel = getEnvVar('LLM_FALLBACK_MODEL', false, 'openai/gpt-4o-mini');
   const openAiApiKey = getEnvVar('OPENAI_API_KEY', false); // Optional for embeddings
   
-  // Validate API keys
-  validateApiKey(openRouterApiKey, 'OPENROUTER_API_KEY');
-  if (openAiApiKey) {
-    validateApiKey(openAiApiKey, 'OPENAI_API_KEY');
+  // Validate API keys only in non-test environments
+  if (!isTestEnvironment) {
+    validateApiKey(openRouterApiKey, 'OPENROUTER_API_KEY');
+    if (openAiApiKey) {
+      validateApiKey(openAiApiKey, 'OPENAI_API_KEY');
+    }
   }
   
   // Vectorize Configuration (optional for now)
