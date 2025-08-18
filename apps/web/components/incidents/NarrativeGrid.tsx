@@ -216,6 +216,7 @@ export function NarrativeGrid({ incidentId, onComplete, onBack }: NarrativeGridP
   );
 
 
+
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6">
       {/* Header */}

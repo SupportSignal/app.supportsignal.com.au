@@ -137,6 +137,7 @@ export type SampleDataRole = "system_admin" | "demo_admin";
 export interface DeveloperToolsBarProps {
   user: {
     role: string;
+    email?: string;
     sessionToken?: string;
   } | null;
   currentStep: number;

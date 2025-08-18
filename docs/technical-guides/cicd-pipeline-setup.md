@@ -37,11 +37,27 @@ graph LR
 
 **Jobs Overview**:
 
-1. **Lint**: ESLint validation across monorepo
-2. **Test**: Unit tests + TypeScript type checking
-3. **E2E Tests**: Playwright tests (conditional - runs if tests exist)
-4. **Build**: Next.js production build + Cloudflare Pages adaptation
-5. **Deploy**: Automated deployment to Cloudflare Pages (main branch only)
+1. **Security**: Gitleaks scan for secrets detection (runs first)
+2. **Lint**: ESLint validation across monorepo
+3. **Test**: Unit tests + TypeScript type checking + Convex build verification
+4. **E2E Tests**: Playwright tests (conditional - runs if tests exist)
+5. **Build**: Next.js production build + Cloudflare Pages adaptation
+6. **Deploy**: Automated deployment to Cloudflare Pages (main branch only)
+
+## Schema Validation Integration
+
+**Critical Addition**: The pipeline includes automated schema-code synchronization checks to prevent TypeScript cascade failures identified in the Schema-Code Synchronization Crisis.
+
+**Schema Validation Steps**:
+1. **Convex Build Generation**: `cd apps/convex && bun run build` - generates type definitions
+2. **Type Checking**: `bun run typecheck` - validates generated types against application code
+3. **Runtime Validation**: Future enhancement to add `bunx convex run validation:checkSchemaSync`
+
+**Prevention of Common Issues**:
+- TypeScript "Type instantiation is excessively deep" cascade failures
+- ActionCtx/QueryCtx/MutationCtx type union conflicts
+- Missing field validation during production operations
+- Schema-code drift causing runtime errors
 
 ---
 
