@@ -135,6 +135,7 @@ jobs:
         if: steps.check-e2e.outputs.e2e_exists == 'true'
         env:
           NODE_ENV: development
+          NEXT_PUBLIC_CONVEX_URL: https://test-convex-url-for-ci.convex.cloud
         run: bun run test:e2e
 
       - name: Skip E2E tests
