@@ -145,7 +145,7 @@ export const generateResponse = action({
         fallbackMessage: 'An error occurred while processing your request.',
       };
     }
-  }),
+  },
 });
 
 /**
@@ -315,5 +315,5 @@ export const createOrGetChatSession = action({
       created_at: Date.now(),
       updated_at: Date.now(),
     };
-  }),
+  },
 });
