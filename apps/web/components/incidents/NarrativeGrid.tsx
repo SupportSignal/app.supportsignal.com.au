@@ -127,47 +127,14 @@ export function NarrativeGrid({ incidentId, onComplete, onBack }: NarrativeGridP
     }
   }, [incidentData]);
 
-  // Sample data scenarios (simplified version from SampleDataButton)
-  const getSampleNarrative = () => {
-    const scenarios = [
-      {
-        before_event: "The participant was scheduled to receive afternoon medications at 2:30 PM as per their medication chart. The support worker arrived at 2:25 PM and began preparing medications. The participant was in the living room watching television and appeared in good spirits. They had eaten lunch at 12:30 PM and had no complaints of pain or discomfort. Their morning medications had been administered correctly at 8:00 AM with no issues.",
-        during_event: "At 2:30 PM, the support worker administered what they believed to be the participant's prescribed Paracetamol 500mg. However, upon checking the medication chart immediately after administration, they realized they had given two tablets instead of the prescribed one tablet. The participant had already swallowed both tablets before the error was noticed. The worker immediately checked for any immediate reactions and found none.",
-        end_event: "The medication error was identified within 2 minutes of administration. The participant showed no immediate adverse reactions - vital signs appeared normal, they were alert and responsive, and complained of no symptoms. The support worker immediately contacted the on-call nurse at 2:32 PM to report the incident and seek medical advice.",
-        post_event: "The on-call nurse advised monitoring the participant for the next 4 hours for any signs of overdose symptoms. The participant's doctor was contacted and advised that the additional 500mg of Paracetamol was not life-threatening but required monitoring. The participant remained stable throughout the monitoring period. Incident was reported to management at 3:00 PM. A review of medication procedures has been scheduled to prevent similar errors."
-      },
-      {
-        before_event: "The participant was attending their weekly social group activity at the community center. They had arrived at 3:00 PM in their wheelchair, transported by community transport. The participant was in good spirits and excited about the craft activity planned for the session. Their wheelchair had been checked that morning and was functioning normally. The activity hall floor was clean and dry.",
-        during_event: "At approximately 4:45 PM, the participant attempted to transfer from their wheelchair to a regular chair to participate in the craft activity. Despite staff assistance and following the transfer procedure, the participant lost their balance during the transfer. They fell backward and hit their head on the corner of a nearby table. Staff immediately attended to the participant, who was conscious but complained of head pain.",
-        end_event: "The participant was immediately assessed by the first aid qualified staff member. They remained conscious and alert but had a visible bump on the back of their head and complained of headache. The participant was kept still while emergency services were called at 4:50 PM. Their wheelchair was checked and found to be functioning normally - the fall appeared to be related to the transfer process.",
-        post_event: "Ambulance arrived at 5:10 PM. The participant was transported to the hospital for assessment and CT scan. The scan showed no serious injury, but they were advised to rest and monitor for concussion symptoms. The participant's family and support coordinator were notified. A review of transfer procedures and equipment has been initiated. The participant returned home that evening with instructions for 24-hour observation."
-      },
-      {
-        before_event: "The participant arrived at the day program at 9:00 AM as usual. They seemed slightly agitated during the morning greeting but participated in the breakfast routine. The participant mentioned they had difficulty sleeping the previous night and were feeling tired. The morning activity was a group discussion about weekend plans, which the participant initially engaged with positively.",
-        during_event: "During the group discussion at 10:15 AM, the participant became increasingly agitated when another participant disagreed with their weekend suggestion. The participant raised their voice and began using inappropriate language directed at the other participant and staff. When a staff member attempted to de-escalate the situation, the participant became more aggressive, shouting and making threatening gestures but did not make physical contact.",
-        end_event: "Staff implemented the de-escalation protocol, removing other participants from the immediate area and speaking calmly to the participant. After approximately 10 minutes, the participant began to calm down. They were offered the opportunity to take a break in a quiet space, which they accepted. The participant expressed remorse about their behavior and explained they were frustrated about their sleep issues.",
-        post_event: "The participant spent 30 minutes in the quiet room with a support worker, using breathing techniques to calm down. They were then able to rejoin the group for the next activity. A behavior support meeting was scheduled for the following week to review the participant's support strategies. The participant's sleep issues were noted for discussion with their healthcare team."
-      }
-    ];
-    return scenarios[Math.floor(Math.random() * scenarios.length)];
-  };
+  // Participant name interpolation is now handled by the backend fillIncidentWithSampleData function
 
-  // Listen for sample data trigger from Developer Tools Bar
-  useEffect(() => {
-    const handleSampleDataEvent = (event: CustomEvent) => {
-      if (event.detail.type === 'narrative') {
-        const sampleData = getSampleNarrative();
-        setNarrativeData(sampleData);
-        setErrors(''); // Clear any existing errors
-        console.log('✅ Narrative filled with sample data');
-      }
-    };
+  // Sample narrative data is now generated by the backend fillIncidentWithSampleData function
+  // with participant name interpolation handled server-side
 
-    window.addEventListener('triggerSampleData', handleSampleDataEvent as EventListener);
-    return () => {
-      window.removeEventListener('triggerSampleData', handleSampleDataEvent as EventListener);
-    };
-  }, []);
+  // The Fill Narrative functionality is now handled by the backend fillIncidentWithSampleData function
+  // called from IncidentCaptureWorkflow.tsx. This component will automatically refresh via useQuery
+  // when the incident data is updated with sample narratives.
 
   // Handle narrative field changes
   const handleNarrativeChange = (field: keyof NarrativeData, value: string) => {

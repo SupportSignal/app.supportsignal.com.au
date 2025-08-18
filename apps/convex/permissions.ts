@@ -11,7 +11,7 @@
  * - frontline_worker: Basic incident creation and editing (capture phase only)
  */
 
-import { query, mutation, MutationCtx, QueryCtx } from './_generated/server';
+import { query, mutation, MutationCtx, QueryCtx, ActionCtx } from './_generated/server';
 import { v } from 'convex/values';
 import { ConvexError } from 'convex/values';
 import { Id } from './_generated/dataModel';
@@ -533,7 +533,7 @@ export const createUserInvitation = mutation({
  * Check if user has specific permission
  */
 async function hasUserPermission(
-  ctx: QueryCtx, 
+  ctx: QueryCtx | MutationCtx | ActionCtx, 
   user: any, 
   permission: Permission,
   context?: {
@@ -620,7 +620,7 @@ async function filterPermissionsByContext(
  * Log permission check for audit trail
  */
 async function logPermissionCheck(
-  ctx: QueryCtx,
+  ctx: QueryCtx | MutationCtx | ActionCtx,
   data: {
     userId: Id<'users'>;
     permission: Permission;
@@ -668,7 +668,7 @@ async function logRoleChange(
  * Log security events for audit trail
  */
 async function logSecurityEvent(
-  ctx: QueryCtx | MutationCtx,
+  ctx: QueryCtx | MutationCtx | ActionCtx,
   data: {
     userId: Id<'users'>;
     eventType: string;
@@ -779,7 +779,7 @@ export const getRolePermissionLabels = query({
  * Usage: await requirePermission(ctx, sessionToken, PERMISSIONS.CREATE_INCIDENT);
  */
 export async function requirePermission(
-  ctx: QueryCtx | MutationCtx,
+  ctx: QueryCtx | MutationCtx | ActionCtx,
   sessionToken: string,
   permission: Permission,
   options?: {

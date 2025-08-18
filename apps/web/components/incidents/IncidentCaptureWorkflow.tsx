@@ -191,6 +191,9 @@ export function IncidentCaptureWorkflow() {
 
   // Convex action for Q&A sample data  
   const generateMockAnswers = useAction(api.aiClarification.generateMockAnswers);
+  
+  // Convex mutation for narrative sample data
+  const fillIncidentWithSampleData = useMutation(api.incidents.createSampleData.fillIncidentWithSampleData);
 
   // Sample data handlers for Developer Tools Bar
   const handleFillForm = () => {
@@ -203,13 +206,34 @@ export function IncidentCaptureWorkflow() {
     window.dispatchEvent(new CustomEvent('triggerSampleData', { detail: { type: 'form' } }));
   };
 
-  const handleFillNarrative = () => {
+  const handleFillNarrative = async () => {
+    if (!user?.sessionToken || !incidentId) {
+      console.warn('Cannot fill narrative: missing session token or incident ID');
+      return;
+    }
+
     // Navigate to step 2 if not already there
     if (currentStep !== 1) {
       setCurrentStep(1);
     }
-    // Use the same approach as the form - dispatch an event for the narrative component to handle
-    window.dispatchEvent(new CustomEvent('triggerSampleData', { detail: { type: 'narrative' } }));
+
+    try {
+      console.log('🔍 DEBUG calling backend fillIncidentWithSampleData');
+      const result = await fillIncidentWithSampleData({
+        sessionToken: user.sessionToken,
+        incidentId: incidentId,
+        scenarioType: "medication_error" // Default scenario for developer testing
+      });
+      
+      if (result.success) {
+        console.log('✅ Sample data filled successfully:', result);
+        // The NarrativeGrid component will automatically refresh via useQuery to show the new data
+      } else {
+        console.error('❌ Failed to fill sample data:', result);
+      }
+    } catch (error) {
+      console.error('❌ Error filling sample data:', error);
+    }
   };
 
   const handleFillQA = async () => {

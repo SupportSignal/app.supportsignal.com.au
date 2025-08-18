@@ -222,6 +222,7 @@ export default defineSchema({
     created_at: v.number(),
     created_by: v.optional(v.id("users")), // Temporarily optional for seed data - should be required in production
     updated_at: v.number(),
+    updated_by: v.optional(v.id("users")), // Who last updated the incident
     
     // Data Quality Tracking
     narrative_hash: v.optional(v.string()),
@@ -274,10 +275,11 @@ export default defineSchema({
     consolidated_narrative: v.optional(v.string()), // Combined narrative for AI analysis
     
     // Metadata
-    created_at: v.number(),
-    updated_at: v.number(),
-    enhanced_at: v.optional(v.number()), // When AI enhancement was completed
-    version: v.number(), // Version number for change tracking
+    created_at: v.float64(),
+    updated_at: v.float64(),
+    enhanced_at: v.optional(v.float64()), // When AI enhancement was completed
+    narrative_hash: v.optional(v.string()), // Hash for detecting narrative changes
+    version: v.float64(), // Version number for change tracking
   })
     .index("by_incident", ["incident_id"])
     .index("by_updated", ["updated_at"]),
