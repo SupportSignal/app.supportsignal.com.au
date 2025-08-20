@@ -65,10 +65,10 @@ export function loadConfig(): AppConfig {
   // In CI/test environments, make API keys optional to allow backend startup
   const isTestEnvironment = environment === 'test' || process.env.CI === 'true';
   
-  // LLM Configuration
+  // LLM Configuration - use environment values
   const openRouterApiKey = getEnvVar('OPENROUTER_API_KEY', !isTestEnvironment, isTestEnvironment ? 'test-key-for-ci' : undefined);
-  const defaultModel = getEnvVar('LLM_MODEL', false, 'anthropic/claude-3-haiku');
-  const fallbackModel = getEnvVar('LLM_FALLBACK_MODEL', false, 'openai/gpt-4o-mini');
+  const defaultModel = getEnvVar('LLM_MODEL', true); // Required - no fallback
+  const fallbackModel = getEnvVar('LLM_FALLBACK_MODEL', true); // Required - no fallback
   const openAiApiKey = getEnvVar('OPENAI_API_KEY', false); // Optional for embeddings
   
   // Validate API keys only in non-test environments
@@ -124,6 +124,23 @@ export interface ModelInfo {
 }
 
 export const SUPPORTED_MODELS: ModelInfo[] = [
+  // Most cost-effective models (recommended for development)
+  {
+    id: 'openai/gpt-5-nano',
+    name: 'GPT-5 Nano',
+    provider: 'OpenAI',
+    costPer1kTokens: 0.00005, // $0.05/M input tokens
+    contextWindow: 400000,
+    recommended: true,
+  },
+  {
+    id: 'openai/gpt-4o-mini',
+    name: 'GPT-4o Mini', 
+    provider: 'OpenAI',
+    costPer1kTokens: 0.00015,
+    contextWindow: 128000,
+    recommended: true,
+  },
   {
     id: 'anthropic/claude-3-haiku',
     name: 'Claude 3 Haiku',
@@ -132,13 +149,14 @@ export const SUPPORTED_MODELS: ModelInfo[] = [
     contextWindow: 200000,
     recommended: true,
   },
+  // Mid-range models for quality balance
   {
-    id: 'openai/gpt-4o-mini',
-    name: 'GPT-4o Mini',
+    id: 'openai/gpt-5-mini',
+    name: 'GPT-5 Mini',
     provider: 'OpenAI',
-    costPer1kTokens: 0.00015,
-    contextWindow: 128000,
-    recommended: true,
+    costPer1kTokens: 0.00025, // $0.25/M input tokens
+    contextWindow: 400000,
+    recommended: false,
   },
   {
     id: 'anthropic/claude-3-sonnet',
@@ -154,6 +172,23 @@ export const SUPPORTED_MODELS: ModelInfo[] = [
     provider: 'OpenAI',
     costPer1kTokens: 0.005,
     contextWindow: 128000,
+    recommended: false,
+  },
+  // Premium models for high-quality tasks
+  {
+    id: 'openai/gpt-5-chat',
+    name: 'GPT-5 Chat',
+    provider: 'OpenAI',
+    costPer1kTokens: 0.00125, // $1.25/M input tokens
+    contextWindow: 400000,
+    recommended: false,
+  },
+  {
+    id: 'openai/gpt-5',
+    name: 'GPT-5',
+    provider: 'OpenAI',
+    costPer1kTokens: 0.00125, // $1.25/M input tokens
+    contextWindow: 400000,
     recommended: false,
   },
 ];
@@ -184,7 +219,7 @@ export function selectModel(
   
   // Default to most cost-effective recommended model
   const recommended = availableModels.find(model => model.recommended);
-  return recommended?.id || 'anthropic/claude-3-haiku';
+  return recommended?.id || 'openai/gpt-5-nano';
 }
 
 /**

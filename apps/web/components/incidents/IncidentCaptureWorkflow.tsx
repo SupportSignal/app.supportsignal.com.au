@@ -223,7 +223,7 @@ export function IncidentCaptureWorkflow() {
       const result = await fillIncidentWithSampleData({
         sessionToken: user.sessionToken,
         incidentId: incidentId,
-        scenarioType: (scenarioType || "medication_error") as "medication_error" | "injury" | "behavioral" | "environmental" | "medical_emergency"
+        scenarioType: (scenarioType || "medication_error") as "medication_error" | "injury" | "behavioral" | "environmental" | "medical_emergency" | "ai_stress_test"
       });
       
       if (result.success) {

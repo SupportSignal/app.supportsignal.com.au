@@ -78,6 +78,7 @@ Following BMAD methodology, these documents form the foundation:
 - **[Log Ingestion Worker Setup KDD](./technical-guides/log-ingestion-worker-setup-kdd.md)** - Knowledge and lessons learned from centralized logging implementation
 - **[Cost-Effective Logging](./technical-guides/cost-effective-logging-in-convex-agentic-systems.md)** - Legacy Convex logging strategies (superseded by Worker system)
 - **[Dev Error Pipeline](./technical-guides/dev-error-pipeline.md)** - Chrome DevTools to Claude Code integration
+- **[AI Model Configuration Architecture KDD](./technical-guides/ai-model-configuration-architecture-kdd.md)** - Environment-driven AI model configuration vs database hardcoding
 - **[Convex Components Guide](./technical-guides/convex-components-guide.md)** - Convex architecture patterns and component examples
 - **[React + Convex Development Patterns KDD](./technical-guides/react-convex-patterns-kdd.md)** - **Critical patterns** - Avoid useEffect recursion, proper data flow, anti-patterns to prevent
 - **[Authentication Architecture](./technical-guides/authentication-architecture.md)** - Complete authentication system architecture and security patterns

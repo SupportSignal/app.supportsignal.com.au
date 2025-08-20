@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
 import { requirePermission, PERMISSIONS } from "./permissions";
 import { ConvexError } from "convex/values";
+import { getConfig } from "./lib/config";
 
 // Process template with variable substitution (moved from aiPromptTemplates.ts)
 export function processTemplate(template: string, variables: Record<string, any>): {
@@ -83,13 +84,25 @@ export const getProcessedPrompt = query({
       args.variables
     );
 
+    // Get model from environment configuration (environment-first architecture)
+    const config = getConfig();
+    const modelToUse = config.llm.defaultModel;
+
+    // Log model selection for transparency
+    console.log("🔧 PROMPT MANAGER MODEL SELECTION", {
+      prompt_name: prompt.prompt_name,
+      database_model: prompt.ai_model,
+      environment_model: modelToUse,
+      using: "environment_configuration",
+    });
+
     return {
       name: prompt.prompt_name,
       version: prompt.prompt_version,
       processedTemplate,
       originalTemplate: prompt.prompt_template,
       substitutions,
-      model: prompt.ai_model || 'openai/gpt-4.1-nano',
+      model: modelToUse, // ✅ Use environment configuration instead of database
       maxTokens: prompt.max_tokens,
       temperature: prompt.temperature,
     };
@@ -224,7 +237,7 @@ Generate questions as a JSON array with this format:
     description: "Generate clarification questions based on incident narrative to gather additional details",
     workflow_step: "clarification_questions",
     subsystem: "incidents",
-    ai_model: "anthropic/claude-3-haiku",
+    ai_model: "openai/gpt-5-nano",
     max_tokens: 1000,
     temperature: 0.3,
     is_active: true,
@@ -266,7 +279,7 @@ Provide the enhanced narrative as a single, well-structured paragraph or series 
     description: "Enhance incident narrative by combining original content with clarification responses",
     workflow_step: "narrative_enhancement",
     subsystem: "incidents",
-    ai_model: "anthropic/claude-3-haiku",
+    ai_model: "openai/gpt-5-nano",
     max_tokens: 2000,
     temperature: 0.1,
     is_active: true,
@@ -308,7 +321,7 @@ Output as JSON:
     description: "Generate realistic mock answers for clarification questions about an NDIS incident report",
     workflow_step: "sample_data_generation",
     subsystem: "incidents",
-    ai_model: "anthropic/claude-3-haiku",
+    ai_model: "openai/gpt-5-nano",
     max_tokens: 2000,
     temperature: 0.7,
     is_active: true,

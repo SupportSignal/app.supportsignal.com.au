@@ -106,3 +106,77 @@ export const clearTestDataOnly = mutation({
     };
   },
 });
+
+// Clear questions for a specific incident to bypass caching
+export const clearIncidentQuestions = mutation({
+  args: {
+    incident_id: v.id("incidents")
+  },
+  handler: async (ctx, args) => {
+    console.log(`🧹 Clearing questions for incident: ${args.incident_id}`);
+    
+    // Delete clarification questions for this incident
+    const questions = await ctx.db
+      .query("clarification_questions")
+      .withIndex("by_incident", (q) => q.eq("incident_id", args.incident_id))
+      .collect();
+    
+    console.log(`Found ${questions.length} questions to delete`);
+    
+    let deletedQuestions = 0;
+    for (const question of questions) {
+      await ctx.db.delete(question._id);
+      deletedQuestions++;
+    }
+    
+    // Also delete clarification answers for this incident
+    const answers = await ctx.db
+      .query("clarification_answers")
+      .withIndex("by_incident", (q) => q.eq("incident_id", args.incident_id))
+      .collect();
+      
+    console.log(`Found ${answers.length} answers to delete`);
+    
+    let deletedAnswers = 0;
+    for (const answer of answers) {
+      await ctx.db.delete(answer._id);
+      deletedAnswers++;
+    }
+    
+    console.log(`✅ Cleared questions and answers for incident ${args.incident_id}`);
+    return {
+      incident_id: args.incident_id,
+      deleted_questions: deletedQuestions,
+      deleted_answers: deletedAnswers,
+      total_deleted: deletedQuestions + deletedAnswers
+    };
+  },
+});
+
+// Clear ALL narrative hashes to force fresh question generation  
+export const clearNarrativeHashes = mutation({
+  args: {},
+  handler: async (ctx) => {
+    console.log(`🧹 Clearing ALL narrative hashes to bypass content-based caching`);
+    
+    // Delete all incident narratives (which contain narrative_hash)
+    const narratives = await ctx.db.query("incident_narratives").collect();
+    
+    console.log(`Found ${narratives.length} narrative records to clear hashes from`);
+    
+    let clearedHashes = 0;
+    for (const narrative of narratives) {
+      // Update to remove narrative_hash, forcing fresh generation
+      await ctx.db.patch(narrative._id, {
+        narrative_hash: undefined
+      });
+      clearedHashes++;
+    }
+    
+    console.log(`✅ Cleared ${clearedHashes} narrative hashes`);
+    return {
+      cleared_hashes: clearedHashes,
+      message: "All narrative hashes cleared - fresh question generation will occur"
+    };
+  },
+});
