@@ -308,16 +308,13 @@ Based on the narrative context above, provide realistic and detailed answers to 
 Questions to answer:
 {{questions}}
 
-Output as JSON:
-{
-  "answers": [
-    {
-      "question_id": "question-id-here", 
-      "question": "The original question text",
-      "answer": "Detailed realistic answer here"
-    }
-  ]
-}`,
+Return a JSON array of answer objects (no markdown formatting):
+[
+  {
+    "question_id": "question-id-here",
+    "answer": "Detailed realistic answer here"
+  }
+]`,
     description: "Generate realistic mock answers for clarification questions about an NDIS incident report",
     workflow_step: "sample_data_generation",
     subsystem: "incidents",
