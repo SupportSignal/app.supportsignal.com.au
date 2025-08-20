@@ -285,7 +285,7 @@ export function LLMTestInterface() {
                       <div>
                         <span className="text-gray-600 dark:text-gray-400">Response:</span>
                         <div className="mt-1 p-2 bg-white dark:bg-gray-800 rounded text-xs italic">
-                          "{testResult.testResults.primary.response.substring(0, 80)}{testResult.testResults.primary.response.length > 80 ? '...' : ''}"
+                          &ldquo;{testResult.testResults.primary.response.substring(0, 80)}{testResult.testResults.primary.response.length > 80 ? '...' : ''}&rdquo;
                         </div>
                       </div>
                     )}
@@ -340,7 +340,7 @@ export function LLMTestInterface() {
                       <div>
                         <span className="text-gray-600 dark:text-gray-400">Response:</span>
                         <div className="mt-1 p-2 bg-white dark:bg-gray-800 rounded text-xs italic">
-                          "{testResult.testResults.fallback.response.substring(0, 80)}{testResult.testResults.fallback.response.length > 80 ? '...' : ''}"
+                          &ldquo;{testResult.testResults.fallback.response.substring(0, 80)}{testResult.testResults.fallback.response.length > 80 ? '...' : ''}&rdquo;
                         </div>
                       </div>
                     )}
@@ -381,7 +381,7 @@ export function LLMTestInterface() {
                   <div className="text-sm">
                     <span className="text-gray-600 dark:text-gray-400">Response:</span>
                     <div className="mt-1 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-blue-800 dark:text-blue-200 italic">
-                      "{testResult.response.substring(0, 100)}{testResult.response.length > 100 ? '...' : ''}"
+                      &ldquo;{testResult.response.substring(0, 100)}{testResult.response.length > 100 ? '...' : ''}&rdquo;
                     </div>
                   </div>
                 )}

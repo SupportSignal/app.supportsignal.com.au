@@ -36,7 +36,11 @@ export const testLLMCommunication = action({
       // Test both primary and fallback models
       const testPrompt = "Hello! Please respond with a brief confirmation that you are working correctly. Keep your response under 50 words.";
       
-      const results = {
+      const results: {
+        primary: any,
+        fallback: any,
+        processingTime: number,
+      } = {
         primary: null,
         fallback: null,
         processingTime: 0,
