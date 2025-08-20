@@ -101,7 +101,37 @@ export const generateClarificationQuestions = action({
       throw new Error("Incident not found");
     }
 
-    console.log("🚀 ALWAYS GENERATING FRESH QUESTIONS - CACHING DISABLED", {
+    // Check if questions already exist for this incident/phase
+    const existingQuestions = await ctx.runQuery(internal.aiClarification.getClarificationQuestions, {
+      sessionToken: args.sessionToken,
+      incident_id: args.incident_id,
+      phase: args.phase,
+    });
+
+    if (existingQuestions && existingQuestions.length > 0) {
+      console.log("✅ QUESTIONS ALREADY EXIST - RETURNING EXISTING", {
+        phase: args.phase,
+        incident_id: args.incident_id,
+        existing_count: existingQuestions.length,
+        timestamp: new Date().toISOString(),
+      });
+      
+      return {
+        questions: existingQuestions.map(q => ({
+          _id: q._id,
+          question_id: q.question_id,
+          question_text: q.question_text,
+          question_order: q.question_order,
+          phase: q.phase,
+          is_active: q.is_active,
+          answered: q.answered,
+        })),
+        cached: true,
+        correlation_id: 'existing-questions',
+      };
+    }
+
+    console.log("🚀 NO EXISTING QUESTIONS - GENERATING NEW", {
       phase: args.phase,
       incident_id: args.incident_id,
       timestamp: new Date().toISOString(),
@@ -741,7 +771,15 @@ export const generateMockAnswers = action({
     // Parse AI response to extract answers
     let parsedAnswers;
     try {
-      parsedAnswers = JSON.parse(aiResult.mock_answers.output);
+      let jsonContent = aiResult.mock_answers.output.trim();
+      
+      // Handle markdown-wrapped JSON (AI ignoring template instructions)
+      const markdownMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      if (markdownMatch) {
+        jsonContent = markdownMatch[1].trim();
+      }
+      
+      parsedAnswers = JSON.parse(jsonContent);
       if (!Array.isArray(parsedAnswers)) {
         throw new Error("AI response is not an array");
       }

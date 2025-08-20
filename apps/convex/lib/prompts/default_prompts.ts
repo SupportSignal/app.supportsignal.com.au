@@ -196,10 +196,10 @@ Generate realistic, detailed answers to the clarification questions provided. Th
 6. **Respect participant dignity** and use person-first language
 
 **Output Format:**
-Provide answers as a JSON array:
+Return only a JSON array (no markdown formatting):
 [
   {
-    "question": "The original question text",
+    "question_id": "question-id-here",
     "answer": "Detailed, realistic answer here"
   }
 ]
