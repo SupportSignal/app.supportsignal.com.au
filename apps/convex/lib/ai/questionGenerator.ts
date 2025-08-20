@@ -54,13 +54,14 @@ const templateVariableTransformer = z.object({
   ]),
   narrative_content: z.string(),
 }).transform(data => ({
-  // Map database fields to actual template variables (must match prompt template exactly)
-  participantName: data.participant_name,      // {{participantName}}
-  reporterName: data.reporter_name,            // {{reporterName}}  
-  location: data.location,                     // {{location}}
-  eventDateTime: data.event_date_time,         // {{eventDateTime}}
-  phase: data.phase,                           // {{phase}}
-  narrativeText: data.narrative_content,       // {{narrativeText}}
+  // Map database fields to actual template variables (must match the ACTIVE prompt template exactly)
+  // CRITICAL: These variable names must match the active template in database
+  participantName: data.participant_name,          // {{participantName}}
+  reporterName: data.reporter_name,                // {{reporterName}}  
+  location: data.location,                         // {{location}}
+  eventDateTime: data.event_date_time,             // {{eventDateTime}}
+  phase: data.phase,                               // {{phase}}
+  narrativeText: data.narrative_content,           // {{narrativeText}}
 }));
 
 // Template interpolation helper

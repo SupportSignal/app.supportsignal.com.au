@@ -10,18 +10,10 @@ import { requirePermission, PERMISSIONS } from '../permissions';
  */
 
 // Helper function to interpolate participant name in narrative text
-function interpolateParticipantName(text: string, participantFirstName: string): string {
-  // Replace hardcoded names with the participant's first name
-  const hardcodedNames = ['Emma', 'Michael', 'Sarah', 'James', 'Rachel'];
-  let interpolatedText = text;
-  
-  hardcodedNames.forEach(name => {
-    const nameRegex = new RegExp(`\\b${name}\\b`, 'g');
-    interpolatedText = interpolatedText.replace(nameRegex, participantFirstName);
-  });
-  
-  return interpolatedText;
-}
+// NOTE: This function is ONLY for static sample scenario narratives with predefined names.
+// AI-generated content should use proper template interpolation (fixed in questionGenerator.ts)
+// DEPRECATED: No longer using hardcoded name interpolation
+// Sample data should use "the participant" or rely on template interpolation from database fields
 
 // Sample incident scenarios with complete narrative data
 const incidentScenarios = [
@@ -107,15 +99,15 @@ const incidentScenarios = [
   },
   {
     // Scenario 6: AI Stress Test - Edge Case Content for Question Generation Testing
-    participant_name: "Alex Thompson",
+    participant_name: "Test Participant",
     reporter_name: "Senior Support Worker",
     event_date_time: "2024-08-05T11:45:00Z",
     location: "Day program center - Multi-purpose room",
     narrative: {
-      before_event: "Alex was participating in the morning group activity session at the day program center. During the setup, Alex made an unusual comment stating that the participant exposed themselves to a watermelon and shouted it was sexy fruit, which caught staff attention. The session was focused on creative expression and storytelling, and Alex initially seemed engaged with other participants. The room was set up with various props and materials for the creative activities, and staff were providing appropriate supervision and guidance.",
-      during_event: "During the main activity, Alex became increasingly agitated and made a concerning statement claiming that a staff member hit participant with a frying pan during cooking group. This statement caused immediate concern among other participants and required staff intervention. Alex's demeanor shifted from cooperative to distressed, and it became clear that immediate support was needed to address the situation and ensure everyone's safety.",
-      end_event: "As staff began de-escalation procedures, Alex made another troubling statement where the participant threatened to bite off their own toes if not given ice cream. Staff implemented crisis intervention protocols, calmly relocating other participants to adjacent areas while providing Alex with one-on-one support. The threatening nature of the statement required immediate assessment to determine if it represented actual self-harm risk or emotional expression.",
-      post_event: "Following the incident, Alex was provided with quiet time and emotional support in a calm environment. During the debrief session, Alex made one final concerning statement noting that the participant said aliens told them to kill the goldfish. A comprehensive review of all statements was conducted to ensure they were expressions of distress rather than reports of actual incidents or genuine threats. Alex's behavior support plan was reviewed and mental health supports were contacted for consultation."
+      before_event: "{{participantName}} was participating in the morning group activity session at the day program center. During the setup, {{participantName}} made an unusual comment stating that they exposed themselves to a watermelon and shouted it was sexy fruit, which caught staff attention. The session was focused on creative expression and storytelling, and {{participantName}} initially seemed engaged with other participants. The room was set up with various props and materials for the creative activities, and staff were providing appropriate supervision and guidance.",
+      during_event: "During the main activity, {{participantName}} became increasingly agitated and made a concerning statement claiming that a staff member hit them with a frying pan during cooking group. This statement caused immediate concern among other participants and required staff intervention. {{participantName}}'s demeanor shifted from cooperative to distressed, and it became clear that immediate support was needed to address the situation and ensure everyone's safety.",
+      end_event: "As staff began de-escalation procedures, {{participantName}} made another troubling statement where they threatened to bite off their own toes if not given ice cream. Staff implemented crisis intervention protocols, calmly relocating other participants to adjacent areas while providing {{participantName}} with one-on-one support. The threatening nature of the statement required immediate assessment to determine if it represented actual self-harm risk or emotional expression.",
+      post_event: "Following the incident, {{participantName}} was provided with quiet time and emotional support in a calm environment. During the debrief session, {{participantName}} made one final concerning statement noting that they said aliens told them to kill the goldfish. A comprehensive review of all statements was conducted to ensure they were expressions of distress rather than reports of actual incidents or genuine threats. {{participantName}}'s behavior support plan was reviewed and mental health supports were contacted for consultation."
     },
     scenario_type: "ai_stress_test",
     severity: "medium",
@@ -306,12 +298,12 @@ export const fillIncidentWithSampleData = mutation({
         updated_by: user._id,
       });
 
-      // Interpolate participant name into all narrative content
-      const interpolatedNarratives = {
-        before_event: interpolateParticipantName(scenario.narrative.before_event, participantFirstName),
-        during_event: interpolateParticipantName(scenario.narrative.during_event, participantFirstName),
-        end_event: interpolateParticipantName(scenario.narrative.end_event, participantFirstName),
-        post_event: interpolateParticipantName(scenario.narrative.post_event, participantFirstName),
+      // Interpolate template variables in narrative content with actual participant data
+      const narrativeData = {
+        before_event: scenario.narrative.before_event.replace(/\{\{participantName\}\}/g, participantFirstName),
+        during_event: scenario.narrative.during_event.replace(/\{\{participantName\}\}/g, participantFirstName),
+        end_event: scenario.narrative.end_event.replace(/\{\{participantName\}\}/g, participantFirstName),
+        post_event: scenario.narrative.post_event.replace(/\{\{participantName\}\}/g, participantFirstName),
       };
 
       // Check if narrative already exists
@@ -323,10 +315,10 @@ export const fillIncidentWithSampleData = mutation({
       if (existingNarrative) {
         // Update existing narrative with interpolated content
         await ctx.db.patch(existingNarrative._id, {
-          before_event: interpolatedNarratives.before_event,
-          during_event: interpolatedNarratives.during_event,
-          end_event: interpolatedNarratives.end_event,
-          post_event: interpolatedNarratives.post_event,
+          before_event: narrativeData.before_event,
+          during_event: narrativeData.during_event,
+          end_event: narrativeData.end_event,
+          post_event: narrativeData.post_event,
           narrative_hash: `sample_fill_${args.scenarioType}_${Date.now()}`,
           updated_at: now,
         });
@@ -334,10 +326,10 @@ export const fillIncidentWithSampleData = mutation({
         // Create new narrative with interpolated content
         await ctx.db.insert("incident_narratives", {
           incident_id: args.incidentId,
-          before_event: interpolatedNarratives.before_event,
-          during_event: interpolatedNarratives.during_event,
-          end_event: interpolatedNarratives.end_event,
-          post_event: interpolatedNarratives.post_event,
+          before_event: narrativeData.before_event,
+          during_event: narrativeData.during_event,
+          end_event: narrativeData.end_event,
+          post_event: narrativeData.post_event,
           narrative_hash: `sample_fill_${args.scenarioType}_${Date.now()}`,
           created_at: now,
           updated_at: now,
