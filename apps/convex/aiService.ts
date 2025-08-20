@@ -47,7 +47,7 @@ export interface AIMetrics {
 // Default OpenRouter configuration
 const DEFAULT_AI_CONFIG: Omit<AIServiceConfig, 'apiKey'> = {
   baseUrl: 'https://openrouter.ai/api/v1',
-  model: 'openai/gpt-4.1-nano',
+  model: 'openai/gpt-5-nano', // Updated to match current config
   maxRetries: 3,
   timeoutMs: 30000,
 };
@@ -160,18 +160,22 @@ export class OpenRouterClient {
 
   /**
    * Calculate estimated cost based on token usage
-   * GPT-4.1-nano pricing: approximately $0.002 per 1K tokens
+   * Uses current model pricing from config
    */
   private calculateCost(tokens?: number, model?: string): number | undefined {
     if (!tokens) return undefined;
     
     const ratesPer1KTokens: Record<string, number> = {
-      'openai/gpt-4.1-nano': 0.002,
+      'openai/gpt-5-nano': 0.00005,
+      'openai/gpt-4o-mini': 0.00015,
+      'openai/gpt-5-mini': 0.00025,
+      'anthropic/claude-3-haiku': 0.00025,
+      'openai/gpt-4.1-nano': 0.002, // Legacy model
       'openai/gpt-4': 0.03,
       'anthropic/claude-3-sonnet': 0.003,
     };
     
-    const rate = ratesPer1KTokens[model || ''] || 0.002;
+    const rate = ratesPer1KTokens[model || ''] || 0.00005; // Default to cheapest model rate
     return (tokens / 1000) * rate;
   }
 

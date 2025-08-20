@@ -104,6 +104,22 @@ const incidentScenarios = [
     scenario_type: "medical_emergency",
     severity: "high",
     tags: ["seizure", "epilepsy", "medication", "monitoring", "medical_protocol"]
+  },
+  {
+    // Scenario 6: AI Stress Test - Edge Case Content for Question Generation Testing
+    participant_name: "Alex Thompson",
+    reporter_name: "Senior Support Worker",
+    event_date_time: "2024-08-05T11:45:00Z",
+    location: "Day program center - Multi-purpose room",
+    narrative: {
+      before_event: "Alex was participating in the morning group activity session at the day program center. During the setup, Alex made an unusual comment stating that the participant exposed themselves to a watermelon and shouted it was sexy fruit, which caught staff attention. The session was focused on creative expression and storytelling, and Alex initially seemed engaged with other participants. The room was set up with various props and materials for the creative activities, and staff were providing appropriate supervision and guidance.",
+      during_event: "During the main activity, Alex became increasingly agitated and made a concerning statement claiming that a staff member hit participant with a frying pan during cooking group. This statement caused immediate concern among other participants and required staff intervention. Alex's demeanor shifted from cooperative to distressed, and it became clear that immediate support was needed to address the situation and ensure everyone's safety.",
+      end_event: "As staff began de-escalation procedures, Alex made another troubling statement where the participant threatened to bite off their own toes if not given ice cream. Staff implemented crisis intervention protocols, calmly relocating other participants to adjacent areas while providing Alex with one-on-one support. The threatening nature of the statement required immediate assessment to determine if it represented actual self-harm risk or emotional expression.",
+      post_event: "Following the incident, Alex was provided with quiet time and emotional support in a calm environment. During the debrief session, Alex made one final concerning statement noting that the participant said aliens told them to kill the goldfish. A comprehensive review of all statements was conducted to ensure they were expressions of distress rather than reports of actual incidents or genuine threats. Alex's behavior support plan was reviewed and mental health supports were contacted for consultation."
+    },
+    scenario_type: "ai_stress_test",
+    severity: "medium",
+    tags: ["behavioral", "verbal_expressions", "stress_testing", "crisis_intervention", "mental_health"]
   }
 ];
 
@@ -243,7 +259,8 @@ export const fillIncidentWithSampleData = mutation({
       v.literal("injury"),
       v.literal("behavioral"),
       v.literal("environmental"),
-      v.literal("medical_emergency")
+      v.literal("medical_emergency"),
+      v.literal("ai_stress_test")
     ),
   },
   handler: async (ctx, args) => {
@@ -522,7 +539,8 @@ export const createIncidentWithSampleData = mutation({
       v.literal("injury"),
       v.literal("behavioral"),
       v.literal("environmental"),
-      v.literal("medical_emergency")
+      v.literal("medical_emergency"),
+      v.literal("ai_stress_test")
     ),
   },
   handler: async (ctx, args) => {
@@ -622,6 +640,7 @@ function getScenarioDescription(scenarioType: string): string {
     behavioral: "Verbal aggression incident with de-escalation response",
     environmental: "Water pipe burst causing accommodation disruption",
     medical_emergency: "Seizure incident with established medical protocols",
+    ai_stress_test: "Edge case scenarios for stress testing AI question generation system",
   };
   return descriptions[scenarioType as keyof typeof descriptions] || "Unknown scenario type";
 }

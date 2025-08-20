@@ -152,7 +152,7 @@ Return the questions in this JSON format:
         }),
         workflow_step: "clarification_generation",
         subsystem: "incidents",
-        ai_model: "gpt-4",
+        ai_model: "openai/gpt-4o-mini",
         max_tokens: 800,
         temperature: 0.7,
         is_active: true,

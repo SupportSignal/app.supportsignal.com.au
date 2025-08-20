@@ -5,6 +5,7 @@
 
 import { ConvexError } from "convex/values";
 import { AIRequest, AIResponse, generateCorrelationId } from "./aiService";
+import { getConfig } from "./lib/config";
 
 // Provider configuration
 export interface ProviderConfig {
@@ -116,9 +117,16 @@ export class OpenRouterProvider extends AIProvider {
     if (!tokens) return undefined;
     
     const ratesPer1KTokens: Record<string, number> = {
+      'openai/gpt-5-nano': 0.00005,  // $0.05/M input tokens
+      'openai/gpt-5-mini': 0.00025,  // $0.25/M input tokens  
+      'openai/gpt-5-chat': 0.00125,  // $1.25/M input tokens
+      'openai/gpt-5': 0.00125,       // $1.25/M input tokens
       'openai/gpt-4.1-nano': 0.002,
       'openai/gpt-4': 0.03,
       'openai/gpt-4o-mini': 0.00015,
+      'openai/gpt-4o': 0.005,
+      'anthropic/claude-3-haiku': 0.00025,
+      'anthropic/claude-3-sonnet': 0.003,
     };
     
     const rate = ratesPer1KTokens[model || ''] || 0.002;
@@ -240,7 +248,7 @@ export class MultiProviderAIManager {
         name: 'OpenRouter',
         apiKey: openrouterApiKey,
         baseUrl: 'https://openrouter.ai/api/v1',
-        models: ['openai/gpt-4.1-nano', 'openai/gpt-4', 'openai/gpt-4o-mini', 'anthropic/claude-3-haiku'],
+        models: ['openai/gpt-5-nano', 'openai/gpt-5-mini', 'openai/gpt-5-chat', 'openai/gpt-5', 'openai/gpt-4.1-nano', 'openai/gpt-4', 'openai/gpt-4o-mini', 'openai/gpt-4o', 'anthropic/claude-3-haiku', 'anthropic/claude-3-sonnet'],
         priority: 1,
         enabled: true,
       }));
@@ -264,60 +272,117 @@ export class MultiProviderAIManager {
   }
 
   /**
-   * Send request with provider fallback logic
+   * Send request with smart fallback logic using configured models
    */
   async sendRequest(request: AIRequest): Promise<AIResponse> {
     const enabledProviders = this.providers.filter(p => p.isEnabled());
     
     if (enabledProviders.length === 0) {
+      console.error("🚨 AI CONFIGURATION ERROR: No AI providers available", {
+        correlationId: request.correlationId,
+        hasOpenRouterKey: !!process.env.OPENROUTER_API_KEY,
+        hasAnthropicKey: !!process.env.ANTHROPIC_API_KEY,
+      });
+      
       return {
         correlationId: request.correlationId,
         content: '',
         model: request.model,
         processingTimeMs: 0,
         success: false,
-        error: 'No AI providers available',
+        error: 'CONFIGURATION ERROR: No AI providers configured. Please verify OPENROUTER_API_KEY is set.',
       };
     }
 
+    const config = getConfig();
     let lastError: string = '';
+    let modelsToTry: string[] = [];
 
-    // Try each provider in priority order
-    for (const provider of enabledProviders) {
-      try {
-        console.log(`Attempting request with provider: ${provider.getName()}`);
-        
-        // Check if provider supports the requested model
-        if (!provider.supportsModel(request.model)) {
-          console.log(`Provider ${provider.getName()} does not support model ${request.model}`);
-          continue;
+    // Build fallback model chain: requested model → fallback model
+    modelsToTry.push(request.model);
+    if (request.model !== config.llm.fallbackModel) {
+      modelsToTry.push(config.llm.fallbackModel);
+    }
+
+    console.log("🔧 AI FALLBACK CHAIN", {
+      requestedModel: request.model,
+      fallbackModel: config.llm.fallbackModel,
+      modelsToTry,
+      correlationId: request.correlationId,
+    });
+
+    // Try each model in the fallback chain
+    for (let modelIndex = 0; modelIndex < modelsToTry.length; modelIndex++) {
+      const modelToTry = modelsToTry[modelIndex];
+      const isMainModel = modelIndex === 0;
+      const isFallbackModel = !isMainModel;
+
+      console.log(`🚀 Attempting ${isMainModel ? 'primary' : 'fallback'} model: ${modelToTry}`, {
+        correlationId: request.correlationId,
+        attemptNumber: modelIndex + 1,
+        totalAttempts: modelsToTry.length,
+      });
+
+      // Try each provider for this model
+      for (const provider of enabledProviders) {
+        try {
+          // Check if provider supports the model
+          if (!provider.supportsModel(modelToTry)) {
+            console.log(`Provider ${provider.getName()} does not support model ${modelToTry}`);
+            continue;
+          }
+
+          // Create request with current model
+          const modelRequest: AIRequest = {
+            ...request,
+            model: modelToTry,
+          };
+
+          const response = await provider.sendRequest(modelRequest);
+          
+          if (response.success) {
+            console.log(`✅ Request successful with provider: ${provider.getName()}, model: ${modelToTry}`, {
+              correlationId: request.correlationId,
+              usedFallback: isFallbackModel,
+              processingTimeMs: response.processingTimeMs,
+            });
+            return response;
+          } else {
+            lastError = response.error || 'Unknown error';
+            console.warn(`❌ Provider ${provider.getName()} failed for model ${modelToTry}:`, lastError);
+          }
+
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          lastError = errorMessage;
+          console.error(`💥 Provider ${provider.getName()} threw error for model ${modelToTry}:`, errorMessage);
         }
+      }
 
-        const response = await provider.sendRequest(request);
-        
-        if (response.success) {
-          console.log(`Request successful with provider: ${provider.getName()}`);
-          return response;
-        } else {
-          lastError = response.error || 'Unknown error';
-          console.warn(`Provider ${provider.getName()} failed:`, lastError);
-        }
-
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        lastError = errorMessage;
-        console.error(`Provider ${provider.getName()} threw error:`, errorMessage);
+      // Log fallback transition
+      if (isMainModel) {
+        console.warn(`🔄 Primary model ${modelToTry} failed across all providers, trying fallback model: ${config.llm.fallbackModel}`);
       }
     }
 
-    // All providers failed
+    // All models and providers failed
+    const errorMessage = `SYSTEM ERROR: Both primary model (${request.model}) and fallback model (${config.llm.fallbackModel}) failed across all providers. Last error: ${lastError}`;
+    
+    console.error("🚨 COMPLETE AI SYSTEM FAILURE", {
+      correlationId: request.correlationId,
+      requestedModel: request.model,
+      fallbackModel: config.llm.fallbackModel,
+      availableProviders: enabledProviders.map(p => p.getName()),
+      lastError,
+    });
+
     return {
       correlationId: request.correlationId,
       content: '',
       model: request.model,
       processingTimeMs: 0,
       success: false,
-      error: `All AI providers failed. Last error: ${lastError}`,
+      error: errorMessage,
     };
   }
 

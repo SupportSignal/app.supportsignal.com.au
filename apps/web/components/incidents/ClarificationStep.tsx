@@ -18,7 +18,7 @@ import {
 } from "@/types/clarification";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/auth/auth-provider";
-import { AlertCircle, Loader2, RefreshCw, CheckCircle2 } from "lucide-react";
+import { AlertCircle, Loader2, RefreshCw, CheckCircle2, ChevronDown, ChevronUp, BookOpen } from "lucide-react";
 
 // Auto-save delay (in milliseconds)
 const AUTO_SAVE_DELAY = 2000;
@@ -41,6 +41,7 @@ export function ClarificationStep({
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGeneratingMockAnswers, setIsGeneratingMockAnswers] = useState(false);
   const [mockAnswersError, setMockAnswersError] = useState<string | null>(null);
+  const [showNarrative, setShowNarrative] = useState(false);
 
   // Convex hooks
   const existingQuestions = useQuery(api.aiClarification.getClarificationQuestions, 
@@ -122,7 +123,23 @@ export function ClarificationStep({
 
   // Manual question generation (user-triggered only)
   const handleGenerateQuestions = useCallback(async () => {
+    console.log("🎯 FRONTEND: Generate questions triggered", {
+      phase,
+      incident_id,
+      hasSessionToken: !!sessionToken,
+      hasIncident: !!incident,
+      hasNarrative: !!incident?.narrative,
+      narrative_preview: incident?.narrative ? 
+        incident.narrative[phase as keyof typeof incident.narrative]?.substring(0, 100) + "..." : 
+        "No narrative",
+    });
+
     if (!sessionToken || !incident?.narrative) {
+      console.error("❌ FRONTEND: Missing data for question generation", {
+        hasSessionToken: !!sessionToken,
+        hasIncident: !!incident,
+        hasNarrative: !!incident?.narrative,
+      });
       setGenerationError("Missing session or narrative data");
       return;
     }
@@ -329,6 +346,53 @@ export function ClarificationStep({
           )}
         </CardHeader>
       </Card>
+
+      {/* Narrative Reference Section */}
+      {incident?.narrative && (
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-blue-600" />
+                <h3 className="font-medium text-sm">Narrative Reference</h3>
+                <span className="text-xs text-gray-500">
+                  ({PHASE_NAMES[phase]} details)
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowNarrative(!showNarrative)}
+                className="h-8 px-2"
+              >
+                {showNarrative ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          </CardHeader>
+          {showNarrative && (
+            <CardContent className="pt-0">
+              <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
+                  {PHASE_NAMES[phase]} Narrative:
+                </h4>
+                <p className="text-sm text-blue-800 dark:text-blue-200 leading-relaxed">
+                  {phase === 'before_event' && incident.narrative.before_event}
+                  {phase === 'during_event' && incident.narrative.during_event}
+                  {phase === 'end_event' && incident.narrative.end_event}
+                  {phase === 'post_event' && incident.narrative.post_event}
+                </p>
+                <div className="mt-3 text-xs text-blue-600 dark:text-blue-400">
+                  💡 Use this context to provide detailed answers to the questions below
+                </div>
+              </div>
+            </CardContent>
+          )}
+        </Card>
+      )}
 
       {/* Error states */}
       {generationError && (

@@ -76,6 +76,14 @@ const NARRATIVE_SCENARIOS = [
     description: 'Seizure incident with established medical protocols',
     severity: 'high'
   },
+  {
+    type: 'ai_stress_test',
+    icon: '🧪',
+    name: 'AI Stress Test',
+    participant: 'Alex Thompson',
+    description: 'Edge case scenarios for stress testing AI question generation system',
+    severity: 'medium'
+  },
 ] as const;
 
 /**

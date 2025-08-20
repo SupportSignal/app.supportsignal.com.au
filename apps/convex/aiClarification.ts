@@ -69,6 +69,13 @@ export const generateClarificationQuestions = action({
     narrative_content: v.string(),
   },
   handler: async (ctx, args) => {
+    console.log("🎯 AI CLARIFICATION GENERATE START", {
+      phase: args.phase,
+      incident_id: args.incident_id,
+      narrative_length: args.narrative_content.length,
+      narrative_preview: args.narrative_content.substring(0, 100) + "...",
+      timestamp: new Date().toISOString(),
+    });
     // Authenticate user with retry
     const user = await retryWithBackoff(
       async () => await ctx.runQuery(internal.auth.verifySession, {
@@ -94,41 +101,21 @@ export const generateClarificationQuestions = action({
       throw new Error("Incident not found");
     }
 
-    // Check for existing questions to avoid duplicates with retry
-    const existingQuestions = await retryWithBackoff(
-      async () => await ctx.runQuery(internal.aiClarification.getClarificationQuestions, {
-        sessionToken: args.sessionToken,
-        incident_id: args.incident_id,
-        phase: args.phase,
-      }),
-      `aiClarification.getClarificationQuestions for ${args.incident_id}/${args.phase}`
-    );
-
-    // Create narrative hash for caching with retry
-    const narrativeHash = await retryWithBackoff(
-      async () => await ctx.runMutation(internal.incidents.createNarrativeHash, {
-        content: args.narrative_content,
-      }),
-      `incidents.createNarrativeHash`
-    );
-
-    // If questions exist and narrative hasn't changed, return cached questions
-    if (existingQuestions.length > 0) {
-      const incident_narrative = await ctx.runQuery(internal.incidents.getIncidentNarrativeByIncidentId, {
-        sessionToken: args.sessionToken,
-        incident_id: args.incident_id,
-      });
-
-      if (incident_narrative?.narrative_hash === narrativeHash) {
-        return {
-          questions: existingQuestions,
-          cached: true,
-          correlation_id: null,
-        };
-      }
-    }
+    console.log("🚀 ALWAYS GENERATING FRESH QUESTIONS - CACHING DISABLED", {
+      phase: args.phase,
+      incident_id: args.incident_id,
+      timestamp: new Date().toISOString(),
+    });
 
     // Generate new questions using AI service
+    console.error("🔥 ABOUT TO CALL QUESTIONGENERATOR", {
+      phase: args.phase,
+      incident_id: args.incident_id,
+      participant_name: incident.participant_name,
+      narrative_length: args.narrative_content.length,
+      timestamp: new Date().toISOString(),
+    });
+    
     const generation_result = await ctx.runAction(internal.lib.ai.questionGenerator.generateQuestionsForPhase, {
       participant_name: incident.participant_name,
       reporter_name: incident.reporter_name,
@@ -139,10 +126,47 @@ export const generateClarificationQuestions = action({
       user_id: user._id,
       incident_id: args.incident_id,
     });
+    
+    console.error("🔥 QUESTIONGENERATOR RETURNED", {
+      phase: args.phase,
+      result: generation_result,
+      questions_count: generation_result?.questions?.length || 0,
+      questions_preview: generation_result?.questions?.map(q => ({
+        id: q.question_id,
+        text_length: q.question_text?.length || 0,
+        text_empty: !q.question_text || q.question_text === "",
+        text_preview: q.question_text?.substring(0, 50) || "EMPTY"
+      })) || [],
+      timestamp: new Date().toISOString(),
+    });
 
     // Store generated questions in database
     const storedQuestions = [];
+    console.log("💾 PREPARING TO STORE QUESTIONS", {
+      phase: args.phase,
+      questions_count: generation_result.questions.length,
+      questions_preview: generation_result.questions.map(q => ({
+        id: q.question_id,
+        text_length: q.question_text ? q.question_text.length : 0,
+        text_empty: !q.question_text || q.question_text === "",
+        text_preview: q.question_text ? q.question_text.substring(0, 50) : "EMPTY",
+      })),
+      timestamp: new Date().toISOString(),
+    });
+    
     for (const question of generation_result.questions) {
+      // 🚨 CRITICAL DEBUG LOGGING - BYPASS RATE LIMITING
+      console.error("🚨 BYPASS RATE LIMIT - PRE-STORAGE VALIDATION", {
+        question_id: question.question_id,
+        question_text: question.question_text,
+        question_text_type: typeof question.question_text,
+        question_text_length: question.question_text ? question.question_text.length : 0,
+        question_text_empty: !question.question_text || question.question_text === "",
+        question_text_preview: question.question_text ? question.question_text.substring(0, 100) : "EMPTY OR NULL",
+        phase: args.phase,
+        timestamp: new Date().toISOString(),
+      });
+
       const questionId = await ctx.runMutation(internal.aiClarification.storeClarificationQuestion, {
         incident_id: args.incident_id,
         question_id: question.question_id,
@@ -165,11 +189,7 @@ export const generateClarificationQuestions = action({
       });
     }
 
-    // Update incident narrative hash
-    await ctx.runMutation(internal.incidents.updateIncidentNarrativeHash, {
-      incident_id: args.incident_id,
-      narrative_hash: narrativeHash,
-    });
+    // Note: Narrative hash caching removed - always generating fresh questions
 
     return {
       questions: storedQuestions,
@@ -473,7 +493,21 @@ export const storeClarificationQuestion = mutation({
     correlation_id: v.string(),
   },
   handler: async (ctx, args) => {
-    const questionId = await ctx.db.insert("clarification_questions", {
+    // 🚨 CRITICAL DEBUG LOGGING - BYPASS RATE LIMITING  
+    console.error("🚨 BYPASS RATE LIMIT - STORAGE MUTATION INPUT", {
+      question_id: args.question_id,
+      question_text: args.question_text,
+      question_text_type: typeof args.question_text,
+      question_text_length: args.question_text ? args.question_text.length : 0,
+      question_text_empty: !args.question_text || args.question_text === "",
+      question_text_preview: args.question_text ? args.question_text.substring(0, 100) : "EMPTY OR NULL",
+      phase: args.phase,
+      incident_id: args.incident_id,
+      timestamp: new Date().toISOString(),
+    });
+
+    // Prepare the exact data that will be inserted
+    const insertData = {
       incident_id: args.incident_id,
       question_id: args.question_id,
       phase: args.phase,
@@ -483,6 +517,27 @@ export const storeClarificationQuestion = mutation({
       ai_model: args.ai_model,
       prompt_version: args.prompt_version,
       is_active: true,
+    };
+
+    // 🚨 CRITICAL DEBUG LOGGING - BYPASS RATE LIMITING
+    console.error("🚨 BYPASS RATE LIMIT - DATABASE INSERT DATA", {
+      question_id: insertData.question_id,
+      question_text: insertData.question_text,
+      question_text_type: typeof insertData.question_text,
+      question_text_length: insertData.question_text ? insertData.question_text.length : 0,
+      question_text_empty: !insertData.question_text || insertData.question_text === "",
+      insert_data: insertData,
+      timestamp: new Date().toISOString(),
+    });
+
+    const questionId = await ctx.db.insert("clarification_questions", insertData);
+
+    // 🚨 CRITICAL DEBUG LOGGING - BYPASS RATE LIMITING
+    console.error("🚨 BYPASS RATE LIMIT - POST-INSERT VERIFICATION", {
+      inserted_id: questionId,
+      question_id: args.question_id,
+      original_question_text_length: args.question_text ? args.question_text.length : 0,
+      timestamp: new Date().toISOString(),
     });
 
     return questionId;

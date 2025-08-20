@@ -18,6 +18,7 @@ import {
   Terminal,
 } from 'lucide-react';
 import { VersionDebug } from '../../components/dev/version-debug';
+import { LLMTestInterface } from '../../components/dev/llm-test-interface';
 import { config } from '../../lib/config';
 import { useAuth } from '../../components/auth/auth-provider';
 import { useEffect } from 'react';
@@ -204,6 +205,11 @@ export default function DevPage() {
                 </div>
               </CardContent>
             </Card>
+          </div>
+
+          {/* LLM Testing Interface */}
+          <div className="mt-8">
+            <LLMTestInterface />
           </div>
 
           {/* Version System Debug */}
