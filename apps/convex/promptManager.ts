@@ -203,16 +203,16 @@ const DEFAULT_PROMPTS = [
   {
     prompt_name: "generate_clarification_questions",
     prompt_version: "v1.0.0",
-    prompt_template: `You are an expert incident analyst helping to gather additional details about an NDIS incident involving {{participant_name}}.
+    prompt_template: `You are an expert incident analyst helping to gather additional details about an NDIS incident involving {{participantName}}.
 
 **Incident Context:**
-- **Participant**: {{participant_name}}
-- **Date/Time**: {{event_date_time}}
-- **Location**: {{incident_location}}
-- **Reporter**: {{reporter_name}}
+- **Participant**: {{participantName}}
+- **Date/Time**: {{eventDateTime}}
+- **Location**: {{location}}
+- **Reporter**: {{reporterName}}
 
-**Current Narrative ({{narrative_phase}} phase):**
-{{existing_narrative}}
+**Current Narrative ({{phase}} phase):**
+{{narrativeText}}
 
 **Your Task:**
 Generate 3-5 specific, focused clarification questions that would help gather additional important details about this incident. Focus on:
@@ -245,37 +245,20 @@ Generate questions as a JSON array with this format:
   {
     prompt_name: "enhance_narrative",
     prompt_version: "v1.0.0", 
-    prompt_template: `You are an expert NDIS incident documentation specialist. Your task is to create a comprehensive, well-structured incident narrative by combining original observations with additional clarification details.
+    prompt_template: `You are an expert NDIS incident documentation specialist. 
 
-**Incident Overview:**
-- **Participant**: {{participant_name}}
-- **Date/Time**: {{event_date_time}}
-- **Location**: {{incident_location}}
-- **Reporter**: {{reporter_name}}
+**Phase:** {{phase}}
 
-**Original Narrative:**
-{{existing_narrative}}
+**Instruction:** {{instruction}}
 
-**Additional Details from Clarifications:**
-{{clarification_responses}}
+**Narrative Facts:**
+{{narrative_facts}}
 
 **Your Task:**
-Create an enhanced, comprehensive narrative that:
-1. **Integrates** original content with clarification responses seamlessly
-2. **Maintains** chronological flow and factual accuracy
-3. **Preserves** the reporter's voice and observations
-4. **Adds** clarified details in appropriate context
-5. **Ensures** professional, respectful language throughout
-
-**Guidelines:**
-- Keep the participant's dignity and privacy central
-- Use clear, professional language suitable for NDIS reporting
-- Maintain factual accuracy - don't infer beyond provided information
-- Structure content logically (chronological or thematic as appropriate)
-- Ensure all important details from both sources are included
+Follow the specific instruction provided to enhance or modify the narrative content based on the narrative facts for the specified phase.
 
 **Output Format:**
-Provide the enhanced narrative as a single, well-structured paragraph or series of paragraphs. Do not include headers, bullets, or JSON formatting - just the enhanced narrative text.`,
+Provide only the enhanced narrative text as requested in the instruction. Do not include headers, bullets, or JSON formatting - just the narrative content.`,
     description: "Enhance incident narrative by combining original content with clarification responses",
     workflow_step: "narrative_enhancement",
     subsystem: "incidents",

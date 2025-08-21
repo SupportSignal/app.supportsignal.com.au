@@ -272,7 +272,7 @@ export const enhanceNarrativeContent = action({
 
       // Get processed prompt template
       const processedPrompt = await ctx.runQuery(api.promptManager.getProcessedPrompt, {
-        prompt_name: "enhance_narrative_content",
+        prompt_name: "enhance_narrative",
         variables: {
           phase: args.phase,
           instruction: args.instruction,
