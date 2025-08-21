@@ -52,13 +52,39 @@ export function IncidentMetadataForm({
   onComplete, 
   existingIncidentId 
 }: IncidentMetadataFormProps) {
-  const [formData, setFormData] = useState<FormData>({
-    reporter_name: user.name, // Pre-fill from authenticated user
-    participant_id: undefined,
-    participant_name: '',
-    event_date_time: new Date().toISOString().slice(0, 16), // Current date/time in local format
-    location: '',
+  const [formData, setFormDataInternal] = useState<FormData>(() => {
+    const initialDateTime = new Date().toISOString().slice(0, 16);
+    console.log('🔍 DEBUG: Initial form state creation:');
+    console.log('   Initial event_date_time:', initialDateTime);
+    console.log('   Current Date():', new Date());
+    console.log('   Current Date().toString():', new Date().toString());
+    console.log('   Current Date().toISOString():', new Date().toISOString());
+    console.log('   User timezone offset (minutes):', new Date().getTimezoneOffset());
+    
+    return {
+      reporter_name: user.name, // Pre-fill from authenticated user
+      participant_id: undefined,
+      participant_name: '',
+      event_date_time: initialDateTime, // Current date/time in local format
+      location: '',
+    };
   });
+
+  // Wrapper to log all form data changes (for debugging)
+  const setFormData = (updater: React.SetStateAction<FormData>) => {
+    setFormDataInternal(prevData => {
+      const newData = typeof updater === 'function' ? updater(prevData) : updater;
+      
+      // Log any changes to event_date_time (development only)
+      if (process.env.NODE_ENV === 'development' && prevData.event_date_time !== newData.event_date_time) {
+        console.log('🔍 DEBUG: Form date/time changed:');
+        console.log('   Previous value:', prevData.event_date_time);
+        console.log('   New value:', newData.event_date_time);
+      }
+      
+      return newData;
+    });
+  };
 
   const [errors, setErrors] = useState<Partial<FormData>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -69,6 +95,7 @@ export function IncidentMetadataForm({
 
 
   const createIncident = useMutation(api.incidents.create);
+  const updateIncidentMetadata = useMutation(api.incidents.updateMetadata);
   const generateRandomData = useMutation(api.incidents.createSampleData.generateRandomIncidentMetadata);
 
   // Load existing incident data if editing
@@ -79,16 +106,56 @@ export function IncidentMetadataForm({
   );
 
 
-  // Load existing incident data into form when available
+  // Track if we've already loaded the initial data to prevent overwriting user changes
+  const [hasLoadedInitialData, setHasLoadedInitialData] = useState(false);
+
+  // Load existing incident data into form when available (only once)
   useEffect(() => {
     if (existingIncident?.incident) {
-      const incident = existingIncident.incident;
+      if (!hasLoadedInitialData) {
+        const incident = existingIncident.incident;
+        console.log('🔍 DEBUG: Loading initial incident data (first time only)');
+        setHasLoadedInitialData(true);
+      
+      // Format the event_date_time for datetime-local input
+      let formattedDateTime = new Date().toISOString().slice(0, 16); // Default fallback
+      if (incident.event_date_time) {
+        try {
+          console.log('🔍 DEBUG: Loading existing incident date/time data:');
+          console.log('   Raw stored value:', incident.event_date_time);
+          console.log('   Type:', typeof incident.event_date_time);
+          
+          // Parse the stored date/time and format it for datetime-local input
+          // Important: datetime-local input expects local timezone, not UTC
+          const date = new Date(incident.event_date_time);
+          console.log('   Parsed Date object:', date);
+          console.log('   Date toString():', date.toString());
+          console.log('   Date toISOString():', date.toISOString());
+          console.log('   Date getTime():', date.getTime());
+          console.log('   User timezone offset (minutes):', date.getTimezoneOffset());
+          
+          // Convert to local timezone format for datetime-local input
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          const hours = String(date.getHours()).padStart(2, '0');
+          const minutes = String(date.getMinutes()).padStart(2, '0');
+          
+          console.log('   Extracted components:', { year, month, day, hours, minutes });
+          
+          formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+          console.log('   Final formatted value for datetime-local:', formattedDateTime);
+        } catch (error) {
+          console.warn('Failed to parse existing event_date_time, using current time as fallback:', incident.event_date_time);
+          console.error('   Error details:', error);
+        }
+      }
       
       const newFormData = {
         reporter_name: incident.reporter_name || user.name,
         participant_id: incident.participant_id,
         participant_name: incident.participant_name || '',
-        event_date_time: incident.event_date_time || new Date().toISOString().slice(0, 16),
+        event_date_time: formattedDateTime,
         location: incident.location || '',
       };
 
@@ -113,11 +180,14 @@ export function IncidentMetadataForm({
         } as Participant;
 
         setSelectedParticipant(participantData);
+        } else {
+          setSelectedParticipant(null);
+        }
       } else {
-        setSelectedParticipant(null);
+        console.log('🔍 DEBUG: Existing incident data available, but skipping load to preserve user changes');
       }
     }
-  }, [existingIncident, user.name]);
+  }, [existingIncident, user.name, hasLoadedInitialData]);
 
   // Handle random sample data generation using centralized service
   const handleRandomSample = async () => {
@@ -134,6 +204,15 @@ export function IncidentMetadataForm({
       });
 
       if (result.success && result.data) {
+        console.log('🔍 DEBUG: Sample data generation result:');
+        console.log('   Full result.data:', result.data);
+        console.log('   Sample event_date_time:', result.data.event_date_time);
+        console.log('   Sample event_date_time type:', typeof result.data.event_date_time);
+        if (result.data.event_date_time) {
+          console.log('   Sample parsed as Date:', new Date(result.data.event_date_time));
+          console.log('   Sample Date toString():', new Date(result.data.event_date_time).toString());
+        }
+        
         // Update form with centralized sample data
         setFormData(prev => ({
           ...prev,
@@ -209,6 +288,14 @@ export function IncidentMetadataForm({
 
   // Handle form field changes
   const handleFieldChange = (field: keyof FormData, value: string) => {
+    if (field === 'event_date_time') {
+      console.log('🔍 DEBUG: User changed date/time field:');
+      console.log('   New value:', value);
+      console.log('   Type:', typeof value);
+      console.log('   Parsed as Date:', new Date(value));
+      console.log('   Date toString():', new Date(value).toString());
+    }
+    
     setFormData(prev => ({ ...prev, [field]: value }));
     // Clear errors for the field being edited
     if (errors[field]) {
@@ -270,16 +357,39 @@ export function IncidentMetadataForm({
 
       let incidentId = currentIncidentId;
 
-      // If we have an existing incident, use it; otherwise create a new one
-      if (!incidentId) {
-        const incidentData = {
-          sessionToken,
-          reporter_name: formData.reporter_name.trim(),
-          participant_id: formData.participant_id,
-          participant_name: formData.participant_name.trim(),
-          event_date_time: formData.event_date_time,
-          location: formData.location.trim(),
-        };
+      // Prepare the form data for submission
+      const incidentData = {
+        sessionToken,
+        reporter_name: formData.reporter_name.trim(),
+        participant_id: formData.participant_id,
+        participant_name: formData.participant_name.trim(),
+        event_date_time: formData.event_date_time,
+        location: formData.location.trim(),
+      };
+
+      // If we have an existing incident, update it; otherwise create a new one
+      if (incidentId) {
+        console.log('🔍 DEBUG: Updating existing incident with date/time data:');
+        console.log('   Incident ID:', incidentId);
+        console.log('   Form event_date_time value:', formData.event_date_time);
+        console.log('   Type:', typeof formData.event_date_time);
+        console.log('   Parsed as Date:', new Date(formData.event_date_time));
+        console.log('   Date toString():', new Date(formData.event_date_time).toString());
+        console.log('   Date toISOString():', new Date(formData.event_date_time).toISOString());
+        console.log('   Full update data being sent:', { ...incidentData, incidentId });
+        
+        await updateIncidentMetadata({
+          ...incidentData,
+          incidentId
+        });
+      } else {
+        console.log('🔍 DEBUG: Creating new incident with date/time data:');
+        console.log('   Form event_date_time value:', formData.event_date_time);
+        console.log('   Type:', typeof formData.event_date_time);
+        console.log('   Parsed as Date:', new Date(formData.event_date_time));
+        console.log('   Date toString():', new Date(formData.event_date_time).toString());
+        console.log('   Date toISOString():', new Date(formData.event_date_time).toISOString());
+        console.log('   Full incident data being sent:', incidentData);
         
         incidentId = await createIncident(incidentData);
 
