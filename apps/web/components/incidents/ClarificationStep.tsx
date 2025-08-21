@@ -20,8 +20,8 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/auth/auth-provider";
 import { AlertCircle, Loader2, RefreshCw, CheckCircle2, ChevronDown, ChevronUp, BookOpen } from "lucide-react";
 
-// Auto-save delay (in milliseconds)
-const AUTO_SAVE_DELAY = 2000;
+// Auto-save delay (in milliseconds) - Standardized to 3 seconds across all components
+const AUTO_SAVE_DELAY = 3000;
 
 export function ClarificationStep({ 
   incident_id, 

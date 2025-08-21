@@ -287,6 +287,148 @@ export const create = mutation({
 });
 
 /**
+ * Update incident metadata with comprehensive validation and permission checks
+ * Allows updating basic incident information while preserving workflow status
+ */
+export const updateMetadata = mutation({
+  args: {
+    sessionToken: v.string(),
+    incidentId: v.id("incidents"),
+    reporter_name: v.string(),
+    participant_id: v.optional(v.id("participants")),
+    participant_name: v.string(),
+    event_date_time: v.string(),
+    location: v.string(),
+  },
+  handler: async (ctx, args) => {
+    let correlationId: string = '';
+    let user: any = null;
+
+    try {
+      // Check permissions first to get user context
+      const authResult = await requirePermission(
+        ctx,
+        args.sessionToken,
+        PERMISSIONS.CREATE_INCIDENT // Using same permission as create for now
+      );
+      user = authResult.user;
+      correlationId = authResult.correlationId;
+
+      // Verify the incident exists and user has access to it
+      const existingIncident = await ctx.db.get(args.incidentId);
+      if (!existingIncident) {
+        throw new ValidationError(
+          "Incident not found",
+          ErrorTypes.BUSINESS_LOGIC_ERROR,
+          { correlationId, context: { incidentId: args.incidentId } }
+        );
+      }
+
+      // Verify user has access to this incident (same company)
+      if (existingIncident.company_id !== user.company_id) {
+        throw new ValidationError(
+          "Access denied to incident",
+          ErrorTypes.BUSINESS_LOGIC_ERROR,
+          { correlationId, context: { incidentId: args.incidentId } }
+        );
+      }
+
+      // Comprehensive input validation using Zod schemas
+      const sanitizedInput = Sanitization.sanitizeObject({
+        reporter_name: args.reporter_name,
+        participant_id: args.participant_id,
+        participant_name: args.participant_name,
+        event_date_time: args.event_date_time,
+        location: args.location,
+      });
+
+      const validatedData = ValidationHelpers.validateIncidentCreation(
+        sanitizedInput,
+        correlationId
+      );
+
+      // Additional business logic validation
+      const eventDate = new Date(validatedData.event_date_time);
+      const now = new Date();
+      
+      // Check if event date is too far in the future (business rule)
+      if (eventDate > new Date(now.getTime() + 24 * 60 * 60 * 1000)) {
+        throw new ValidationError(
+          "Incident date cannot be more than 24 hours in the future",
+          ErrorTypes.BUSINESS_LOGIC_ERROR,
+          { correlationId, context: { eventDate: validatedData.event_date_time } }
+        );
+      }
+
+      // Check if event date is too far in the past (business rule)
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      if (eventDate < thirtyDaysAgo) {
+        throw new ValidationError(
+          "Incident date cannot be more than 30 days in the past",
+          ErrorTypes.BUSINESS_LOGIC_ERROR,
+          { correlationId, context: { eventDate: validatedData.event_date_time } }
+        );
+      }
+
+      const currentTime = Date.now();
+      
+      // Update the incident metadata
+      await ctx.db.patch(args.incidentId, {
+        reporter_name: validatedData.reporter_name,
+        participant_id: validatedData.participant_id,
+        participant_name: validatedData.participant_name,
+        event_date_time: validatedData.event_date_time,
+        location: validatedData.location,
+        updated_at: currentTime,
+      });
+
+      // Log success
+      ErrorLogging.logSuccess(
+        'incident_metadata_updated',
+        user._id,
+        correlationId,
+        {
+          incidentId: args.incidentId,
+          companyId: user.company_id,
+          reporter_name: validatedData.reporter_name,
+        }
+      );
+
+      console.log('📝 INCIDENT METADATA UPDATED', {
+        incidentId: args.incidentId,
+        updatedBy: user._id,
+        companyId: user.company_id,
+        correlationId,
+        timestamp: new Date().toISOString(),
+      });
+
+      return args.incidentId;
+    } catch (error) {
+      // Comprehensive error handling
+      if (error instanceof ValidationError) {
+        ErrorLogging.logValidationError(error, 'incidents:updateMetadata', user?._id);
+        throw error;
+      }
+
+      if (error instanceof ConvexError) {
+        ErrorLogging.logBusinessError(error, 'incidents:updateMetadata', user?._id, correlationId);
+        throw error;
+      }
+
+      // Unexpected error
+      const unexpectedError = new ValidationError(
+        `Failed to update incident metadata: ${(error as Error).message}`,
+        ErrorTypes.BUSINESS_LOGIC_ERROR,
+        { correlationId, context: { originalError: (error as Error).message } }
+      );
+      
+      ErrorLogging.logBusinessError(unexpectedError, 'incidents:updateMetadata', user?._id, correlationId);
+      throw unexpectedError;
+    }
+  },
+});
+
+/**
  * Update incident workflow status with comprehensive validation
  * Requires appropriate permissions based on status being updated
  */
