@@ -288,12 +288,8 @@ export const fillIncidentWithSampleData = mutation({
       const existingParticipantName = incident.participant_name || '';
       const participantFirstName = existingParticipantName.split(' ')[0] || 'Participant';
 
-      // Update the incident with scenario data but PRESERVE the participant name from form
+      // STEP 2 SCOPE: Only update timestamp, don't touch Step 1 fields (participant, date, location)
       await ctx.db.patch(args.incidentId, {
-        // DON'T overwrite participant_name - keep what user entered in form
-        reporter_name: scenario.reporter_name,
-        event_date_time: scenario.event_date_time,
-        location: scenario.location,
         updated_at: now,
         updated_by: user._id,
       });

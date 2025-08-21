@@ -99,17 +99,17 @@ export function TemplateSeederInterface({
   };
 
   const handleClearTemplates = async () => {
-    if (!window.confirm('⚠️ DANGER: This will clear ALL prompt templates from the database. This action cannot be undone. Are you sure you want to continue?')) {
+    if (!window.confirm('⚠️ DANGER: This will deactivate ALL prompt templates in the database. This action cannot be undone. Are you sure you want to continue?')) {
       return;
     }
     
-    if (!window.confirm('⚠️ FINAL WARNING: You are about to permanently clear all AI prompt templates. Type "DELETE" in the next dialog to confirm.')) {
+    if (!window.confirm('⚠️ FINAL WARNING: You are about to permanently deactivate all AI prompt templates. Type "DEACTIVATE" in the next dialog to confirm.')) {
       return;
     }
     
-    const userInput = window.prompt('Type "DELETE" to confirm clearing all templates:');
-    if (userInput !== 'DELETE') {
-      alert('Clearing cancelled. You must type "DELETE" exactly to confirm.');
+    const userInput = window.prompt('Type "DEACTIVATE" to confirm deactivating all templates:');
+    if (userInput !== 'DEACTIVATE') {
+      alert('Deactivation cancelled. You must type "DEACTIVATE" exactly to confirm.');
       return;
     }
     
@@ -202,7 +202,7 @@ export function TemplateSeederInterface({
               ) : (
                 <Trash2 size={16} />
               )}
-              {clearing ? 'Clearing...' : 'Clear All'}
+              {clearing ? 'Deactivating...' : 'Deactivate All'}
             </Button>
           )}
         </div>
