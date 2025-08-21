@@ -664,6 +664,19 @@ export const generateMockAnswers = action({
       throw new Error("Incident not found");
     }
 
+    // Get narrative details from the incident_narratives table
+    const narrative = await retryWithBackoff(
+      async () => await ctx.runQuery(internal.narratives.getByIncident, {
+        sessionToken: args.sessionToken,
+        incident_id: args.incident_id,
+      }),
+      `narratives.getByIncident for ${args.incident_id}`
+    );
+
+    if (!narrative) {
+      throw new Error("Narrative not found for incident");
+    }
+
     // Get existing questions for this phase
     const questions = await retryWithBackoff(
       async () => await ctx.runQuery(internal.aiClarification.getClarificationQuestions, {
@@ -690,18 +703,22 @@ export const generateMockAnswers = action({
       }
     };
 
-    // Debug: Log the incident structure to understand the narrative access
-    console.log("🐛 INCIDENT DEBUG", {
+    // Debug: Log the narrative structure to verify data access
+    console.log("🐛 NARRATIVE DEBUG", {
       incident_id: args.incident_id,
       phase: args.phase,
       hasIncident: !!incident,
-      incidentKeys: incident ? Object.keys(incident) : [],
-      hasNarrative: !!incident?.narrative,
-      narrativeKeys: incident?.narrative ? Object.keys(incident.narrative) : [],
-      narrativeStructure: incident?.narrative,
+      hasNarrative: !!narrative,
+      narrativeKeys: narrative ? Object.keys(narrative) : [],
+      narrativePhases: narrative ? {
+        before_event: !!narrative.before_event,
+        during_event: !!narrative.during_event,
+        end_event: !!narrative.end_event,
+        post_event: !!narrative.post_event,
+      } : {},
     });
 
-    const phaseNarrative = getPhaseNarrative(args.phase, incident.narrative);
+    const phaseNarrative = getPhaseNarrative(args.phase, narrative);
     
     console.log("🐛 NARRATIVE DEBUG", {
       phase: args.phase,

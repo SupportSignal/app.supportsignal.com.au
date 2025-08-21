@@ -9,12 +9,23 @@ export const DEFAULT_PROMPT_TEMPLATES = [
 
 **Incident Context:**
 - **Participant**: {{participant_name}}
-- **Date/Time**: {{event_date_time}}
-- **Location**: {{incident_location}}
+- **Date/Time**: {{event_datetime}}
+- **Location**: {{location}}
 - **Reporter**: {{reporter_name}}
 
-**Current Narrative ({{narrative_phase}} phase):**
-{{existing_narrative}}
+**Current Incident Narrative:**
+
+**Before Event:**
+{{before_event}}
+
+**During Event:**
+{{during_event}}
+
+**End of Event:**
+{{end_of_event}}
+
+**Post Event Support:**
+{{post_event_support}}
 
 **Your Task:**
 Generate 3-5 specific, focused clarification questions that would help gather additional important details about this incident. Focus on:
@@ -44,17 +55,16 @@ Generate questions as a JSON array with this format:
         required: true,
       },
       {
-        name: "event_date_time",
+        name: "event_datetime",
         description: "Date and time of incident",
         type: "string" as const,
         required: true,
       },
       {
-        name: "incident_location",
+        name: "location",
         description: "Location where incident occurred",
         type: "string" as const,
-        required: false,
-        default_value: "unspecified location"
+        required: true,
       },
       {
         name: "reporter_name",
@@ -63,14 +73,26 @@ Generate questions as a JSON array with this format:
         required: true,
       },
       {
-        name: "narrative_phase",
-        description: "Phase of narrative being clarified",
+        name: "before_event",
+        description: "Before event narrative phase",
         type: "string" as const,
         required: true,
       },
       {
-        name: "existing_narrative",
-        description: "Current narrative content for the phase",
+        name: "during_event",
+        description: "During event narrative phase",
+        type: "string" as const,
+        required: true,
+      },
+      {
+        name: "end_of_event",
+        description: "End of event narrative phase",
+        type: "string" as const,
+        required: true,
+      },
+      {
+        name: "post_event_support",
+        description: "Post event support narrative phase",
         type: "string" as const,
         required: true,
       }
@@ -174,16 +196,15 @@ Provide only the enhanced narrative text for the {{narrative_phase}} phase. Do n
 **Incident Context:**
 - **Participant**: {{participant_name}}
 - **Reporter**: {{reporter_name}}
-- **Location**: {{incident_location}}
-- **Date/Time**: {{event_date_time}}
+- **Location**: {{location}}
 
-**Phase**: {{narrative_phase}} phase of the incident
+**Phase**: {{phase}} phase of the incident
 
 **Original Narrative for Context:**
-{{existing_narrative}}
+{{phase_narrative}}
 
 **Clarification Questions to Answer:**
-{{questions_to_answer}}
+{{questions}}
 
 **Your Task:**
 Generate realistic, detailed answers to the clarification questions provided. The answers should:
@@ -219,32 +240,25 @@ Ensure all answers are factual, helpful, and maintain the professional standards
         required: true,
       },
       {
-        name: "incident_location",
+        name: "location",
         description: "Location where incident occurred",
         type: "string" as const,
-        required: false,
-        default_value: "unspecified location"
+        required: true,
       },
       {
-        name: "event_date_time",
-        description: "Date and time of incident",
+        name: "phase",
+        description: "Phase of narrative (beforeEvent, duringEvent, endOfEvent, postEventSupport)",
         type: "string" as const,
         required: true,
       },
       {
-        name: "narrative_phase",
-        description: "Phase of narrative (before_event, during_event, end_event, post_event)",
-        type: "string" as const,
-        required: true,
-      },
-      {
-        name: "existing_narrative",
+        name: "phase_narrative",
         description: "Original narrative content for context",
         type: "string" as const,
         required: true,
       },
       {
-        name: "questions_to_answer",
+        name: "questions",
         description: "JSON array or text list of clarification questions to answer",
         type: "string" as const,
         required: true,
