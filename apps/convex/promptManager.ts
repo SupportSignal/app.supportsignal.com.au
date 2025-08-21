@@ -84,16 +84,17 @@ export const getProcessedPrompt = query({
       args.variables
     );
 
-    // Get model from environment configuration (environment-first architecture)
+    // Get model: database-first, fallback to environment configuration
     const config = getConfig();
-    const modelToUse = config.llm.defaultModel;
+    const modelToUse = prompt.ai_model || config.llm.defaultModel;
 
     // Log model selection for transparency
     console.log("🔧 PROMPT MANAGER MODEL SELECTION", {
       prompt_name: prompt.prompt_name,
       database_model: prompt.ai_model,
-      environment_model: modelToUse,
-      using: "environment_configuration",
+      environment_model: config.llm.defaultModel,
+      selected_model: modelToUse,
+      using: prompt.ai_model ? "database_override" : "environment_default",
     });
 
     return {
@@ -137,10 +138,17 @@ export const seedPromptTemplates = mutation({
         .first();
 
       if (!existingPrompt) {
-        // Create new prompt from default template
+        // Create new prompt from default template with sensible defaults
         const promptId = await ctx.db.insert("ai_prompts", {
           ...defaultPrompt,
+          prompt_version: defaultPrompt.prompt_version || "v1.0.0",
+          ai_model: defaultPrompt.ai_model || undefined, // Use system configuration by default
+          max_tokens: defaultPrompt.max_tokens || 2000,
+          temperature: defaultPrompt.temperature || 0.3,
+          is_active: defaultPrompt.is_active !== false, // Default to true unless explicitly false
+          usage_count: 0,
           created_at: now,
+          created_by: user._id,
         });
         promptIds.push(promptId);
       }
@@ -202,7 +210,6 @@ export const updatePromptUsage = mutation({
 const DEFAULT_PROMPTS = [
   {
     prompt_name: "generate_clarification_questions",
-    prompt_version: "v1.0.0",
     prompt_template: `You are an expert incident analyst helping to gather additional details about an NDIS incident involving {{participantName}}.
 
 **Incident Context:**
@@ -237,39 +244,52 @@ Generate questions as a JSON array with this format:
     description: "Generate clarification questions based on incident narrative to gather additional details",
     workflow_step: "clarification_questions",
     subsystem: "incidents",
-    ai_model: "openai/gpt-5-nano",
-    max_tokens: 1000,
-    temperature: 0.3,
-    is_active: true,
   },
   {
     prompt_name: "enhance_narrative",
-    prompt_version: "v1.0.0", 
-    prompt_template: `You are an expert NDIS incident documentation specialist. 
+    prompt_template: `You are a professional incident documentation specialist. Your task is to create a polished, consolidated narrative for the {{phase}} phase by enhancing human-authored content while preserving all factual details and authentic insights.
 
-**Phase:** {{phase}}
+**Incident Context:**
+- **Participant**: {{participantName}}
+- **Location**: {{location}}
+- **Date/Time**: {{eventDateTime}}
+- **Reporter**: {{reporterName}}
 
-**Instruction:** {{instruction}}
+**Phase**: {{phase}} phase of the incident
 
-**Narrative Facts:**
-{{narrative_facts}}
+**Original Narrative (baseline content):**
+{{originalNarrative}}
+
+**Human-Authored Investigation Details:**
+{{investigationQA}}
 
 **Your Task:**
-Follow the specific instruction provided to enhance or modify the narrative content based on the narrative facts for the specified phase.
+Create an enhanced narrative for the {{phase}} phase that:
+
+1. **Preserves all factual content** from both the original narrative and human answers
+2. **Improves grammar, flow, and readability** without changing meaning
+3. **Integrates investigation details** seamlessly into a coherent narrative
+4. **Maintains the authentic voice** of the human reporter's observations
+5. **Uses professional language** suitable for incident documentation
+6. **Organizes information logically** within the phase timeline
+
+**Enhancement Guidelines:**
+- Fix grammar, spelling, and sentence structure issues
+- Improve paragraph flow and transitions
+- Integrate Q&A insights naturally (don't just append them)
+- Remove redundancy while keeping all unique details
+- Use consistent terminology and professional tone
+- Maintain chronological or logical organization
+- Preserve specific names, times, quotes, and technical details exactly
 
 **Output Format:**
-Provide only the enhanced narrative text as requested in the instruction. Do not include headers, bullets, or JSON formatting - just the narrative content.`,
-    description: "Enhance incident narrative by combining original content with clarification responses",
-    workflow_step: "narrative_enhancement",
+Provide the enhanced narrative as flowing prose. Do not use bullet points, headers, or JSON formatting - just well-written narrative paragraphs that tell the complete story of the {{phase}} phase.`,
+    description: "Consolidate and enhance incident narrative by integrating original content with human-authored Q&A investigation details",
+    workflow_step: "narrative_consolidation",
     subsystem: "incidents",
-    ai_model: "openai/gpt-5-nano",
-    max_tokens: 2000,
-    temperature: 0.1,
-    is_active: true,
   },
   {
     prompt_name: "generate_mock_answers",
-    prompt_version: "v1.0.0",
     prompt_template: `You are generating realistic mock answers for clarification questions about an NDIS incident report.
 
 The incident involved {{participant_name}}, and was reported by {{reporter_name}}.
@@ -301,10 +321,6 @@ Return a JSON array of answer objects (no markdown formatting):
     description: "Generate realistic mock answers for clarification questions about an NDIS incident report",
     workflow_step: "sample_data_generation",
     subsystem: "incidents",
-    ai_model: "openai/gpt-5-nano",
-    max_tokens: 2000,
-    temperature: 0.7,
-    is_active: true,
   }
 ];
 
