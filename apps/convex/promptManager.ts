@@ -141,11 +141,11 @@ export const seedPromptTemplates = mutation({
         // Create new prompt from default template with sensible defaults
         const promptId = await ctx.db.insert("ai_prompts", {
           ...defaultPrompt,
-          prompt_version: defaultPrompt.prompt_version || "v1.0.0",
-          ai_model: defaultPrompt.ai_model || undefined, // Use system configuration by default
-          max_tokens: defaultPrompt.max_tokens || 2000,
-          temperature: defaultPrompt.temperature || 0.3,
-          is_active: defaultPrompt.is_active !== false, // Default to true unless explicitly false
+          prompt_version: (defaultPrompt as any).prompt_version || "v1.0.0",
+          ai_model: (defaultPrompt as any).ai_model || undefined, // Use system configuration by default
+          max_tokens: (defaultPrompt as any).max_tokens || 2000,
+          temperature: (defaultPrompt as any).temperature || 0.3,
+          is_active: (defaultPrompt as any).is_active !== false, // Default to true unless explicitly false
           usage_count: 0,
           created_at: now,
           created_by: user._id,
@@ -281,12 +281,18 @@ Create an enhanced narrative for the {{phase}} phase that:
 - Use consistent terminology and professional tone
 - Maintain chronological or logical organization
 - Preserve specific names, times, quotes, and technical details exactly
+- **Quote Formatting**: Keep direct quotes on the same line as the surrounding text - never break quotes across lines or place quote marks alone on separate lines
 
 **Output Format:**
-Provide the enhanced narrative as flowing prose. Do not use bullet points, headers, or JSON formatting - just well-written narrative paragraphs that tell the complete story of the {{phase}} phase.`,
+Provide the enhanced narrative as well-organized prose with natural paragraph breaks:
+- Present the content in 2-3 focused paragraphs, each covering a distinct aspect or time period
+- Use clear topic flow: context/setup → main events → responses/outcomes  
+- Ensure smooth transitions between paragraphs
+- Do not use bullet points, headers, or JSON formatting - just well-structured narrative paragraphs that tell the complete story of the {{phase}} phase`,
     description: "Consolidate and enhance incident narrative by integrating original content with human-authored Q&A investigation details",
     workflow_step: "narrative_consolidation",
     subsystem: "incidents",
+    max_tokens: 4000,
   },
   {
     prompt_name: "generate_mock_answers",
@@ -431,4 +437,66 @@ export const clearAllPrompts = mutation({
       deletedTemplates,
     };
   }
+});
+
+// Reset and seed prompts in one operation (sample_data permission required)
+export const resetAndSeedPrompts = mutation({
+  args: {
+    sessionToken: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Validate sample_data permission
+    const { user, correlationId } = await requirePermission(
+      ctx,
+      args.sessionToken,
+      PERMISSIONS.SAMPLE_DATA,
+      { errorMessage: 'Sample data permission required to reset and seed prompt templates' }
+    );
+
+    // Step 1: Clear existing prompts
+    const allPrompts = await ctx.db
+      .query("ai_prompts")
+      .withIndex("by_active", (q) => q.eq("is_active", true))
+      .collect();
+
+    const clearedCount = allPrompts.length;
+    const clearedTemplates: string[] = [];
+
+    // Soft delete all prompts by setting them inactive
+    for (const prompt of allPrompts) {
+      await ctx.db.patch(prompt._id, {
+        is_active: false,
+        replaced_at: Date.now(),
+      });
+      clearedTemplates.push(prompt.prompt_name);
+    }
+
+    // Step 2: Seed new prompts
+    const promptIds: string[] = [];
+    const now = Date.now();
+
+    // Seed each default template
+    for (const defaultPrompt of DEFAULT_PROMPTS) {
+      const promptId = await ctx.db.insert("ai_prompts", {
+        ...defaultPrompt,
+        prompt_version: (defaultPrompt as any).prompt_version || "v1.0.0",
+        ai_model: (defaultPrompt as any).ai_model || undefined,
+        max_tokens: (defaultPrompt as any).max_tokens || 2000,
+        temperature: (defaultPrompt as any).temperature || 0.3,
+        is_active: (defaultPrompt as any).is_active !== false,
+        usage_count: 0,
+        created_at: now,
+        created_by: user._id,
+      });
+      promptIds.push(promptId);
+    }
+
+    return {
+      message: `Successfully reset and seeded ${promptIds.length} prompt templates`,
+      clearedCount,
+      clearedTemplates,
+      seededCount: promptIds.length,
+      promptIds,
+    };
+  },
 });

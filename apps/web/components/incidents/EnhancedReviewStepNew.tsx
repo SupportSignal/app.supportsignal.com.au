@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useQuery, useAction } from 'convex/react';
+import { useQuery, useMutation, useAction } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useAuth } from '@/components/auth/auth-provider';
 import { Button } from '@starter/ui/button';
@@ -29,6 +29,38 @@ interface EnhancedReviewStepNewProps {
   onComplete: (data: { success: boolean }) => void;
   onPrevious: () => void;
 }
+
+// Simple text formatting function - breaks text into paragraphs with light emphasis
+const formatNarrativeText = (text: string): React.ReactNode => {
+  if (!text?.trim()) return null;
+
+  // Split into sentences and group into logical paragraphs
+  const sentences = text.match(/[^\.!?]+[\.!?]+/g) || [text];
+  const paragraphs: string[] = [];
+  let currentParagraph = '';
+
+  sentences.forEach((sentence, index) => {
+    currentParagraph += sentence.trim() + ' ';
+    
+    // Start new paragraph after 2-3 sentences or at logical breaks
+    const shouldBreak = (index + 1) % 3 === 0 || 
+      sentence.includes('After') || 
+      sentence.includes('During') || 
+      sentence.includes('Following') ||
+      sentence.includes('Subsequently');
+      
+    if (shouldBreak || index === sentences.length - 1) {
+      paragraphs.push(currentParagraph.trim());
+      currentParagraph = '';
+    }
+  });
+
+  return paragraphs.map((paragraph, index) => (
+    <p key={index} className="mb-3 last:mb-0">
+      {paragraph}
+    </p>
+  ));
+};
 
 interface PhaseEnhancement {
   phase: ClarificationPhase;
@@ -332,7 +364,9 @@ export function EnhancedReviewStepNew({
                             <h4 className="font-medium">Enhanced Narrative</h4>
                           </div>
                           <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-                            <p className="text-sm leading-relaxed">{phase.enhanced_content}</p>
+                            <div className="text-sm leading-relaxed space-y-3">
+                              {formatNarrativeText(phase.enhanced_content)}
+                            </div>
                           </div>
                         </div>
                       )}

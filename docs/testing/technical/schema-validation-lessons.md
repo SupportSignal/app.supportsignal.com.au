@@ -75,6 +75,47 @@ Schema normalization was incorporated into Story 1.4 (Core API Layer) to address
 
 This ensures documentation matches reality while identifying improvements needed.
 
+## Database Index Validation Learning (Story 5.5)
+
+### Context
+During narrative enhancement implementation, attempted to use non-existent database index `by_question_id` on `clarification_questions` table, causing runtime error.
+
+### The Problem
+**What Happened**: Wrote JOIN query assuming standard index existed without checking actual database schema.
+
+**Error**: `Index clarification_questions.by_question_id not found`
+
+**Root Cause**: Made assumption about database indexes based on field names instead of verifying actual schema.
+
+### Available vs Assumed Indexes
+**Assumed**: `by_question_id` index existed for JOIN operations
+**Reality**: Available indexes were:
+- `by_generated`  
+- `by_incident`
+- `by_incident_phase`
+
+### The Solution
+**MANDATORY**: Always check database indexes before writing queries.
+
+```bash
+# Use Convex MCP to verify available indexes
+mcp__convex__tables  # Shows all table schemas INCLUDING available indexes
+```
+
+**Fixed approach**: 
+- Used existing `by_incident_phase` index to get all questions
+- Created in-memory Map for `question_id` lookup
+- Avoided non-existent index while achieving same JOIN result
+
+### Prevention Rules
+- **Never assume indexes exist** based on field names
+- **Always verify schema including indexes** before database operations  
+- **Use available tools** (`mcp__convex__tables`) to check actual database structure
+- **Design queries around existing indexes** rather than assuming optimal indexes exist
+
+### Impact
+Prevents runtime database errors and multiple debugging cycles when joining tables or writing complex queries.
+
 ## Story 1.4 Schema Migration Critical Learning
 
 ### The Migration Challenge

@@ -50,6 +50,11 @@ export function useClearAllTemplates() {
   return useMutation(api.promptManager.clearAllPrompts);
 }
 
+// Hook for resetting and seeding prompts in one operation (requires SAMPLE_DATA permission)
+export function useResetAndSeedPrompts() {
+  return useMutation(api.promptManager.resetAndSeedPrompts);
+}
+
 // Hook for listing all prompts from database (for admin UI)
 export function useAllPrompts(sessionToken?: string, subsystem?: string, activeOnly?: boolean) {
   return useQuery(api.promptManager.listAllPrompts, 

@@ -253,10 +253,21 @@ export const enhanceNarrativeContent = action({
     const correlationId = generateCorrelationId();
     const operation = "enhanceNarrativeContent";
     
+    console.log('🔥 STARTING AI ENHANCEMENT - Full Request:', {
+      correlationId,
+      phase: args.phase,
+      hasAnswers: args.answers?.length || 0,
+      instructionLength: args.instruction?.length || 0,
+      timestamp: new Date().toISOString(),
+    });
+    
     try {
       // Rate limiting check
       const rateLimitKey = args.user_id || 'anonymous';
+      console.log('🔄 Rate limit check:', { rateLimitKey, remaining: rateLimiter.getRemainingRequests(rateLimitKey) });
+      
       if (!rateLimiter.isAllowed(rateLimitKey)) {
+        console.error('🚫 RATE LIMIT EXCEEDED:', { rateLimitKey });
         throw new ConvexError("Rate limit exceeded. Please try again later.");
       }
 
@@ -270,14 +281,85 @@ export const enhanceNarrativeContent = action({
         .map(item => `Q: ${item.question.trim()}\nA: ${item.answer.trim()}`)
         .join('\n\n');
 
+      console.log('📝 Processed Q&A pairs:', { 
+        validAnswersCount: validAnswers.length,
+        narrativeFactsLength: narrativeFacts.length,
+        sampleFacts: narrativeFacts.substring(0, 200) + '...'
+      });
+
+      // Get incident context for template variables via direct database access
+      let incidentData = null;
+      if (args.incident_id) {
+        try {
+          // Direct database access in action context - no permissions needed since this is for AI enhancement
+          const dbIncident = await ctx.db.get(args.incident_id);
+          
+          if (dbIncident) {
+            incidentData = dbIncident;
+            console.log('🏢 Incident data retrieved from database:', {
+              incident_id: args.incident_id,
+              participant: incidentData?.participant_name,
+              location: incidentData?.location,
+              reporter: incidentData?.reporter_name,
+              eventDateTime: incidentData?.event_date_time,
+              raw_event_date_time_field: JSON.stringify(incidentData?.event_date_time),
+              event_date_time_type: typeof incidentData?.event_date_time,
+              all_incident_fields: Object.keys(incidentData || {})
+            });
+          } else {
+            console.warn('⚠️ Incident not found for ID:', args.incident_id);
+          }
+        } catch (error) {
+          console.error('❌ Error retrieving incident data:', error);
+        }
+      }
+
+      // Prepare template variables with detailed logging
+      const templateVariables = {
+        // Template expects these exact variable names:
+        participantName: incidentData?.participant_name || 'Unknown Participant',
+        location: incidentData?.location || 'Unknown Location',
+        eventDateTime: incidentData?.event_date_time || 'Unknown Date/Time',
+        reporterName: incidentData?.reporter_name || 'Unknown Reporter',
+        phase: args.phase,
+        originalNarrative: args.instruction,
+        investigationQA: narrativeFacts,
+      };
+
+      console.log('📝 Template variables prepared:', {
+        participantName: templateVariables.participantName,
+        location: templateVariables.location,
+        eventDateTime: templateVariables.eventDateTime,
+        eventDateTime_raw: incidentData?.event_date_time,
+        eventDateTime_fallback: templateVariables.eventDateTime === 'Unknown Date/Time' ? 'USING FALLBACK' : 'USING INCIDENT DATA',
+        reporterName: templateVariables.reporterName,
+        phase: templateVariables.phase,
+        originalNarrativeLength: templateVariables.originalNarrative?.length || 0,
+        investigationQALength: templateVariables.investigationQA?.length || 0,
+      });
+
       // Get processed prompt template
+      console.log('🔍 Requesting prompt template:', { prompt_name: "enhance_narrative", phase: args.phase });
+      
       const processedPrompt = await ctx.runQuery(api.promptManager.getProcessedPrompt, {
         prompt_name: "enhance_narrative",
-        variables: {
-          phase: args.phase,
-          instruction: args.instruction,
-          narrative_facts: narrativeFacts,
-        },
+        variables: templateVariables,
+      });
+
+      console.log('✅ Prompt template processed:', {
+        name: processedPrompt.name,
+        model: processedPrompt.model,
+        templateLength: processedPrompt.processedTemplate?.length || 0,
+        temperature: processedPrompt.temperature,
+        maxTokens: processedPrompt.maxTokens,
+        substitutions: processedPrompt.substitutions,
+      });
+
+      // Log the actual processed template that AI will receive (truncated for readability)
+      console.log('🎯 FINAL TEMPLATE SENT TO AI (first 500 chars):', {
+        processedTemplatePreview: processedPrompt.processedTemplate?.substring(0, 500) + '...',
+        hasEventDateTimeSubstitution: processedPrompt.processedTemplate?.includes(incidentData?.event_date_time || 'Unknown Date/Time'),
+        eventDateTimeValueInTemplate: incidentData?.event_date_time || 'FALLBACK_USED',
       });
 
       // Prepare AI request
@@ -297,11 +379,30 @@ export const enhanceNarrativeContent = action({
       };
 
       // Send request through multi-provider manager
+      console.log('🤖 Sending request to AI Manager:', {
+        correlationId,
+        model: aiRequest.model,
+        promptLength: aiRequest.prompt?.length || 0,
+        temperature: aiRequest.temperature,
+        maxTokens: aiRequest.maxTokens,
+      });
+      
       const aiResponse = await aiManager.sendRequest(aiRequest);
+
+      console.log('🎯 AI Manager Response:', {
+        correlationId,
+        success: aiResponse.success,
+        contentLength: aiResponse.content?.length || 0,
+        processingTimeMs: aiResponse.processingTimeMs,
+        tokensUsed: aiResponse.tokensUsed,
+        cost: aiResponse.cost,
+        error: aiResponse.error || 'none',
+      });
 
       // Track cost
       if (aiResponse.cost) {
         costTracker.trackRequest(aiResponse.cost);
+        console.log('💰 Cost tracked:', { cost: aiResponse.cost, totalCost: costTracker.getMetrics().totalCost });
       }
 
       // Log the request
@@ -345,14 +446,35 @@ export const enhanceNarrativeContent = action({
       return response;
 
     } catch (error) {
-      // Log failed request
+      // Enhanced error logging with full context
+      const errorDetails = {
+        errorType: error?.constructor?.name || typeof error,
+        errorMessage: error instanceof Error ? error.message : String(error),
+        errorStack: error instanceof Error ? error.stack : undefined,
+        operation: 'enhanceNarrativeContent',
+        phase: args.phase,
+        correlationId,
+        timestamp: new Date().toISOString(),
+        // Include original error object for debugging
+        originalError: error,
+      };
+      
+      console.error('🚨 AI ENHANCEMENT ERROR - Full Details:', errorDetails);
+      
+      // Create detailed error message for response
+      const detailedErrorMessage = `AI Enhancement Failed in ${operation}:
+        Phase: ${args.phase}
+        Error Type: ${errorDetails.errorType}
+        Message: ${errorDetails.errorMessage}
+        Correlation ID: ${correlationId}`;
+
       const failedResponse: AIResponse = {
         correlationId,
         content: '',
         model: 'openai/gpt-4.1-nano',
-        processingTimeMs: 0,
+        processingTimeMs: Date.now() - Date.now(), // Will be 0, but keeping structure
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: detailedErrorMessage,
       };
 
       await logAIOperation(
@@ -362,14 +484,18 @@ export const enhanceNarrativeContent = action({
           correlationId,
           model: 'openai/gpt-4.1-nano',
           prompt: '',
-          metadata: { error: failedResponse.error },
+          metadata: { 
+            error: detailedErrorMessage,
+            errorDetails: errorDetails 
+          },
         },
         failedResponse,
         args.user_id,
         args.incident_id
       );
 
-      throw error;
+      // Throw enhanced error with context
+      throw new ConvexError(detailedErrorMessage);
     }
   },
 });
