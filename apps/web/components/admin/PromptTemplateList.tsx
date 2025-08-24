@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAllPrompts } from '@/lib/prompts/prompt-template-service';
 import { AIPromptTemplate, TEMPLATE_CATEGORIES, CATEGORY_LABELS, AIPrompt } from '@/types/prompt-templates';
 import { useAuth } from '@/components/auth/auth-provider';
-import { Search, Eye } from 'lucide-react';
+import { Search, Eye, ChevronDown, ChevronRight } from 'lucide-react';
 
 interface PromptTemplateListProps {
   onPreview?: (template: AIPromptTemplate) => void;
@@ -21,6 +21,7 @@ export function PromptTemplateList({
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [expandedPrompts, setExpandedPrompts] = useState<Set<string>>(new Set());
   
   const rawPrompts = useAllPrompts(user?.sessionToken, filterCategory === 'all' ? undefined : filterCategory);
   const loading = rawPrompts === undefined;
@@ -81,6 +82,16 @@ export function PromptTemplateList({
 
   const getStatusColor = (isActive: boolean) => {
     return isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
+  };
+
+  const togglePromptExpansion = (templateId: string) => {
+    const newExpanded = new Set(expandedPrompts);
+    if (newExpanded.has(templateId)) {
+      newExpanded.delete(templateId);
+    } else {
+      newExpanded.add(templateId);
+    }
+    setExpandedPrompts(newExpanded);
   };
 
   return (
@@ -178,12 +189,38 @@ export function PromptTemplateList({
               <CardContent className="pt-0">
                 {/* Template Preview */}
                 <div className="bg-gray-50 rounded-lg p-3">
-                  <div className="text-xs font-medium text-gray-700 mb-1">Template Preview:</div>
-                  <div className="text-sm text-gray-600 font-mono">
-                    {template.prompt_template.length > 200 
-                      ? `${template.prompt_template.substring(0, 200)}...` 
-                      : template.prompt_template
-                    }
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-xs font-medium text-gray-700">Full Template:</div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => togglePromptExpansion(template._id)}
+                      className="h-6 px-2 text-xs"
+                    >
+                      {expandedPrompts.has(template._id) ? (
+                        <>
+                          <ChevronDown size={12} className="mr-1" />
+                          Collapse
+                        </>
+                      ) : (
+                        <>
+                          <ChevronRight size={12} className="mr-1" />
+                          Expand ({template.prompt_template.length} chars)
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  
+                  <div className={`text-sm text-gray-600 font-mono ${expandedPrompts.has(template._id) ? '' : 'line-clamp-3'}`}>
+                    {expandedPrompts.has(template._id) ? (
+                      <pre className="whitespace-pre-wrap break-words overflow-auto max-h-96 p-2 bg-white rounded border">
+                        {template.prompt_template}
+                      </pre>
+                    ) : (
+                      <div className="line-clamp-3">
+                        {template.prompt_template}
+                      </div>
+                    )}
                   </div>
                 </div>
                 

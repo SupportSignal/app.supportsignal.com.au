@@ -81,6 +81,7 @@ Following BMAD methodology, these documents form the foundation:
 - **[AI Model Configuration Architecture KDD](./technical-guides/ai-model-configuration-architecture-kdd.md)** - Environment-driven AI model configuration vs database hardcoding
 - **[Convex Components Guide](./technical-guides/convex-components-guide.md)** - Convex architecture patterns and component examples
 - **[React + Convex Development Patterns KDD](./technical-guides/react-convex-patterns-kdd.md)** - **Critical patterns** - Avoid useEffect recursion, proper data flow, anti-patterns to prevent
+- **[Business Logic Validation Failure KDD](./technical-guides/business-logic-validation-failure-kdd.md)** - **Critical debugging pattern** - Business logic validation must precede technical error resolution
 - **[Authentication Architecture](./technical-guides/authentication-architecture.md)** - Complete authentication system architecture and security patterns
 - **[Cloudflare Pages Setup](./technical-guides/cloudflare-pages-setup.md)** - Step-by-step Cloudflare Pages deployment guide
 - **[Cloudflare Pages Troubleshooting](./technical-guides/cloudflare-pages-deployment-troubleshooting.md)** - Systematic troubleshooting for deployment issues

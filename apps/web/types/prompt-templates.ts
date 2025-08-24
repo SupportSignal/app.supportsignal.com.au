@@ -45,6 +45,14 @@ export interface ClearResult {
   deletedTemplates: string[];
 }
 
+export interface ResetAndSeedResult {
+  message: string;
+  clearedCount: number;
+  clearedTemplates: string[];
+  seededCount: number;
+  promptIds: string[];
+}
+
 // Template categories for filtering and organization
 export const TEMPLATE_CATEGORIES = [
   'incidents',

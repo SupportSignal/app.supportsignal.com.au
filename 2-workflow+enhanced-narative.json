@@ -1,0 +1,472 @@
+{
+  "clarification_workflow": {
+    "before_event": {
+      "answers": [
+        {
+          "answer_text": "During the morning group session, we were focusing on creative expression through storytelling. The staff had set up various props, including fruits, to inspire creativity and encourage participants to use their imagination. We had prompts like 'What would a fruit say if it could talk?' to stimulate conversation and creativity. This might have influenced Emma's comment about the watermelon, as it was likely intended to be humorous or playful in the context of the activity.",
+          "answered_at": 1756015212531,
+          "answered_by": "k1775q2kemjjdywr747yjzddx57p3kk7",
+          "character_count": 477,
+          "is_complete": true,
+          "question_id": "before_event_q1",
+          "word_count": 75
+        },
+        {
+          "answer_text": "Before Emma made her comment, she was actively participating in the group, engaging with both staff and other participants. She seemed to enjoy the storytelling aspect and was sharing ideas. After her comment about the watermelon, there was a noticeable shift; some participants giggled, while others looked a bit confused. Emma appeared to be amused by the reaction, but staff quickly intervened to redirect the focus back to the activity.",
+          "answered_at": 1756015212606,
+          "answered_by": "k1775q2kemjjdywr747yjzddx57p3kk7",
+          "character_count": 440,
+          "is_complete": true,
+          "question_id": "before_event_q2",
+          "word_count": 70
+        },
+        {
+          "answer_text": "When Emma made her comment about the watermelon, staff members immediately approached her with a calm demeanor. They acknowledged her comment but gently reminded her that the focus was on storytelling and creativity. Emma seemed to understand and responded positively, laughing it off and returning her attention to the activity. The staff's intervention was quick and aimed at maintaining a supportive environment.",
+          "answered_at": 1756015212696,
+          "answered_by": "k1775q2kemjjdywr747yjzddx57p3kk7",
+          "character_count": 415,
+          "is_complete": true,
+          "question_id": "before_event_q3",
+          "word_count": 62
+        },
+        {
+          "answer_text": "Staff are trained to handle unexpected or inappropriate comments by using a strategy that emphasizes redirection and positive reinforcement. Guidelines include acknowledging the comment without giving it undue attention, redirecting the participant back to the activity, and ensuring a safe and respectful environment for everyone. Training sessions also cover how to maintain a balance between allowing self-expression and guiding participants toward appropriate interactions.",
+          "answered_at": 1756015212769,
+          "answered_by": "k1775q2kemjjdywr747yjzddx57p3kk7",
+          "character_count": 477,
+          "is_complete": true,
+          "question_id": "before_event_q4",
+          "word_count": 63
+        },
+        {
+          "answer_text": "Leading up to the session, Emma appeared to be in a generally good mood, smiling and interacting positively with her peers. However, there was a slight change in her demeanor during the session; she seemed a bit more animated than usual, which could have contributed to her unexpected comment. Overall, her behavior was consistent with her usual level of engagement, but there was an added layer of excitement that day.",
+          "answered_at": 1756015212818,
+          "answered_by": "k1775q2kemjjdywr747yjzddx57p3kk7",
+          "character_count": 419,
+          "is_complete": true,
+          "question_id": "before_event_q5",
+          "word_count": 70
+        }
+      ],
+      "phase": "before_event",
+      "phase_complete": true,
+      "questions": [
+        {
+          "ai_model": "openai/gpt-4o-mini",
+          "generated_at": 1756015192444,
+          "prompt_version": "v1.0.0",
+          "question_id": "before_event_q1",
+          "question_order": 1,
+          "question_text": "What specific activities or prompts were being used in the morning group session that may have influenced Emma's comment about the watermelon?"
+        },
+        {
+          "ai_model": "openai/gpt-4o-mini",
+          "generated_at": 1756015192468,
+          "prompt_version": "v1.0.0",
+          "question_id": "before_event_q2",
+          "question_order": 2,
+          "question_text": "Can you describe Emma's behavior and interactions with other participants before and after the comment about the watermelon?"
+        },
+        {
+          "ai_model": "openai/gpt-4o-mini",
+          "generated_at": 1756015192489,
+          "prompt_version": "v1.0.0",
+          "question_id": "before_event_q3",
+          "question_order": 3,
+          "question_text": "Were there any specific staff interventions or responses to Emma's comment at the time, and how did she react to those?"
+        },
+        {
+          "ai_model": "openai/gpt-4o-mini",
+          "generated_at": 1756015192508,
+          "prompt_version": "v1.0.0",
+          "question_id": "before_event_q4",
+          "question_order": 4,
+          "question_text": "What training or guidelines do staff have in place for addressing unexpected or inappropriate comments made by participants during sessions?"
+        },
+        {
+          "ai_model": "openai/gpt-4o-mini",
+          "generated_at": 1756015192529,
+          "prompt_version": "v1.0.0",
+          "question_id": "before_event_q5",
+          "question_order": 5,
+          "question_text": "Were there any observations made about Emma's mood or behavior leading up to the session, including any changes from her usual demeanor?"
+        }
+      ]
+    },
+    "during_event": {
+      "answers": [
+        {
+          "answer_text": "Emma stated quite clearly that a staff member had 'hit her with a frying pan' during the cooking group. This statement was alarming and caused a ripple of concern among the other participants. I recall that several participants were present in the group room at the time, including Mark and Sarah, who both looked visibly shocked when Emma made her claim.",
+          "answered_at": 1756015225708,
+          "answered_by": "k1775q2kemjjdywr747yjzddx57p3kk7",
+          "character_count": 355,
+          "is_complete": true,
+          "question_id": "during_event_q1",
+          "word_count": 61
+        },
+        {
+          "answer_text": "Leading up to her agitation, Emma appeared to be engaged and participating in the cooking activity. However, I noticed that she seemed to struggle with some of the tasks, which could have contributed to her frustration. There was a moment when she dropped a mixing bowl, and I think that might have triggered her distress. It was shortly after that incident that her demeanor shifted, and she began to express her agitation.",
+          "answered_at": 1756015225765,
+          "answered_by": "k1775q2kemjjdywr747yjzddx57p3kk7",
+          "character_count": 424,
+          "is_complete": true,
+          "question_id": "during_event_q2",
+          "word_count": 72
+        },
+        {
+          "answer_text": "During the cooking activity, we had several safety procedures in place, including ensuring that all sharp objects and hot equipment were handled by staff only. Staff members are trained in de-escalation techniques and are instructed to monitor participants closely for signs of distress. In emergencies, we have a protocol for quickly removing participants from the situation and providing one-on-one support.",
+          "answered_at": 1756015225825,
+          "answered_by": "k1775q2kemjjdywr747yjzddx57p3kk7",
+          "character_count": 409,
+          "is_complete": true,
+          "question_id": "during_event_q3",
+          "word_count": 60
+        },
+        {
+          "answer_text": "After Emma made her statement, staff immediately intervened by first ensuring that she was safe and removed her from the group setting to a quieter area. They provided her with reassurance and asked her to explain what happened in a calm manner. Meanwhile, another staff member addressed the concerns of the other participants, reassuring them that they were safe and that the situation was being handled. They also encouraged the group to take a few deep breaths together to help ease the tension.",
+          "answered_at": 1756015225872,
+          "answered_by": "k1775q2kemjjdywr747yjzddx57p3kk7",
+          "character_count": 498,
+          "is_complete": true,
+          "question_id": "during_event_q4",
+          "word_count": 83
+        },
+        {
+          "answer_text": "There have been a few previous incidents involving Emma during similar activities, primarily related to her sensitivity to noise and crowded spaces. In the past, she has experienced moments of distress when there are too many people or too much chaos. This context is important because it suggests that her reaction during this incident may have been influenced by her previous experiences in similar environments.",
+          "answered_at": 1756015225923,
+          "answered_by": "k1775q2kemjjdywr747yjzddx57p3kk7",
+          "character_count": 414,
+          "is_complete": true,
+          "question_id": "during_event_q5",
+          "word_count": 65
+        }
+      ],
+      "phase": "during_event",
+      "phase_complete": true,
+      "questions": [
+        {
+          "ai_model": "openai/gpt-4o-mini",
+          "generated_at": 1756015192214,
+          "prompt_version": "v1.0.0",
+          "question_id": "during_event_q1",
+          "question_order": 1,
+          "question_text": "What specific statements did Emma make regarding the incident with the frying pan, and were there any witnesses to this event?"
+        },
+        {
+          "ai_model": "openai/gpt-4o-mini",
+          "generated_at": 1756015192235,
+          "prompt_version": "v1.0.0",
+          "question_id": "during_event_q2",
+          "question_order": 2,
+          "question_text": "Can you describe Emma's behavior leading up to her agitation and any possible triggers that may have contributed to her distress during the activity?"
+        },
+        {
+          "ai_model": "openai/gpt-4o-mini",
+          "generated_at": 1756015192254,
+          "prompt_version": "v1.0.0",
+          "question_id": "during_event_q3",
+          "question_order": 3,
+          "question_text": "What procedures were in place to manage participant safety during the cooking activity, and how were staff trained to handle emergencies or distress among participants?"
+        },
+        {
+          "ai_model": "openai/gpt-4o-mini",
+          "generated_at": 1756015192273,
+          "prompt_version": "v1.0.0",
+          "question_id": "during_event_q4",
+          "question_order": 4,
+          "question_text": "What immediate actions did staff take after Emma made her statement, and how did they support her and other participants in the group?"
+        },
+        {
+          "ai_model": "openai/gpt-4o-mini",
+          "generated_at": 1756015192295,
+          "prompt_version": "v1.0.0",
+          "question_id": "during_event_q5",
+          "question_order": 5,
+          "question_text": "Were there any previous incidents involving Emma or other participants during similar activities that could provide context for this event?"
+        }
+      ]
+    },
+    "end_event": {
+      "answers": [
+        {
+          "answer_text": "Before Emma made her threatening statement about self-harm, there were several triggers that seemed to escalate her distress. Emma had been expressing frustration over not being able to choose the activity for the day, which she had been looking forward to. Additionally, she had a disagreement with another participant over shared resources in the group room. These events appeared to heighten her agitation and contributed to her eventual outburst.",
+          "answered_at": 1756015237013,
+          "answered_by": "k1775q2kemjjdywr747yjzddx57p3kk7",
+          "character_count": 450,
+          "is_complete": true,
+          "question_id": "end_event_q1",
+          "word_count": 69
+        },
+        {
+          "answer_text": "In response to Emma's statement about self-harm, staff immediately implemented our crisis intervention protocols. This included calmly relocating other participants to adjacent areas to ensure their safety and reduce any potential triggers for Emma. One staff member engaged in one-on-one support with her, using a calm and reassuring tone to validate her feelings while also redirecting her focus. We also employed grounding techniques, encouraging Emma to take deep breaths and express her feelings verbally rather than through threats.",
+          "answered_at": 1756015237057,
+          "answered_by": "k1775q2kemjjdywr747yjzddx57p3kk7",
+          "character_count": 538,
+          "is_complete": true,
+          "question_id": "end_event_q2",
+          "word_count": 78
+        },
+        {
+          "answer_text": "Emma has a history of behavioral incidents related to frustration and emotional regulation, which have been documented in her support plan. She has previously exhibited similar outbursts when she feels overwhelmed or when her expectations are not met. Additionally, Emma has been diagnosed with anxiety, which can sometimes manifest in extreme statements or behaviors when she feels cornered or unsupported. This context is important for understanding her reactions during incidents.",
+          "answered_at": 1756015237098,
+          "answered_by": "k1775q2kemjjdywr747yjzddx57p3kk7",
+          "character_count": 483,
+          "is_complete": true,
+          "question_id": "end_event_q3",
+          "word_count": 70
+        },
+        {
+          "answer_text": "During the incident, we utilized several communication strategies to assist Emma. Staff members employed active listening techniques, allowing her to express her feelings without interruption. We also used visual aids, such as a feelings chart, to help her identify and articulate her emotions more clearly. Modifications included simplifying our language and providing her with choices to regain a sense of control over the situation, which seemed to help de-escalate her distress.",
+          "answered_at": 1756015237141,
+          "answered_by": "k1775q2kemjjdywr747yjzddx57p3kk7",
+          "character_count": 482,
+          "is_complete": true,
+          "question_id": "end_event_q4",
+          "word_count": 71
+        },
+        {
+          "answer_text": "There were a few environmental factors in the day program center that may have contributed to Emma's distress. The group room was particularly noisy at the time, with multiple activities happening simultaneously, which can be overwhelming for some participants. Additionally, the layout of the room made it difficult for Emma to find a quiet space to retreat to, which may have increased her anxiety. We also had a new staff member present, which could have added to her discomfort as she was not familiar with them.",
+          "answered_at": 1756015237185,
+          "answered_by": "k1775q2kemjjdywr747yjzddx57p3kk7",
+          "character_count": 516,
+          "is_complete": true,
+          "question_id": "end_event_q5",
+          "word_count": 86
+        }
+      ],
+      "phase": "end_event",
+      "phase_complete": true,
+      "questions": [
+        {
+          "ai_model": "openai/gpt-4o-mini",
+          "generated_at": 1756015193074,
+          "prompt_version": "v1.0.0",
+          "question_id": "end_event_q1",
+          "question_order": 1,
+          "question_text": "What specific events or triggers preceded Emma's threatening statement about self-harm?"
+        },
+        {
+          "ai_model": "openai/gpt-4o-mini",
+          "generated_at": 1756015193096,
+          "prompt_version": "v1.0.0",
+          "question_id": "end_event_q2",
+          "question_order": 2,
+          "question_text": "How did staff respond to Emma's statement about self-harm, and what specific crisis intervention protocols were implemented?"
+        },
+        {
+          "ai_model": "openai/gpt-4o-mini",
+          "generated_at": 1756015193123,
+          "prompt_version": "v1.0.0",
+          "question_id": "end_event_q3",
+          "question_order": 3,
+          "question_text": "Can you provide information on Emma's previous behavioral incidents or mental health history that may be relevant to this situation?"
+        },
+        {
+          "ai_model": "openai/gpt-4o-mini",
+          "generated_at": 1756015193157,
+          "prompt_version": "v1.0.0",
+          "question_id": "end_event_q4",
+          "question_order": 4,
+          "question_text": "What communication strategies or tools were used with Emma during the incident, and were there any modifications made to assist her?"
+        },
+        {
+          "ai_model": "openai/gpt-4o-mini",
+          "generated_at": 1756015193197,
+          "prompt_version": "v1.0.0",
+          "question_id": "end_event_q5",
+          "question_order": 5,
+          "question_text": "Were there any environmental factors in the day program center that may have contributed to Emma's distress at the time of the incident?"
+        }
+      ]
+    },
+    "post_event": {
+      "answers": [
+        {
+          "answer_text": "Leading up to Emma's concerning statement about aliens and the goldfish, there was a noticeable shift in her demeanor. She had been engaged in a group activity, but I observed her becoming increasingly withdrawn and distracted. At one point, she started to fidget with her hands and seemed to be talking to herself. It was during a quieter moment, after the activity had ended, that she suddenly blurted out the statement about aliens. It seemed to come out of nowhere, and it was clear she was in distress.",
+          "answered_at": 1756015283657,
+          "answered_by": "k1775q2kemjjdywr747yjzddx57p3kk7",
+          "character_count": 507,
+          "is_complete": true,
+          "question_id": "post_event_q1",
+          "word_count": 88
+        },
+        {
+          "answer_text": "There were no significant changes in Emma’s routine or medication that we were aware of prior to the incident. However, the environment in Group Room 2 was a bit louder than usual that day, with several participants engaging in animated discussions. This could have contributed to her feeling overwhelmed, but there were no documented changes in her medication or daily schedule leading up to the event.",
+          "answered_at": 1756015283716,
+          "answered_by": "k1775q2kemjjdywr747yjzddx57p3kk7",
+          "character_count": 403,
+          "is_complete": true,
+          "question_id": "post_event_q2",
+          "word_count": 66
+        },
+        {
+          "answer_text": "During the quiet time after the incident, we used several emotional support strategies with Emma. We created a calm environment by dimming the lights and minimizing noise. One staff member sat with her, using a soft tone to ask open-ended questions about how she was feeling. We also encouraged her to engage in deep breathing exercises to help her relax. This approach seemed to help her regain some composure.",
+          "answered_at": 1756015283813,
+          "answered_by": "k1775q2kemjjdywr747yjzddx57p3kk7",
+          "character_count": 411,
+          "is_complete": true,
+          "question_id": "post_event_q3",
+          "word_count": 69
+        },
+        {
+          "answer_text": "During the incident, other participants seemed startled by Emma's outburst. Some looked concerned, while others appeared confused. Staff responded quickly to de-escalate the situation, which helped to calm the group. Afterward, we held a brief discussion with the participants to reassure them and explain that Emma was okay, which seemed to help alleviate some of their concerns.",
+          "answered_at": 1756015283893,
+          "answered_by": "k1775q2kemjjdywr747yjzddx57p3kk7",
+          "character_count": 380,
+          "is_complete": true,
+          "question_id": "post_event_q4",
+          "word_count": 57
+        },
+        {
+          "answer_text": "Since the debrief session, Emma has not expressed any further concerns or thoughts about the incident. She seems to have settled back into her routine, but we continue to monitor her closely. Staff are encouraged to check in with her regularly to ensure she feels supported and to address any lingering feelings she may have about the incident.",
+          "answered_at": 1756015283981,
+          "answered_by": "k1775q2kemjjdywr747yjzddx57p3kk7",
+          "character_count": 344,
+          "is_complete": true,
+          "question_id": "post_event_q5",
+          "word_count": 58
+        }
+      ],
+      "phase": "post_event",
+      "phase_complete": true,
+      "questions": [
+        {
+          "ai_model": "openai/gpt-4o-mini",
+          "generated_at": 1756015195396,
+          "prompt_version": "v1.0.0",
+          "question_id": "post_event_q1",
+          "question_order": 1,
+          "question_text": "What specific events or interactions led up to Emma's concerning statement about aliens and the goldfish?"
+        },
+        {
+          "ai_model": "openai/gpt-4o-mini",
+          "generated_at": 1756015198445,
+          "prompt_version": "v1.0.0",
+          "question_id": "post_event_q1",
+          "question_order": 1,
+          "question_text": "What specific events or interactions led up to Emma's concerning statement about the aliens and the goldfish?"
+        },
+        {
+          "ai_model": "openai/gpt-4o-mini",
+          "generated_at": 1756015195416,
+          "prompt_version": "v1.0.0",
+          "question_id": "post_event_q2",
+          "question_order": 2,
+          "question_text": "Were there any noticeable changes in Emma's behavior or mood prior to the incident, and if so, what were they?"
+        },
+        {
+          "ai_model": "openai/gpt-4o-mini",
+          "generated_at": 1756015198464,
+          "prompt_version": "v1.0.0",
+          "question_id": "post_event_q2",
+          "question_order": 2,
+          "question_text": "Were there any changes in Emma’s routine, environment, or medication prior to the incident that could have influenced her behavior?"
+        },
+        {
+          "ai_model": "openai/gpt-4o-mini",
+          "generated_at": 1756015195435,
+          "prompt_version": "v1.0.0",
+          "question_id": "post_event_q3",
+          "question_order": 3,
+          "question_text": "Can you describe the group dynamics in Group Room 2 at the time of the incident, including the roles of staff and other participants?"
+        },
+        {
+          "ai_model": "openai/gpt-4o-mini",
+          "generated_at": 1756015198484,
+          "prompt_version": "v1.0.0",
+          "question_id": "post_event_q3",
+          "question_order": 3,
+          "question_text": "Can you provide details about the emotional support strategies used with Emma during the quiet time after the incident?"
+        },
+        {
+          "ai_model": "openai/gpt-4o-mini",
+          "generated_at": 1756015195456,
+          "prompt_version": "v1.0.0",
+          "question_id": "post_event_q4",
+          "question_order": 4,
+          "question_text": "What specific elements of Emma's behavior support plan were reviewed following the incident, and what recommendations were made by the mental health supports contacted?"
+        },
+        {
+          "ai_model": "openai/gpt-4o-mini",
+          "generated_at": 1756015198502,
+          "prompt_version": "v1.0.0",
+          "question_id": "post_event_q4",
+          "question_order": 4,
+          "question_text": "What were the reactions and responses of other participants and staff in the group room during the incident?"
+        },
+        {
+          "ai_model": "openai/gpt-4o-mini",
+          "generated_at": 1756015195486,
+          "prompt_version": "v1.0.0",
+          "question_id": "post_event_q5",
+          "question_order": 5,
+          "question_text": "What measures are currently in place at the day program center to monitor and support participants during emotional distress, and how effective have they been in the past?"
+        },
+        {
+          "ai_model": "openai/gpt-4o-mini",
+          "generated_at": 1756015198522,
+          "prompt_version": "v1.0.0",
+          "question_id": "post_event_q5",
+          "question_order": 5,
+          "question_text": "Has Emma expressed any further concerns or thoughts about the incident since the debrief session?"
+        }
+      ]
+    }
+  },
+  "completion_status": {
+    "analysis_generated": false,
+    "completed_steps": [
+      "metadata",
+      "narrative",
+      "before_event",
+      "during_event",
+      "end_event",
+      "post_event"
+    ],
+    "current_step": 6,
+    "narrative_enhanced": false,
+    "questions_generated": true,
+    "total_progress": 75
+  },
+  "exported_at": 1756032875165,
+  "exported_by": "k1775q2kemjjdywr747yjzddx57p3kk7",
+  "metadata": {
+    "capture_status": "completed",
+    "company_id": "kd7d55ekvja3322na7trhs6g257p3s2e",
+    "created_at": 1756032578703,
+    "created_by": "k1775q2kemjjdywr747yjzddx57p3kk7",
+    "event_date_time": "2025-08-24T11:21",
+    "export_step": 6,
+    "export_timestamp": 1756032875165,
+    "incident_id": "m976ncp7wa55cd29v7f8a5rd9n7p8wj7",
+    "location": "Day program center - Group room 2",
+    "overall_status": "capture_pending",
+    "participant_id": "nd799agyd64ekt6fvpcz8k9ddh7p3sk4",
+    "participant_name": "Emma Johnson",
+    "reporter_name": "David Cruwys"
+  },
+  "narrative_data": {
+    "before_event": "Emma was participating in the morning group activity session at the day program center. During the setup, Emma made an unusual comment stating that they exposed themselves to a watermelon and shouted it was sexy fruit, which caught staff attention. The session was focused on creative expression and storytelling, and Emma initially seemed engaged with other participants. The room was set up with various props and materials for the creative activities, and staff were providing appropriate supervision and guidance.",
+    "before_event_extra": "Emma was participating in the morning group activity session at the day program center, which was designed to foster creative expression through storytelling. The room was thoughtfully arranged with various props, including fruits, to inspire imagination and encourage participants to engage with the activities. Staff members provided appropriate supervision and guidance, facilitating a supportive environment for all attendees. During the setup, the staff introduced prompts such as \"What would a fruit say if it could talk?\" to stimulate conversation and creativity among the participants. Emma, who initially appeared to be in a good mood and actively engaged with both staff and her peers, seemed particularly animated that day, which may have contributed to her unexpected comment.\n\nAs the session progressed, Emma made an unusual remark, stating that she had \"exposed herself to a watermelon\" and exclaimed that it was \"sexy fruit.\" This comment caught the attention of the staff and other participants, eliciting a range of reactions—some participants giggled, while others looked confused. Emma appeared amused by the response, but staff members quickly intervened to redirect the focus back to the activity. They approached her calmly, acknowledging her comment while gently reminding her that the emphasis was on storytelling and creativity. Emma responded positively to the staff's intervention, laughing off her comment and returning her attention to the group activities. The staff's prompt response was in line with their training, which emphasizes redirection and positive reinforcement to maintain a safe and respectful environment for all participants. Overall, while Emma's behavior was consistent with her usual level of engagement, the added excitement of the day may have influenced her playful comment, highlighting the dynamic nature of group interactions in creative settings.",
+    "created_at": 1756032578726,
+    "during_event": "During the main activity, Emma became increasingly agitated and made a concerning statement claiming that a staff member hit them with a frying pan during cooking group. This statement caused immediate concern among other participants and required staff intervention. Emma's demeanor shifted from cooperative to distressed, and it became clear that immediate support was needed to address the situation and ensure everyone's safety.",
+    "during_event_extra": "During the cooking group activity, Emma initially appeared engaged and participative, but her demeanor began to shift as she struggled with some of the tasks. A notable moment occurred when she accidentally dropped a mixing bowl, which seemed to trigger her frustration. Shortly thereafter, Emma made a concerning statement, claiming that a staff member had \"hit her with a frying pan\" during the session. This alarming assertion not only caused immediate distress for Emma but also sent a ripple of concern among the other participants present, including Mark and Sarah, who visibly reacted with shock to her claim.\n\nRecognizing the seriousness of the situation, staff members promptly intervened to ensure the safety of all participants. They first removed Emma from the group setting to a quieter area, where they provided her with reassurance and encouraged her to calmly explain what had happened. Meanwhile, another staff member addressed the concerns of the remaining participants, reassuring them of their safety and emphasizing that the situation was being managed. To help ease the tension in the room, the staff encouraged the group to take a few deep breaths together. It is important to note that Emma had experienced similar distress in the past, particularly in environments with excessive noise or chaos, which may have contributed to her reaction during this incident. Staff members are trained in de-escalation techniques and closely monitor participants for signs of distress, ensuring that safety protocols are in place to manage emergencies effectively.",
+    "end_event": "As staff began de-escalation procedures, Emma made another troubling statement where they threatened to bite off their own toes if not given ice cream. Staff implemented crisis intervention protocols, calmly relocating other participants to adjacent areas while providing Emma with one-on-one support. The threatening nature of the statement required immediate assessment to determine if it represented actual self-harm risk or emotional expression.",
+    "end_event_extra": "As staff initiated de-escalation procedures, Emma made a concerning statement, threatening to bite off her own toes if she was not given ice cream. This alarming declaration necessitated an immediate assessment to determine whether it indicated a genuine risk of self-harm or was merely an expression of her emotional distress. Prior to this outburst, several triggers appeared to escalate Emma's agitation. She had been vocalizing her frustration over not being able to choose the day's activity, which she had been eagerly anticipating. Additionally, a disagreement with another participant regarding shared resources in the group room further heightened her distress, contributing to her eventual threatening statement.\n\nIn response to Emma's alarming comment, staff promptly implemented crisis intervention protocols to ensure the safety of all participants. They calmly relocated other individuals to adjacent areas, minimizing potential triggers for Emma while providing her with focused one-on-one support. A staff member engaged with her using a calm and reassuring tone, validating her feelings and redirecting her attention. Grounding techniques were employed, encouraging Emma to take deep breaths and articulate her emotions verbally rather than resorting to threats. Throughout the incident, staff utilized active listening strategies, allowing Emma to express her feelings without interruption. Visual aids, such as a feelings chart, were introduced to help her identify and communicate her emotions more effectively. Modifications to communication included simplifying language and offering her choices to restore a sense of control, which appeared to aid in de-escalating her distress.\n\nEnvironmental factors within the day program center may have also contributed to Emma's heightened anxiety during the incident. The group room was particularly noisy, with multiple activities occurring simultaneously, creating an overwhelming atmosphere for some participants. The room's layout made it challenging for Emma to find a quiet space to retreat, potentially exacerbating her discomfort. Furthermore, the presence of a new staff member, whom Emma was unfamiliar with, could have added to her unease. Understanding these contextual elements is crucial for interpreting Emma's reactions and guiding future interventions to better support her emotional regulation and overall well-being.",
+    "post_event": "Following the incident, Emma was provided with quiet time and emotional support in a calm environment. During the debrief session, Emma made one final concerning statement noting that they said aliens told them to kill the goldfish. A comprehensive review of all statements was conducted to ensure they were expressions of distress rather than reports of actual incidents or genuine threats. Emma's behavior support plan was reviewed and mental health supports were contacted for consultation.",
+    "post_event_extra": "Following the incident, Emma was provided with a period of quiet time and emotional support in a calm environment. The staff created a soothing atmosphere by dimming the lights and minimizing noise, which was essential given the heightened stress levels observed during the earlier group activity. Emma had displayed a noticeable shift in her demeanor, becoming increasingly withdrawn and distracted. As she fidgeted with her hands and appeared to be talking to herself, the situation escalated when she unexpectedly blurted out a concerning statement about aliens instructing her to kill the goldfish. This outburst seemed to emerge from a place of distress rather than a coherent thought, prompting immediate attention from the staff.\n\nIn response to Emma's statement, a comprehensive review of all interactions and statements was conducted to ascertain that they were expressions of emotional distress rather than genuine threats. Staff members quickly intervened to de-escalate the situation, reassuring other participants who appeared startled and confused. After the incident, Emma engaged in deep breathing exercises with a staff member who used a soft tone to ask open-ended questions about her feelings, which helped her regain some composure. Since the debrief session, Emma has not expressed any further concerns regarding the incident and appears to have settled back into her routine. Staff continue to monitor her closely, encouraging regular check-ins to ensure she feels supported and to address any lingering feelings she may have about the event. The review of Emma's behavior support plan and consultation with mental health professionals were also initiated to provide additional layers of support as needed.",
+    "updated_at": 1756032638330,
+    "version": 8
+  },
+  "participant_details": {
+    "care_notes": "Requires assistance with daily living activities. Responds well to routine and clear communication.",
+    "contact_phone": "0412 345 678",
+    "date_of_birth": "1995-03-15",
+    "emergency_contact": "Mary Johnson (Mother) - 0423 456 789",
+    "first_name": "Emma",
+    "last_name": "Johnson",
+    "ndis_number": "123456001",
+    "support_level": "medium"
+  },
+  "version": "1.0"
+}

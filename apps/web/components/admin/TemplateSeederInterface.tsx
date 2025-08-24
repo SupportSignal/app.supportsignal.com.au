@@ -10,13 +10,15 @@ import { Alert, AlertDescription } from '@starter/ui/alert';
 import { 
   useSeedDefaultPrompts, 
   useDefaultTemplates,
-  useClearAllTemplates
+  useClearAllTemplates,
+  useResetAndSeedPrompts
 } from '@/lib/prompts/prompt-template-service';
 import { useAuth } from '@/components/auth/auth-provider';
 import { 
   DefaultTemplatesInfo, 
   SeedingResult,
   ClearResult,
+  ResetAndSeedResult,
   CATEGORY_LABELS 
 } from '@/types/prompt-templates';
 import { 
@@ -26,27 +28,33 @@ import {
   RefreshCw, 
   Database,
   Zap,
-  Trash2
+  Trash2,
+  RotateCcw
 } from 'lucide-react';
 
 interface TemplateSeederInterfaceProps {
   onSeedingComplete?: (result: SeedingResult) => void;
   onClearingComplete?: (result: ClearResult) => void;
+  onResetAndSeedComplete?: (result: ResetAndSeedResult) => void;
 }
 
 export function TemplateSeederInterface({ 
   onSeedingComplete,
-  onClearingComplete 
+  onClearingComplete,
+  onResetAndSeedComplete
 }: TemplateSeederInterfaceProps) {
   const { user } = useAuth();
   const [seeding, setSeeding] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const [lastSeedingResult, setLastSeedingResult] = useState<SeedingResult | null>(null);
   const [lastClearResult, setLastClearResult] = useState<ClearResult | null>(null);
+  const [lastResetAndSeedResult, setLastResetAndSeedResult] = useState<ResetAndSeedResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   
   const seedDefaultPrompts = useSeedDefaultPrompts();
   const clearAllTemplates = useClearAllTemplates();
+  const resetAndSeedPrompts = useResetAndSeedPrompts();
   const defaultTemplatesInfo = useDefaultTemplates(user?.sessionToken);
   
   // Get user permissions to check for sample_data access
@@ -134,6 +142,28 @@ export function TemplateSeederInterface({
     }
   };
 
+  const handleResetAndSeed = async () => {
+    setResetting(true);
+    setError(null);
+    
+    try {
+      if (!user?.sessionToken) {
+        throw new Error('Authentication required');
+      }
+      const result = await resetAndSeedPrompts({ sessionToken: user.sessionToken });
+      setLastResetAndSeedResult(result);
+      
+      if (onResetAndSeedComplete) {
+        onResetAndSeedComplete(result);
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to reset and seed templates';
+      setError(errorMessage);
+    } finally {
+      setResetting(false);
+    }
+  };
+
   const getStatusColor = (isValid: boolean) => {
     return isValid ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
   };
@@ -179,7 +209,7 @@ export function TemplateSeederInterface({
         <div className="flex gap-2">
           <Button 
             onClick={handleSeedTemplates}
-            disabled={seeding || clearing || !templates.validation.isValid}
+            disabled={seeding || clearing || resetting || !templates.validation.isValid}
             className="flex items-center gap-2"
           >
             {seeding ? (
@@ -189,11 +219,27 @@ export function TemplateSeederInterface({
             )}
             {seeding ? 'Seeding...' : 'Seed Templates'}
           </Button>
+
+          {hasSampleDataPermission && (
+            <Button 
+              onClick={handleResetAndSeed}
+              disabled={seeding || clearing || resetting}
+              variant="default"
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              {resetting ? (
+                <RefreshCw className="animate-spin" size={16} />
+              ) : (
+                <RotateCcw size={16} />
+              )}
+              {resetting ? 'Resetting & Seeding...' : 'Reset & Seed'}
+            </Button>
+          )}
           
           {hasSampleDataPermission && (
             <Button 
               onClick={handleClearTemplates}
-              disabled={seeding || clearing}
+              disabled={seeding || clearing || resetting}
               variant="destructive"
               className="flex items-center gap-2 bg-red-600 hover:bg-red-700"
             >
@@ -343,6 +389,52 @@ export function TemplateSeederInterface({
         </Card>
       )}
 
+      {/* Reset and Seed Result */}
+      {lastResetAndSeedResult && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <RotateCcw className="text-blue-600" size={20} />
+              Reset & Seed Result
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <Trash2 className="text-red-600" size={16} />
+                  <span>Cleared: {lastResetAndSeedResult.clearedCount} prompts</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="text-green-600" size={16} />
+                  <span>Seeded: {lastResetAndSeedResult.seededCount} prompts</span>
+                </div>
+              </div>
+
+              <Alert>
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-800">
+                  <strong>✅ Success:</strong> {lastResetAndSeedResult.message}
+                </AlertDescription>
+              </Alert>
+              
+              {lastResetAndSeedResult.clearedTemplates.length > 0 && (
+                <div className="space-y-2">
+                  <div className="text-sm font-medium text-gray-800">Templates Replaced:</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {lastResetAndSeedResult.clearedTemplates.map((templateName, index) => (
+                      <div key={index} className="py-2 px-3 bg-blue-50 text-blue-800 rounded border border-blue-200">
+                        <span className="font-mono text-sm">{templateName}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Error Display */}
       {error && (
         <Alert>
@@ -384,6 +476,14 @@ export function TemplateSeederInterface({
               <strong>Immediate Availability:</strong> Seeded prompts are immediately available for AI operations
             </div>
           </div>
+          {hasSampleDataPermission && (
+            <div className="flex items-start gap-2">
+              <RotateCcw className="text-blue-600 mt-0.5" size={16} />
+              <div>
+                <strong className="text-blue-700">🔄 Reset & Seed:</strong> One-click operation to clear existing templates and seed fresh ones with updated configurations (no confirmations required)
+              </div>
+            </div>
+          )}
           {hasSampleDataPermission && (
             <div className="flex items-start gap-2">
               <Trash2 className="text-red-600 mt-0.5" size={16} />

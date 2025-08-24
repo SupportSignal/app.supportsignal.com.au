@@ -10,25 +10,43 @@ const createMockDb = () => {
   let idCounter = 0;
 
   return {
-    query: jest.fn((tableName) => ({
-      withIndex: jest.fn((_indexName, _callback) => ({
-        first: jest.fn(async () => mockData.get(`${tableName}_first`) || null),
-        collect: jest.fn(async () => mockData.get(`${tableName}_collect`) || []),
+    query: jest.fn((tableName) => {
+      const queryBuilder = {
+        withIndex: jest.fn((_indexName, _callback) => ({
+          ...queryBuilder,
+          first: jest.fn(async () => mockData.get(`${tableName}_first`) || null),
+          collect: jest.fn(async () => mockData.get(`${tableName}_collect`) || []),
+          order: jest.fn(() => ({
+            ...queryBuilder,
+            take: jest.fn(async (limit) => 
+              (mockData.get(`${tableName}_collect`) || []).slice(0, limit)
+            ),
+          })),
+          take: jest.fn(async (limit) => 
+            (mockData.get(`${tableName}_collect`) || []).slice(0, limit)
+          ),
+          filter: jest.fn(() => ({
+            ...queryBuilder,
+            first: jest.fn(async () => mockData.get(`${tableName}_first`) || null),
+            collect: jest.fn(async () => mockData.get(`${tableName}_collect`) || []),
+          })),
+        })),
+        filter: jest.fn(() => ({
+          ...queryBuilder,
+          first: jest.fn(async () => mockData.get(`${tableName}_first`) || null),
+          collect: jest.fn(async () => mockData.get(`${tableName}_collect`) || []),
+        })),
         order: jest.fn(() => ({
+          ...queryBuilder,
           take: jest.fn(async (limit) => 
             (mockData.get(`${tableName}_collect`) || []).slice(0, limit)
           ),
         })),
-        take: jest.fn(async (limit) => 
-          (mockData.get(`${tableName}_collect`) || []).slice(0, limit)
-        ),
-      })),
-      order: jest.fn(() => ({
-        take: jest.fn(async (limit) => 
-          (mockData.get(`${tableName}_collect`) || []).slice(0, limit)
-        ),
-      })),
-    })),
+        first: jest.fn(async () => mockData.get(`${tableName}_first`) || null),
+        collect: jest.fn(async () => mockData.get(`${tableName}_collect`) || []),
+      };
+      return queryBuilder;
+    }),
     insert: jest.fn(async (tableName, data) => {
       const id = `${tableName}_${++idCounter}`;
       const record = { _id: id, ...data, _creationTime: Date.now() };

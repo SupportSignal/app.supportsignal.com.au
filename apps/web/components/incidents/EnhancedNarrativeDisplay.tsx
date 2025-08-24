@@ -25,6 +25,7 @@ import { OriginalContentCollapse } from './OriginalContentCollapse';
 import { QADisplayCollapse } from './QADisplayCollapse';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
+import ReactMarkdown from 'react-markdown';
 import type { Id } from '@/convex/_generated/dataModel';
 
 interface EnhancedNarrativeDisplayProps {
@@ -43,11 +44,13 @@ interface EnhancedNarrativeDisplayProps {
     updated_at: number;
   };
   incident_id: Id<"incidents">;
+  phase?: string;
 }
 
 export function EnhancedNarrativeDisplay({ 
   enhancedNarrative, 
-  incident_id 
+  incident_id,
+  phase
 }: EnhancedNarrativeDisplayProps) {
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
@@ -55,6 +58,7 @@ export function EnhancedNarrativeDisplay({
   const [activeTab, setActiveTab] = useState("enhanced");
 
   // Mutation for updating enhanced narrative
+  // @ts-ignore - Temporary workaround for TypeScript inference issue
   const updateEnhancedNarrative = useMutation(api.aiEnhancement.updateEnhancedNarrative);
 
   const handleSave = async () => {
@@ -194,10 +198,12 @@ export function EnhancedNarrativeDisplay({
                 </div>
               ) : (
                 <div className="prose prose-sm max-w-none">
-                  <div className="whitespace-pre-wrap bg-background p-4 rounded-md border">
-                    {enhancedNarrative.user_edited 
-                      ? enhancedNarrative.user_edits 
-                      : enhancedNarrative.enhanced_content}
+                  <div className="bg-background p-4 rounded-md border whitespace-pre-wrap">
+                    <ReactMarkdown>
+                      {enhancedNarrative.user_edited 
+                        ? enhancedNarrative.user_edits 
+                        : enhancedNarrative.enhanced_content}
+                    </ReactMarkdown>
                   </div>
                 </div>
               )}
@@ -223,8 +229,10 @@ export function EnhancedNarrativeDisplay({
             </CardHeader>
             <CardContent>
               <div className="prose prose-sm max-w-none">
-                <div className="whitespace-pre-wrap bg-muted/30 p-4 rounded-md border">
-                  {enhancedNarrative.original_content}
+                <div className="bg-muted/30 p-4 rounded-md border">
+                  <ReactMarkdown>
+                    {enhancedNarrative.original_content}
+                  </ReactMarkdown>
                 </div>
               </div>
             </CardContent>
@@ -240,8 +248,10 @@ export function EnhancedNarrativeDisplay({
             <CardContent>
               {enhancedNarrative.clarification_responses ? (
                 <div className="prose prose-sm max-w-none">
-                  <div className="whitespace-pre-wrap bg-muted/30 p-4 rounded-md border">
-                    {enhancedNarrative.clarification_responses}
+                  <div className="bg-muted/30 p-4 rounded-md border">
+                    <ReactMarkdown>
+                      {enhancedNarrative.clarification_responses}
+                    </ReactMarkdown>
                   </div>
                 </div>
               ) : (

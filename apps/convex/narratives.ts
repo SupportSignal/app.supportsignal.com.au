@@ -4,6 +4,7 @@ import { v } from "convex/values";
 import { ConvexError } from "convex/values";
 import { requirePermission, PERMISSIONS } from './permissions';
 import { Id } from './_generated/dataModel';
+import { internal } from './_generated/api';
 
 /**
  * Create initial narrative content for new incident
@@ -545,5 +546,51 @@ export const subscribeToNarrativeActivity = query({
       subscribedAt: Date.now(),
       correlationId,
     };
+  },
+});
+
+/**
+ * Internal mutation to update enhanced content for a specific phase
+ */
+export const updateEnhancedContent = mutation({
+  args: {
+    sessionToken: v.string(),
+    narratives_id: v.id("incident_narratives"),
+    phase: v.union(v.literal("before_event"), v.literal("during_event"), v.literal("end_event"), v.literal("post_event")),
+    enhanced_content: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Authenticate user
+    const user = await ctx.runQuery(internal.auth.verifySession, {
+      sessionToken: args.sessionToken,
+    });
+
+    if (!user) {
+      throw new ConvexError("Authentication required");
+    }
+
+    // Get the narratives record
+    const narratives = await ctx.db.get(args.narratives_id);
+    if (!narratives) {
+      throw new ConvexError("Narratives not found");
+    }
+
+    // Map phase to enhanced field
+    const fieldMap = {
+      before_event: "before_event_extra",
+      during_event: "during_event_extra", 
+      end_event: "end_event_extra",
+      post_event: "post_event_extra",
+    };
+
+    // Update the enhanced content
+    await ctx.db.patch(args.narratives_id, {
+      [fieldMap[args.phase]]: args.enhanced_content,
+      enhanced_at: Date.now(),
+      updated_at: Date.now(),
+      version: narratives.version + 1,
+    });
+
+    return { success: true };
   },
 });

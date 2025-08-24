@@ -113,30 +113,23 @@ This dedicated guide takes you from zero to a fully deployed AI application with
 
 ```bash
 # Development
-bun dev              # Start development server
-bun dev:claude       # Development with Claude logging integration
+bun run web:dev      # Start Next.js web application
+bun run convex:dev   # Start Convex backend/database
+bun run worker:dev   # Start Cloudflare worker
+
+# Testing (Coverage Watch Mode)
+bun run test:web:coverage:watch     # Web app tests with coverage
+bun run test:convex:coverage:watch  # Convex backend tests with coverage
+bun run test:worker:coverage:watch  # Worker tests with coverage
 
 # Build & Production
 bun build            # Build for production
 bun start            # Start production server
 
-# Testing
-bun test             # Run Jest unit tests
-bun test:e2e         # Run Playwright E2E tests
-bun test:e2e:ui      # Run Playwright with UI mode
-
 # Code Quality
 bun lint             # Run ESLint
 bun format           # Run Prettier
 bun typecheck        # Run TypeScript compiler checks
-
-# Convex Backend
-bunx convex dev      # Start Convex development server
-bunx convex deploy   # Deploy Convex functions
-
-# Claude Integration
-bun chrome:debug     # Start Chrome with debugging port
-bun claude:bridge    # Start Claude Dev Bridge for log capture
 ```
 
 ## Convex Backend Setup

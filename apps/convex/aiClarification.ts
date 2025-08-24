@@ -611,8 +611,28 @@ export const getClarificationAnswers = query({
     }
 
     const answers = await answersQuery.collect();
+    
+    // Get all questions for this incident and phase (since no by_question_id index exists)
+    const allQuestions = await ctx.db
+      .query("clarification_questions")
+      .withIndex("by_incident_phase", (q) => 
+        q.eq("incident_id", args.incident_id).eq("phase", args.phase || "before_event")
+      )
+      .collect();
+    
+    // Create a map for fast lookup
+    const questionsMap = new Map();
+    allQuestions.forEach(q => {
+      questionsMap.set(q.question_id, q.question_text);
+    });
+    
+    // Join answers with questions
+    const answersWithQuestions = answers.map(answer => ({
+      ...answer,
+      question_text: questionsMap.get(answer.question_id) || 'Question not found',
+    }));
 
-    return answers.sort((a, b) => a.answered_at - b.answered_at);
+    return answersWithQuestions.sort((a, b) => a.answered_at - b.answered_at);
   },
 });
 
