@@ -594,3 +594,138 @@ export const updateEnhancedContent = mutation({
     return { success: true };
   },
 });
+
+/**
+ * Alias for getByIncident function - provides narratives for a specific incident
+ * This function matches the API call expected by IncidentSummaryDisplay.tsx
+ */
+export const getByIncidentId = query({
+  args: {
+    sessionToken: v.string(),
+    incident_id: v.id("incidents"),
+  },
+  handler: async (ctx, args) => {
+    // Get the incident to validate access
+    const incident = await ctx.db.get(args.incident_id);
+    if (!incident) {
+      throw new ConvexError("Incident not found");
+    }
+
+    // Check permissions
+    const { user } = await requirePermission(
+      ctx,
+      args.sessionToken,
+      PERMISSIONS.VIEW_ALL_COMPANY_INCIDENTS,
+      {
+        companyId: incident.company_id,
+        resourceOwnerId: incident.created_by || undefined,
+      }
+    );
+
+    // Get narratives for the incident
+    const narratives = await ctx.db
+      .query("incident_narratives")
+      .withIndex("by_incident", (q) => q.eq("incident_id", args.incident_id))
+      .first();
+
+    if (!narratives) {
+      return null;
+    }
+
+    return narratives;
+  },
+});
+
+/**
+ * Get summary statistics for narratives associated with an incident
+ * Provides question counts and other metrics for Step 8 summary display
+ */
+export const getStatsByIncidentId = query({
+  args: {
+    sessionToken: v.string(),
+    incident_id: v.id("incidents"),
+  },
+  handler: async (ctx, args) => {
+    // Get the incident to validate access
+    const incident = await ctx.db.get(args.incident_id);
+    if (!incident) {
+      throw new ConvexError("Incident not found");
+    }
+
+    // Check permissions
+    const { user } = await requirePermission(
+      ctx,
+      args.sessionToken,
+      PERMISSIONS.VIEW_ALL_COMPANY_INCIDENTS,
+      {
+        companyId: incident.company_id,
+        resourceOwnerId: incident.created_by || undefined,
+      }
+    );
+
+    // Get narratives for the incident
+    const narratives = await ctx.db
+      .query("incident_narratives")
+      .withIndex("by_incident", (q) => q.eq("incident_id", args.incident_id))
+      .first();
+
+    if (!narratives) {
+      return {
+        total_questions: 0,
+        phases: {
+          before_event: { question_count: 0, has_content: false },
+          during_event: { question_count: 0, has_content: false },
+          end_event: { question_count: 0, has_content: false },
+          post_event: { question_count: 0, has_content: false },
+        },
+      };
+    }
+
+    // Count questions for each phase (based on structured data)
+    const countQuestions = (content: string | undefined) => {
+      if (!content) return 0;
+      try {
+        const parsed = JSON.parse(content);
+        if (Array.isArray(parsed)) {
+          return parsed.length;
+        } else if (parsed && typeof parsed === 'object' && parsed.questions) {
+          return Array.isArray(parsed.questions) ? parsed.questions.length : 0;
+        }
+      } catch {
+        // If not JSON, estimate based on question marks or structured content
+        const questionMarks = (content.match(/\?/g) || []).length;
+        return Math.max(1, questionMarks);
+      }
+      return 0;
+    };
+
+    const phases = {
+      before_event: {
+        question_count: countQuestions(narratives.before_event),
+        has_content: !!narratives.before_event,
+      },
+      during_event: {
+        question_count: countQuestions(narratives.during_event),
+        has_content: !!narratives.during_event,
+      },
+      end_event: {
+        question_count: countQuestions(narratives.end_event),
+        has_content: !!narratives.end_event,
+      },
+      post_event: {
+        question_count: countQuestions(narratives.post_event),
+        has_content: !!narratives.post_event,
+      },
+    };
+
+    const total_questions = Object.values(phases).reduce(
+      (sum, phase) => sum + phase.question_count,
+      0
+    );
+
+    return {
+      total_questions,
+      phases,
+    };
+  },
+});
