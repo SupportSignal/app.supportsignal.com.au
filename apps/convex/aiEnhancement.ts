@@ -425,7 +425,7 @@ export const validateWorkflowCompletion = query({
     
     return {
       checklist,
-      allComplete,
+      all_complete: allComplete,
       missing_requirements: Object.entries(checklist)
         .filter(([, status]) => !status)
         .map(([requirement]) => requirement),

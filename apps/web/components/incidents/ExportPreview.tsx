@@ -1,14 +1,17 @@
 "use client";
 
-import React from 'react';
-import { useQuery } from 'convex/react';
+import React, { useState } from 'react';
+import { useQuery, useAction } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useAuth } from '@/components/auth/auth-provider';
 import { Card, CardContent, CardHeader, CardTitle } from '@starter/ui/card';
 import { Badge } from '@starter/ui/badge';
 import { Separator } from '@starter/ui/separator';
-import { CalendarDays, MapPin, User, FileText, Clock } from 'lucide-react';
+import { Button } from '@starter/ui/button';
+import { Checkbox } from '@starter/ui/checkbox';
+import { CalendarDays, MapPin, User, FileText, Clock, Download, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 import type { Id } from '@/convex/_generated/dataModel';
 
 interface ExportPreviewProps {
@@ -29,6 +32,15 @@ export function ExportPreview({
   enhancedNarrative 
 }: ExportPreviewProps) {
   const { user } = useAuth();
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [pdfSections, setPdfSections] = useState({
+    basic_information: true,
+    incident_narratives: true,
+    clarification_qa: true,
+    enhanced_narrative: true,
+    metadata: true,
+    participant_details: true
+  });
   
   // Fetch incident details
   const incident = useQuery(
@@ -38,6 +50,9 @@ export function ExportPreview({
       id: incident_id 
     } : "skip"
   );
+
+  // PDF generation action
+  const generatePDF = useAction(api.pdfGeneration.generateIncidentPDF);
 
   if (!incident) {
     return (
@@ -57,6 +72,69 @@ export function ExportPreview({
       return format(date, 'PPP p');
     } catch {
       return dateTimeString;
+    }
+  };
+
+  // Handle PDF section toggles
+  const handleSectionToggle = (section: keyof typeof pdfSections) => {
+    console.log('Toggle PDF section:', section, 'from', pdfSections[section], 'to', !pdfSections[section]);
+    setPdfSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  // Handle PDF generation
+  const handleGeneratePDF = async () => {
+    if (!user?.sessionToken) {
+      toast.error("Authentication required to generate PDF");
+      return;
+    }
+
+    console.log('Starting PDF generation with sections:', pdfSections);
+    setIsGeneratingPDF(true);
+
+    try {
+      const selectedSections = Object.entries(pdfSections)
+        .filter(([_, enabled]) => enabled)
+        .map(([section, _]) => section);
+
+      console.log('Selected PDF sections:', selectedSections);
+
+      const result = await generatePDF({
+        sessionToken: user.sessionToken,
+        incident_id,
+        sections: selectedSections
+      });
+
+      console.log('PDF generation completed, result:', {
+        filename: result.filename,
+        dataSize: result.pdfData.length,
+        generatedAt: result.generatedAt
+      });
+
+      // Create blob and download
+      const pdfArray = new Uint8Array(result.pdfData);
+      const blob = new Blob([pdfArray], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = result.filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success("PDF downloaded successfully!");
+      console.log('PDF download completed successfully');
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.error('PDF generation failed:', error);
+      toast.error(`Failed to generate PDF: ${errorMessage}`);
+    } finally {
+      setIsGeneratingPDF(false);
     }
   };
 
@@ -179,6 +257,128 @@ export function ExportPreview({
                 Contributing conditions and analysis will be added by team leaders in the analysis workflow
               </p>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* PDF Export Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Download className="h-5 w-5" />
+            PDF Export Options
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Generate a comprehensive PDF report with customizable sections
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* PDF Section Checkboxes */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="basic_information"
+                checked={pdfSections.basic_information}
+                onCheckedChange={() => handleSectionToggle('basic_information')}
+              />
+              <label
+                htmlFor="basic_information"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Basic Information
+              </label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="incident_narratives"
+                checked={pdfSections.incident_narratives}
+                onCheckedChange={() => handleSectionToggle('incident_narratives')}
+              />
+              <label
+                htmlFor="incident_narratives"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Incident Narratives
+              </label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="clarification_qa"
+                checked={pdfSections.clarification_qa}
+                onCheckedChange={() => handleSectionToggle('clarification_qa')}
+              />
+              <label
+                htmlFor="clarification_qa"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Clarification Q&A
+              </label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="enhanced_narrative"
+                checked={pdfSections.enhanced_narrative}
+                onCheckedChange={() => handleSectionToggle('enhanced_narrative')}
+              />
+              <label
+                htmlFor="enhanced_narrative"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Enhanced Narrative
+              </label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="participant_details"
+                checked={pdfSections.participant_details}
+                onCheckedChange={() => handleSectionToggle('participant_details')}
+              />
+              <label
+                htmlFor="participant_details"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Participant Details
+              </label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="metadata"
+                checked={pdfSections.metadata}
+                onCheckedChange={() => handleSectionToggle('metadata')}
+              />
+              <label
+                htmlFor="metadata"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Metadata & Timestamps
+              </label>
+            </div>
+          </div>
+
+          {/* Generate PDF Button */}
+          <div className="pt-4 border-t">
+            <Button
+              onClick={handleGeneratePDF}
+              disabled={isGeneratingPDF || !user?.sessionToken}
+              className="w-full md:w-auto"
+            >
+              {isGeneratingPDF ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Generating PDF...
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4 mr-2" />
+                  Download PDF Report
+                </>
+              )}
+            </Button>
           </div>
         </CardContent>
       </Card>

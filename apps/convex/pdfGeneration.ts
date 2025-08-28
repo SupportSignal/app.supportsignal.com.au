@@ -102,7 +102,7 @@ async function gatherIncidentData(ctx: ActionCtx, args: { sessionToken: string; 
   // @ts-ignore - TypeScript inference issues with complex internal API types
   const incident: any = await ctx.runQuery(internal.incidents.getById, {
     sessionToken: args.sessionToken,
-    incident_id: args.incident_id
+    id: args.incident_id
   });
   
   if (!incident) {
@@ -118,9 +118,9 @@ async function gatherIncidentData(ctx: ActionCtx, args: { sessionToken: string; 
   
   // Get participant data  
   // @ts-ignore - TypeScript inference issues with complex internal API types
-  const participant: any = await ctx.runQuery(internal.participants.getById, {
+  const participant: any = await ctx.runQuery(internal["participants/getById"].getParticipantById, {
     sessionToken: args.sessionToken,
-    participant_id: incident.participant_id
+    participantId: incident.participant_id
   });
   
   // Try to get clarification workflow data if available - placeholder for now

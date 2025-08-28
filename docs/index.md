@@ -77,6 +77,12 @@ Following BMAD methodology, these documents form the foundation:
 - **[Worker Deployment Setup](./technical-guides/worker-deployment-setup.md)** - Cloudflare Workers + Redis logging infrastructure deployment
 - **[Log Ingestion Worker Setup KDD](./technical-guides/log-ingestion-worker-setup-kdd.md)** - Knowledge and lessons learned from centralized logging implementation
 - **[Cost-Effective Logging](./technical-guides/cost-effective-logging-in-convex-agentic-systems.md)** - Legacy Convex logging strategies (superseded by Worker system)
+
+#### 🧠 Recent Knowledge Discovery & Design (KDD) Documents
+
+- **[PDF Generation Implementation KDD](./technical-guides/pdf-generation-implementation-kdd.md)** - jsPDF vs Puppeteer for serverless environments, comprehensive incident data gathering patterns
+- **[API Compatibility Patterns KDD](./technical-guides/api-compatibility-patterns-kdd.md)** - Runtime vs compile-time validation gaps, compatibility wrapper patterns for API mismatches
+- **[Implementation vs Testing Gap KDD](./technical-guides/implementation-vs-testing-gap-kdd.md)** - User-first validation methodology, complete workflow testing over technical implementation
 - **[Dev Error Pipeline](./technical-guides/dev-error-pipeline.md)** - Chrome DevTools to Claude Code integration
 - **[AI Model Configuration Architecture KDD](./technical-guides/ai-model-configuration-architecture-kdd.md)** - Environment-driven AI model configuration vs database hardcoding
 - **[Convex Components Guide](./technical-guides/convex-components-guide.md)** - Convex architecture patterns and component examples

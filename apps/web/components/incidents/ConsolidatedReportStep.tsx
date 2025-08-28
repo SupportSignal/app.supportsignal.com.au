@@ -70,21 +70,57 @@ export function ConsolidatedReportStep({
     } : "skip"
   );
 
+  // Debug logging for data fetching
+  React.useEffect(() => {
+    console.log('ConsolidatedReportStep - Data status:', {
+      incident: !!incident,
+      incident_id,
+      userSessionToken: !!user?.sessionToken,
+      enhancedNarrative: {
+        loading: enhancedNarrative === undefined,
+        exists: !!enhancedNarrative,
+        data: enhancedNarrative
+      },
+      workflowValidation: {
+        loading: workflowValidation === undefined,
+        exists: !!workflowValidation,
+        data: workflowValidation
+      }
+    });
+  }, [incident, enhancedNarrative, workflowValidation, user?.sessionToken, incident_id]);
+
   // Mutations
   const submitForAnalysis = useMutation(api.aiEnhancement.submitIncidentForAnalysis);
 
   const handleSubmitForAnalysis = async () => {
+    console.log('Submit for Analysis button clicked');
+    console.log('User session token:', !!user?.sessionToken);
+    console.log('Enhanced narrative:', {
+      exists: !!enhancedNarrative,
+      id: enhancedNarrative?._id,
+      userEdited: enhancedNarrative?.user_edited,
+      version: enhancedNarrative?.enhancement_version
+    });
+    console.log('Workflow validation:', workflowValidation);
+    console.log('Incident handoff status:', incident?.handoff_status);
+
     if (!user?.sessionToken || !enhancedNarrative) {
+      console.error('Submit failed: Missing authentication or enhancement');
       toast.error("Cannot submit - missing authentication or enhancement");
       return;
     }
 
     // Validate completion before submitting
-    if (!workflowValidation?.allComplete) {
+    if (!workflowValidation?.all_complete) {
+      console.error('Submit failed: Workflow not complete', {
+        all_complete: workflowValidation?.all_complete,
+        missingRequirements: workflowValidation?.missing_requirements
+      });
       toast.error("Cannot submit - workflow not complete");
       return;
     }
 
+    console.log('Starting submission process...');
     setIsSubmitting(true);
 
     try {
@@ -137,8 +173,8 @@ export function ConsolidatedReportStep({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant={workflowValidation.allComplete ? "default" : "secondary"}>
-            {workflowValidation.allComplete ? "Complete" : "Incomplete"}
+          <Badge variant={workflowValidation.all_complete ? "default" : "secondary"}>
+            {workflowValidation.all_complete ? "Complete" : "Incomplete"}
           </Badge>
           <Badge variant="outline">
             {incident.handoff_status || "draft"}
@@ -204,7 +240,10 @@ export function ConsolidatedReportStep({
       </Card>
 
       {/* Tabbed Content Views */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={(tab) => {
+        console.log('Tab changed from', activeTab, 'to', tab);
+        setActiveTab(tab);
+      }} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="summary" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
@@ -296,7 +335,7 @@ export function ConsolidatedReportStep({
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {workflowValidation.allComplete ? (
+                {workflowValidation.all_complete ? (
                   <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
                     <div className="flex items-center gap-2 text-green-800 dark:text-green-200">
                       <CheckCircle className="h-5 w-5" />
@@ -363,7 +402,12 @@ export function ConsolidatedReportStep({
           {incident.handoff_status !== "ready_for_analysis" && (
             <Button
               variant="outline"
-              onClick={() => setActiveTab("completion")}
+              onClick={() => {
+                console.log('Review Completion button clicked, switching to completion tab');
+                console.log('Current active tab:', activeTab);
+                console.log('Workflow validation status:', workflowValidation);
+                setActiveTab("completion");
+              }}
               className="flex items-center gap-2"
             >
               <CheckCircle className="h-4 w-4" />
@@ -373,7 +417,7 @@ export function ConsolidatedReportStep({
           
           <Button
             onClick={handleSubmitForAnalysis}
-            disabled={!workflowValidation.allComplete || !enhancedNarrative || isSubmitting || incident.handoff_status === "ready_for_analysis"}
+            disabled={!workflowValidation.all_complete || !enhancedNarrative || isSubmitting || incident.handoff_status === "ready_for_analysis"}
             className="flex items-center gap-2"
           >
             {isSubmitting ? (

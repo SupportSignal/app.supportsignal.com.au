@@ -31,6 +31,11 @@ interface ChecklistItem {
 }
 
 export function CompletionChecklist({ validation }: CompletionChecklistProps) {
+  // Debug logging for validation data
+  React.useEffect(() => {
+    console.log('CompletionChecklist - Validation data:', validation);
+  }, [validation]);
+
   const checklistItems: ChecklistItem[] = [
     {
       key: 'metadata_complete',
