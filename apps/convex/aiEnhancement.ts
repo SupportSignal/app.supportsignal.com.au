@@ -357,14 +357,32 @@ export const getEnhancedNarrative = query({
       PERMISSIONS.VIEW_ALL_COMPANY_INCIDENTS
     );
     
-    // Get enhanced narrative
-    const enhancedNarrative = await ctx.db
-      .query("enhanced_narratives")
+    // Get narratives data which contains enhanced content in *_extra fields
+    const narratives = await ctx.db
+      .query("incident_narratives")
       .withIndex("by_incident", (q) => q.eq("incident_id", args.incident_id))
-      .order("desc")
       .first();
     
-    return enhancedNarrative;
+    // If narratives exist and have enhanced content, format it as enhanced narrative
+    if (narratives && (narratives.before_event_extra || narratives.during_event_extra || 
+                     narratives.end_event_extra || narratives.post_event_extra)) {
+      return {
+        _id: narratives._id,
+        incident_id: args.incident_id,
+        enhanced_content: {
+          before_event: narratives.before_event_extra || narratives.before_event,
+          during_event: narratives.during_event_extra || narratives.during_event,
+          end_event: narratives.end_event_extra || narratives.end_event,
+          post_event: narratives.post_event_extra || narratives.post_event,
+        },
+        user_edited: false, // Enhanced content from AI, not user-edited
+        created_at: narratives.updated_at || narratives.created_at,
+        updated_at: narratives.updated_at || narratives.created_at,
+        enhancement_version: 1,
+      };
+    }
+    
+    return null;
   },
 });
 
@@ -402,11 +420,14 @@ export const validateWorkflowCompletion = query({
       .withIndex("by_incident", (q) => q.eq("incident_id", args.incident_id))
       .collect();
     
-    // Get enhanced narrative
-    const enhancedNarrative = await ctx.db
-      .query("enhanced_narratives")
-      .withIndex("by_incident", (q) => q.eq("incident_id", args.incident_id))
-      .first();
+    // Check for enhanced narrative content in the narratives data
+    // Enhanced content is stored as *_extra fields in the incident_narratives table
+    const hasEnhancedContent = !!(narratives && (
+      narratives.before_event_extra || 
+      narratives.during_event_extra || 
+      narratives.end_event_extra || 
+      narratives.post_event_extra
+    ));
     
     // Validate completion checklist
     const checklist = {
@@ -417,7 +438,7 @@ export const validateWorkflowCompletion = query({
         narratives.end_event && 
         narratives.post_event),
       clarifications_complete: clarificationAnswers.length > 0,
-      enhancement_complete: !!enhancedNarrative,
+      enhancement_complete: hasEnhancedContent,
       validation_passed: true, // Add specific validation logic as needed
     };
     
@@ -440,7 +461,7 @@ export const submitIncidentForAnalysis = mutation({
   args: {
     sessionToken: v.string(),
     incident_id: v.id("incidents"),
-    enhanced_narrative_id: v.id("enhanced_narratives"),
+    enhanced_narrative_id: v.optional(v.id("enhanced_narratives")), // Make optional for backwards compatibility
   },
   handler: async (ctx, args) => {
     // Check permissions
@@ -468,8 +489,14 @@ export const submitIncidentForAnalysis = mutation({
       .withIndex("by_incident", (q) => q.eq("incident_id", args.incident_id))
       .collect();
 
-    // Get enhanced narrative
-    const enhancedNarrative = await ctx.db.get(args.enhanced_narrative_id);
+    // Check for enhanced narrative content in the narratives data
+    // Enhanced content is stored as *_extra fields in the incident_narratives table
+    const hasEnhancedContent = !!(narratives && (
+      narratives.before_event_extra || 
+      narratives.during_event_extra || 
+      narratives.end_event_extra || 
+      narratives.post_event_extra
+    ));
 
     // Validate completion checklist
     const checklist = {
@@ -480,19 +507,19 @@ export const submitIncidentForAnalysis = mutation({
         narratives.end_event && 
         narratives.post_event),
       clarifications_complete: clarificationAnswers.length > 0,
-      enhancement_complete: !!enhancedNarrative,
+      enhancement_complete: hasEnhancedContent,
       validation_passed: true,
     };
 
     const validation = {
       checklist,
-      allComplete: Object.values(checklist).every(status => status === true),
+      all_complete: Object.values(checklist).every(status => status === true),
       missing_requirements: Object.entries(checklist)
         .filter(([, status]) => !status)
         .map(([requirement]) => requirement),
     };
     
-    if (!validation.allComplete) {
+    if (!validation.all_complete) {
       throw new ConvexError(`Workflow incomplete. Missing: ${validation.missing_requirements.join(', ')}`);
     }
     

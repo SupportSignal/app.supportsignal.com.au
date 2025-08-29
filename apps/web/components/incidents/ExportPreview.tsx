@@ -14,6 +14,12 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import type { Id } from '@/convex/_generated/dataModel';
 
+// CENTRALIZED PDF SECTION CONFIGURATION
+import { 
+  getDefaultSections,
+  type PDFSectionKey 
+} from '@/shared/pdf-sections';
+
 interface ExportPreviewProps {
   incident_id: Id<"incidents">;
   enhancedNarrative: {
@@ -31,15 +37,22 @@ export function ExportPreview({
   incident_id, 
   enhancedNarrative 
 }: ExportPreviewProps) {
+  console.log('🚨 COMPONENT LOADED 🚨');
+  console.log('🎯 ExportPreview component rendering with props:', {
+    incident_id,
+    hasEnhancedNarrative: !!enhancedNarrative,
+    enhancedNarrativeId: enhancedNarrative?._id
+  });
+  
   const { user } = useAuth();
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
-  const [pdfSections, setPdfSections] = useState({
-    basic_information: true,
-    incident_narratives: true,
-    clarification_qa: true,
-    enhanced_narrative: true,
-    metadata: true,
-    participant_details: true
+  // Initialize PDF sections using centralized configuration (all sections enabled by default)
+  const [pdfSections, setPdfSections] = useState(() => {
+    const defaultSections = getDefaultSections();
+    return defaultSections.reduce((acc, section) => {
+      acc[section] = true;
+      return acc;
+    }, {} as Record<PDFSectionKey, boolean>);
   });
   
   // Fetch incident details
@@ -51,8 +64,16 @@ export function ExportPreview({
     } : "skip"
   );
 
-  // PDF generation action
+  // PDF generation actions
   const generatePDF = useAction(api.pdfGeneration.generateIncidentPDF);
+  const downloadPDF = useAction(api.pdfGeneration.downloadPDF);
+  
+  // Debug: Verify actions are defined
+  console.log('🔍 Actions verification:', {
+    generatePDFDefined: !!generatePDF,
+    downloadPDFDefined: !!downloadPDF,
+    apiPdfGenerationKeys: Object.keys(api.pdfGeneration),
+  });
 
   if (!incident) {
     return (
@@ -65,6 +86,14 @@ export function ExportPreview({
   const finalNarrative = enhancedNarrative.user_edited 
     ? enhancedNarrative.user_edits 
     : enhancedNarrative.enhanced_content;
+
+  // DEBUG: Check what finalNarrative contains
+  console.log('🔍 finalNarrative debug:', {
+    isString: typeof finalNarrative === 'string',
+    type: typeof finalNarrative,
+    value: finalNarrative,
+    keys: typeof finalNarrative === 'object' ? Object.keys(finalNarrative || {}) : 'N/A'
+  });
 
   const formatDateTime = (dateTimeString: string) => {
     try {
@@ -101,33 +130,101 @@ export function ExportPreview({
 
       console.log('Selected PDF sections:', selectedSections);
 
-      const result = await generatePDF({
+      // Step 1: Generate PDF and store in Convex storage
+      const generateResult = await generatePDF({
         sessionToken: user.sessionToken,
         incident_id,
         sections: selectedSections
       });
 
       console.log('PDF generation completed, result:', {
-        filename: result.filename,
-        dataSize: result.pdfData.length,
-        generatedAt: result.generatedAt
+        filename: generateResult.filename,
+        storageId: generateResult.storageId,
+        fileSize: generateResult.fileSize,
+        generatedAt: generateResult.generatedAt
       });
 
-      // Create blob and download
-      const pdfArray = new Uint8Array(result.pdfData);
-      const blob = new Blob([pdfArray], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
+      try {
+        console.log('✅ PDF generation phase complete, preparing download phase...');
+        console.log('🔍 generateResult object type:', typeof generateResult);
+        console.log('🔍 generateResult keys:', Object.keys(generateResult));
+        console.log('🔍 storageId validation:', {
+          exists: !!generateResult.storageId,
+          type: typeof generateResult.storageId,
+          value: generateResult.storageId,
+          length: generateResult.storageId?.length
+        });
+
+        // Step 2: Download PDF from storage
+        console.log('🔄 Starting PDF download from storage...', {
+          storageId: generateResult.storageId,
+          hasSessionToken: !!user.sessionToken,
+          filename: generateResult.filename
+        });
+
+        console.log('🔄 About to call downloadPDF action...');
+        const downloadResult = await downloadPDF({
+          sessionToken: user.sessionToken,
+          storageId: generateResult.storageId
+        });
+        console.log('✅ downloadPDF action completed successfully!');
+
+      console.log('✅ PDF download from storage completed:', {
+        hasDownloadUrl: !!downloadResult.downloadUrl,
+        contentType: downloadResult.contentType,
+        fileSize: downloadResult.fileSize
+      });
+
+      // Validate download URL
+      if (!downloadResult.downloadUrl) {
+        throw new Error('No download URL received from server');
+      }
+
+      // Fetch the PDF from the URL and create a proper blob download
+      console.log('🔗 Fetching PDF from Convex storage URL for proper download...');
+      
+      const response = await fetch(downloadResult.downloadUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch PDF: ${response.statusText}`);
+      }
+      
+      const pdfBlob = await response.blob();
+      console.log('✅ PDF blob fetched:', {
+        size: pdfBlob.size,
+        type: pdfBlob.type
+      });
+      
+      // Create blob URL for download (this stays in same origin)
+      const blobUrl = URL.createObjectURL(pdfBlob);
       
       const link = document.createElement('a');
-      link.href = url;
-      link.download = result.filename;
+      link.href = blobUrl;
+      link.download = generateResult.filename;
       document.body.appendChild(link);
+      
+      console.log('🖱️ Triggering file download...');
       link.click();
       document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      
+      // Clean up blob URL
+      URL.revokeObjectURL(blobUrl);
+      
+        console.log('🎉 PDF download process completed successfully');
 
-      toast.success("PDF downloaded successfully!");
-      console.log('PDF download completed successfully');
+        toast.success("PDF downloaded successfully!");
+        console.log('PDF download completed successfully');
+
+      } catch (downloadError) {
+        console.error('❌ CRITICAL ERROR in download phase:', downloadError);
+        console.error('❌ Error type:', typeof downloadError);
+        console.error('❌ Error name:', downloadError?.name);
+        console.error('❌ Error message:', downloadError?.message);
+        console.error('❌ Error stack:', downloadError?.stack);
+        console.error('❌ Full error object:', downloadError);
+        
+        // Re-throw to trigger the main error handler
+        throw new Error(`Download phase failed: ${downloadError instanceof Error ? downloadError.message : 'Unknown error'}`);
+      }
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -216,7 +313,12 @@ export function ExportPreview({
             <div className="prose prose-sm max-w-none">
               <div className="p-4 bg-background border rounded-lg">
                 <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                  {finalNarrative}
+                  {typeof finalNarrative === 'string' 
+                    ? finalNarrative 
+                    : typeof finalNarrative === 'object' 
+                      ? JSON.stringify(finalNarrative, null, 2)
+                      : 'Unable to display narrative content'
+                  }
                 </div>
               </div>
             </div>

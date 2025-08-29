@@ -30,6 +30,12 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { toast } from 'sonner';
 import type { Id } from '@/convex/_generated/dataModel';
 
+// CENTRALIZED PDF SECTION CONFIGURATION
+import { 
+  getAllSectionKeys, 
+  PDF_SECTION_UI_CONFIG 
+} from '@/shared/pdf-sections';
+
 interface IncidentSummaryDisplayProps {
   incident_id: Id<"incidents">;
   incident: any;
@@ -45,15 +51,10 @@ export function IncidentSummaryDisplay({
 }: IncidentSummaryDisplayProps) {
   const { user } = useAuth();
 
-  // PDF generation state
-  const [pdfSections, setPdfSections] = useState<string[]>([
-    'overview',
-    'participant', 
-    'brief_narratives',
-    'detailed_narratives',
-    'questions_answers',
-    'processing_info'
-  ]);
+  // PDF generation state using centralized configuration
+  const [pdfSections, setPdfSections] = useState<string[]>(
+    getAllSectionKeys()
+  );
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   // Fetch narratives
@@ -65,8 +66,9 @@ export function IncidentSummaryDisplay({
     } : "skip"
   );
 
-  // PDF generation action
+  // PDF generation actions
   const generatePDF = useAction(api.pdfGeneration.generateIncidentPDF);
+  const downloadPDF = useAction(api.pdfGeneration.downloadPDF);
 
   // Fetch narrative statistics (question counts, etc)
   const narrativeStats = useQuery(
@@ -84,15 +86,8 @@ export function IncidentSummaryDisplay({
     }
   };
 
-  // PDF Section options
-  const pdfSectionOptions = [
-    { id: 'overview', label: 'Incident Overview & Metadata', icon: '📋' },
-    { id: 'participant', label: 'Participant Information', icon: '👤' },
-    { id: 'brief_narratives', label: 'Brief Narrative Summaries', icon: '📝' },
-    { id: 'detailed_narratives', label: 'Detailed Enhanced Narratives', icon: '📖' },
-    { id: 'questions_answers', label: 'Questions & Answers (All Phases)', icon: '❓' },
-    { id: 'processing_info', label: 'Processing & System Information', icon: '📊' }
-  ];
+  // PDF Section options using centralized configuration
+  const pdfSectionOptions = PDF_SECTION_UI_CONFIG;
 
   // Handle PDF section toggle
   const handleSectionToggle = (sectionId: string, checked: boolean) => {
@@ -110,33 +105,76 @@ export function IncidentSummaryDisplay({
       return;
     }
 
+    console.log('📋 IncidentSummaryDisplay: Starting PDF generation with sections:', pdfSections);
     setIsGeneratingPDF(true);
     
     try {
-      const result = await generatePDF({
+      // Step 1: Generate PDF and store in Convex storage
+      const generateResult = await generatePDF({
         sessionToken: user.sessionToken,
         incident_id,
         sections: pdfSections
       });
 
-      // Convert array back to Uint8Array then to blob
-      const pdfArray = new Uint8Array(result.pdfData);
-      const blob = new Blob([pdfArray], { type: 'application/pdf' });
+      console.log('📋 IncidentSummaryDisplay: PDF generation completed, result:', {
+        filename: generateResult.filename,
+        storageId: generateResult.storageId,
+        fileSize: generateResult.fileSize,
+        generatedAt: generateResult.generatedAt
+      });
+
+      // Step 2: Download PDF from storage
+      console.log('📋 IncidentSummaryDisplay: Starting PDF download from storage...');
+      const downloadResult = await downloadPDF({
+        sessionToken: user.sessionToken,
+        storageId: generateResult.storageId
+      });
+
+      console.log('📋 IncidentSummaryDisplay: PDF download completed:', {
+        hasDownloadUrl: !!downloadResult.downloadUrl,
+        contentType: downloadResult.contentType,
+        fileSize: downloadResult.fileSize
+      });
+
+      // Validate download URL
+      if (!downloadResult.downloadUrl) {
+        throw new Error('No download URL received from server');
+      }
+
+      // Fetch the PDF from the URL and create a proper blob download
+      console.log('📋 IncidentSummaryDisplay: Fetching PDF from Convex storage URL for proper download...');
       
-      // Create download link
-      const url = URL.createObjectURL(blob);
+      const response = await fetch(downloadResult.downloadUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch PDF: ${response.statusText}`);
+      }
+      
+      const pdfBlob = await response.blob();
+      console.log('📋 IncidentSummaryDisplay: PDF blob fetched:', {
+        size: pdfBlob.size,
+        type: pdfBlob.type
+      });
+      
+      // Create blob URL for download (this stays in same origin)
+      const blobUrl = URL.createObjectURL(pdfBlob);
+      
       const link = document.createElement('a');
-      link.href = url;
-      link.download = result.filename;
+      link.href = blobUrl;
+      link.download = generateResult.filename;
       document.body.appendChild(link);
+      
+      console.log('📋 IncidentSummaryDisplay: Triggering file download...');
       link.click();
       document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      
+      // Clean up blob URL
+      URL.revokeObjectURL(blobUrl);
 
       toast.success("PDF report downloaded successfully!");
+      console.log('📋 IncidentSummaryDisplay: PDF download process completed successfully');
       
     } catch (error) {
-      console.error("PDF generation failed:", error);
+      console.error("📋 IncidentSummaryDisplay: PDF generation failed:", error);
       toast.error("Failed to generate PDF. Please try again.");
     } finally {
       setIsGeneratingPDF(false);

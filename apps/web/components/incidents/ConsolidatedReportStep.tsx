@@ -124,11 +124,18 @@ export function ConsolidatedReportStep({
     setIsSubmitting(true);
 
     try {
-      const result = await submitForAnalysis({
+      // Prepare args for submission - enhanced_narrative_id is optional
+      const submissionArgs: any = {
         sessionToken: user.sessionToken,
         incident_id,
-        enhanced_narrative_id: enhancedNarrative._id
-      });
+      };
+      
+      // Only include enhanced_narrative_id if it exists (for backwards compatibility)
+      if (enhancedNarrative?._id) {
+        submissionArgs.enhanced_narrative_id = enhancedNarrative._id;
+      }
+      
+      const result = await submitForAnalysis(submissionArgs);
 
       if (result.success) {
         toast.success("Incident submitted for analysis workflow");
@@ -241,7 +248,10 @@ export function ConsolidatedReportStep({
 
       {/* Tabbed Content Views */}
       <Tabs value={activeTab} onValueChange={(tab) => {
-        console.log('Tab changed from', activeTab, 'to', tab);
+        console.log('🔄 Tab changed from', activeTab, 'to', tab);
+        if (tab === 'preview') {
+          console.log('🎯 NAVIGATED TO EXPORT PREVIEW TAB - ExportPreview component will now render');
+        }
         setActiveTab(tab);
       }} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
@@ -310,16 +320,26 @@ export function ConsolidatedReportStep({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {enhancedNarrative ? (
-                <ExportPreview 
-                  incident_id={incident_id}
-                  enhancedNarrative={enhancedNarrative}
-                />
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  Enhanced narrative not available for preview
-                </div>
-              )}
+              {(() => {
+                console.log('🔍 Export Preview Tab - Enhanced Narrative Check:', {
+                  enhancedNarrativeExists: !!enhancedNarrative,
+                  enhancedNarrativeType: typeof enhancedNarrative,
+                  enhancedNarrativeKeys: enhancedNarrative ? Object.keys(enhancedNarrative) : 'N/A',
+                  enhancedNarrativeId: enhancedNarrative?._id,
+                  enhancedNarrativeContent: enhancedNarrative?.enhanced_content ? 'Present' : 'Missing'
+                });
+                
+                return enhancedNarrative ? (
+                  <ExportPreview 
+                    incident_id={incident_id}
+                    enhancedNarrative={enhancedNarrative}
+                  />
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Enhanced narrative not available for preview
+                  </div>
+                );
+              })()}
             </CardContent>
           </Card>
         </TabsContent>

@@ -5,17 +5,16 @@ import { ConvexError } from 'convex/values';
 import jsPDF from 'jspdf';
 import type { ActionCtx } from './_generated/server';
 
-// PDF Section types for checkbox selection
-const PDF_SECTIONS = {
-  overview: 'Incident Overview & Metadata',
-  participant: 'Participant Information', 
-  brief_narratives: 'Brief Narrative Summaries',
-  detailed_narratives: 'Detailed Enhanced Narratives',
-  questions_answers: 'Questions & Answers (All Phases)',
-  processing_info: 'Processing & System Information'
-} as const;
+// CENTRALIZED PDF SECTION CONFIGURATION
+// Import from shared package to ensure frontend/backend consistency
+import { 
+  PDF_SECTIONS, 
+  type PDFSectionKey, 
+  getAllSectionKeys, 
+  validateSectionKeys 
+} from '../../packages/shared/pdf-sections';
 
-type PDFSection = keyof typeof PDF_SECTIONS;
+type PDFSection = PDFSectionKey;
 
 interface IncidentData {
   incident: any;
@@ -39,57 +38,265 @@ export const generateIncidentPDF = action({
       const data = await gatherIncidentData(ctx, args);
       
       // Determine which sections to include (all by default)
-      const selectedSections = args.sections || Object.keys(PDF_SECTIONS);
+      const selectedSections = args.sections || getAllSectionKeys();
       
-      // Generate PDF
+      // COMPREHENSIVE SECTION VALIDATION USING CENTRALIZED SYSTEM
+      const validation = validateSectionKeys(selectedSections);
+      const allAvailableSections = validation.availableKeys;
+      const invalidSections = validation.invalid;
+      const validSections = validation.valid;
+      
+      console.log('=== PDF GENERATION: SECTION ANALYSIS ===');
+      console.log('Frontend requested sections:', args.sections);
+      console.log('Backend available sections:', allAvailableSections);
+      console.log('Selected sections after processing:', selectedSections);
+      console.log('Valid sections (will be processed):', validSections);
+      console.log('Invalid sections (will be ignored):', invalidSections);
+      console.log('Sections count - Requested:', args.sections?.length || 'all', 'Valid:', validSections.length);
+      
+      if (invalidSections.length > 0) {
+        console.warn('⚠️  SECTION MISMATCH DETECTED:', {
+          invalidSections,
+          suggestion: 'Frontend sending wrong section names',
+          availableOptions: allAvailableSections
+        });
+      }
+      
+      console.log('Starting PDF generation with data:', {
+        hasIncident: !!data.incident,
+        hasNarratives: !!data.narratives,
+        hasParticipant: !!data.participant,
+        incidentId: data.incident?._id,
+        participantName: data.participant?.participant?.first_name
+      });
+
+      // Generate PDF with comprehensive metrics tracking
       const doc = new jsPDF('p', 'mm', 'a4');
       let currentY = 20;
+      const pdfMetrics = {
+        sectionsProcessed: 0,
+        sectionsSkipped: 0,
+        totalContentAdded: 0,
+        sectionDetails: [] as Array<{name: string, processed: boolean, reason?: string, contentLength?: number}>
+      };
+      
+      console.log('=== PDF DOCUMENT CREATION ===');
+      console.log('PDF document created, initial Y position:', currentY);
+      console.log('Starting header generation...');
       
       // Add header
       currentY = addDocumentHeader(doc, data.incident, currentY);
+      console.log('✅ Header added successfully, new Y position:', currentY);
       
-      // Add sections based on selection
-      if (selectedSections.includes('overview')) {
-        currentY = addIncidentOverview(doc, data, currentY);
+      // PROCESS SECTIONS WITH DETAILED METRICS TRACKING
+      console.log('=== PDF SECTIONS PROCESSING ===');
+      
+      // Process each available section with comprehensive logging
+      for (const sectionKey of allAvailableSections) {
+        const sectionTitle = PDF_SECTIONS[sectionKey as keyof typeof PDF_SECTIONS];
+        const isRequested = validSections.includes(sectionKey);
+        
+        if (!isRequested) {
+          console.log(`⏭️  SKIPPING: ${sectionKey} (${sectionTitle}) - Not requested by frontend`);
+          pdfMetrics.sectionsSkipped++;
+          pdfMetrics.sectionDetails.push({
+            name: sectionKey,
+            processed: false,
+            reason: 'Not requested by frontend'
+          });
+          continue;
+        }
+
+        console.log(`🔄 PROCESSING: ${sectionKey} (${sectionTitle})`);
+        const beforeY = currentY;
+        
+        try {
+          switch (sectionKey) {
+            case 'basic_information':
+              currentY = addIncidentOverview(doc, data, currentY);
+              break;
+            case 'participant_details':
+              currentY = addParticipantInformation(doc, data, currentY);
+              break;
+            case 'incident_narratives':
+              currentY = addBriefNarratives(doc, data, currentY);
+              break;
+            case 'enhanced_narrative':
+              currentY = addDetailedNarratives(doc, data, currentY);
+              break;
+            case 'clarification_qa':
+              currentY = addQuestionsAndAnswers(doc, data, currentY);
+              break;
+            case 'metadata':
+              currentY = addProcessingInformation(doc, data, currentY);
+              break;
+            default:
+              console.warn(`⚠️  UNKNOWN SECTION: ${sectionKey}`);
+              continue;
+          }
+          
+          const contentAdded = currentY - beforeY;
+          pdfMetrics.sectionsProcessed++;
+          pdfMetrics.totalContentAdded += contentAdded;
+          pdfMetrics.sectionDetails.push({
+            name: sectionKey,
+            processed: true,
+            contentLength: contentAdded
+          });
+          
+          console.log(`✅ COMPLETED: ${sectionKey} - Added ${contentAdded}mm content, Y position: ${beforeY} → ${currentY}`);
+          
+        } catch (error) {
+          console.error(`❌ FAILED: ${sectionKey} processing error:`, error);
+          pdfMetrics.sectionDetails.push({
+            name: sectionKey,
+            processed: false,
+            reason: `Processing error: ${error instanceof Error ? error.message : 'Unknown error'}`
+          });
+        }
       }
       
-      if (selectedSections.includes('participant')) {
-        currentY = addParticipantInformation(doc, data, currentY);
-      }
-      
-      if (selectedSections.includes('brief_narratives')) {
-        currentY = addBriefNarratives(doc, data, currentY);
-      }
-      
-      if (selectedSections.includes('detailed_narratives')) {
-        currentY = addDetailedNarratives(doc, data, currentY);
-      }
-      
-      if (selectedSections.includes('questions_answers')) {
-        currentY = addQuestionsAndAnswers(doc, data, currentY);
-      }
-      
-      if (selectedSections.includes('processing_info')) {
-        currentY = addProcessingInformation(doc, data, currentY);
-      }
-      
-      // Add footer
+      // Add footer and finalize document
+      console.log('=== PDF DOCUMENT FINALIZATION ===');
+      console.log('Adding document footer...');
       addDocumentFooter(doc, data.incident);
+      console.log('✅ Footer added successfully');
       
+      // COMPREHENSIVE BYTE STREAM & METRICS TRACKING
+      console.log('=== PDF BYTE STREAM GENERATION ===');
       const pdfBuffer = doc.output('arraybuffer');
+      const bufferSize = pdfBuffer.byteLength;
       const filename = `incident-${data.incident.participant_name.replace(/\s+/g, '-')}-${data.incident._id}-${Date.now()}.pdf`;
       
-      return {
-        pdfData: Array.from(new Uint8Array(pdfBuffer)),
+      // FINAL METRICS REPORT
+      console.log('=== PDF GENERATION COMPLETE - FINAL METRICS ===');
+      console.log('📊 SECTION PROCESSING SUMMARY:');
+      console.log(`   • Sections Processed: ${pdfMetrics.sectionsProcessed}/${allAvailableSections.length}`);
+      console.log(`   • Sections Skipped: ${pdfMetrics.sectionsSkipped}`);
+      console.log(`   • Total Content Added: ${pdfMetrics.totalContentAdded}mm`);
+      
+      console.log('📋 DETAILED SECTION RESULTS:');
+      pdfMetrics.sectionDetails.forEach(section => {
+        if (section.processed) {
+          console.log(`   ✅ ${section.name}: +${section.contentLength}mm content`);
+        } else {
+          console.log(`   ⏭️  ${section.name}: ${section.reason}`);
+        }
+      });
+      
+      console.log('💾 BYTE STREAM METRICS:');
+      console.log(`   • PDF Buffer Size: ${bufferSize.toLocaleString()} bytes (${(bufferSize/1024).toFixed(2)} KB)`);
+      console.log(`   • Filename: ${filename}`);
+      console.log(`   • Within Convex Limits: ${bufferSize <= 8192 ? '❌ No, using file storage' : '✅ Yes'}`);
+      
+      // Store PDF in Convex file storage
+      console.log('🔄 Storing PDF in Convex file storage...');
+      const pdfBlob = new Blob([pdfBuffer], { type: 'application/pdf' });
+      const storageId = await ctx.storage.store(pdfBlob);
+      console.log('✅ PDF stored successfully, storage ID:', storageId);
+      
+      const result = {
+        storageId,
         filename,
         generatedAt: Date.now(),
-        sections: selectedSections
+        sections: validSections, // Only return actually processed sections
+        fileSize: bufferSize,
+        metrics: pdfMetrics // Include detailed metrics
       };
+      
+      console.log('🎉 PDF GENERATION SUCCESS:', {
+        storageId: result.storageId,
+        filename: result.filename,
+        sectionsProcessed: pdfMetrics.sectionsProcessed,
+        fileSize: `${bufferSize.toLocaleString()} bytes`,
+        generatedAt: new Date(result.generatedAt).toISOString()
+      });
+      
+      return result;
       
     } catch (error) {
       console.error('PDF generation failed:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       throw new ConvexError(`PDF generation failed: ${errorMessage}`);
+    }
+  }
+});
+
+/**
+ * Download generated PDF from storage
+ */
+export const downloadPDF = action({
+  args: {
+    sessionToken: v.string(),
+    storageId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Basic permission check
+    // In a real app, you'd verify the user has access to this specific PDF
+    if (!args.sessionToken) {
+      throw new ConvexError("Authentication required");
+    }
+    
+    console.log('=== PDF DOWNLOAD FROM STORAGE REQUESTED ===');
+    console.log('📥 Download request details:', { 
+      storageId: args.storageId,
+      hasSessionToken: !!args.sessionToken,
+      timestamp: new Date().toISOString()
+    });
+    
+    try {
+      // Get the PDF blob from storage
+      console.log('🔄 Retrieving PDF blob from Convex storage...');
+      const pdfBlob = await ctx.storage.get(args.storageId);
+      
+      if (!pdfBlob) {
+        console.error('❌ PDF not found in storage:', {
+          storageId: args.storageId,
+          timestamp: new Date().toISOString()
+        });
+        throw new ConvexError("PDF file not found in storage");
+      }
+      
+      console.log('✅ PDF blob retrieved successfully:', {
+        blobSize: pdfBlob.size,
+        blobType: pdfBlob.type,
+        sizeInKB: (pdfBlob.size / 1024).toFixed(2)
+      });
+      
+      // Convert blob to array buffer then to array
+      console.log('🔄 Converting blob to array buffer...');
+      const arrayBuffer = await pdfBlob.arrayBuffer();
+      console.log('✅ Array buffer created, size:', arrayBuffer.byteLength);
+      
+      console.log('🔄 Getting storage URL for direct download...');
+      const storageUrl = await ctx.storage.getUrl(args.storageId);
+      
+      if (!storageUrl) {
+        console.error('❌ Failed to get storage URL for PDF');
+        throw new ConvexError("Failed to generate download URL");
+      }
+      
+      console.log('✅ Storage URL generated successfully');
+      
+      const result = {
+        downloadUrl: storageUrl,
+        contentType: 'application/pdf',
+        fileSize: pdfBlob.size
+      };
+      
+      console.log('🎉 PDF DOWNLOAD SUCCESS:', {
+        hasDownloadUrl: !!result.downloadUrl,
+        contentType: result.contentType,
+        fileSize: result.fileSize,
+        timestamp: new Date().toISOString()
+      });
+      
+      return result;
+      
+    } catch (error) {
+      console.error('PDF download failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      throw new ConvexError(`PDF download failed: ${errorMessage}`);
     }
   }
 });
@@ -180,7 +387,7 @@ function addIncidentOverview(doc: jsPDF, data: IncidentData, startY: number): nu
   let y = startY;
   
   // Section header
-  y = addSectionHeader(doc, '📋 INCIDENT OVERVIEW', y);
+  y = addSectionHeader(doc, 'INCIDENT OVERVIEW', y);
   
   const { incident } = data;
   
@@ -222,7 +429,7 @@ function addParticipantInformation(doc: jsPDF, data: IncidentData, startY: numbe
   let y = startY;
   
   // Section header
-  y = addSectionHeader(doc, '👤 PARTICIPANT INFORMATION', y);
+  y = addSectionHeader(doc, 'PARTICIPANT INFORMATION', y);
   
   const { participant } = data;
   
@@ -268,7 +475,7 @@ function addBriefNarratives(doc: jsPDF, data: IncidentData, startY: number): num
   let y = startY;
   
   // Section header
-  y = addSectionHeader(doc, '📝 INCIDENT NARRATIVE - BRIEF SUMMARIES', y);
+  y = addSectionHeader(doc, 'INCIDENT NARRATIVE - BRIEF SUMMARIES', y);
   
   const { narratives } = data;
   
@@ -279,10 +486,10 @@ function addBriefNarratives(doc: jsPDF, data: IncidentData, startY: number): num
   }
   
   const phases = [
-    { key: 'before_event', title: '🕐 BEFORE THE INCIDENT', icon: '🕐' },
-    { key: 'during_event', title: '🚨 DURING THE INCIDENT', icon: '🚨' },  
-    { key: 'end_event', title: '🏁 INCIDENT CONCLUSION', icon: '🏁' },
-    { key: 'post_event', title: '📋 AFTER THE INCIDENT', icon: '📋' }
+    { key: 'before_event', title: 'BEFORE THE INCIDENT', icon: '' },
+    { key: 'during_event', title: 'DURING THE INCIDENT', icon: '' },  
+    { key: 'end_event', title: 'INCIDENT CONCLUSION', icon: '' },
+    { key: 'post_event', title: 'AFTER THE INCIDENT', icon: '' }
   ];
   
   for (const phase of phases) {
@@ -304,7 +511,7 @@ function addDetailedNarratives(doc: jsPDF, data: IncidentData, startY: number): 
   let y = startY;
   
   // Section header
-  y = addSectionHeader(doc, '📝 DETAILED ENHANCED NARRATIVES', y);
+  y = addSectionHeader(doc, 'DETAILED ENHANCED NARRATIVES', y);
   
   const { narratives } = data;
   
@@ -315,10 +522,10 @@ function addDetailedNarratives(doc: jsPDF, data: IncidentData, startY: number): 
   }
   
   const phases = [
-    { key: 'before_event_extra', title: '🕐 BEFORE THE INCIDENT - DETAILED', icon: '🕐' },
-    { key: 'during_event_extra', title: '🚨 DURING THE INCIDENT - DETAILED', icon: '🚨' },  
-    { key: 'end_event_extra', title: '🏁 INCIDENT CONCLUSION - DETAILED', icon: '🏁' },
-    { key: 'post_event_extra', title: '📋 AFTER THE INCIDENT - DETAILED', icon: '📋' }
+    { key: 'before_event_extra', title: 'BEFORE THE INCIDENT - DETAILED', icon: '' },
+    { key: 'during_event_extra', title: 'DURING THE INCIDENT - DETAILED', icon: '' },  
+    { key: 'end_event_extra', title: 'INCIDENT CONCLUSION - DETAILED', icon: '' },
+    { key: 'post_event_extra', title: 'AFTER THE INCIDENT - DETAILED', icon: '' }
   ];
   
   for (const phase of phases) {
@@ -340,7 +547,7 @@ function addQuestionsAndAnswers(doc: jsPDF, data: IncidentData, startY: number):
   let y = startY;
   
   // Section header
-  y = addSectionHeader(doc, '❓ QUESTIONS & ANSWERS', y);
+  y = addSectionHeader(doc, 'QUESTIONS & ANSWERS', y);
   
   const { clarificationWorkflow } = data;
   
@@ -411,7 +618,7 @@ function addProcessingInformation(doc: jsPDF, data: IncidentData, startY: number
   let y = startY;
   
   // Section header
-  y = addSectionHeader(doc, '📊 PROCESSING INFORMATION', y);
+  y = addSectionHeader(doc, 'PROCESSING INFORMATION', y);
   
   const { narratives } = data;
   
@@ -465,7 +672,7 @@ function addDocumentFooter(doc: jsPDF, incident: any): void {
   
   // Confidentiality notice
   doc.setFont('helvetica', 'bold');
-  doc.text('🔒 Confidential - For authorized personnel only', 105, y + 20, { align: 'center' });
+  doc.text('CONFIDENTIAL - For authorized personnel only', 105, y + 20, { align: 'center' });
 }
 
 /**

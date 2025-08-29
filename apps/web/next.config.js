@@ -2,6 +2,15 @@
 const nextConfig = {
   productionBrowserSourceMaps: false,
   transpilePackages: ['@repo/ui'],
+  
+  // Webpack configuration for shared package resolution
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@/shared': require('path').resolve(__dirname, '../../packages/shared'),
+    };
+    return config;
+  },
   eslint: {
     ignoreDuringBuilds: false,
   },

@@ -1,7 +1,12 @@
 # Dependencies
 node_modules/
 .pnpm-debug.log*
-1-workflow.json
+
+# Workflow data files (contain test/sample data - should not be committed)
+*workflow*.json
+*-workflow.json
+workflow-*.json
+
 # Bun
 bun.lockb
 

@@ -80,7 +80,8 @@ Following BMAD methodology, these documents form the foundation:
 
 #### 🧠 Recent Knowledge Discovery & Design (KDD) Documents
 
-- **[PDF Generation Implementation KDD](./technical-guides/pdf-generation-implementation-kdd.md)** - jsPDF vs Puppeteer for serverless environments, comprehensive incident data gathering patterns
+- **[PDF Generation Debugging KDD](./technical-guides/pdf-generation-debugging-kdd.md)** - **CRITICAL DEBUGGING GUIDE** - Multi-layer PDF generation issues, component architecture, storage limits, character encoding, and UX patterns
+- **[PDF Generation Implementation KDD](./technical-guides/pdf-generation-implementation-kdd.md)** - jsPDF vs Puppeteer for serverless environments, comprehensive incident data gathering patterns  
 - **[API Compatibility Patterns KDD](./technical-guides/api-compatibility-patterns-kdd.md)** - Runtime vs compile-time validation gaps, compatibility wrapper patterns for API mismatches
 - **[Implementation vs Testing Gap KDD](./technical-guides/implementation-vs-testing-gap-kdd.md)** - User-first validation methodology, complete workflow testing over technical implementation
 - **[Dev Error Pipeline](./technical-guides/dev-error-pipeline.md)** - Chrome DevTools to Claude Code integration
