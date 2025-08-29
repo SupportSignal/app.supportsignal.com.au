@@ -26,11 +26,27 @@ Detailed specifications for each development phase:
 - **Dependencies**: Epic 1 (database and AI services)
 - **Deliverables**: Complete frontline worker experience
 
-#### **[Epic 3: Incident Analysis Workflow](./epic-3.md)**
+#### **[Epic 3: Incident Capture Workflow](./epic-3.md)**  
+- **Scope**: 7-step capture wizard, narrative collection, AI clarification system
+- **Duration**: 3-4 weeks
+- **Dependencies**: Epic 1 (database and AI services)
+- **Deliverables**: Complete frontline worker experience
+
+#### **Epic 4: [RESERVED]**
+- **Scope**: To be defined
+- **Status**: Reserved for future epic
+
+#### **[Epic 5: Incident Analysis Workflow](./epic-5.md)**
 - **Scope**: 4-step analysis process, contributing conditions, classification system
 - **Duration**: 3-4 weeks  
-- **Dependencies**: Epic 1 (APIs), Epic 2 (incident data)
+- **Dependencies**: Epic 1 (APIs), Epic 3 (incident data)
 - **Deliverables**: Complete team leader analysis tools
+
+#### **[Epic 6: AI Prompt Management System](./epic-6.md)**
+- **Scope**: AI prompt template management and configuration
+- **Duration**: 1-2 weeks
+- **Dependencies**: Epic 1 (AI services, authentication)
+- **Deliverables**: Complete AI prompt management system
 
 ---
 
@@ -53,19 +69,22 @@ gantt
     AI Clarification      :e2-ai,   after e2-nar, 1w
     Enhancement & Review  :e2-rev,  after e2-ai, 1w
     
-    section Epic 3: Analysis  
-    Analysis Setup        :e3-setup, after e1-api, 1w
-    Contributing Analysis :e3-contrib, after e3-setup, 1w
-    Classification System :e3-class, after e3-contrib, 1w
-    Export & Completion   :e3-export, after e3-class, 1w
+    section Epic 5: Analysis  
+    Analysis Setup        :e5-setup, after e1-api, 1w
+    Contributing Analysis :e5-contrib, after e5-setup, 1w
+    Classification System :e5-class, after e5-contrib, 1w
+    Export & Completion   :e5-export, after e5-class, 1w
 ```
 
 ### Dependencies Matrix
 | Epic | Requires | Enables | Parallel Opportunities |
 |------|----------|---------|----------------------|
 | Epic 1 | Project setup | All features | None (foundation first) |
-| Epic 2 | Epic 1 complete | Analysis workflow | Epic 3 (after Epic 1) |
-| Epic 3 | Epic 1 + incident data | Full platform | Epic 2 (analysis setup only) |
+| Epic 2 | Epic 1 complete | Capture workflow | Epic 3 (after Epic 1) |
+| Epic 3 | Epic 1 + Epic 2 | Analysis workflow | Epic 5 foundation, Epic 6 |
+| Epic 4 | [RESERVED] | TBD | TBD |
+| Epic 5 | Epic 1 + Epic 3 data | Full platform | None (analysis completion) |
+| Epic 6 | Epic 1 only | AI customization | All AI features |
 
 ---
 
@@ -83,11 +102,22 @@ gantt
 - [ ] **Story 2.3**: AI-Powered Clarification System
 - [ ] **Story 2.4**: Narrative Enhancement & Completion
 
-### Epic 3: Incident Analysis Workflow  
-- [ ] **Story 3.1**: Analysis Workflow Setup
-- [ ] **Story 3.2**: Contributing Conditions Analysis
-- [ ] **Story 3.3**: Incident Classification System
-- [ ] **Story 3.4**: Analysis Completion & Export
+### Epic 3: Incident Capture Workflow  
+- [x] **Story 3.1**: Metadata & Narrative Collection ✅
+- [x] **Story 3.2**: AI-Powered Clarification System ✅
+- [x] **Story 3.3**: Narrative Enhancement & Completion ✅
+
+### Epic 4: [RESERVED]
+- **Status**: Reserved for future epic definition
+
+### Epic 5: Incident Analysis Workflow  
+- [ ] **Story 5.1**: Analysis Workflow Setup
+- [ ] **Story 5.2**: Contributing Conditions Analysis
+- [ ] **Story 5.3**: Incident Classification System
+- [ ] **Story 5.4**: Analysis Completion & Export
+
+### Epic 6: AI Prompt Management System
+- [x] **Story 6.1**: Core AI Prompt Management Foundation ✅
 
 ---
 

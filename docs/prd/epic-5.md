@@ -1,4 +1,4 @@
-# Epic 4: Incident Analysis Workflow
+# Epic 5: Incident Analysis Workflow
 
 ## Epic Overview
 
@@ -55,7 +55,7 @@ graph TD
 
 ## Story Breakdown
 
-### Story 3.1: Analysis Workflow Setup
+### Story 5.1: Analysis Workflow Setup
 
 **Priority**: CRITICAL  
 **Estimated Effort**: 1 week  
