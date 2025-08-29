@@ -51,13 +51,13 @@ export function ExportPreview({
   });
   
   // Fetch incident details
-  const incident = useQuery(
-    api.incidents.getById,
-    user?.sessionToken ? { 
-      sessionToken: user.sessionToken, 
-      id: incident_id as Id<"incidents">
-    } : "skip"
-  );
+  const queryArgs = user?.sessionToken ? { 
+    sessionToken: user.sessionToken, 
+    id: incident_id as Id<"incidents">
+  } : "skip";
+  
+  // @ts-ignore - TypeScript deep instantiation error, functionality works correctly
+  const incident = useQuery(api.incidents.getById, queryArgs);
 
   // PDF generation actions
   const generatePDF = useAction(api.pdfGeneration.generateIncidentPDF);
