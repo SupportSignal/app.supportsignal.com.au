@@ -217,9 +217,9 @@ export function ExportPreview({
       } catch (downloadError) {
         console.error('❌ CRITICAL ERROR in download phase:', downloadError);
         console.error('❌ Error type:', typeof downloadError);
-        console.error('❌ Error name:', downloadError?.name);
-        console.error('❌ Error message:', downloadError?.message);
-        console.error('❌ Error stack:', downloadError?.stack);
+        console.error('❌ Error name:', (downloadError as any)?.name);
+        console.error('❌ Error message:', (downloadError as any)?.message);
+        console.error('❌ Error stack:', (downloadError as any)?.stack);
         console.error('❌ Full error object:', downloadError);
         
         // Re-throw to trigger the main error handler
