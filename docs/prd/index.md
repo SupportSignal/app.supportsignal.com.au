@@ -118,6 +118,7 @@ gantt
 
 ### Epic 6: AI Prompt Management System
 - [x] **Story 6.1**: Core AI Prompt Management Foundation ✅
+- [ ] **Story 6.2**: Advanced Prompt Management & Analytics
 
 ---
 
