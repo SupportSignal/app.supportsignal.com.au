@@ -41,12 +41,13 @@ export function ExportPreview({
   const { user } = useAuth();
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   // Initialize PDF sections using centralized configuration (all sections enabled by default)
-  const [pdfSections, setPdfSections] = useState(() => {
+  const [pdfSections, setPdfSections] = useState<Record<PDFSectionKey, boolean>>(() => {
     const defaultSections = getDefaultSections();
-    return defaultSections.reduce((acc, section) => {
-      acc[section] = true;
-      return acc;
-    }, {} as Record<PDFSectionKey, boolean>);
+    const sections = {} as Record<PDFSectionKey, boolean>;
+    defaultSections.forEach(section => {
+      sections[section] = true;
+    });
+    return sections;
   });
   
   // Fetch incident details
