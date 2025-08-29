@@ -37,12 +37,6 @@ export function ExportPreview({
   incident_id, 
   enhancedNarrative 
 }: ExportPreviewProps) {
-  console.log('🚨 COMPONENT LOADED 🚨');
-  console.log('🎯 ExportPreview component rendering with props:', {
-    incident_id,
-    hasEnhancedNarrative: !!enhancedNarrative,
-    enhancedNarrativeId: enhancedNarrative?._id
-  });
   
   const { user } = useAuth();
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
@@ -60,7 +54,7 @@ export function ExportPreview({
     api.incidents.getById,
     user?.sessionToken ? { 
       sessionToken: user.sessionToken, 
-      id: incident_id 
+      id: incident_id as Id<"incidents">
     } : "skip"
   );
 
@@ -68,12 +62,6 @@ export function ExportPreview({
   const generatePDF = useAction(api.pdfGeneration.generateIncidentPDF);
   const downloadPDF = useAction(api.pdfGeneration.downloadPDF);
   
-  // Debug: Verify actions are defined
-  console.log('🔍 Actions verification:', {
-    generatePDFDefined: !!generatePDF,
-    downloadPDFDefined: !!downloadPDF,
-    apiPdfGenerationKeys: Object.keys(api.pdfGeneration),
-  });
 
   if (!incident) {
     return (
@@ -87,13 +75,6 @@ export function ExportPreview({
     ? enhancedNarrative.user_edits 
     : enhancedNarrative.enhanced_content;
 
-  // DEBUG: Check what finalNarrative contains
-  console.log('🔍 finalNarrative debug:', {
-    isString: typeof finalNarrative === 'string',
-    type: typeof finalNarrative,
-    value: finalNarrative,
-    keys: typeof finalNarrative === 'object' ? Object.keys(finalNarrative || {}) : 'N/A'
-  });
 
   const formatDateTime = (dateTimeString: string) => {
     try {
@@ -106,7 +87,6 @@ export function ExportPreview({
 
   // Handle PDF section toggles
   const handleSectionToggle = (section: keyof typeof pdfSections) => {
-    console.log('Toggle PDF section:', section, 'from', pdfSections[section], 'to', !pdfSections[section]);
     setPdfSections(prev => ({
       ...prev,
       [section]: !prev[section]
@@ -120,15 +100,12 @@ export function ExportPreview({
       return;
     }
 
-    console.log('Starting PDF generation with sections:', pdfSections);
     setIsGeneratingPDF(true);
 
     try {
       const selectedSections = Object.entries(pdfSections)
         .filter(([_, enabled]) => enabled)
         .map(([section, _]) => section);
-
-      console.log('Selected PDF sections:', selectedSections);
 
       // Step 1: Generate PDF and store in Convex storage
       const generateResult = await generatePDF({
@@ -137,42 +114,10 @@ export function ExportPreview({
         sections: selectedSections
       });
 
-      console.log('PDF generation completed, result:', {
-        filename: generateResult.filename,
-        storageId: generateResult.storageId,
-        fileSize: generateResult.fileSize,
-        generatedAt: generateResult.generatedAt
-      });
-
-      try {
-        console.log('✅ PDF generation phase complete, preparing download phase...');
-        console.log('🔍 generateResult object type:', typeof generateResult);
-        console.log('🔍 generateResult keys:', Object.keys(generateResult));
-        console.log('🔍 storageId validation:', {
-          exists: !!generateResult.storageId,
-          type: typeof generateResult.storageId,
-          value: generateResult.storageId,
-          length: generateResult.storageId?.length
-        });
-
-        // Step 2: Download PDF from storage
-        console.log('🔄 Starting PDF download from storage...', {
-          storageId: generateResult.storageId,
-          hasSessionToken: !!user.sessionToken,
-          filename: generateResult.filename
-        });
-
-        console.log('🔄 About to call downloadPDF action...');
-        const downloadResult = await downloadPDF({
-          sessionToken: user.sessionToken,
-          storageId: generateResult.storageId
-        });
-        console.log('✅ downloadPDF action completed successfully!');
-
-      console.log('✅ PDF download from storage completed:', {
-        hasDownloadUrl: !!downloadResult.downloadUrl,
-        contentType: downloadResult.contentType,
-        fileSize: downloadResult.fileSize
+      // Step 2: Download PDF from storage
+      const downloadResult = await downloadPDF({
+        sessionToken: user.sessionToken,
+        storageId: generateResult.storageId
       });
 
       // Validate download URL
@@ -181,20 +126,14 @@ export function ExportPreview({
       }
 
       // Fetch the PDF from the URL and create a proper blob download
-      console.log('🔗 Fetching PDF from Convex storage URL for proper download...');
-      
       const response = await fetch(downloadResult.downloadUrl);
       if (!response.ok) {
         throw new Error(`Failed to fetch PDF: ${response.statusText}`);
       }
       
       const pdfBlob = await response.blob();
-      console.log('✅ PDF blob fetched:', {
-        size: pdfBlob.size,
-        type: pdfBlob.type
-      });
       
-      // Create blob URL for download (this stays in same origin)
+      // Create blob URL for download
       const blobUrl = URL.createObjectURL(pdfBlob);
       
       const link = document.createElement('a');
@@ -202,29 +141,13 @@ export function ExportPreview({
       link.download = generateResult.filename;
       document.body.appendChild(link);
       
-      console.log('🖱️ Triggering file download...');
       link.click();
       document.body.removeChild(link);
       
       // Clean up blob URL
       URL.revokeObjectURL(blobUrl);
-      
-        console.log('🎉 PDF download process completed successfully');
 
-        toast.success("PDF downloaded successfully!");
-        console.log('PDF download completed successfully');
-
-      } catch (downloadError) {
-        console.error('❌ CRITICAL ERROR in download phase:', downloadError);
-        console.error('❌ Error type:', typeof downloadError);
-        console.error('❌ Error name:', (downloadError as any)?.name);
-        console.error('❌ Error message:', (downloadError as any)?.message);
-        console.error('❌ Error stack:', (downloadError as any)?.stack);
-        console.error('❌ Full error object:', downloadError);
-        
-        // Re-throw to trigger the main error handler
-        throw new Error(`Download phase failed: ${downloadError instanceof Error ? downloadError.message : 'Unknown error'}`);
-      }
+      toast.success("PDF downloaded successfully!");
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
