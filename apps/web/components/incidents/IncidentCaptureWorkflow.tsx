@@ -408,6 +408,7 @@ export function IncidentCaptureWorkflow() {
           incident_id={incidentId}
           onComplete={handleConsolidatedReportComplete}
           onPrevious={() => setCurrentStep(6)} // Go back to enhanced_review step
+          onNavigateToStep={handleStepNavigate}
         />
       ) : null,
       isComplete: completedSteps.has('consolidated_report'),

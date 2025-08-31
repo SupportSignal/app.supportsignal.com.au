@@ -32,12 +32,14 @@ interface ConsolidatedReportStepProps {
   incident_id: Id<"incidents">;
   onComplete: (data: { success: boolean; handoff_id?: string }) => void;
   onPrevious: () => void;
+  onNavigateToStep?: (step: number) => void;
 }
 
 export function ConsolidatedReportStep({ 
   incident_id, 
   onComplete, 
-  onPrevious 
+  onPrevious,
+  onNavigateToStep
 }: ConsolidatedReportStepProps) {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("summary");
@@ -287,6 +289,7 @@ export function ConsolidatedReportStep({
                 incident_id={incident_id}
                 incident={incident}
                 enhancedNarrative={enhancedNarrative}
+                onNavigateToStep={onNavigateToStep}
               />
             </CardContent>
           </Card>
