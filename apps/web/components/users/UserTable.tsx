@@ -31,7 +31,6 @@ interface User {
   name: string;
   email: string;
   role: 'system_admin' | 'demo_admin' | 'company_admin' | 'team_lead' | 'frontline_worker';
-  has_llm_access?: boolean;
   company_id?: string;
   companyName?: string;
   protection?: {
@@ -241,7 +240,6 @@ export function UserTable({
                   <TableHead>User</TableHead>
                   <TableHead>Role</TableHead>
                   {showCompanyColumn && <TableHead>Company</TableHead>}
-                  <TableHead>LLM Access</TableHead>
                   <TableHead>Created</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -285,18 +283,6 @@ export function UserTable({
                         </div>
                       </TableCell>
                     )}
-                    
-                    <TableCell>
-                      {user.has_llm_access ? (
-                        <Badge className="bg-green-100 text-green-800">
-                          Enabled
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline">
-                          Disabled
-                        </Badge>
-                      )}
-                    </TableCell>
                     
                     <TableCell>
                       <div className="text-sm">

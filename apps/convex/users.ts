@@ -15,16 +15,23 @@ export const getCurrent = query({
   },
   handler: async (ctx: QueryCtx, args) => {
     try {
-      // Use permission system to validate session and get user
-      const { user, correlationId } = await requirePermission(
-        ctx,
-        args.sessionToken,
-        PERMISSIONS.CREATE_INCIDENT // Basic permission all users have
-      );
+      // Direct session validation without permission checks (used for auth itself)
+      const session = await ctx.db
+        .query('sessions')
+        .withIndex('by_session_token', q => q.eq('sessionToken', args.sessionToken))
+        .first();
+
+      if (!session || session.expires < Date.now()) {
+        return null;
+      }
+
+      const user = await ctx.db.get(session.userId);
+      if (!user) {
+        return null;
+      }
 
       console.log('👤 USER PROFILE ACCESSED', {
         userId: user._id,
-        correlationId,
         timestamp: new Date().toISOString(),
       });
 
@@ -34,7 +41,6 @@ export const getCurrent = query({
         email: user.email,
         profile_image_url: user.profile_image_url,
         role: user.role,
-        has_llm_access: user.has_llm_access,
         company_id: user.company_id,
         _creationTime: user._creationTime,
       };
@@ -134,7 +140,6 @@ export const createUser = mutation({
       v.literal("team_lead"),
       v.literal("frontline_worker")
     ),
-    has_llm_access: v.optional(v.boolean()),
   },
   handler: async (ctx: MutationCtx, args) => {
     // Check permissions
@@ -181,7 +186,6 @@ export const createUser = mutation({
       email: args.email,
       password: tempPassword, // In production, this should be hashed
       role: args.role,
-      has_llm_access: args.has_llm_access || false,
       company_id: companyId,
     });
 
@@ -214,7 +218,6 @@ export const updateUser = mutation({
     userId: v.id('users'),
     name: v.optional(v.string()),
     email: v.optional(v.string()),
-    has_llm_access: v.optional(v.boolean()),
   },
   handler: async (ctx: MutationCtx, args) => {
     // Check permissions
@@ -256,7 +259,6 @@ export const updateUser = mutation({
         updates.email = args.email;
       }
     }
-    if (args.has_llm_access !== undefined) updates.has_llm_access = args.has_llm_access;
 
     // Apply updates
     await ctx.db.patch(args.userId, updates);

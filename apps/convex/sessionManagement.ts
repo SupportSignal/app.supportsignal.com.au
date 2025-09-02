@@ -227,7 +227,6 @@ export const validateSession = query({
           email: user.email,
           role: user.role,
           company_id: user.company_id,
-          has_llm_access: user.has_llm_access,
         },
         session: {
           expires: session.expires,

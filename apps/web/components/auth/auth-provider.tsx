@@ -196,7 +196,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             role: result.user.role,
             profile_image_url: (result.user as { profile_image_url?: string })
               .profile_image_url,
-            has_llm_access: (result.user as { has_llm_access?: boolean }).has_llm_access,
+            
             sessionToken: result.sessionToken,
             _creationTime: Date.now(), // Login users don't have creation time from backend
           }
@@ -232,7 +232,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               profile_image_url: (
                 loginResult.user as { profile_image_url?: string }
               ).profile_image_url,
-              has_llm_access: (loginResult.user as { has_llm_access?: boolean }).has_llm_access,
               sessionToken: loginResult.sessionToken,
               _creationTime: Date.now(), // Login users don't have creation time from backend
             }

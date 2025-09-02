@@ -33,7 +33,6 @@ interface User {
   name: string;
   email: string;
   role: 'system_admin' | 'demo_admin' | 'company_admin' | 'team_lead' | 'frontline_worker';
-  has_llm_access?: boolean;
   company_id?: string;
   protection?: {
     isProtected: boolean;
@@ -101,7 +100,6 @@ export default function UsersPage() {
         name: userData.name,
         email: userData.email,
         role: userData.role,
-        has_llm_access: userData.has_llm_access,
       });
       
       setShowCreateForm(false);
@@ -128,7 +126,6 @@ export default function UsersPage() {
         userId: editingUser._id,
         name: userData.name,
         email: userData.email,
-        has_llm_access: userData.has_llm_access,
       });
 
       // Update role if changed

@@ -34,7 +34,6 @@ export default defineSchema({
       v.literal("team_lead"),
       v.literal("frontline_worker")
     ),
-    has_llm_access: v.optional(v.boolean()), // LLM access control flag
     // Multi-tenant company association
     company_id: v.optional(v.id("companies")), // Which company they belong to
     // Timestamps
@@ -138,7 +137,6 @@ export default defineSchema({
     timestamp: v.number(),
     model_used: v.optional(v.string()),
     tokens_used: v.optional(v.number()),
-    has_llm_access: v.boolean(), // Track if message used LLM or fallback
   })
     .index('by_session_id', ['sessionId']),
 
@@ -253,7 +251,12 @@ export default defineSchema({
     .index("by_status", ["overall_status"])
     .index("by_created", ["created_at"])
     .index("by_handoff_status", ["handoff_status"])
-    .index("by_enhanced_narrative", ["enhanced_narrative_id"]),
+    .index("by_enhanced_narrative", ["enhanced_narrative_id"])
+    // Story 4.1: Multi-tenant incident listing indices
+    .index("by_company_status", ["company_id", "overall_status"])
+    .index("by_company_created", ["company_id", "created_at"])
+    .index("by_company_user", ["company_id", "created_by"])
+    .index("by_company_updated", ["company_id", "updated_at"]),
 
   // Multi-phase incident narratives
   incident_narratives: defineTable({

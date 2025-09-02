@@ -363,7 +363,6 @@ export const getUserStats = query({
 
     // Calculate other stats
     const totalUsers = allUsers.length;
-    const usersWithLLMAccess = allUsers.filter(user => user.has_llm_access).length;
     const usersWithoutCompany = allUsers.filter(user => !user.company_id).length;
 
     return {
@@ -371,7 +370,6 @@ export const getUserStats = query({
       totalCompanies: allCompanies.length,
       roleDistribution: roleStats,
       companyDistribution: companyStats,
-      usersWithLLMAccess,
       usersWithoutCompany,
       correlationId,
     };

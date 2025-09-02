@@ -30,7 +30,7 @@ export const PERMISSIONS = {
   // Incident Management
   CREATE_INCIDENT: 'create_incident',
   EDIT_OWN_INCIDENT_CAPTURE: 'edit_own_incident_capture',
-  VIEW_TEAM_INCIDENTS: 'view_team_incidents',
+  VIEW_MY_INCIDENTS: 'view_my_incidents',
   VIEW_ALL_COMPANY_INCIDENTS: 'view_all_company_incidents',
   PERFORM_ANALYSIS: 'perform_analysis',
   
@@ -43,9 +43,6 @@ export const PERMISSIONS = {
   SYSTEM_CONFIGURATION: 'system_configuration',
   COMPANY_CONFIGURATION: 'company_configuration',
   MANAGE_COMPANY: 'manage_company',
-  
-  // LLM Access Control
-  ACCESS_LLM_FEATURES: 'access_llm_features',
   
   // Audit and Security
   VIEW_AUDIT_LOGS: 'view_audit_logs',
@@ -80,10 +77,10 @@ export const PERMISSION_REGISTRY: Record<string, PermissionDefinition> = {
     category: 'Incident Management',
     testable: true,
   },
-  [PERMISSIONS.VIEW_TEAM_INCIDENTS]: {
-    key: PERMISSIONS.VIEW_TEAM_INCIDENTS,
-    label: 'View Team Incidents',
-    description: 'View incidents from your team',
+  [PERMISSIONS.VIEW_MY_INCIDENTS]: {
+    key: PERMISSIONS.VIEW_MY_INCIDENTS,
+    label: 'View My Incidents',
+    description: 'View incidents I created or am involved in',
     category: 'Incident Management',
     testable: true,
   },
@@ -143,13 +140,6 @@ export const PERMISSION_REGISTRY: Record<string, PermissionDefinition> = {
     category: 'Configuration',
     testable: true,
   },
-  [PERMISSIONS.ACCESS_LLM_FEATURES]: {
-    key: PERMISSIONS.ACCESS_LLM_FEATURES,
-    label: 'Access LLM Features',
-    description: 'Use AI-powered features',
-    category: 'AI & Analytics',
-    testable: true,
-  },
   [PERMISSIONS.VIEW_AUDIT_LOGS]: {
     key: PERMISSIONS.VIEW_AUDIT_LOGS,
     label: 'View Audit Logs',
@@ -188,7 +178,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   [ROLES.SYSTEM_ADMIN]: [
     PERMISSIONS.CREATE_INCIDENT,
     PERMISSIONS.EDIT_OWN_INCIDENT_CAPTURE,
-    PERMISSIONS.VIEW_TEAM_INCIDENTS,
+    PERMISSIONS.VIEW_MY_INCIDENTS,
     PERMISSIONS.VIEW_ALL_COMPANY_INCIDENTS,
     PERMISSIONS.PERFORM_ANALYSIS,
     PERMISSIONS.MANAGE_USERS,
@@ -197,7 +187,6 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     PERMISSIONS.SYSTEM_CONFIGURATION,
     PERMISSIONS.COMPANY_CONFIGURATION,
     PERMISSIONS.MANAGE_COMPANY,
-    PERMISSIONS.ACCESS_LLM_FEATURES,
     PERMISSIONS.VIEW_AUDIT_LOGS,
     PERMISSIONS.VIEW_SECURITY_LOGS,
     PERMISSIONS.IMPERSONATE_USERS,
@@ -206,7 +195,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   [ROLES.DEMO_ADMIN]: [
     PERMISSIONS.CREATE_INCIDENT,
     PERMISSIONS.EDIT_OWN_INCIDENT_CAPTURE,
-    PERMISSIONS.VIEW_TEAM_INCIDENTS,
+    PERMISSIONS.VIEW_MY_INCIDENTS,
     PERMISSIONS.VIEW_ALL_COMPANY_INCIDENTS,
     PERMISSIONS.PERFORM_ANALYSIS,
     PERMISSIONS.MANAGE_USERS,
@@ -214,14 +203,13 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     PERMISSIONS.VIEW_USER_PROFILES,
     PERMISSIONS.COMPANY_CONFIGURATION,
     PERMISSIONS.MANAGE_COMPANY,
-    PERMISSIONS.ACCESS_LLM_FEATURES,
     PERMISSIONS.VIEW_AUDIT_LOGS,
     PERMISSIONS.SAMPLE_DATA,
   ],
   [ROLES.COMPANY_ADMIN]: [
     PERMISSIONS.CREATE_INCIDENT,
     PERMISSIONS.EDIT_OWN_INCIDENT_CAPTURE,
-    PERMISSIONS.VIEW_TEAM_INCIDENTS,
+    PERMISSIONS.VIEW_MY_INCIDENTS,
     PERMISSIONS.VIEW_ALL_COMPANY_INCIDENTS,
     PERMISSIONS.PERFORM_ANALYSIS,
     PERMISSIONS.MANAGE_USERS,
@@ -229,19 +217,19 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     PERMISSIONS.VIEW_USER_PROFILES,
     PERMISSIONS.COMPANY_CONFIGURATION,
     PERMISSIONS.MANAGE_COMPANY,
-    PERMISSIONS.ACCESS_LLM_FEATURES,
     PERMISSIONS.VIEW_AUDIT_LOGS,
   ],
   [ROLES.TEAM_LEAD]: [
     PERMISSIONS.CREATE_INCIDENT,
-    PERMISSIONS.VIEW_TEAM_INCIDENTS,
+    PERMISSIONS.VIEW_MY_INCIDENTS,
+    PERMISSIONS.VIEW_ALL_COMPANY_INCIDENTS,
     PERMISSIONS.PERFORM_ANALYSIS,
     PERMISSIONS.VIEW_USER_PROFILES,
-    PERMISSIONS.ACCESS_LLM_FEATURES,
   ],
   [ROLES.FRONTLINE_WORKER]: [
     PERMISSIONS.CREATE_INCIDENT,
     PERMISSIONS.EDIT_OWN_INCIDENT_CAPTURE,
+    PERMISSIONS.VIEW_MY_INCIDENTS,
   ],
 };
 
@@ -325,9 +313,38 @@ export const getUserPermissions = query({
     companyId: v.optional(v.id('companies')),
   },
   handler: async (ctx: QueryCtx, args) => {
+    const correlationId = generateCorrelationId();
+    
+    console.log('🔍 CONVEX - getUserPermissions START', {
+      correlationId,
+      hasSessionToken: !!args.sessionToken,
+      sessionTokenLength: args.sessionToken?.length || 0,
+      companyId: args.companyId,
+      timestamp: new Date().toISOString()
+    });
+
     try {
       const user = await getUserFromSession(ctx, args.sessionToken);
+      
+      console.log('🔍 CONVEX - getUserPermissions USER LOOKUP', {
+        correlationId,
+        userFound: !!user,
+        user: user ? {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          company_id: user.company_id
+        } : null,
+        timestamp: new Date().toISOString()
+      });
+
       if (!user) {
+        console.log('🔍 CONVEX - getUserPermissions FAILED - NO USER', {
+          correlationId,
+          reason: 'Invalid or expired session',
+          timestamp: new Date().toISOString()
+        });
         return {
           permissions: [],
           role: null,
@@ -338,13 +355,38 @@ export const getUserPermissions = query({
       // Get base permissions for user role
       const rolePermissions = ROLE_PERMISSIONS[user.role as Role] || [];
       
+      console.log('🔍 CONVEX - getUserPermissions ROLE PERMISSIONS', {
+        correlationId,
+        userRole: user.role,
+        rolePermissions,
+        rolePermissionCount: rolePermissions.length,
+        timestamp: new Date().toISOString()
+      });
+      
       // Add inherited permissions from role hierarchy
       const inheritedPermissions = getInheritedPermissions(user.role as Role);
       const allPermissions = [...new Set([...rolePermissions, ...inheritedPermissions])];
 
+      console.log('🔍 CONVEX - getUserPermissions INHERITED PERMISSIONS', {
+        correlationId,
+        inheritedPermissions,
+        allPermissions,
+        totalPermissionCount: allPermissions.length,
+        timestamp: new Date().toISOString()
+      });
+
       // Filter permissions based on context
       const contextualPermissions = await filterPermissionsByContext(ctx, user, allPermissions, {
         companyId: args.companyId,
+      });
+
+      console.log('🔍 CONVEX - getUserPermissions FINAL RESULT', {
+        correlationId,
+        contextualPermissions,
+        finalPermissionCount: contextualPermissions.length,
+        userRole: user.role,
+        userCompanyId: user.company_id,
+        timestamp: new Date().toISOString()
       });
 
       return {
@@ -597,7 +639,7 @@ function getCompanySpecificPermissions(role: Role): Permission[] {
     case ROLES.TEAM_LEAD:
       return [PERMISSIONS.VIEW_ALL_COMPANY_INCIDENTS];
     case ROLES.FRONTLINE_WORKER:
-      return [PERMISSIONS.VIEW_TEAM_INCIDENTS];
+      return [PERMISSIONS.VIEW_MY_INCIDENTS];
     default:
       return [];
   }

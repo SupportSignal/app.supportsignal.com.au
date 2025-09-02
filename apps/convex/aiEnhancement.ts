@@ -350,12 +350,28 @@ export const getEnhancedNarrative = query({
     incident_id: v.id("incidents"),
   },
   handler: async (ctx, args) => {
-    // Check permissions
+    // Get user first to obtain company context
     const { user } = await requirePermission(
       ctx,
       args.sessionToken,
-      PERMISSIONS.VIEW_ALL_COMPANY_INCIDENTS
+      PERMISSIONS.CREATE_INCIDENT // Basic permission to get user info
     );
+
+    // Get the incident to check if user can access it (either owns it or has company-wide access)
+    const incident = await ctx.db.get(args.incident_id);
+    if (!incident) {
+      throw new ConvexError('Incident not found');
+    }
+
+    // Check if user can access this incident (owns it OR has company-wide permissions)
+    const canAccessIncident = 
+      incident.created_by === user._id || // User owns the incident
+      (user.company_id === incident.company_id && // Same company AND
+       (user.role === 'team_lead' || user.role === 'company_admin' || user.role === 'system_admin')); // Has elevated role
+
+    if (!canAccessIncident) {
+      throw new ConvexError('Insufficient permissions to enhance this incident');
+    }
     
     // Get narratives data which contains enhanced content in *_extra fields
     const narratives = await ctx.db

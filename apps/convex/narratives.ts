@@ -3,6 +3,8 @@ import { query, mutation, action } from "./_generated/server";
 import { v } from "convex/values";
 import { ConvexError } from "convex/values";
 import { requirePermission, PERMISSIONS } from './permissions';
+import { getUserFromSession } from './lib/sessionResolver';
+import { generateCorrelationId } from './aiService';
 import { Id } from './_generated/dataModel';
 import { internal } from './_generated/api';
 
@@ -279,15 +281,18 @@ export const applyEnhancements = mutation({
       throw new ConvexError("Associated incident not found");
     }
 
-    // Check permissions 
-    const { user, correlationId } = await requirePermission(
-      ctx,
-      args.sessionToken,
-      PERMISSIONS.ACCESS_LLM_FEATURES, // Enhanced narratives require LLM access
-      {
-        companyId: incident.company_id,
-      }
-    );
+    // Authenticate user and validate incident access
+    const user = await getUserFromSession(ctx, args.sessionToken);
+    if (!user) {
+      throw new ConvexError("Authentication required");
+    }
+
+    // Validate user is in same company as incident
+    if (user.company_id !== incident.company_id) {
+      throw new ConvexError("Access denied: incident belongs to different company");
+    }
+
+    const correlationId = generateCorrelationId();
 
     await ctx.db.patch(args.narrative_id, args.enhancements);
 

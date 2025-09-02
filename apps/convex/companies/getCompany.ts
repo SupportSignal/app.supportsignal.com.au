@@ -50,7 +50,7 @@ export const getCurrentUserCompany = query({
             name: u.name,
             email: u.email,
             role: u.role,
-            has_llm_access: u.has_llm_access,
+
             profile_image_url: u.profile_image_url,
           }));
         }

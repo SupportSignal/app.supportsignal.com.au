@@ -26,7 +26,6 @@ interface SearchFilters {
   searchTerm: string;
   roleFilter: string;
   companyFilter?: string;
-  llmAccessFilter: string;
 }
 
 interface Company {
@@ -53,11 +52,6 @@ const ROLE_OPTIONS = [
   { value: 'frontline_worker', label: 'Frontline Worker' }
 ];
 
-const LLM_ACCESS_OPTIONS = [
-  { value: 'all', label: 'All Users' },
-  { value: 'enabled', label: 'LLM Enabled' },
-  { value: 'disabled', label: 'LLM Disabled' }
-];
 
 /**
  * Advanced search and filter component for user management
@@ -122,8 +116,7 @@ export function UserSearchFilter({
     onFiltersChange({
       searchTerm: '',
       roleFilter: 'all',
-      companyFilter: showCompanyFilter ? 'all' : undefined,
-      llmAccessFilter: 'all'
+      companyFilter: showCompanyFilter ? 'all' : undefined
     });
   };
 
@@ -132,7 +125,6 @@ export function UserSearchFilter({
     if (filters.searchTerm) count++;
     if (filters.roleFilter !== 'all') count++;
     if (filters.companyFilter && filters.companyFilter !== 'all') count++;
-    if (filters.llmAccessFilter !== 'all') count++;
     return count;
   };
 
@@ -232,28 +224,6 @@ export function UserSearchFilter({
                   </div>
                 )}
 
-                {/* LLM Access Filter */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    LLM Access
-                  </label>
-                  <Select
-                    value={filters.llmAccessFilter}
-                    onValueChange={(value) => handleFilterChange('llmAccessFilter', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select LLM access..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LLM_ACCESS_OPTIONS.map(option => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
 
               {/* Filter Actions */}
@@ -336,19 +306,6 @@ export function UserSearchFilter({
                 </Badge>
               )}
 
-              {filters.llmAccessFilter !== 'all' && (
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  LLM: {LLM_ACCESS_OPTIONS.find(o => o.value === filters.llmAccessFilter)?.label}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleFilterChange('llmAccessFilter', 'all')}
-                    className="h-3 w-3 p-0 ml-1 hover:bg-transparent"
-                  >
-                    <X className="h-2 w-2" />
-                  </Button>
-                </Badge>
-              )}
             </div>
           )}
         </div>

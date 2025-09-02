@@ -77,7 +77,6 @@ export const seedInitialData = mutation({
           password: "", // Will be set separately via auth system
           role: "system_admin",
           company_id: supportSignalCompanyId,
-          has_llm_access: true, // System admin has full access
         });
         console.log(`✅ Created David user with ID: ${davidUserId}`);
       }
@@ -172,7 +171,6 @@ export const quickSeed = mutation({
       password: "",
       role: "system_admin",
       company_id: supportSignalCompanyId,
-      has_llm_access: true,
     });
 
     console.log("✅ Quick seed completed");

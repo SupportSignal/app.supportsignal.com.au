@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { useAction, useMutation } from 'convex/react';
+import { useAction, useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useAuth } from '@/components/auth/auth-provider';
 import { IncidentMetadataForm } from './IncidentMetadataForm';
@@ -14,7 +14,7 @@ import { WorkflowWizard, WizardStep } from '@/components/user/workflow-wizard';
 import { Card, CardContent } from '@starter/ui/card';
 import { Button } from '@starter/ui/button';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 import { Id } from '@/convex/_generated/dataModel';
 import { ClarificationPhase } from '@/types/clarification';
@@ -42,8 +42,86 @@ import { WorkflowImportResult } from '@/types/workflowData';
 export function IncidentCaptureWorkflow() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [currentStep, setCurrentStep] = useState(0); // 0-based indexing for WorkflowWizard
   const [incidentId, setIncidentId] = useState<Id<"incidents"> | null>(null);
+  const [hasSetInitialStep, setHasSetInitialStep] = useState(false);
+
+  // Check for existing incident ID in URL parameters (for "Continue" functionality)
+  useEffect(() => {
+    const existingIncidentId = searchParams.get('id');
+    if (existingIncidentId) {
+      console.log('🔍 CONTINUE: Found existing incident ID in URL:', existingIncidentId);
+      setIncidentId(existingIncidentId as Id<"incidents">);
+    }
+  }, [searchParams]);
+
+  // Load existing incident data if continuing an incident
+  const existingIncident = useQuery(
+    api.incidents.getIncidentById, 
+    incidentId && user?.sessionToken 
+      ? { 
+          sessionToken: user.sessionToken, 
+          incident_id: incidentId 
+        } 
+      : "skip"
+  );
+
+  // Set initial step and completion state when loading existing incident
+  useEffect(() => {
+    if (existingIncident && !hasSetInitialStep && incidentId) {
+      console.log('🔍 CONTINUE: Loading existing incident data:', existingIncident);
+      
+      // Determine which step to start from based on incident completion status
+      const completedStepSet = new Set<string>();
+      let startingStep = 0;
+      
+      // Check what's already completed based on incident data
+      if (existingIncident.participant_name && existingIncident.reporter_name) {
+        completedStepSet.add('metadata');
+        startingStep = Math.max(startingStep, 1);
+      }
+      
+      if (existingIncident.before_event || existingIncident.during_event || 
+          existingIncident.end_event || existingIncident.post_event) {
+        completedStepSet.add('narrative');
+        startingStep = Math.max(startingStep, 2);
+      }
+      
+      // Check clarification phases based on capture_status
+      if (existingIncident.capture_status === 'completed' || 
+          existingIncident.overall_status === 'analysis_pending' ||
+          existingIncident.overall_status === 'completed') {
+        // All clarification phases are complete
+        completedStepSet.add('before_event');
+        completedStepSet.add('during_event');
+        completedStepSet.add('end_event');
+        completedStepSet.add('post_event');
+        
+        if (existingIncident.overall_status === 'analysis_pending' || 
+            existingIncident.overall_status === 'completed') {
+          completedStepSet.add('enhanced_review');
+          startingStep = Math.max(startingStep, 7); // Consolidated report step
+        } else {
+          startingStep = Math.max(startingStep, 6); // Enhanced review step
+        }
+      } else if (existingIncident.capture_status === 'narrative_complete') {
+        // Start from first clarification phase
+        startingStep = Math.max(startingStep, 2);
+      }
+      
+      console.log('🔍 CONTINUE: Setting initial state:', {
+        completedSteps: Array.from(completedStepSet),
+        startingStep: startingStep,
+        capture_status: existingIncident.capture_status,
+        overall_status: existingIncident.overall_status
+      });
+      
+      setCompletedSteps(completedStepSet);
+      setCurrentStep(startingStep);
+      setHasSetInitialStep(true);
+    }
+  }, [existingIncident, hasSetInitialStep, incidentId]);
   
   // Convex action for batch question generation
   const generateAllQuestions = useAction(api.aiClarification.generateAllClarificationQuestions);

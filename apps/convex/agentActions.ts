@@ -23,8 +23,6 @@ export const generateResponse = action({
     response: string;
     model: string;
     tokensUsed: number;
-    has_llm_access: boolean;
-    fallbackMessage: string | null;
   }> => {
     // Verify authentication using API functions for actions
     const session = await ctx.runQuery(api.auth.findSessionByToken, { sessionToken: args.sessionToken }) as any;
@@ -39,51 +37,6 @@ export const generateResponse = action({
     const correlationId = crypto.randomUUID();
     
     try {
-      // Check user's LLM access using authenticated user context
-      const accessCheck: {
-        has_llm_access: boolean;
-        fallbackMessage: string | null;
-      } = await ctx.runQuery(api.auth.checkUserLLMAccess, {
-        userId: user._id,
-      });
-
-      if (!accessCheck.has_llm_access) {
-        // Log access denial
-        await ctx.runMutation(api.auth.logAccessEvent, {
-          userId: user._id,
-          eventType: 'access_denied',
-          details: 'LLM access requested but user lacks permission',
-        });
-
-        // Return fallback response
-        const fallbackResponse = generateFallbackResponse(args.message);
-        
-        // Store message in database
-        await ctx.runMutation(internal.agent.createChatMessage, {
-          sessionId: args.sessionId,
-          userId: user._id,
-          role: 'assistant',
-          content: fallbackResponse,
-          correlationId,
-          has_llm_access: false,
-        });
-
-        return {
-          response: fallbackResponse,
-          model: 'fallback',
-          tokensUsed: 0,
-          has_llm_access: false,
-          fallbackMessage: accessCheck.fallbackMessage,
-        };
-      }
-
-      // User has LLM access - proceed with AI generation
-      await ctx.runMutation(api.auth.logAccessEvent, {
-        userId: user._id,
-        eventType: 'access_granted',
-        details: 'LLM access granted for message generation',
-      });
-
       // Load configuration
       const config = getConfig();
       
@@ -111,15 +64,12 @@ export const generateResponse = action({
         correlationId,
         modelUsed: response.model,
         tokensUsed: response.tokensUsed,
-        has_llm_access: true,
       });
 
       return {
         response: response.content,
         model: response.model,
         tokensUsed: response.tokensUsed,
-        has_llm_access: true,
-        fallbackMessage: null,
       };
     } catch (error) {
       // eslint-disable-next-line no-console
@@ -134,15 +84,12 @@ export const generateResponse = action({
         role: 'assistant',
         content: fallbackResponse,
         correlationId,
-        has_llm_access: false,
       });
 
       return {
         response: fallbackResponse,
         model: 'error_fallback',
         tokensUsed: 0,
-        has_llm_access: false,
-        fallbackMessage: 'An error occurred while processing your request.',
       };
     }
   },
@@ -237,25 +184,6 @@ async function callOpenRouterAPI(
   throw new Error('All models and retries exhausted');
 }
 
-/**
- * Generate fallback response for users without LLM access
- */
-function generateFallbackResponse(message: string): string {
-  const responses = [
-    "Thanks for your message! I'm a basic chat assistant. For AI-powered responses with access to our knowledge base, please contact david@ideasmen.com.au to request LLM access.",
-    "I received your message. Currently, you're using the basic chat experience. To unlock AI features and knowledge base integration, reach out to david@ideasmen.com.au for LLM access.",
-    "Hello! I'm operating in basic mode. For advanced AI responses and document search capabilities, please contact david@ideasmen.com.au to request full access.",
-    "Your message has been received. I'm providing basic responses right now. To access our full AI capabilities, please contact david@ideasmen.com.au for LLM permissions.",
-  ];
-
-  // Simple hash-based selection for consistent responses
-  const hash = message.split('').reduce((a, b) => {
-    a = ((a << 5) - a) + b.charCodeAt(0);
-    return a & a;
-  }, 0);
-  
-  return responses[Math.abs(hash) % responses.length];
-}
 
 /**
  * Create or get chat session for user

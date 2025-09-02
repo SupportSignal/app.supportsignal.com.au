@@ -257,7 +257,6 @@ export const registerUser = mutation({
         password: hashedPassword,
         role: defaultRole,
         company_id: companyId,
-        has_llm_access: false, // Default to no LLM access
       });
 
       // Log successful registration
@@ -404,7 +403,6 @@ export const loginUser = mutation({
           email: user.email,
           role: user.role,
           company_id: user.company_id,
-          has_llm_access: user.has_llm_access,
         },
         sessionToken,
         expires,
@@ -820,7 +818,6 @@ export const createOrUpdateGitHubUser = mutation({
         email: user.email,
         role: user.role,
         profile_image_url: user.profile_image_url,
-        has_llm_access: user.has_llm_access,
       },
       sessionToken,
     };
@@ -843,7 +840,6 @@ export const githubOAuthLogin = action({
       email: string;
       role: string;
       profile_image_url?: string;
-      has_llm_access?: boolean;
     };
     sessionToken: string;
   }> => {
@@ -1117,7 +1113,6 @@ export const createOrUpdateGoogleUser = mutation({
         email: user.email,
         role: user.role,
         profile_image_url: user.profile_image_url,
-        has_llm_access: user.has_llm_access,
       },
       sessionToken,
     };
@@ -1140,7 +1135,6 @@ export const googleOAuthLogin = action({
       email: string;
       role: string;
       profile_image_url?: string;
-      has_llm_access?: boolean;
     };
     sessionToken: string;
   }> => {
@@ -1346,102 +1340,6 @@ export const getUserById = query({
   },
 });
 
-// =======================
-// LLM Access Control Functions (Story 4.2)
-// =======================
-
-/**
- * Check if user has LLM access based on database flag
- * Implements AC 8: User-based LLM access control with graceful fallback
- */
-export const checkUserLLMAccess = query({
-  args: { userId: v.id('users') },
-  handler: async (ctx, args) => {
-    try {
-      const user = await ctx.db.get(args.userId);
-      
-      if (!user) {
-        return {
-          has_llm_access: false,
-          fallbackMessage: 'User not found. Please sign in to access chat features.',
-        };
-      }
-
-      const hasAccess = user.has_llm_access === true;
-
-      if (!hasAccess) {
-        return {
-          has_llm_access: false,
-          fallbackMessage: `Hi ${user.name}! You're using the basic chat experience. To access our AI-powered responses with knowledge base integration, please contact david@ideasmen.com.au to request LLM access.`,
-        };
-      }
-
-      return {
-        has_llm_access: true,
-        fallbackMessage: null,
-      };
-    } catch (error) {
-      console.error('Error checking user LLM access:', (error as Error).message);
-      return {
-        has_llm_access: false,
-        fallbackMessage: 'Unable to verify access. Please try again later.',
-      };
-    }
-  },
-});
-
-/**
- * Update user LLM access (admin function)
- */
-export const updateUserLLMAccess = mutation({
-  args: {
-    userId: v.id('users'),
-    has_llm_access: v.boolean(),
-  },
-  handler: async (ctx, args) => {
-    try {
-      await ctx.db.patch(args.userId, {
-        has_llm_access: args.has_llm_access,
-      });
-
-      const user = await ctx.db.get(args.userId);
-      console.log(`Updated LLM access for user ${user?.email}: ${args.has_llm_access}`);
-
-      return { success: true };
-    } catch (error) {
-      console.error('Error updating user LLM access:', error);
-      throw new ConvexError(`Failed to update user access: ${(error as Error).message}`);
-    }
-  },
-});
-
-/**
- * Log access control events for security monitoring
- */
-export const logAccessEvent = mutation({
-  args: {
-    userId: v.id('users'),
-    eventType: v.union(
-      v.literal('access_granted'),
-      v.literal('access_denied'),
-      v.literal('access_requested')
-    ),
-    details: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    const user = await ctx.db.get(args.userId);
-    
-    console.log(`Access event: ${args.eventType} for user ${user?.email}`, {
-      userId: args.userId,
-      eventType: args.eventType,
-      details: args.details,
-      timestamp: Date.now(),
-    });
-
-    // In a production system, you might want to store these events
-    // in a dedicated access_logs table for security analysis
-  },
-});
 
 // =======================
 // Owner Access Control for Version Indicator (Story 2.5)

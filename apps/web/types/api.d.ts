@@ -25,7 +25,6 @@ export interface UserProfile {
   
   // Role-based access control
   role: "system_admin" | "demo_admin" | "company_admin" | "team_lead" | "frontline_worker";
-  has_llm_access: boolean;
   
   // Company context
   company_id: Id<"companies">;
@@ -192,7 +191,6 @@ export interface SessionValidation {
     email: string;
     role: string;
     company_id: Id<"companies">;
-    has_llm_access: boolean;
   };
   session?: {
     expires: number;
@@ -355,7 +353,6 @@ export type Permission =
   | 'EDIT_OWN_INCIDENT_CAPTURE'
   | 'VIEW_ALL_COMPANY_INCIDENTS'
   | 'PERFORM_ANALYSIS'
-  | 'ACCESS_LLM_FEATURES'
   | 'USER_MANAGEMENT'
   | 'COMPANY_CONFIGURATION';
 
@@ -535,7 +532,6 @@ export const PERMISSIONS = {
   EDIT_OWN_INCIDENT_CAPTURE: 'EDIT_OWN_INCIDENT_CAPTURE',
   VIEW_ALL_COMPANY_INCIDENTS: 'VIEW_ALL_COMPANY_INCIDENTS',
   PERFORM_ANALYSIS: 'PERFORM_ANALYSIS',
-  ACCESS_LLM_FEATURES: 'ACCESS_LLM_FEATURES',
   USER_MANAGEMENT: 'USER_MANAGEMENT',
   COMPANY_CONFIGURATION: 'COMPANY_CONFIGURATION'
 } as const;

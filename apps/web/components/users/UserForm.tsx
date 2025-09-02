@@ -31,7 +31,6 @@ interface UserFormData {
   name: string;
   email: string;
   role: 'system_admin' | 'demo_admin' | 'company_admin' | 'team_lead' | 'frontline_worker';
-  has_llm_access: boolean;
 }
 
 interface UserFormProps {
@@ -40,7 +39,6 @@ interface UserFormProps {
     name: string;
     email: string;
     role: 'system_admin' | 'demo_admin' | 'company_admin' | 'team_lead' | 'frontline_worker';
-    has_llm_access?: boolean;
     protection?: {
       isProtected: boolean;
       protectionReason?: string;
@@ -105,7 +103,6 @@ export function UserForm({
     name: user?.name || '',
     email: user?.email || '',
     role: user?.role || 'frontline_worker',
-    has_llm_access: user?.has_llm_access || false,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -328,21 +325,6 @@ export function UserForm({
             )}
           </div>
 
-          {/* LLM Access Field */}
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="llm_access"
-              checked={formData.has_llm_access}
-              onCheckedChange={(checked) => handleInputChange('has_llm_access', checked)}
-              disabled={isSubmitting || isProtected}
-            />
-            <Label htmlFor="llm_access" className="flex-1">
-              <div>Enable AI/LLM Access</div>
-              <div className="text-xs text-muted-foreground">
-                Allow this user to access AI-powered features and analysis
-              </div>
-            </Label>
-          </div>
 
           {/* System Admin Warning */}
           {formData.role === 'system_admin' && (

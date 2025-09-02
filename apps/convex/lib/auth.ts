@@ -12,7 +12,6 @@ export interface AuthenticatedUser {
   name: string;
   email: string;
   role: string;
-  has_llm_access?: boolean;
   profile_image_url?: string;
   _creationTime: number;
 }
@@ -61,7 +60,6 @@ export async function validateSession(
       name: user.name,
       email: user.email,
       role: user.role,
-      has_llm_access: user.has_llm_access,
       profile_image_url: user.profile_image_url,
       _creationTime: user._creationTime,
     },

@@ -198,16 +198,6 @@ export default function DashboardPage() {
                     </span>
                   </dd>
                 </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">LLM Access</dt>
-                  <dd className="text-sm">
-                    {user.has_llm_access ? (
-                      <span className="text-green-600 dark:text-green-400">✓ Enabled</span>
-                    ) : (
-                      <span className="text-red-600 dark:text-red-400">✗ Disabled</span>
-                    )}
-                  </dd>
-                </div>
               </dl>
             </div>
 
@@ -274,14 +264,12 @@ export default function DashboardPage() {
             Quick Actions
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {user.has_llm_access && (
-              <Link
-                href="/chat"
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium text-center transition-colors"
-              >
-                💬 Test LLM Chat
-              </Link>
-            )}
+            <Link
+              href="/chat"
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium text-center transition-colors"
+            >
+              💬 Test LLM Chat
+            </Link>
             <Link
               href="/change-password"
               className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium text-center transition-colors"

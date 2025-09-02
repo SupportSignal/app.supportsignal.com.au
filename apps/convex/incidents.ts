@@ -14,6 +14,25 @@ import {
   Sanitization 
 } from './validation';
 
+// Story 4.1: Incident Listing Types
+interface IncidentFilter {
+  status?: string;
+  dateRange?: { start: number; end: number };
+  participantId?: Id<"participants">;
+  userId?: Id<"users">;
+  searchText?: string;
+}
+
+interface PaginationArgs {
+  limit: number;
+  offset: number;
+}
+
+interface SortingArgs {
+  field: "date" | "status" | "participant" | "reporter" | "updated";
+  direction: "asc" | "desc";
+}
+
 /**
  * Get incident by ID with proper access control
  * Supports role-based access: system_admin, company_admin, team_lead, frontline_worker (own incidents)

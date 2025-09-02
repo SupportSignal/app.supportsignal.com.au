@@ -38,81 +38,57 @@ export const resetUserPassword = mutation({
   },
 });
 
-// Grant LLM access to any user by email
-export const grantLLMAccessByEmail = mutation({
-  args: {
-    email: v.string(),
-  },
-  handler: async (ctx: MutationCtx, args) => {
-    const targetEmail = args.email.toLowerCase().trim();
-    
-    // Find the user
-    const user = await ctx.db
-      .query('users')
-      .withIndex('by_email', q => q.eq('email', targetEmail))
-      .first();
+// NOTE: These migration functions are no longer needed since has_llm_access concept has been removed
+// Commented out to preserve migration history
 
-    if (!user) {
-      return { 
-        message: `User ${targetEmail} not found. Please create user account first.`,
-        updated: false 
-      };
-    }
+// // Grant LLM access to any user by email
+// export const grantLLMAccessByEmail = mutation({
+//   args: {
+//     email: v.string(),
+//   },
+//   handler: async (ctx: MutationCtx, args) => {
+//     return {
+//       message: 'LLM access migration no longer needed - access granted to all users',
+//       updated: false
+//     };
+//   },
+// });
 
-    // Check if already has LLM access
-    if (user.has_llm_access === true) {
-      return { 
-        message: `User ${targetEmail} already has LLM access`,
-        updated: false 
-      };
-    }
+// // Set default LLM access for all users without it set
+// export const setDefaultLLMAccess = mutation({
+//   args: {
+//     defaultAccess: v.boolean(),
+//   },
+//   handler: async (ctx: MutationCtx, args: { defaultAccess: boolean }) => {
+//     return {
+//       message: 'LLM access migration no longer needed - access granted to all users',
+//       updated: 0,
+//     };
+//   },
+// });
 
-    // Grant LLM access
-    await ctx.db.patch(user._id, {
-      has_llm_access: true,
-    });
-
-    console.log(`✅ Granted LLM access to ${targetEmail}`);
-
-    return {
-      message: `✅ Successfully granted LLM access to ${targetEmail}`,
-      updated: true,
-      userId: user._id,
-    };
-  },
-});
-
-// Set default LLM access for all users without it set
-export const setDefaultLLMAccess = mutation({
-  args: {
-    defaultAccess: v.boolean(),
-  },
-  handler: async (ctx: MutationCtx, args: { defaultAccess: boolean }) => {
-    // Get all users without hasLLMAccess set
+// Remove has_llm_access field from all users (cleanup after schema change)
+export const removeHasLLMAccessField = mutation({
+  args: {},
+  handler: async (ctx: MutationCtx) => {
     const users = await ctx.db.query('users').collect();
-    const usersToUpdate = users.filter(
-      (user: { has_llm_access?: boolean }) => user.has_llm_access === undefined
-    );
+    let updated = 0;
 
-    if (usersToUpdate.length === 0) {
-      return { 
-        message: 'No users need LLM access update', 
-        updated: 0 
-      };
+    for (const user of users) {
+      if ('has_llm_access' in user) {
+        // Create a new object without has_llm_access field
+        const { has_llm_access, ...cleanUser } = user as any;
+        
+        // Replace the entire document with clean data
+        await ctx.db.replace(user._id, cleanUser);
+        updated++;
+      }
     }
 
-    // Update each user
-    for (const user of usersToUpdate) {
-      await ctx.db.patch(user._id, {
-        has_llm_access: args.defaultAccess,
-      });
-    }
-
-    console.log(`✅ Set LLM access to ${args.defaultAccess} for ${usersToUpdate.length} users`);
-
+    console.log(`✅ Removed has_llm_access field from ${updated} users`);
     return {
-      message: `Updated ${usersToUpdate.length} users with has_llm_access=${args.defaultAccess}`,
-      updated: usersToUpdate.length,
+      message: `Removed has_llm_access field from ${updated} users`,
+      updated,
     };
   },
 });

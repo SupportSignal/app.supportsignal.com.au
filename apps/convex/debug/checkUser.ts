@@ -24,7 +24,7 @@ export const checkUserRole = query({
       name: user.name,
       role: user.role,
       company_id: user.company_id,
-      has_llm_access: user.has_llm_access,
+
       found: true,
     };
   },
