@@ -122,11 +122,17 @@ PERMISSIONS = {
 }
 ```
 
-### Role-Permission Mapping
-- **frontline_worker**: `CREATE_INCIDENT`, `EDIT_OWN_INCIDENT_CAPTURE`, `VIEW_MY_INCIDENTS`
-- **team_lead**: All frontline_worker + `VIEW_ALL_COMPANY_INCIDENTS`, `PERFORM_ANALYSIS`
-- **company_admin**: All permissions within company boundary
-- **system_admin**: All permissions + cross-company access (admin functions only)
+### Permission-Role Mapping
+**Access is determined by permissions, not roles. Roles are convenient groupings:**
+
+**Core Permissions:**
+- `CREATE_INCIDENT` - Granted to: frontline_worker, team_lead, system_admin
+- `EDIT_OWN_INCIDENT_CAPTURE` - Granted to: frontline_worker, team_lead, system_admin
+- `VIEW_MY_INCIDENTS` - Granted to: frontline_worker, team_lead, system_admin
+- `VIEW_ALL_COMPANY_INCIDENTS` - Granted to: team_lead, company_admin, system_admin
+- `PERFORM_ANALYSIS` - Granted to: team_lead, company_admin, system_admin
+
+**Key Principle**: Features check permissions, not roles. Any user with required permissions can access functionality.
 
 ## Security Testing Requirements
 
@@ -201,12 +207,14 @@ console.log('SECURITY EVENT', { user: user._id, company: user.company_id, action
 2. **Company scoping is non-negotiable** - Every query must include it
 3. **UI rendering follows backend permissions** - Never rely on frontend alone
 4. **Comprehensive logging essential** - Security events need full audit trail
+5. **Permissions drive access, not roles** - Always check specific permissions, roles are just convenient groupings
 
 ### Common Pitfalls Avoided
 1. **"Admin can see everything" assumption** - Even admins respect company boundaries
 2. **Performance vs Security trade-off** - Security compound indexes solve both  
 3. **Frontend permission hiding** - Backend must enforce, not just UI
 4. **Cross-company aggregation temptation** - Never aggregate across company boundaries
+5. **Role-based assumptions** - Never assume capabilities based on role names; always check specific permissions
 
 ## Future Security Considerations
 

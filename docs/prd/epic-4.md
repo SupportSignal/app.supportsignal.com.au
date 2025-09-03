@@ -36,14 +36,14 @@ Epic 4 solves critical workflow gaps that emerge as incident volume scales. With
 **Epic**: Epic 4  
 **Estimated Effort**: 1 week  
 
-**User Story**: As a **Team Leader or Frontline Worker**, I need to view a list of incidents relevant to my role with appropriate filtering and search capabilities, so that I can effectively manage and track incident workflows.
+**User Story**: As a **user with incident viewing permissions**, I need to view a list of incidents I'm authorized to see with appropriate filtering and search capabilities, so that I can effectively manage and track incident workflows.
 
 **Business Value**: Provides the foundational incident management interface that enables both oversight and personal workflow management.
 
 **Acceptance Criteria**:
 1. **Multi-Tenant Data Isolation (CRITICAL)**
-   - Team Leaders see ALL incidents within their company ONLY (company-scoped)
-   - Frontline Workers see ONLY their own incidents within their company
+   - Users with `VIEW_ALL_COMPANY_INCIDENTS` permission see ALL incidents within their company ONLY (company-scoped)
+   - Users with `VIEW_MY_INCIDENTS` permission see ONLY their own incidents within their company
    - **NO cross-company data visibility** under any circumstances
    - All database queries MUST include `companyId` filtering
 
@@ -57,7 +57,7 @@ Epic 4 solves critical workflow gaps that emerge as incident volume scales. With
    - Text search across incident content and metadata
    - Filter by Status (Draft, In Progress, Completed)
    - Filter by Date Range (Last Week, Month, Custom)
-   - **Team Leader Only**: Filter by Participant, Filter by Frontline Worker
+   - **Users with VIEW_ALL_COMPANY_INCIDENTS permission**: Filter by Participant, Filter by Worker
    - Clear/reset all filters functionality
 
 4. **Sorting and Pagination**
@@ -71,13 +71,13 @@ Epic 4 solves critical workflow gaps that emerge as incident volume scales. With
 **Epic**: Epic 4  
 **Estimated Effort**: 4-5 days  
 
-**User Story**: As a **Frontline Worker**, when I visit the new incident page, I want to see my incomplete incidents and choose to continue existing work or start fresh, so that I don't create duplicate incidents or lose progress on partially completed work.
+**User Story**: As a **user with incident creation permissions**, when I visit the new incident page, I want to see my incomplete incidents and choose to continue existing work or start fresh, so that I don't create duplicate incidents or lose progress on partially completed work.
 
 **Business Value**: Prevents workflow abandonment and duplicate incident creation while providing seamless workflow continuation.
 
 **Acceptance Criteria**:
 1. **Conditional Modal Display Logic**
-   - Modal triggered **ONLY** when Frontline Worker has incomplete incidents
+   - Modal triggered **ONLY** when user has incomplete incidents
    - If no incomplete incidents exist → Direct to new incident creation (no modal)
    - If incomplete incidents exist → Show "Continue Existing" vs "Start New Incident" modal
    - Improves UX by eliminating unnecessary modal interruption
@@ -105,7 +105,7 @@ Epic 4 solves critical workflow gaps that emerge as incident volume scales. With
 **Epic**: Epic 4  
 **Estimated Effort**: 3 days  
 
-**User Story**: As a **Team Leader or Frontline Worker**, I need clear incident status indicators and progress tracking so that I can understand workflow state and manage incident completion effectively.
+**User Story**: As a **user with incident viewing permissions**, I need clear incident status indicators and progress tracking so that I can understand workflow state and manage incident completion effectively.
 
 **Business Value**: Provides workflow transparency and enables proper incident lifecycle management.
 
@@ -135,16 +135,16 @@ Epic 4 solves critical workflow gaps that emerge as incident volume scales. With
 **Epic**: Epic 4  
 **Estimated Effort**: 3-4 days  
 
-**User Story**: As a **Team Leader or Frontline Worker**, I need clear action buttons for each incident so I can view details, continue work, or start analysis based on my role and the incident status.
+**User Story**: As a **user with incident access permissions**, I need clear action buttons for each incident so I can view details, continue work, or start analysis based on my permissions and the incident status.
 
 **Business Value**: Enables complete incident workflow management by providing role-appropriate actions for every incident interaction.
 
 **Acceptance Criteria**:
-1. **Role-Based Action Buttons**
-   - **Frontline Worker + Incomplete Incident**: "Continue Work" button
-   - **Frontline Worker + Complete Incident**: "View Incident" button (read-only)
-   - **Team Leader + Any Incident**: "View Incident" button (read-only)
-   - **Team Leader + Complete Incident**: Additional "Start Analysis" button
+1. **Permission-Based Action Buttons**
+   - **User with CREATE_INCIDENT + Incomplete Incident**: "Continue Work" button
+   - **User with VIEW_MY_INCIDENTS + Complete Incident**: "View Incident" button (read-only)
+   - **User with VIEW_ALL_COMPANY_INCIDENTS + Any Incident**: "View Incident" button (read-only)
+   - **User with PERFORM_ANALYSIS + Complete Incident**: Additional "Start Analysis" button
 
 2. **Action Button Implementation**
    - "Continue Work" → Routes to `/new-incident?id=[incidentId]` (resumes at exact step)
@@ -170,21 +170,21 @@ Epic 4 solves critical workflow gaps that emerge as incident volume scales. With
 
 **New Convex Queries**:
 ```typescript
-// Team Leader - All company incidents (COMPANY-SCOPED ONLY)
+// Users with VIEW_ALL_COMPANY_INCIDENTS - All company incidents (COMPANY-SCOPED ONLY)
 getAllCompanyIncidents(companyId, filters, pagination)
-// MUST verify user belongs to companyId before returning data
+// MUST verify user has permission and belongs to companyId before returning data
 
-// Frontline Worker - Personal incidents only (COMPANY-SCOPED)  
+// Users with VIEW_MY_INCIDENTS - Personal incidents only (COMPANY-SCOPED)  
 getMyIncidents(userId, includeCompleted: boolean)
 // MUST verify user.companyId and filter by both userId AND companyId
 
-// Workflow continuation helper (COMPANY-SCOPED)
+// Users with CREATE_INCIDENT - Workflow continuation helper (COMPANY-SCOPED)
 getMyIncompleteIncidents(userId) 
 // MUST verify user.companyId and filter accordingly
 
-// Status management (COMPANY-SCOPED)
+// Users with appropriate permissions - Status management (COMPANY-SCOPED)
 updateIncidentStatus(incidentId, newStatus, userId)
-// MUST verify incident.companyId matches user.companyId
+// MUST verify incident.companyId matches user.companyId AND user has required permission
 ```
 
 **Database Schema Extensions**:
@@ -214,7 +214,7 @@ updateIncidentStatus(incidentId, newStatus, userId)
 - Breadcrumb navigation for incident detail views
 
 **Permission Layer Integration**:
-- Extend existing role-based access control with company boundaries
+- Extend existing permission-based access control with company boundaries
 - **CRITICAL**: All queries MUST enforce company-scoped data filtering
 - Multi-tenant isolation verification at API level (no cross-company leakage)
 - Audit logging integration tracking company-scoped incident access
@@ -230,7 +230,7 @@ updateIncidentStatus(incidentId, newStatus, userId)
 ## Success Metrics
 
 ### User Adoption Metrics
-- **Incident List Usage**: >80% of team leaders use `/incidents` weekly
+- **Incident List Usage**: >80% of users with VIEW_ALL_COMPANY_INCIDENTS permission use `/incidents` weekly
 - **Workflow Continuation**: >60% of incomplete incidents resumed vs. abandoned
 - **Duplicate Reduction**: <5% duplicate incidents created (vs baseline)
 
@@ -241,7 +241,7 @@ updateIncidentStatus(incidentId, newStatus, userId)
 
 ### Business Impact Metrics
 - **Workflow Completion Rate**: Increased incident completion (target: >90%)
-- **Management Efficiency**: Team leaders can review incident status 50% faster
+- **Management Efficiency**: Users with oversight permissions can review incident status 50% faster
 - **Process Compliance**: Reduced lost/abandoned incidents by 75%
 
 ---
@@ -299,8 +299,8 @@ updateIncidentStatus(incidentId, newStatus, userId)
 - [ ] Integration testing with existing Epic 1-3 functionality
 
 ### Epic Completion Criteria
-- [ ] Team leaders can effectively manage all company incidents
-- [ ] Frontline workers can seamlessly continue incomplete work
+- [ ] Users with VIEW_ALL_COMPANY_INCIDENTS permission can effectively manage all company incidents
+- [ ] Users with CREATE_INCIDENT permission can seamlessly continue incomplete work
 - [ ] No regression in existing incident capture workflow (Epic 3)
 - [ ] Documentation updated (user guides, API docs, architecture)
 - [ ] Stakeholder acceptance testing completed with real user scenarios

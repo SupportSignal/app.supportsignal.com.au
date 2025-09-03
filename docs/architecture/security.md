@@ -26,15 +26,26 @@ Our authentication system extends Convex's native authentication with enterprise
 - **Account Lockout**: 5 failed attempts trigger temporary account lockout
 - **Password Change Validation**: Current password required for password updates
 
-### Role-Based Access Control (RBAC)
+### Permission-Based Access Control (PBAC)
 
-**4-Tier Role Hierarchy**:
-- **System Admin**: Full platform access across all companies
-- **Company Admin**: Company-level management and configuration  
-- **Team Lead**: Incident analysis and team oversight
-- **Frontline Worker**: Incident creation and own incident editing
+**Access control is permission-driven, not role-driven. Roles are convenient groupings of permissions.**
 
-**Permission Matrix**: [See Backend Patterns - Role-Based Permission System](../patterns/backend-patterns.md#role-based-permission-system-pattern)
+**Core Permissions**:
+- `CREATE_INCIDENT` - Create new incidents
+- `EDIT_OWN_INCIDENT_CAPTURE` - Edit own incident capture data
+- `VIEW_MY_INCIDENTS` - View personal incidents within company
+- `VIEW_ALL_COMPANY_INCIDENTS` - View all incidents within company
+- `PERFORM_ANALYSIS` - Perform incident analysis workflows
+- `MANAGE_USERS` - User management within company
+- `SYSTEM_CONFIGURATION` - System-level configuration
+
+**Role Groupings (for convenience)**:
+- **System Admin**: All permissions + cross-company access
+- **Company Admin**: Company-level management permissions
+- **Team Lead**: Analysis and oversight permissions
+- **Frontline Worker**: Incident creation and personal access permissions
+
+**Permission Matrix**: [See Backend Patterns - Permission-Based Access System](../patterns/backend-patterns.md#permission-based-access-system-pattern)
 
 **Business Rule**: "Democratic Creation, Controlled Editing"
 - Anyone can CREATE incidents (encourages reporting)
@@ -44,8 +55,9 @@ Our authentication system extends Convex's native authentication with enterprise
 ### Multi-Tenant Security
 
 **Company Scoping**: All data access is scoped to user's company context
-**Permission Validation**: Every operation validates both role permissions and company boundaries
+**Permission Validation**: Every operation validates specific permissions and company boundaries
 **Data Isolation**: Database queries include company filtering to prevent cross-tenant access
+**Permission-First Design**: Features check specific permissions, not role names
 
 ## Input Validation & Data Protection
 
