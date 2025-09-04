@@ -73,16 +73,9 @@ export function IncidentCaptureWorkflow() {
   const canEditIncident = useMemo(() => {
     if (!incidentId || !currentIncident || !user) return false;
     
-    // User owns the incident
-    if (currentIncident.created_by === user._id) return true;
-    
-    // User is team_lead, company_admin, or system_admin in same company
-    if (currentIncident.company_id === user.company_id && 
-        (user.role === 'team_lead' || user.role === 'company_admin' || user.role === 'system_admin')) {
-      return true;
-    }
-    
-    return false;
+    // ONLY the incident creator/reporter can edit narratives and answers
+    // Elevated roles (team_lead, company_admin, system_admin) can VIEW but NOT EDIT
+    return currentIncident.created_by === user._id;
   }, [incidentId, currentIncident, user]);
 
   // SECURITY: Check if user can view but not edit (for read-only mode)
@@ -823,7 +816,7 @@ export function IncidentCaptureWorkflow() {
                       Read-Only Access
                     </h3>
                     <p className="text-sm text-amber-700 mt-1">
-                      You're viewing an incident created by another user. You can view the details but cannot make changes.
+                      You're viewing an incident created by another user. Only the original reporter can edit incident narratives and answers. You have view-only access.
                     </p>
                   </div>
                 </div>
