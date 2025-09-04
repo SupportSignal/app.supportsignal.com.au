@@ -5,7 +5,7 @@
 **Status**: **WAITING FOR EPIC 2** 🟡  
 **Epic 2 Dependency**: Entity management foundation required
 
-**Goal**: Implement the complete 7-step incident capture workflow for frontline workers, featuring intelligent narrative collection, AI-powered clarification questions, comprehensive prompt management, and seamless handoff to the analysis phase.
+**Goal**: Implement the complete 8-step incident capture workflow for frontline workers, featuring intelligent narrative collection, AI-powered clarification questions, and automatic workflow completion with seamless handoff to the analysis phase.
 
 **Duration**: 4-5 weeks  
 **Team Size**: 2-3 developers (frontend focus + AI specialist for Story 3.4)  
@@ -40,19 +40,22 @@ graph TD
     B --> C[Step 1: Metadata Entry]
     C --> D[Step 2: Multi-Phase Narrative]
     D --> E[Step 3-6: AI Clarification]
-    E --> F[Step 7: Final Review]
-    F --> G[Submit & Handoff to Analysis]
+    E --> F[Step 7: Enhanced Review]
+    F --> G[Step 8: Consolidated Report]
+    G --> H[Auto-Complete & Handoff to Analysis]
     
     subgraph "Validation & Progress"
-        H[Progress Indicator]
-        I[Step Validation]
-        J[Auto-Save]
+        I[Progress Indicator]
+        J[Step Validation]
+        K[Auto-Save]
+        L[Auto-Completion]
     end
     
-    C -.-> H
-    D -.-> I
-    E -.-> J
-    F -.-> H
+    C -.-> I
+    D -.-> J
+    E -.-> K
+    F -.-> I
+    G -.-> L
 ```
 
 ---
@@ -146,14 +149,45 @@ Implement the final review step that combines original narratives with clarifica
 
 ---
 
-**Note**: Stories 3.4 and 3.5 (AI Prompt Management) have been moved to Epic 6 as Stories 6.1 and 6.2.
+### Story 3.4: Workflow Auto-Completion
+
+**Priority**: MEDIUM  
+**Estimated Effort**: 1-2 days  
+**Dependencies**: Story 3.3 (consolidated report completion)
+
+#### Requirements
+Implement automatic incident completion when users finish the final workflow step, eliminating confusion about workflow status and ensuring incidents don't reappear in continuation modals unnecessarily.
+
+**Auto-Completion Logic**:
+- **Trigger**: User completes Step 8 (Consolidated Report) workflow step
+- **Action**: Automatically update `overall_status` from "analysis_pending" to "completed"
+- **Timestamp**: Set `workflow_completed_at` field with completion timestamp
+- **Modal Exclusion**: Completed incidents no longer appear in workflow continuation modal
+
+**Data Backfill Requirements**:
+- **Historical Data**: Identify existing incidents that have completed all workflow steps but remain in "analysis_pending" status
+- **Batch Update**: Retrospectively mark historically completed incidents as "completed"
+- **Audit Trail**: Log all auto-completion actions with user context and timestamps
+
+#### Acceptance Criteria
+- [ ] **Automatic Status Update**: Step 8 completion triggers `overall_status` change to "completed"
+- [ ] **Workflow Timestamp**: `workflow_completed_at` field populated on auto-completion
+- [ ] **Modal Exclusion**: Completed incidents excluded from `getMyIncompleteIncidents` query
+- [ ] **Data Backfill**: Historical incidents with completed workflows marked as "completed"
+- [ ] **Status Preservation**: Manual submission workflow can still override completion status
+- [ ] **Audit Logging**: All status changes logged with user context and correlation IDs
+
+---
+
+**Note**: Story 3.5 (AI Prompt Management) has been moved to Epic 6 as Story 6.2.
 
 ---
 
 ## Epic Success Criteria
 
 ### Functional Requirements
-- [ ] **Complete Workflow**: All 7 steps implemented and fully functional
+- [ ] **Complete Workflow**: All 8 steps implemented and fully functional
+- [ ] **Auto-Completion**: Automatic workflow completion when Step 8 is finished
 - [ ] **AI Integration**: 95%+ success rate for question generation and enhancement
 - [ ] **Mobile Responsive**: Full functionality on iOS and Android browsers
 - [ ] **Performance**: <2 second step transitions, <10 second AI processing
