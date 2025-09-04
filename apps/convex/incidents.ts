@@ -1329,3 +1329,125 @@ export const getIncidentNarrativeByIncidentId = query({
     return narrative;
   },
 });
+
+/**
+ * Story 4.2: Get incomplete incidents for workflow continuation modal
+ * Returns user's own incomplete incidents within their company for workflow continuation
+ */
+export const getMyIncompleteIncidents = query({
+  args: { sessionToken: v.string() },
+  handler: async (ctx, args) => {
+    // Check permissions for viewing personal incidents
+    const { user, correlationId } = await requirePermission(
+      ctx,
+      args.sessionToken,
+      PERMISSIONS.VIEW_MY_INCIDENTS
+    );
+    
+    // Query user's incomplete incidents within their company
+    const incompleteIncidents = await ctx.db
+      .query("incidents")
+      .withIndex("by_company", (q) => q.eq("company_id", user.company_id))
+      .filter((q) => 
+        q.and(
+          q.eq(q.field("created_by"), user._id),
+          q.or(
+            q.eq(q.field("overall_status"), "capture_pending"),
+            q.eq(q.field("capture_status"), "draft")
+          )
+        )
+      )
+      .order("desc")
+      .take(10); // Limit to 10 most recent incomplete incidents
+
+    console.log('📋 INCOMPLETE INCIDENTS FETCHED', {
+      userId: user._id,
+      companyId: user.company_id,
+      count: incompleteIncidents.length,
+      correlationId,
+      timestamp: new Date().toISOString(),
+    });
+
+    return incompleteIncidents;
+  },
+});
+
+/**
+ * Get workflow step description helper function
+ */
+export const getWorkflowStepInfo = (step: number): string => {
+  const stepMap: Record<number, string> = {
+    1: "Basic Information",
+    2: "Before Event",
+    3: "During Event", 
+    4: "After Event",
+    5: "Q&A Session",
+    6: "AI Enhancement",
+    7: "Review & Submit"
+  };
+  return stepMap[step] || "Unknown Step";
+};
+
+/**
+ * Story 4.2: Update incident workflow progress tracking
+ * Updates current step, step description, and content preview for workflow continuation
+ */
+export const updateWorkflowProgress = mutation({
+  args: {
+    sessionToken: v.string(),
+    incidentId: v.id("incidents"),
+    current_step: v.optional(v.number()),
+    content_preview: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // Check permissions for updating incident
+    const { user, correlationId } = await requirePermission(
+      ctx,
+      args.sessionToken,
+      PERMISSIONS.EDIT_OWN_INCIDENT_CAPTURE
+    );
+
+    // Get the incident to verify ownership
+    const incident = await ctx.db.get(args.incidentId);
+    if (!incident) {
+      throw new ConvexError("Incident not found");
+    }
+
+    // Verify company context and ownership
+    if (incident.company_id !== user.company_id) {
+      throw new ConvexError("Access denied: incident belongs to different company");
+    }
+
+    if (incident.created_by !== user._id) {
+      throw new ConvexError("Access denied: can only update your own incidents");
+    }
+
+    // Prepare updates
+    const updates: any = {
+      updated_at: Date.now(),
+    };
+
+    if (args.current_step) {
+      updates.current_step = args.current_step;
+      updates.step_description = getWorkflowStepInfo(args.current_step);
+    }
+
+    if (args.content_preview) {
+      updates.content_preview = args.content_preview.substring(0, 100); // Limit to 100 chars
+    }
+
+    // Update the incident
+    await ctx.db.patch(args.incidentId, updates);
+
+    console.log('📈 WORKFLOW PROGRESS UPDATED', {
+      incidentId: args.incidentId,
+      userId: user._id,
+      current_step: args.current_step,
+      content_preview_length: args.content_preview?.length || 0,
+      correlationId,
+      timestamp: new Date().toISOString(),
+    });
+
+    return { success: true };
+  },
+});

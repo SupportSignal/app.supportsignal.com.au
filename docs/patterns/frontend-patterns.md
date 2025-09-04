@@ -370,9 +370,306 @@ useEffect(() => {
 
 **✅ CORRECT**: Only external data dependencies, use refs for internal tracking
 
+### Always-Visible Modal Anti-Pattern
+
+**❌ PROBLEMATIC**:
+```typescript
+// Modal always renders regardless of data availability
+return (
+  <Modal isOpen={showModal}>
+    {incompleteIncidents?.length > 0 ? (
+      <IncidentList incidents={incompleteIncidents} />
+    ) : (
+      <div>Loading...</div> // Empty modal annoys users
+    )}
+  </Modal>
+);
+```
+
+**✅ CORRECT**: Conditional modal rendering based on data availability
+
+### URL Navigation for State-Heavy Workflows
+
+**❌ PROBLEMATIC for complex workflows**:
+```typescript
+// Forces page reload, loses state, requires URL parsing
+const handleContinue = (incidentId: string, step: number) => {
+  router.push(`/workflow?id=${incidentId}&step=${step}`);
+  // Loses all component state, requires loading states
+};
+```
+
+**✅ CORRECT**: Direct state management for single-page workflows
+
+### Parent-Child State Leakage in Modals
+
+**❌ PROBLEMATIC**:
+```typescript
+// Modal directly manipulates parent state
+const Modal = ({ setParentStep, setParentId }) => {
+  const handleContinue = () => {
+    setParentStep(3);    // Modal shouldn't know parent structure
+    setParentId(id);     // Tight coupling
+    closeModal();        // Modal manages own closure
+  };
+};
+```
+
+**✅ CORRECT**: Clean callback interfaces with single responsibility
+
+## Modal State Management Patterns
+
+### Conditional Modal Display Pattern
+
+**Context**: Showing modals only when necessary, avoiding unnecessary UI interruption
+**Implementation**: 
+
+Use conditional rendering based on data availability rather than always showing modals.
+
+```typescript
+// ✅ CORRECT: Conditional modal display
+const incompleteIncidents = useQuery(api.getMyIncompleteIncidents, 
+  sessionToken ? { sessionToken } : "skip"
+);
+
+// Only show modal if user has incomplete work
+const shouldShowModal = incompleteIncidents && incompleteIncidents.length > 0;
+
+return (
+  <>
+    {shouldShowModal && (
+      <ContinueWorkflowModal
+        isOpen={showContinueModal}
+        incompleteIncidents={incompleteIncidents}
+        onClose={handleModalClose}
+      />
+    )}
+    {/* Main content always renders */}
+    <MainWorkflowContent />
+  </>
+);
+```
+
+**Rationale**: 
+- Eliminates unnecessary modal interruptions when no action is needed
+- Improves user experience by reducing cognitive load
+- Prevents empty or loading states in modal content
+
+**Example**: Story 4.2 workflow continuation modal only appears when user has incomplete incidents
+
+### Modal Anti-Reappearance Pattern
+
+**Context**: Preventing modals from reappearing after user dismisses them during the same session
+**Implementation**:
+
+Track modal dismissal state to respect user's decision within session boundaries.
+
+```typescript
+// ✅ CORRECT: Respect user dismissal
+const [showContinueModal, setShowContinueModal] = useState(false);
+const [modalDismissed, setModalDismissed] = useState(false);
+
+// Show modal logic respects dismissal
+useEffect(() => {
+  if (incompleteIncidents?.length > 0 && !modalDismissed && !incidentId) {
+    setShowContinueModal(true);
+  }
+}, [incompleteIncidents, modalDismissed, incidentId]);
+
+const handleModalClose = () => {
+  setShowContinueModal(false);
+  setModalDismissed(true); // Prevent reappearance
+};
+
+// ❌ WRONG: Modal reappears every time
+const handleModalClose = () => {
+  setShowContinueModal(false);
+  // Missing dismissal tracking - modal will reappear
+};
+```
+
+**Rationale**:
+- Respects user's explicit dismissal choice
+- Prevents annoying repeated modal displays
+- Maintains session-scoped user preferences
+
+### Component Communication in Modals Pattern
+
+**Context**: Clean data flow between modal components and parent containers
+**Implementation**:
+
+Use callback patterns with clear separation of concerns between modal logic and navigation logic.
+
+```typescript
+// ✅ CORRECT: Clean callback separation
+interface ContinueWorkflowModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  incompleteIncidents: IncidentPreview[];
+  onContinue: (incidentId: string, step?: number) => void;
+  onStartNew: () => void;
+}
+
+// Modal handles UI logic only
+const handleContinue = (incidentId: string, step?: number) => {
+  onContinue(incidentId, step);
+  // Don't call onClose() - let parent handle navigation
+};
+
+// Parent handles navigation and routing
+const handleContinueIncident = (incidentId: string, step?: number) => {
+  setIncidentId(incidentId);
+  if (step) setCurrentStep(step - 1);
+  setShowContinueModal(false); // Parent manages modal state
+};
+```
+
+**Rationale**:
+- Clear separation between UI logic and business logic
+- Parent component maintains control over navigation flow
+- Reusable modal components with configurable behavior
+
+## Data Loading Strategy Patterns
+
+### Direct Data Loading vs URL Navigation Pattern
+
+**Context**: Choosing between direct component state updates vs URL-based navigation for data loading
+**Implementation**:
+
+For workflow continuation, direct data loading provides better user experience than URL navigation.
+
+```typescript
+// ✅ CORRECT: Direct data loading for workflow continuation
+const handleContinueIncident = (incidentId: string, step?: number) => {
+  // Direct state updates for immediate UI response
+  setIncidentId(incidentId);  
+  if (step) setCurrentStep(step - 1);
+  setShowContinueModal(false);
+  
+  // No router.push() needed - component handles state internally
+};
+
+// ❌ ALTERNATIVE: URL-based navigation (more complex)
+const handleContinueIncident = (incidentId: string, step?: number) => {
+  router.push(`/new-incident?id=${incidentId}&step=${step}`);
+  // Requires URL parsing logic, loading states, etc.
+};
+```
+
+**Rationale**:
+- Direct loading eliminates page refresh and loading states
+- Faster user experience with immediate state updates
+- Simpler implementation without URL parameter parsing
+- Better for single-page workflows with complex state
+
+**When to use URL navigation instead**:
+- Deep linking requirements (bookmarkable URLs)
+- Multi-page workflows where each step is a separate page
+- SEO requirements for different workflow steps
+
+### Query Result Structure Handling Pattern
+
+**Context**: Working with structured query results that contain both data arrays and metadata
+**Implementation**:
+
+Handle nested query results with proper null checking and default values.
+
+```typescript
+// ✅ CORRECT: Structured result handling
+const incompleteIncidentsResult = useQuery(
+  api.incidents_listing.getMyIncompleteIncidents,
+  user?.sessionToken ? { sessionToken: user.sessionToken } : "skip"
+);
+
+// Extract with safe defaults
+const incompleteIncidents = incompleteIncidentsResult?.incidents || [];
+const totalIncompleteCount = incompleteIncidentsResult?.totalCount || 0;
+
+// Use both pieces of data appropriately
+const shouldShowModal = incompleteIncidents.length > 0;
+const displayCount = totalIncompleteCount > incompleteIncidents.length 
+  ? `Showing ${incompleteIncidents.length} of ${totalIncompleteCount}`
+  : `${incompleteIncidents.length} total`;
+```
+
+**Rationale**:
+- Handles loading states gracefully with default values
+- Separates data from metadata for different UI purposes
+- Prevents undefined errors during query loading
+
+## Workflow Continuation Architecture Pattern
+
+**Context**: Implementing continuation systems for complex multi-step workflows
+**Implementation**:
+
+Use a combination of conditional modals, direct data loading, and state management for seamless workflow resumption.
+
+```typescript
+// ✅ CORRECT: Complete workflow continuation architecture
+const WorkflowContainer = () => {
+  // Core workflow state
+  const [currentStep, setCurrentStep] = useState(0);
+  const [incidentId, setIncidentId] = useState<string | null>(null);
+  
+  // Modal state with dismissal tracking
+  const [showContinueModal, setShowContinueModal] = useState(false);
+  const [modalDismissed, setModalDismissed] = useState(false);
+  
+  // Data loading with conditional query
+  const incompleteIncidentsResult = useQuery(
+    api.getMyIncompleteIncidents,
+    sessionToken ? { sessionToken } : "skip"
+  );
+  
+  // Conditional modal display logic
+  useEffect(() => {
+    const incidents = incompleteIncidentsResult?.incidents || [];
+    if (incidents.length > 0 && !modalDismissed && !incidentId) {
+      setShowContinueModal(true);
+    }
+  }, [incompleteIncidentsResult, modalDismissed, incidentId]);
+  
+  // Direct data loading for continuation
+  const handleContinueIncident = (incidentId: string, step?: number) => {
+    setIncidentId(incidentId);
+    if (step) setCurrentStep(step - 1);
+    setShowContinueModal(false);
+  };
+  
+  return (
+    <>
+      {/* Conditional modal */}
+      {incompleteIncidentsResult?.incidents && (
+        <ContinueWorkflowModal
+          isOpen={showContinueModal}
+          incompleteIncidents={incompleteIncidentsResult.incidents}
+          onContinue={handleContinueIncident}
+          onClose={() => setModalDismissed(true)}
+        />
+      )}
+      
+      {/* Main workflow */}
+      <WorkflowSteps 
+        currentStep={currentStep} 
+        incidentId={incidentId}
+      />
+    </>
+  );
+};
+```
+
+**Key Components**:
+1. **Conditional Modal Display**: Only shows when relevant
+2. **Anti-Reappearance Logic**: Respects user dismissal
+3. **Direct Data Loading**: Fast workflow resumption
+4. **Clean Component Communication**: Clear callback patterns
+
+**Implementation Reference**: Story 4.2 - Workflow Continuation System
+
 ## Related Documentation
 
 - [Backend Patterns](backend-patterns.md) - For API integration patterns  
 - [Testing Patterns](testing-patterns.md) - For frontend testing approaches
 - [Architecture Patterns](architecture-patterns.md) - For overall system design
 - **[React + Convex Patterns KDD](../technical-guides/react-convex-patterns-kdd.md)** - **CRITICAL** - Comprehensive guide to avoid useEffect recursion and data flow anti-patterns
+- **[Incident Workflow Patterns KDD](../incident-workflow/incident-workflow-patterns-kdd.md)** - Workflow-specific state management and save patterns

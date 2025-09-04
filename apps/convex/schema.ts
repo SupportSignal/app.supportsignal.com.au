@@ -228,6 +228,11 @@ export default defineSchema({
     narrative_enhanced: v.boolean(),
     analysis_generated: v.boolean(),
     
+    // Story 4.2: Workflow continuation tracking
+    current_step: v.optional(v.number()), // 1-7 for workflow steps
+    step_description: v.optional(v.string()), // Human readable step name
+    content_preview: v.optional(v.string()), // First 100 chars for preview
+    
     // Enhancement completion fields (Story 3.3)
     enhanced_narrative_id: v.optional(v.id("enhanced_narratives")),
     workflow_completed_at: v.optional(v.number()),

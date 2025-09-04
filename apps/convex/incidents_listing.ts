@@ -547,18 +547,42 @@ export const getMyIncompleteIncidents = query({
       PERMISSIONS.CREATE_INCIDENT
     );
     
-    const incidents = await ctx.db
+    console.log(`📋 BACKEND: getMyIncompleteIncidents called for user ${user.email} (ID: ${user._id})`);
+    console.log(`📋 BACKEND: Company ID: ${user.company_id}`);
+    
+    // Get total count of incomplete incidents
+    const allIncompleteIncidents = await ctx.db
+      .query("incidents")
+      .withIndex("by_company_user", (q) => 
+        q.eq("company_id", user.company_id).eq("created_by", user._id)
+      )
+      .filter((q) => q.neq(q.field("overall_status"), "completed"))
+      .collect();
+    
+    // Get top 5 most recent for display
+    const recentIncidents = await ctx.db
       .query("incidents")
       .withIndex("by_company_user", (q) => 
         q.eq("company_id", user.company_id).eq("created_by", user._id)
       )
       .filter((q) => q.neq(q.field("overall_status"), "completed"))
       .order("desc")
-      .take(10); // Limit to recent incomplete incidents
+      .take(5); // Show top 5 for modal display
+    
+    const totalCount = allIncompleteIncidents.length;
+    console.log(`📋 BACKEND: Found ${totalCount} total incomplete incidents, showing top ${recentIncidents.length}`);
+    console.log(`📋 BACKEND: Recent incidents:`, recentIncidents.map(i => ({
+      id: i._id,
+      participant: i.participant_name,
+      overall_status: i.overall_status,
+      capture_status: i.capture_status,
+      created_at: i.created_at
+    })));
     
     return {
-      incidents,
-      count: incidents.length,
+      incidents: recentIncidents,
+      count: recentIncidents.length,
+      totalCount: totalCount,
       correlationId
     };
   }

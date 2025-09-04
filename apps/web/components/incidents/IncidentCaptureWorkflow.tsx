@@ -20,6 +20,7 @@ import { Id } from '@/convex/_generated/dataModel';
 import { ClarificationPhase } from '@/types/clarification';
 import { DeveloperToolsBar } from './DeveloperToolsBar';
 import { WorkflowImportResult } from '@/types/workflowData';
+import { ContinueWorkflowModal } from './ContinueWorkflowModal';
 
 /**
  * Main Incident Capture Workflow Component
@@ -40,21 +41,68 @@ import { WorkflowImportResult } from '@/types/workflowData';
  * - Responsive design
  */
 export function IncidentCaptureWorkflow() {
+  console.log('🚨 INCIDENT CAPTURE WORKFLOW COMPONENT LOADED 🚨');
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [currentStep, setCurrentStep] = useState(0); // 0-based indexing for WorkflowWizard
   const [incidentId, setIncidentId] = useState<Id<"incidents"> | null>(null);
   const [hasSetInitialStep, setHasSetInitialStep] = useState(false);
+  
+  // Story 4.2: Continue workflow modal state
+  const [showContinueModal, setShowContinueModal] = useState(false);
+  const [hasCheckedForIncompleteIncidents, setHasCheckedForIncompleteIncidents] = useState(false);
+  const [userMadeChoice, setUserMadeChoice] = useState(false); // Track if user already made a choice
+
+  // Query for incomplete incidents to show modal
+  const incompleteIncidentsResult = useQuery(
+    api.incidents_listing.getMyIncompleteIncidents,
+    user?.sessionToken ? { sessionToken: user.sessionToken } : "skip"
+  );
+
+  // Extract incidents array and total count from result
+  const incompleteIncidents = incompleteIncidentsResult?.incidents || [];
+  const totalIncompleteCount = incompleteIncidentsResult?.totalCount || 0;
+
+  // Debug logging for incomplete incidents
+  useEffect(() => {
+    console.log('🔍 STATE DEBUG:', {
+      timestamp: new Date().toISOString(),
+      user: user?.email || 'null',
+      sessionToken: !!user?.sessionToken,
+      incompleteIncidentsResult: !!incompleteIncidentsResult,
+      incompleteIncidents: incompleteIncidents?.length || 'undefined',
+      hasCheckedForIncompleteIncidents,
+      userMadeChoice,
+      incidentId: incidentId || 'null',
+      showContinueModal,
+      urlParams: {
+        id: searchParams.get('id'),
+        step: searchParams.get('step')
+      }
+    });
+  }, [user, incompleteIncidentsResult, incompleteIncidents, hasCheckedForIncompleteIncidents, userMadeChoice, incidentId, showContinueModal, searchParams]);
 
   // Check for existing incident ID in URL parameters (for "Continue" functionality)
   useEffect(() => {
     const existingIncidentId = searchParams.get('id');
+    const stepParam = searchParams.get('step');
+    
     if (existingIncidentId) {
       console.log('🔍 CONTINUE: Found existing incident ID in URL:', existingIncidentId);
       setIncidentId(existingIncidentId as Id<"incidents">);
+      
+      // Set initial step from URL parameter if provided
+      if (stepParam && !hasSetInitialStep) {
+        const step = parseInt(stepParam, 10);
+        if (step >= 1 && step <= 7) {
+          console.log('🔍 CONTINUE: Setting step from URL parameter:', step);
+          setCurrentStep(step - 1); // Convert to 0-based indexing
+          setHasSetInitialStep(true);
+        }
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, hasSetInitialStep]);
 
   // Load existing incident data if continuing an incident
   const existingIncident = useQuery(
@@ -125,6 +173,40 @@ export function IncidentCaptureWorkflow() {
   
   // Convex action for batch question generation
   const generateAllQuestions = useAction(api.aiClarification.generateAllClarificationQuestions);
+  
+  // Story 4.2: Reference workflow progress mutation
+  const updateWorkflowProgressMutation = useMutation(api.incidents.updateWorkflowProgress);
+  
+  // Story 4.2: Helper function to update workflow progress
+  const updateWorkflowProgress = async (step: number, preview?: string) => {
+    if (incidentId && user?.sessionToken) {
+      try {
+        await updateWorkflowProgressMutation({
+          sessionToken: user.sessionToken,
+          incidentId: incidentId,
+          current_step: step,
+          content_preview: preview,
+        });
+        
+        console.log('📈 WORKFLOW PROGRESS: Updated step', step, 'with preview:', preview?.substring(0, 50));
+      } catch (error) {
+        console.error('❌ WORKFLOW PROGRESS: Failed to update:', error);
+      }
+    }
+  };
+
+  const getStepDescription = (step: number): string => {
+    const stepMap: Record<number, string> = {
+      1: "Basic Information",
+      2: "Before Event",
+      3: "During Event", 
+      4: "After Event",
+      5: "Q&A Session",
+      6: "AI Enhancement",
+      7: "Review & Submit"
+    };
+    return stepMap[step] || "Unknown Step";
+  };
 
   // Check authentication and authorization
   useEffect(() => {
@@ -136,8 +218,145 @@ export function IncidentCaptureWorkflow() {
     }
   }, [user, isLoading, router]);
 
+  // Story 4.2: Show continue workflow modal if user has incomplete incidents
+  useEffect(() => {
+    console.log('🔍 MODAL CONDITIONS CHECK:', {
+      timestamp: new Date().toISOString(),
+      user: !!user,
+      userEmail: user?.email || 'null',
+      incompleteIncidentsResult: !!incompleteIncidentsResult,
+      incompleteIncidents: !!incompleteIncidents,
+      incompleteIncidentsLength: incompleteIncidents?.length || 'undefined',
+      hasCheckedForIncompleteIncidents,
+      incidentId: incidentId || 'null',
+      urlIdParam: searchParams.get('id') || 'null',
+      showContinueModal,
+      urlIncidentIdCheck: searchParams.get('id'),
+      willShowModal: !!(user && 
+                        incompleteIncidentsResult && 
+                        incompleteIncidents && 
+                        incompleteIncidents.length > 0 && 
+                        !showContinueModal && 
+                        !incidentId && 
+                        !searchParams.get('id') &&
+                        !userMadeChoice)
+    });
+
+    // Only show modal if:
+    // 1. User is authenticated
+    // 2. We have a query result (not loading)
+    // 3. We have incomplete incidents (length > 0)
+    // 4. We haven't already shown the modal
+    // 5. We're not continuing an existing incident
+    // 6. No incident ID in URL params (check immediately, not from state)
+    // 7. User hasn't already made a choice (new condition)
+    const urlIncidentId = searchParams.get('id');
+    
+    console.log('🔍 URL CHECK:', {
+      urlIncidentId,
+      incidentIdFromState: incidentId,
+      willBlockDueToUrl: !!urlIncidentId,
+      willBlockDueToState: !!incidentId
+    });
+    
+    if (user && 
+        incompleteIncidentsResult && 
+        incompleteIncidents && 
+        incompleteIncidents.length > 0 && 
+        !showContinueModal && 
+        !incidentId && 
+        !urlIncidentId &&
+        !userMadeChoice) {
+      
+      console.log('📋 MODAL CHECK: All conditions met, showing modal...');
+      console.log('📋 CONTINUE MODAL: Found', incompleteIncidents.length, 'incomplete incidents, showing modal');
+      console.log('📋 CONTINUE MODAL: Incidents data:', incompleteIncidents);
+      
+      setShowContinueModal(true);
+      setHasCheckedForIncompleteIncidents(true);
+    } else if (user && 
+               incompleteIncidentsResult && 
+               incompleteIncidents && 
+               incompleteIncidents.length === 0 && 
+               !hasCheckedForIncompleteIncidents) {
+      // No incomplete incidents, just set the flag to prevent future checks
+      console.log('📋 CONTINUE MODAL: No incomplete incidents found, proceeding with new incident');
+      setHasCheckedForIncompleteIncidents(true);
+    } else {
+      console.log('📋 MODAL CHECK: Conditions not met, skipping modal');
+    }
+  }, [user, incompleteIncidentsResult, incompleteIncidents, hasCheckedForIncompleteIncidents, userMadeChoice, incidentId, searchParams, showContinueModal]);
+
+  // Story 4.2: Track step changes and update workflow progress
+  useEffect(() => {
+    if (incidentId && currentStep > 0) {
+      // Update workflow progress when step changes
+      updateWorkflowProgress(currentStep + 1); // Convert to 1-based step number
+    }
+  }, [currentStep, incidentId]);
+
   // Track step completion states
   const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set());
+
+  // Story 4.2: Continue workflow modal handlers
+  const handleContinueIncident = (selectedIncidentId: string, step?: number) => {
+    console.log('🔄 CONTINUE BUTTON CLICKED:', {
+      timestamp: new Date().toISOString(),
+      selectedIncidentId,
+      step,
+      currentModalState: showContinueModal,
+      currentHasChecked: hasCheckedForIncompleteIncidents
+    });
+    
+    // Close modal and load incident data directly
+    console.log('🔄 CONTINUE: Loading incident data directly, no navigation needed');
+    setShowContinueModal(false);
+    setHasCheckedForIncompleteIncidents(true);
+    setUserMadeChoice(true); // Prevent modal from reappearing
+    
+    // Set the incident ID to load the existing data
+    setIncidentId(selectedIncidentId as Id<"incidents">);
+    
+    // Set the step if provided
+    if (step && step > 0) {
+      console.log('🔄 CONTINUE: Setting step to:', step - 1); // Convert to 0-based
+      setCurrentStep(step - 1);
+      setHasSetInitialStep(true);
+    }
+    
+    console.log('🔄 CONTINUE: Incident will be loaded and form populated automatically');
+  };
+
+  const handleStartNewIncident = () => {
+    console.log('🆕 START NEW BUTTON CLICKED:', {
+      timestamp: new Date().toISOString(),
+      currentModalState: showContinueModal,
+      currentHasChecked: hasCheckedForIncompleteIncidents,
+      currentIncidentId: incidentId,
+      currentUrl: window.location.href
+    });
+    
+    console.log('🆕 START NEW: Setting modal state to false...');
+    setShowContinueModal(false);
+    console.log('🆕 START NEW: Setting hasChecked to true...');
+    setHasCheckedForIncompleteIncidents(true);
+    setUserMadeChoice(true); // Prevent modal from reappearing
+    
+    console.log('🆕 START NEW: Staying on current page with blank form');
+    // Stay on current page and proceed with new incident workflow
+    // The blank form will be shown
+  };
+
+  const handleModalClose = () => {
+    console.log('❌ CANCEL BUTTON CLICKED:', {
+      timestamp: new Date().toISOString(),
+      currentModalState: showContinueModal,
+      currentHasChecked: hasCheckedForIncompleteIncidents
+    });
+    setUserMadeChoice(true); // Prevent modal from reappearing
+    console.log('❌ CANCEL: Navigating away from new incident page to incidents list');
+    router.push('/incidents');
+  };
 
   // Incident-specific business logic handlers
   const handleMetadataComplete = (newIncidentId: Id<"incidents">) => {
@@ -567,6 +786,18 @@ export function IncidentCaptureWorkflow() {
         <div className="fixed bottom-4 right-4 bg-black text-white p-2 text-xs rounded opacity-50">
           Step: {currentStep + 1} | IncidentId: {incidentId || 'none'}
         </div>
+
+        {/* Story 4.2: Continue Workflow Modal */}
+        {incompleteIncidents && (
+          <ContinueWorkflowModal
+            isOpen={showContinueModal}
+            onClose={handleModalClose}
+            incompleteIncidents={incompleteIncidents}
+            totalCount={totalIncompleteCount}
+            onContinue={handleContinueIncident}
+            onStartNew={handleStartNewIncident}
+          />
+        )}
       </div>
     </div>
   );
