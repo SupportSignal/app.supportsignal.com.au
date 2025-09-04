@@ -1451,3 +1451,146 @@ export const updateWorkflowProgress = mutation({
     return { success: true };
   },
 });
+
+/**
+ * Story 3.4: Auto-Complete Workflow
+ * Automatically transitions incident to ready_for_analysis when workflow is complete
+ * Triggered when user completes Step 8 (Consolidated Report)
+ */
+export const autoCompleteWorkflow = mutation({
+  args: {
+    sessionToken: v.string(),
+    incident_id: v.id("incidents"),
+    correlation_id: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const correlationId = args.correlation_id || `auto-complete-${Date.now()}`;
+    
+    // Verify user permissions
+    const { user } = await requirePermission(ctx, args.sessionToken, PERMISSIONS.UPDATE_INCIDENT);
+    
+    // Get the incident
+    const incident = await ctx.db.get(args.incident_id);
+    if (!incident) {
+      throw new ConvexError("Incident not found");
+    }
+    
+    // Verify company boundary
+    if (incident.company_id !== user.company_id) {
+      throw new ConvexError("Access denied - incident belongs to different company");
+    }
+    
+    // Check if already completed
+    if (incident.overall_status === "ready_for_analysis" || incident.overall_status === "completed") {
+      console.log('⚠️ WORKFLOW ALREADY COMPLETED', {
+        incidentId: args.incident_id,
+        currentStatus: incident.overall_status,
+        userId: user._id,
+        correlationId,
+        timestamp: new Date().toISOString(),
+      });
+      return { 
+        success: true, 
+        already_completed: true,
+        current_status: incident.overall_status 
+      };
+    }
+    
+    // Validate that workflow is actually complete
+    // Check if enhanced narrative exists (indicates Step 8 completion)
+    if (!incident.enhanced_narrative_id) {
+      throw new ConvexError("Cannot auto-complete - workflow not fully finished");
+    }
+    
+    const now = Date.now();
+    
+    // Update incident to ready_for_analysis status
+    await ctx.db.patch(args.incident_id, {
+      overall_status: "ready_for_analysis",
+      workflow_completed_at: now,
+      updated_at: now,
+    });
+    
+    // Log the auto-completion
+    console.log('✅ WORKFLOW AUTO-COMPLETED', {
+      incidentId: args.incident_id,
+      userId: user._id,
+      userEmail: user.email,
+      previousStatus: incident.overall_status,
+      newStatus: "ready_for_analysis",
+      workflow_completed_at: now,
+      correlationId,
+      timestamp: new Date().toISOString(),
+    });
+    
+    return { 
+      success: true, 
+      status: "ready_for_analysis",
+      workflow_completed_at: now 
+    };
+  },
+});
+
+/**
+ * Story 3.4: Data Backfill for Historical Incidents
+ * Retrospectively mark incidents as ready_for_analysis if workflow is complete
+ */
+export const backfillWorkflowCompletions = mutation({
+  args: {
+    sessionToken: v.string(),
+    limit: v.optional(v.number()), // Batch size, default 50
+    correlation_id: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const correlationId = args.correlation_id || `backfill-${Date.now()}`;
+    const limit = args.limit || 50;
+    
+    // Verify admin permissions for backfill operations
+    const { user } = await requirePermission(ctx, args.sessionToken, PERMISSIONS.ADMIN);
+    
+    // Find incidents that have completed workflow but wrong status
+    const incidentsToUpdate = await ctx.db
+      .query("incidents")
+      .withIndex("by_company", (q) => q.eq("company_id", user.company_id))
+      .filter((q) => 
+        q.and(
+          // Has enhanced narrative (indicates completed workflow)
+          q.neq(q.field("enhanced_narrative_id"), undefined),
+          // But status is still analysis_pending
+          q.eq(q.field("overall_status"), "analysis_pending"),
+          // Workflow not already marked complete
+          q.eq(q.field("workflow_completed_at"), undefined)
+        )
+      )
+      .take(limit);
+    
+    const now = Date.now();
+    let updatedCount = 0;
+    
+    for (const incident of incidentsToUpdate) {
+      await ctx.db.patch(incident._id, {
+        overall_status: "ready_for_analysis",
+        workflow_completed_at: incident.updated_at || now, // Use incident's last update or now
+        updated_at: now,
+      });
+      updatedCount++;
+    }
+    
+    console.log('📈 WORKFLOW BACKFILL COMPLETED', {
+      processedIncidents: incidentsToUpdate.length,
+      updatedCount,
+      userId: user._id,
+      userEmail: user.email,
+      companyId: user.company_id,
+      correlationId,
+      timestamp: new Date().toISOString(),
+    });
+    
+    return {
+      success: true,
+      processed: incidentsToUpdate.length,
+      updated: updatedCount,
+      hasMore: incidentsToUpdate.length === limit,
+    };
+  },
+});

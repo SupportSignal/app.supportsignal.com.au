@@ -60,6 +60,47 @@ export function IncidentCaptureWorkflow() {
     user?.sessionToken ? { sessionToken: user.sessionToken } : "skip"
   );
 
+  // SECURITY: Fetch incident data to verify permissions when editing existing incident
+  const currentIncident = useQuery(
+    api.incidents.getById,
+    (incidentId && user?.sessionToken) ? { 
+      sessionToken: user.sessionToken, 
+      id: incidentId 
+    } : "skip"
+  );
+
+  // SECURITY: Check if user can edit this incident
+  const canEditIncident = useMemo(() => {
+    if (!incidentId || !currentIncident || !user) return false;
+    
+    // User owns the incident
+    if (currentIncident.created_by === user._id) return true;
+    
+    // User is team_lead, company_admin, or system_admin in same company
+    if (currentIncident.company_id === user.company_id && 
+        (user.role === 'team_lead' || user.role === 'company_admin' || user.role === 'system_admin')) {
+      return true;
+    }
+    
+    return false;
+  }, [incidentId, currentIncident, user]);
+
+  // SECURITY: Check if user can view but not edit (for read-only mode)
+  const canViewIncident = useMemo(() => {
+    if (!incidentId || !currentIncident || !user) return false;
+    
+    // Can edit means can view
+    if (canEditIncident) return true;
+    
+    // Can view all company incidents (team leads and above)
+    if (currentIncident.company_id === user.company_id && 
+        (user.role === 'team_lead' || user.role === 'company_admin' || user.role === 'system_admin')) {
+      return true;
+    }
+    
+    return false;
+  }, [incidentId, currentIncident, user, canEditIncident]);
+
   // Extract incidents array and total count from result
   const incompleteIncidents = incompleteIncidentsResult?.incidents || [];
   const totalIncompleteCount = incompleteIncidentsResult?.totalCount || 0;
@@ -727,6 +768,82 @@ export function IncidentCaptureWorkflow() {
 
   if (!user) {
     return null; // Will redirect
+  }
+
+  // SECURITY: Handle unauthorized access to existing incidents
+  if (incidentId && currentIncident) {
+    if (!canViewIncident) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+          <div className="max-w-md mx-auto text-center">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+              <h3 className="text-lg font-medium text-red-800 mb-2">
+                Access Denied
+              </h3>
+              <p className="text-red-600 mb-4">
+                You don't have permission to view this incident. This incident belongs to a different user or company.
+              </p>
+              <div className="space-y-2">
+                <Link
+                  href="/incidents"
+                  className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                >
+                  View My Incidents
+                </Link>
+                <div>
+                  <Link
+                    href="/dashboard"
+                    className="text-red-600 hover:text-red-500 text-sm"
+                  >
+                    Return to Dashboard
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    // SECURITY: Show read-only warning for users who can view but not edit
+    if (canViewIncident && !canEditIncident) {
+      return (
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+          <div className="max-w-6xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <div className="mb-6">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-amber-800">
+                      Read-Only Access
+                    </h3>
+                    <p className="text-sm text-amber-700 mt-1">
+                      You're viewing an incident created by another user. You can view the details but cannot make changes.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Read-only view would go here - for now redirect to incident list */}
+            <div className="text-center">
+              <p className="text-gray-600 mb-4">Read-only incident viewing is not yet implemented.</p>
+              <Link
+                href="/incidents"
+                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                View All Incidents
+              </Link>
+            </div>
+          </div>
+        </div>
+      );
+    }
   }
 
   return (

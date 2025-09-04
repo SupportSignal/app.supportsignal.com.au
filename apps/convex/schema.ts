@@ -214,7 +214,7 @@ export default defineSchema({
     // Workflow Status
     capture_status: v.union(v.literal("draft"), v.literal("in_progress"), v.literal("completed")),
     analysis_status: v.union(v.literal("not_started"), v.literal("in_progress"), v.literal("completed")),
-    overall_status: v.union(v.literal("capture_pending"), v.literal("analysis_pending"), v.literal("completed")),
+    overall_status: v.union(v.literal("capture_pending"), v.literal("analysis_pending"), v.literal("ready_for_analysis"), v.literal("completed")),
     
     // Audit Fields
     created_at: v.number(),

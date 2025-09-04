@@ -550,22 +550,32 @@ export const getMyIncompleteIncidents = query({
     console.log(`📋 BACKEND: getMyIncompleteIncidents called for user ${user.email} (ID: ${user._id})`);
     console.log(`📋 BACKEND: Company ID: ${user.company_id}`);
     
-    // Get total count of incomplete incidents
+    // Get total count of incomplete incidents (Story 3.4: exclude ready_for_analysis)
     const allIncompleteIncidents = await ctx.db
       .query("incidents")
       .withIndex("by_company_user", (q) => 
         q.eq("company_id", user.company_id).eq("created_by", user._id)
       )
-      .filter((q) => q.neq(q.field("overall_status"), "completed"))
+      .filter((q) => 
+        q.and(
+          q.neq(q.field("overall_status"), "completed"),
+          q.neq(q.field("overall_status"), "ready_for_analysis") // Story 3.4: workflow-complete incidents
+        )
+      )
       .collect();
     
-    // Get top 5 most recent for display
+    // Get top 5 most recent for display (Story 3.4: exclude ready_for_analysis)
     const recentIncidents = await ctx.db
       .query("incidents")
       .withIndex("by_company_user", (q) => 
         q.eq("company_id", user.company_id).eq("created_by", user._id)
       )
-      .filter((q) => q.neq(q.field("overall_status"), "completed"))
+      .filter((q) => 
+        q.and(
+          q.neq(q.field("overall_status"), "completed"),
+          q.neq(q.field("overall_status"), "ready_for_analysis") // Story 3.4: workflow-complete incidents
+        )
+      )
       .order("desc")
       .take(5); // Show top 5 for modal display
     
