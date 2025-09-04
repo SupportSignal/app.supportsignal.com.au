@@ -160,20 +160,20 @@ Implement automatic incident completion when users finish the final workflow ste
 
 **Auto-Completion Logic**:
 - **Trigger**: User completes Step 8 (Consolidated Report) workflow step
-- **Action**: Automatically update `overall_status` from "analysis_pending" to "completed"
+- **Action**: Automatically update `overall_status` from "analysis_pending" to "ready_for_analysis"
 - **Timestamp**: Set `workflow_completed_at` field with completion timestamp
-- **Modal Exclusion**: Completed incidents no longer appear in workflow continuation modal
+- **Modal Exclusion**: Workflow-complete incidents no longer appear in workflow continuation modal
 
 **Data Backfill Requirements**:
 - **Historical Data**: Identify existing incidents that have completed all workflow steps but remain in "analysis_pending" status
-- **Batch Update**: Retrospectively mark historically completed incidents as "completed"
+- **Batch Update**: Retrospectively mark historically workflow-complete incidents as "ready_for_analysis"
 - **Audit Trail**: Log all auto-completion actions with user context and timestamps
 
 #### Acceptance Criteria
-- [ ] **Automatic Status Update**: Step 8 completion triggers `overall_status` change to "completed"
+- [ ] **Automatic Status Update**: Step 8 completion triggers `overall_status` change to "ready_for_analysis"
 - [ ] **Workflow Timestamp**: `workflow_completed_at` field populated on auto-completion
-- [ ] **Modal Exclusion**: Completed incidents excluded from `getMyIncompleteIncidents` query
-- [ ] **Data Backfill**: Historical incidents with completed workflows marked as "completed"
+- [ ] **Modal Exclusion**: Workflow-complete incidents excluded from `getMyIncompleteIncidents` query
+- [ ] **Data Backfill**: Historical incidents with completed workflows marked as "ready_for_analysis"
 - [ ] **Status Preservation**: Manual submission workflow can still override completion status
 - [ ] **Audit Logging**: All status changes logged with user context and correlation IDs
 
