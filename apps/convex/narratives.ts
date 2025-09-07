@@ -136,9 +136,13 @@ export const update = mutation({
       throw new ConvexError("Access denied: incident belongs to different company");
     }
 
-    // Check if capture phase is still editable
-    if (incident.capture_status === "completed") {
-      throw new ConvexError("Cannot edit narrative: capture phase is completed");
+    // Check if narrative editing is allowed
+    // Allow editing if:
+    // 1. Capture phase is not completed yet, OR
+    // 2. Capture is completed but workflow hasn't been auto-completed yet (overall_status !== "ready_for_analysis")
+    // 3. AND user is the incident owner (validated by permission check above)
+    if (incident.capture_status === "completed" && incident.overall_status === "ready_for_analysis") {
+      throw new ConvexError("Cannot edit narrative: workflow has been completed and submitted for analysis");
     }
 
     // Get existing narrative

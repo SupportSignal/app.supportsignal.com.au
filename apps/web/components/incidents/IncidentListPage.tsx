@@ -356,6 +356,8 @@ export function IncidentListPage() {
               pagination={pagination}
               onPageChange={handlePageChange}
               hasMore={incidents.hasMore}
+              currentUser={user}
+              hasCompanyAccess={hasCompanyAccess}
             />
           )}
         </CardContent>

@@ -41,6 +41,7 @@ interface QuestionGenerationResponse {
 
 // Zod transformation schema for template variable mapping
 // Maps database field names to actual template variable names used in prompt templates
+// Note: phase variable removed - phase context is now embedded in phase-specific prompt templates
 const templateVariableTransformer = z.object({
   participant_name: z.string(),
   reporter_name: z.string(),
@@ -51,16 +52,16 @@ const templateVariableTransformer = z.object({
     z.literal("during_event"),
     z.literal("end_event"),
     z.literal("post_event")
-  ]),
+  ]), // Still validate phase for prompt selection, but don't include in template variables
   narrative_content: z.string(),
 }).transform(data => ({
-  // Map database fields to actual template variables (must match the ACTIVE prompt template exactly)
-  // CRITICAL: These variable names must match the active template in database
+  // Map database fields to actual template variables (must match the phase-specific prompt templates exactly)
+  // CRITICAL: These variable names must match the phase-specific templates in database
   participantName: data.participant_name,          // {{participantName}}
   reporterName: data.reporter_name,                // {{reporterName}}  
   location: data.location,                         // {{location}}
   eventDateTime: data.event_date_time,             // {{eventDateTime}}
-  phase: data.phase,                               // {{phase}}
+  // phase: data.phase,                            // REMOVED: {{phase}} - context now embedded in prompts
   narrativeText: data.narrative_content,           // {{narrativeText}}
 }));
 
@@ -192,10 +193,16 @@ export const generateQuestionsForPhase = action({
       const config = getConfig();
       const modelToUse = config.llm.defaultModel;
       
-      // Get active prompt template
-      console.log("🔍 Getting active prompt template for clarification questions...");
+      // Get phase-specific prompt template (required)
+      const promptName = `generate_clarification_questions_${args.phase}`;
+      console.log("🔍 Getting phase-specific prompt template for clarification questions...", {
+        phase: args.phase,
+        promptName,
+        correlationId,
+      });
+      
       const prompt = await ctx.runQuery(internal.promptManager.getActivePrompt, {
-        prompt_name: "generate_clarification_questions",
+        prompt_name: promptName,
         subsystem: "incidents",
       });
 
@@ -208,34 +215,47 @@ export const generateQuestionsForPhase = action({
       });
 
       if (!prompt) {
-        console.error("❌ NO PROMPT TEMPLATE FOUND", { correlationId });
-        throw new Error("No active prompt template found for clarification questions");
+        console.error("❌ NO PHASE-SPECIFIC PROMPT TEMPLATE FOUND", { 
+          promptName, 
+          phase: args.phase,
+          correlationId 
+        });
+        throw new Error(`No active prompt template found for phase '${args.phase}' (${promptName})`);
       }
 
       // Transform database fields to template variable names using Zod
       console.log("🔄 Mapping database fields to template variable names...");
+      
       const templateVariables = templateVariableTransformer.parse({
         participant_name: args.participant_name,
         reporter_name: args.reporter_name,
         location: args.location,
         event_date_time: args.event_date_time,
-        phase: args.phase,
+        phase: args.phase, // Used for validation only
         narrative_content: args.narrative_content,
       });
 
+      // Phase-specific prompts don't need the phase variable in template interpolation
+      const finalTemplateVariables = {
+        participantName: templateVariables.participantName,
+        reporterName: templateVariables.reporterName,
+        location: templateVariables.location,
+        eventDateTime: templateVariables.eventDateTime,
+        narrativeText: templateVariables.narrativeText,
+      };
+
       console.log("✅ TEMPLATE VARIABLES MAPPED", {
         original_keys: Object.keys(args),
-        template_variable_keys: Object.keys(templateVariables),
+        template_variable_keys: Object.keys(finalTemplateVariables),
         narrative_preview: templateVariables.narrativeText.substring(0, 100),
         participant_name: templateVariables.participantName,
         location: templateVariables.location,
-        phase: templateVariables.phase,
         correlationId,
       });
 
       // Interpolate template with correctly mapped template variables
       console.log("🔄 Interpolating prompt template with mapped variables...");
-      const interpolatedPrompt = interpolateTemplate(prompt.prompt_template, templateVariables);
+      const interpolatedPrompt = interpolateTemplate(prompt.prompt_template, finalTemplateVariables);
 
       console.log("📝 INTERPOLATED PROMPT", {
         prompt_length: interpolatedPrompt.length,

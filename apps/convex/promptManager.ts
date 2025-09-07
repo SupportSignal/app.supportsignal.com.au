@@ -209,43 +209,6 @@ export const updatePromptUsage = mutation({
 // Hardcoded default templates for seeding
 const DEFAULT_PROMPTS = [
   {
-    prompt_name: "generate_clarification_questions",
-    prompt_template: `You are an expert incident analyst helping to gather additional details about an NDIS incident involving {{participantName}}.
-
-**Incident Context:**
-- **Participant**: {{participantName}}
-- **Date/Time**: {{eventDateTime}}
-- **Location**: {{location}}
-- **Reporter**: {{reporterName}}
-
-**Current Narrative ({{phase}} phase):**
-{{narrativeText}}
-
-**Your Task:**
-Generate 3-5 specific, focused clarification questions that would help gather additional important details about this incident. Focus on:
-- Missing factual details that would improve understanding
-- Context that could help prevent similar incidents
-- Specific circumstances that aren't clear from the current narrative
-
-**Requirements:**
-- Questions should be clear and specific
-- Avoid yes/no questions when possible
-- Focus on actionable details
-- Consider NDIS reporting requirements
-- Be sensitive to the participant's needs and dignity
-
-Generate questions as a JSON array with this format:
-[
-  {
-    "question": "Your specific question here",
-    "purpose": "Brief explanation of why this detail is important"
-  }
-]`,
-    description: "Generate clarification questions based on incident narrative to gather additional details",
-    workflow_step: "clarification_questions",
-    subsystem: "incidents",
-  },
-  {
     prompt_name: "enhance_narrative",
     prompt_template: `You are a professional incident documentation specialist. Your task is to create a polished, consolidated narrative for the {{phase}} phase by enhancing human-authored content while preserving all factual details and authentic insights.
 
@@ -326,6 +289,189 @@ Return a JSON array of answer objects (no markdown formatting):
 ]`,
     description: "Generate realistic mock answers for clarification questions about an NDIS incident report",
     workflow_step: "sample_data_generation",
+    subsystem: "incidents",
+  },
+  {
+    prompt_name: "generate_clarification_questions_before_event",
+    prompt_template: `You are an expert incident analyst helping to gather **clear and practical details** about what was happening BEFORE an NDIS incident involving {{participantName}}.  
+
+**Incident Context:**  
+- **Participant**: {{participantName}}  
+- **Date/Time**: {{eventDateTime}}  
+- **Location**: {{location}}  
+- **Reporter**: {{reporterName}}  
+
+**Before Event Narrative:**  
+{{narrativeText}}  
+
+**Your Task:**  
+Generate 3–5 clarification questions that a frontline worker who was present could reasonably answer.  
+Focus only on **direct observations** and **simple, useful details** that may have happened before the incident.  
+
+**Key Areas to Explore (Before-Event):**  
+- How the participant looked, acted, or felt in the lead-up (mood, energy, body language)  
+- Any changes to normal routine (meals, transport, schedule, medication, staff changes)  
+- The setup of the environment (noise, lighting, number of people, activity props)  
+- Interactions with staff or peers before the incident  
+- Any small signs, stressors, or triggers noticed beforehand  
+
+**Requirements:**  
+- Keep questions plain, short, and easy to understand (suitable for English as a second language)  
+- Avoid yes/no questions — ask for descriptions instead  
+- Stick to things the worker could directly see, hear, or do (not management, training, or history they wouldn't know)  
+- Questions should help identify early warning signs or conditions that may have contributed to the incident  
+- Be respectful and sensitive to the participant's dignity  
+
+**Output format:**  
+Return the questions as a JSON array:  
+[
+  {
+    "question": "Your specific before-event question here",
+    "purpose": "Brief explanation of why this detail is important"
+  }
+]`,
+    description: "Generate before-event focused clarification questions about antecedents and environmental factors",
+    workflow_step: "clarification_questions",
+    subsystem: "incidents",
+  },
+  {
+    prompt_name: "generate_clarification_questions_during_event",
+    prompt_template: `You are an expert incident analyst helping to gather **clear, practical details** about what happened DURING an NDIS incident involving {{participantName}}.  
+
+**Incident Context:**  
+- **Participant**: {{participantName}}  
+- **Date/Time**: {{eventDateTime}}  
+- **Location**: {{location}}  
+- **Reporter**: {{reporterName}}  
+
+**During Event Narrative:**  
+{{narrativeText}}  
+
+**Your Task:**  
+Generate 3–5 clarification questions that a frontline worker who was present could reasonably answer.  
+Focus only on **what was seen, heard, or done** during the time the incident was happening.  
+
+**Key Areas to Explore (During-Event):**  
+- What actions staff took to keep people safe  
+- How the participant responded to those actions (what helped, what didn't)  
+- Any physical interventions or tools used  
+- Any changes made to the space (moving people, blocking exits, removing objects)  
+- How staff communicated with the participant and each other  
+- Timing — what happened first, next, last  
+
+**Requirements:**  
+- Use plain, short, and easy-to-read language (for English as a second language)  
+- Avoid yes/no questions — ask for clear, descriptive responses  
+- Keep questions focused on **observable actions and responses**  
+- Do not ask about policy, training, or background knowledge outside the staff member's direct role  
+- Be respectful of the participant's dignity — focus on safety, care, and what was tried  
+
+**Output format:**  
+Return the questions as a JSON array:  
+[
+  {
+    "question": "Your specific during-event question here",
+    "purpose": "Brief explanation of why this detail is important"
+  }
+]`,
+    description: "Generate during-event focused clarification questions about interventions and safety measures",
+    workflow_step: "clarification_questions",
+    subsystem: "incidents",
+  },
+  {
+    prompt_name: "generate_clarification_questions_end_event",
+    prompt_template: `You are an expert incident analyst helping to gather **clear, practical details** about how an NDIS incident involving {{participantName}} came to an end and what happened right afterward.  
+
+**Incident Context:**  
+- **Participant**: {{participantName}}  
+- **Date/Time**: {{eventDateTime}}  
+- **Location**: {{location}}  
+- **Reporter**: {{reporterName}}  
+
+**End Event Narrative:**  
+{{narrativeText}}  
+
+**Your Task:**  
+Generate 3–5 clarification questions that a frontline worker who was present could reasonably answer.  
+Focus on what happened as the incident finished and in the minutes or moments just after.  
+
+**Key Areas to Explore (End-Event):**  
+- What helped calm things down or bring the incident to a close  
+- How the participant's behavior or mood changed as things settled  
+- Any immediate safety concerns that were still present  
+- If emergency services (e.g., ambulance, police) were involved, what happened next  
+- How staff worked together during the resolution  
+- What steps were taken to return things to normal or support the participant after the event  
+
+**Requirements:**  
+- Use simple, clear, and direct language (for English as a second language)  
+- Avoid yes/no questions — ask for short descriptions or actions  
+- Only ask about things the worker **saw, heard, or did** — not policy or background knowledge  
+- Focus on what helped resolve the incident or what needed follow-up  
+- Keep a respectful tone — protect the dignity of the participant and others involved  
+
+**Output format:**  
+Return the questions as a JSON array:  
+[
+  {
+    "question": "Your specific end-event question here",
+    "purpose": "Brief explanation of why this detail is important"
+  }
+]`,
+    description: "Generate end-event focused clarification questions about resolution strategies and outcomes",
+    workflow_step: "clarification_questions",
+    subsystem: "incidents",
+  },
+  {
+    prompt_name: "generate_clarification_questions_post_event",
+    prompt_template: `You are an expert incident analyst helping to gather **clear and practical details** about what happened in the **first few hours after** an NDIS incident involving {{participantName}}.  
+
+This is about checking that the participant is **safe**, has been **offered the right support**, and that **key people were notified**.  
+
+**Incident Context:**  
+- **Participant**: {{participantName}}  
+- **Date/Time**: {{eventDateTime}}  
+- **Location**: {{location}}  
+- **Reporter**: {{reporterName}}  
+
+**Post-Event Narrative:**  
+{{narrativeText}}  
+
+**Your Task:**  
+Generate 3–5 clarification questions based on what may have occurred in the **4 hours after the incident**.  
+Your goal is to confirm:
+- The participant was no longer in danger or distress  
+- They were offered appropriate care or emotional support  
+- The right people (e.g. family, supervisor, emergency services) were contacted  
+- Relevant notes or handovers were done (if required)
+
+**Who can answer:**  
+These questions should be answerable by **either the frontline worker or the team leader**, depending on who was involved.
+
+**Key Areas to Explore (Post-Event):**  
+- Was the participant safe, calm, and supervised?  
+- Was medical or emotional support offered?  
+- Were family, guardians, or other team members notified?  
+- Were incident forms, handovers, or internal alerts completed?  
+- Did the participant return to a normal or safe activity?  
+- Were others (e.g. peers or staff) also supported afterward?
+
+**Requirements:**  
+- Use clear, simple language  
+- Avoid yes/no questions — ask for short descriptions or facts  
+- Stay within what someone on shift would reasonably know or do  
+- Be respectful and uphold the participant's dignity  
+
+**Output format:**  
+Return the questions as a JSON array:  
+[
+  {
+    "question": "Your specific post-event question here",
+    "purpose": "Brief explanation of why this follow-up detail is important"
+  }
+]`,
+    description: "Generate post-event focused clarification questions about follow-up care and lessons learned",
+    workflow_step: "clarification_questions",
     subsystem: "incidents",
   }
 ];
@@ -437,6 +583,50 @@ export const clearAllPrompts = mutation({
       deletedTemplates,
     };
   }
+});
+
+// Deactivate a specific prompt by name (sample_data permission required)
+export const deactivatePrompt = mutation({
+  args: {
+    sessionToken: v.string(),
+    promptName: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Validate sample_data permission
+    const { user, correlationId } = await requirePermission(
+      ctx,
+      args.sessionToken,
+      PERMISSIONS.SAMPLE_DATA,
+      { errorMessage: 'Sample data permission required to deactivate prompt templates' }
+    );
+
+    // Find the prompt by name
+    const prompt = await ctx.db
+      .query("ai_prompts")
+      .withIndex("by_name", (q) => q.eq("prompt_name", args.promptName))
+      .filter((q) => q.eq(q.field("is_active"), true))
+      .first();
+
+    if (!prompt) {
+      return {
+        success: false,
+        message: `No active prompt found with name: ${args.promptName}`,
+        correlationId,
+      };
+    }
+
+    // Deactivate the prompt
+    await ctx.db.patch(prompt._id, {
+      is_active: false,
+    });
+
+    return {
+      success: true,
+      message: `Successfully deactivated prompt: ${args.promptName}`,
+      promptId: prompt._id,
+      correlationId,
+    };
+  },
 });
 
 // Reset and seed prompts in one operation (sample_data permission required)

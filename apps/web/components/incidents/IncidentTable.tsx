@@ -55,6 +55,12 @@ interface IncidentTableProps {
   };
   onPageChange: (newOffset: number) => void;
   hasMore: boolean;
+  currentUser?: {
+    _id: string;
+    role: string;
+    permissions: string[];
+  };
+  hasCompanyAccess?: boolean;
 }
 
 export function IncidentTable({
@@ -64,7 +70,9 @@ export function IncidentTable({
   onSortChange,
   pagination,
   onPageChange,
-  hasMore
+  hasMore,
+  currentUser,
+  hasCompanyAccess = false
 }: IncidentTableProps) {
   const router = useRouter();
 
@@ -82,48 +90,94 @@ export function IncidentTable({
   };
 
   const getActionButton = (incident: Incident) => {
-    // Determine user permissions based on what data we can see
-    // If we can see all company incidents, user has VIEW_ALL_COMPANY_INCIDENTS
-    const hasCompanyAccess = incidents.some(i => i.created_by !== incident.created_by);
+    // Determine ownership
+    const isMyIncident = currentUser && incident.created_by === currentUser._id;
     
+    // Always show View button
+    const viewButton = (
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={() => router.push(`/incidents/${incident._id}`)}
+        className="flex items-center gap-1"
+      >
+        <EyeIcon className="w-3 h-3" />
+        View
+      </Button>
+    );
+
+    // For OTHER PEOPLE'S incidents (elevated role viewing)
+    if (!isMyIncident) {
+      if (incident.overall_status === "completed") {
+        return (
+          <div className="flex gap-1">
+            {viewButton}
+            {hasCompanyAccess && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => router.push(`/analysis/${incident._id}`)}
+                className="flex items-center gap-1"
+              >
+                <BarChart3Icon className="w-3 h-3" />
+                Analyze
+              </Button>
+            )}
+          </div>
+        );
+      } else {
+        // Other's incomplete incident - VIEW ONLY
+        return <div className="flex gap-1">{viewButton}</div>;
+      }
+    }
+
+    // For MY incidents
     if (incident.overall_status === "completed") {
+      // Fully completed workflow
       return (
         <div className="flex gap-1">
+          {viewButton}
           <Button
             size="sm"
             variant="outline"
-            onClick={() => router.push(`/incidents/${incident._id}`)}
+            onClick={() => router.push(`/analysis/${incident._id}`)}
+            className="flex items-center gap-1"
+          >
+            <BarChart3Icon className="w-3 h-3" />
+            Analyze
+          </Button>
+        </div>
+      );
+    } else if (incident.overall_status === "ready_for_analysis") {
+      // Auto-completed, submitted for analysis - no continue needed
+      return (
+        <div className="flex gap-1">
+          {viewButton}
+          <Badge variant="secondary" className="text-xs">
+            Submitted for Analysis
+          </Badge>
+        </div>
+      );
+    } else if (incident.capture_status === "completed") {
+      // Capture complete but workflow not auto-completed yet - allow review
+      return (
+        <div className="flex gap-1">
+          {viewButton}
+          <Button
+            size="sm"
+            onClick={() => router.push(`/new-incident?id=${incident._id}`)}
             className="flex items-center gap-1"
           >
             <EyeIcon className="w-3 h-3" />
-            View
+            Review
           </Button>
-          {hasCompanyAccess && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => router.push(`/analysis/${incident._id}`)}
-              className="flex items-center gap-1"
-            >
-              <BarChart3Icon className="w-3 h-3" />
-              Analyze
-            </Button>
-          )}
         </div>
       );
     } else {
-      // Incomplete incident
+      // Still capturing - allow continue
       return (
         <div className="flex gap-1">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => router.push(`/incidents/${incident._id}`)}
-            className="flex items-center gap-1"
-          >
-            <EyeIcon className="w-3 h-3" />
-            View
-          </Button>
+          {viewButton}
           <Button
             size="sm"
             onClick={() => router.push(`/new-incident?id=${incident._id}`)}
@@ -204,17 +258,56 @@ export function IncidentTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {incidents.map((incident) => (
-              <TableRow key={incident._id} className="hover:bg-muted/50">
-                <TableCell className="font-medium">
-                  <div>
-                    <div className="font-medium">{incident.participant_name}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {incident.location}
+            {incidents.map((incident) => {
+              const isMyIncident = currentUser && incident.created_by === currentUser._id;
+              // Check for completion at any level
+              const isFullyComplete = incident.overall_status === "completed" || 
+                                     incident.overall_status === "ready_for_analysis" ||
+                                     incident.overall_status === "analysis_pending" ||
+                                     incident.capture_status === "completed";
+              
+              // Determine styling based on ownership and completion
+              let rowStyling = 'hover:bg-muted/50';
+              if (isMyIncident) {
+                if (isFullyComplete) {
+                  // Green for completed incidents (capture complete or workflow complete)
+                  rowStyling += ' bg-green-50/30 border-l-4 border-l-green-200';
+                } else {
+                  // Blue for my incomplete incidents
+                  rowStyling += ' bg-blue-50/30 border-l-4 border-l-blue-200';
+                }
+              }
+              
+              return (
+                <TableRow 
+                  key={incident._id} 
+                  className={rowStyling}
+                >
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{incident.participant_name}</span>
+                          {isMyIncident && (
+                            <Badge 
+                              variant="outline" 
+                              className={`text-xs ${
+                                isFullyComplete 
+                                  ? 'bg-green-50 text-green-700 border-green-200' 
+                                  : 'bg-blue-50 text-blue-700 border-blue-200'
+                              }`}
+                            >
+                              {isFullyComplete ? 'My Incident - Ready' : 'My Incident'}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {incident.location}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell>{incident.reporter_name}</TableCell>
+                  </TableCell>
+                  <TableCell>{incident.reporter_name}</TableCell>
                 <TableCell>{incident.event_date_time}</TableCell>
                 <TableCell>
                   <IncidentStatusBadge 
@@ -226,11 +319,12 @@ export function IncidentTable({
                 <TableCell className="text-muted-foreground">
                   {formatDate(incident.updated_at)}
                 </TableCell>
-                <TableCell className="text-right">
-                  {getActionButton(incident)}
-                </TableCell>
-              </TableRow>
-            ))}
+                  <TableCell className="text-right">
+                    {getActionButton(incident)}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
