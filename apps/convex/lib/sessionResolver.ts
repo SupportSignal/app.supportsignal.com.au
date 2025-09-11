@@ -12,6 +12,12 @@ import { QueryCtx } from '../_generated/server';
  * First checks for impersonation sessions, then falls back to normal sessions
  */
 export async function getUserFromSession(ctx: QueryCtx, sessionToken: string) {
+  console.log('🔍 SESSION RESOLVER DEBUG', {
+    sessionTokenLength: sessionToken?.length,
+    sessionTokenPrefix: sessionToken?.substring(0, 8) + '...',
+    timestamp: new Date().toISOString()
+  });
+
   // First check if this is an impersonation session token
   const impersonationSession = await ctx.db
     .query('impersonation_sessions')
@@ -22,9 +28,18 @@ export async function getUserFromSession(ctx: QueryCtx, sessionToken: string) {
     ))
     .first();
 
+  console.log('🔍 IMPERSONATION CHECK', {
+    found: !!impersonationSession,
+    sessionToken: sessionToken?.substring(0, 8) + '...'
+  });
+
   if (impersonationSession) {
     // Return the target user (the one being impersonated)
     const targetUser = await ctx.db.get(impersonationSession.target_user_id);
+    console.log('🔍 IMPERSONATION USER', {
+      found: !!targetUser,
+      userId: targetUser?._id
+    });
     if (targetUser) {
       // Add impersonation metadata to the user object
       return {
@@ -42,10 +57,29 @@ export async function getUserFromSession(ctx: QueryCtx, sessionToken: string) {
     .withIndex('by_session_token', q => q.eq('sessionToken', sessionToken))
     .first();
   
+  console.log('🔍 NORMAL SESSION CHECK', {
+    found: !!session,
+    expired: session ? session.expires < Date.now() : null,
+    expires: session?.expires,
+    now: Date.now(),
+    sessionToken: sessionToken?.substring(0, 8) + '...'
+  });
+  
   if (!session || session.expires < Date.now()) {
+    console.log('🔍 SESSION RESOLVER RETURNING NULL', {
+      reason: !session ? 'no_session_found' : 'session_expired',
+      sessionToken: sessionToken?.substring(0, 8) + '...'
+    });
     return null;
   }
   
-  return await ctx.db.get(session.userId);
+  const user = await ctx.db.get(session.userId);
+  console.log('🔍 SESSION RESOLVER SUCCESS', {
+    userId: user?._id,
+    userFound: !!user,
+    sessionToken: sessionToken?.substring(0, 8) + '...'
+  });
+  
+  return user;
 }
 

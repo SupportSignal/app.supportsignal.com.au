@@ -137,8 +137,11 @@ export const generateClarificationQuestions = action({
       timestamp: new Date().toISOString(),
     });
 
-    // Generate new questions using AI service
-    console.error("🔥 ABOUT TO CALL QUESTIONGENERATOR", {
+    // Generate correlation ID for this generation session
+    const correlationId = crypto.randomUUID();
+
+    // Generate new questions using AI service with phase-specific functions
+    console.log("🚀 CALLING PHASE-SPECIFIC QUESTION GENERATOR", {
       phase: args.phase,
       incident_id: args.incident_id,
       participant_name: incident.participant_name,
@@ -146,15 +149,34 @@ export const generateClarificationQuestions = action({
       timestamp: new Date().toISOString(),
     });
     
-    const generation_result = await ctx.runAction(internal.lib.ai.questionGenerator.generateQuestionsForPhase, {
-      participant_name: incident.participant_name,
-      reporter_name: incident.reporter_name,
+    // Build template variables
+    const templateVariables = {
+      participantName: incident.participant_name,
+      reporterName: incident.reporter_name,
       location: incident.location,
-      event_date_time: incident.event_date_time,
-      phase: args.phase,
-      narrative_content: args.narrative_content,
-      user_id: user._id,
-      incident_id: args.incident_id,
+      eventDateTime: incident.event_date_time,
+      // Add phase-specific narrative content
+      [args.phase === 'before_event' ? 'beforeEvent' : 
+       args.phase === 'during_event' ? 'duringEvent' :
+       args.phase === 'end_event' ? 'endEvent' : 'postEvent']: args.narrative_content
+    };
+
+    // Call the appropriate phase-specific function
+    const functionMap = {
+      "before_event": internal.lib.ai.questionGenerator.generateBeforeEventQuestions,
+      "during_event": internal.lib.ai.questionGenerator.generateDuringEventQuestions,
+      "end_event": internal.lib.ai.questionGenerator.generateEndEventQuestions,
+      "post_event": internal.lib.ai.questionGenerator.generatePostEventQuestions,
+    };
+
+    const targetFunction = functionMap[args.phase];
+    if (!targetFunction) {
+      throw new Error(`Invalid phase: ${args.phase}`);
+    }
+
+    const generation_result = await ctx.runAction(targetFunction, {
+      sessionToken: args.sessionToken,
+      variables: templateVariables
     });
     
     console.error("🔥 QUESTIONGENERATOR RETURNED", {
@@ -203,9 +225,9 @@ export const generateClarificationQuestions = action({
         phase: args.phase,
         question_text: question.question_text,
         question_order: question.question_order,
-        ai_model: generation_result.ai_model_used,
+        ai_model: generation_result.ai_model_used || 'unknown',
         prompt_version: "v1.0.0",
-        correlation_id: generation_result.correlation_id,
+        correlation_id: correlationId,
       });
 
       storedQuestions.push({
@@ -224,7 +246,7 @@ export const generateClarificationQuestions = action({
     return {
       questions: storedQuestions,
       cached: false,
-      correlation_id: generation_result.correlation_id,
+      correlation_id: correlationId,
     };
   },
 });

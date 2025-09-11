@@ -171,10 +171,7 @@ export function ConsolidatedReportStep({
         incident_id,
       };
       
-      // Only include enhanced_narrative_id if it exists (for backwards compatibility)
-      if (enhancedNarrative?._id) {
-        submissionArgs.enhanced_narrative_id = enhancedNarrative._id;
-      }
+      // enhanced_narrative_id parameter removed - now using *_extra fields validation
       
       const result = await submitForAnalysis(submissionArgs);
 

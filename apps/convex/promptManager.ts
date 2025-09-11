@@ -4,15 +4,40 @@ import { requirePermission, PERMISSIONS } from "./permissions";
 import { ConvexError } from "convex/values";
 import { getConfig } from "./lib/config";
 
-// Process template with variable substitution (moved from aiPromptTemplates.ts)
-export function processTemplate(template: string, variables: Record<string, any>): {
+// Enhanced template processing with validation (Story 6.3: Developer Prompt Testing)
+export function processTemplateWithValidation(
+  template: string, 
+  variables: Record<string, any>
+): {
   processedTemplate: string;
   substitutions: Record<string, string>;
+  missingPlaceholders: string[];
+  unusedVariables: string[];
 } {
   const substitutions: Record<string, string> = {};
   
-  // Replace {{ variable }} patterns with actual values
-  const processedTemplate = template.replace(/\{\{\s*([^}]+)\s*\}\}/g, (match, variableName) => {
+  // Sanitize template: normalize whitespace in placeholders and fix malformed ones
+  const sanitizedTemplate = template
+    .replace(/\{\{\s*([^}]*?)\s*\}\}/g, (match, content) => {
+      // Remove newlines and normalize whitespace in placeholder content
+      const cleanContent = content.replace(/\s+/g, ' ').trim();
+      return `{{${cleanContent}}}`;
+    });
+  
+  // Extract all {{placeholder}} patterns from sanitized template
+  const placeholderMatches = sanitizedTemplate.match(/\{\{\s*([^}]+)\s*\}\}/g) || [];
+  const placeholderNames = placeholderMatches.map(match => 
+    match.replace(/[{}]/g, '').trim()
+  );
+  
+  // Find missing and unused variables
+  const missingPlaceholders = placeholderNames.filter(name => !(name in variables));
+  const unusedVariables = Object.keys(variables).filter(name => 
+    !placeholderNames.includes(name)
+  );
+  
+  // Replace {{ variable }} patterns with actual values using sanitized template
+  const processedTemplate = sanitizedTemplate.replace(/\{\{\s*([^}]+)\s*\}\}/g, (match, variableName) => {
     const trimmedName = variableName.trim();
     
     if (variables.hasOwnProperty(trimmedName)) {
@@ -29,8 +54,33 @@ export function processTemplate(template: string, variables: Record<string, any>
   return {
     processedTemplate,
     substitutions,
+    missingPlaceholders,
+    unusedVariables,
   };
 }
+
+// Legacy function for backward compatibility
+export function processTemplate(template: string, variables: Record<string, any>): {
+  processedTemplate: string;
+  substitutions: Record<string, string>;
+} {
+  const result = processTemplateWithValidation(template, variables);
+  return {
+    processedTemplate: result.processedTemplate,
+    substitutions: result.substitutions,
+  };
+}
+
+// Convex query wrapper for enhanced template processing
+export const processTemplateWithValidationQuery = query({
+  args: {
+    template: v.string(),
+    variables: v.any(),
+  },
+  handler: async (ctx, args) => {
+    return processTemplateWithValidation(args.template, args.variables);
+  },
+});
 
 // Get active prompt template by name
 export const getActivePrompt = query({
@@ -149,6 +199,7 @@ export const seedPromptTemplates = mutation({
           usage_count: 0,
           created_at: now,
           created_by: user._id,
+          scope: "production", // Story 6.3: Default to production scope
         });
         promptIds.push(promptId);
       }
@@ -302,7 +353,7 @@ Return a JSON array of answer objects (no markdown formatting):
 - **Reporter**: {{reporterName}}  
 
 **Before Event Narrative:**  
-{{narrativeText}}  
+{{beforeEvent}}  
 
 **Your Task:**  
 Generate 3–5 clarification questions that a frontline worker who was present could reasonably answer.  
@@ -345,7 +396,7 @@ Return the questions as a JSON array:
 - **Reporter**: {{reporterName}}  
 
 **During Event Narrative:**  
-{{narrativeText}}  
+{{duringEvent}}  
 
 **Your Task:**  
 Generate 3–5 clarification questions that a frontline worker who was present could reasonably answer.  
@@ -389,7 +440,7 @@ Return the questions as a JSON array:
 - **Reporter**: {{reporterName}}  
 
 **End Event Narrative:**  
-{{narrativeText}}  
+{{endEvent}}  
 
 **Your Task:**  
 Generate 3–5 clarification questions that a frontline worker who was present could reasonably answer.  
@@ -435,7 +486,7 @@ This is about checking that the participant is **safe**, has been **offered the 
 - **Reporter**: {{reporterName}}  
 
 **Post-Event Narrative:**  
-{{narrativeText}}  
+{{postEvent}}  
 
 **Your Task:**  
 Generate 3–5 clarification questions based on what may have occurred in the **4 hours after the incident**.  
@@ -677,6 +728,9 @@ export const resetAndSeedPrompts = mutation({
         usage_count: 0,
         created_at: now,
         created_by: user._id,
+        
+        // Story 6.3: All seeded prompts are production scope
+        scope: "production",
       });
       promptIds.push(promptId);
     }
@@ -687,6 +741,212 @@ export const resetAndSeedPrompts = mutation({
       clearedTemplates,
       seededCount: promptIds.length,
       promptIds,
+    };
+  },
+});
+
+// ============================================================================
+// Story 6.3: Developer-Scoped Prompt Testing Functions
+// ============================================================================
+
+/**
+ * Get active prompt with developer scope support
+ * Looks for developer-scoped prompts first, falls back to production
+ */
+export const getActivePromptWithDeveloperScope = query({
+  args: {
+    prompt_name: v.string(),
+    subsystem: v.optional(v.string()),
+    developer_session_id: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // Try developer-scoped prompt first if session provided
+    if (args.developer_session_id) {
+      const devPrompt = await ctx.db
+        .query("ai_prompts")
+        .withIndex("by_scope_and_session", (q) => 
+          q.eq("scope", "developer").eq("developer_session_id", args.developer_session_id)
+        )
+        .filter((q) =>
+          q.and(
+            q.eq(q.field("prompt_name"), args.prompt_name),
+            q.eq(q.field("is_active"), true),
+            args.subsystem ? q.eq(q.field("subsystem"), args.subsystem) : true
+          )
+        )
+        .order("desc")
+        .first();
+
+      if (devPrompt) {
+        console.log("🧪 DEVELOPER PROMPT FOUND", {
+          prompt_name: args.prompt_name,
+          developer_session_id: args.developer_session_id,
+          expires_at: devPrompt.expires_at,
+        });
+        return devPrompt;
+      }
+    }
+
+    // Fallback to production prompt (including records without scope field during migration)
+    const productionPrompt = await ctx.db
+      .query("ai_prompts")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("prompt_name"), args.prompt_name),
+          q.eq(q.field("is_active"), true),
+          args.subsystem ? q.eq(q.field("subsystem"), args.subsystem) : true,
+          // Include records with scope: "production" OR no scope field (migration compatibility)
+          q.or(
+            q.eq(q.field("scope"), "production"),
+            q.eq(q.field("scope"), undefined)
+          )
+        )
+      )
+      .order("desc")
+      .first();
+
+    if (productionPrompt) {
+      console.log("🏭 PRODUCTION PROMPT USED", {
+        prompt_name: args.prompt_name,
+        had_session: !!args.developer_session_id,
+      });
+      return productionPrompt;
+    }
+
+    return null;
+  },
+});
+
+/**
+ * Clone a production prompt to developer scope for testing
+ */
+export const clonePromptForDeveloper = mutation({
+  args: {
+    sessionToken: v.string(),
+    prompt_name: v.string(),
+    developer_session_id: v.string(),
+    subsystem: v.optional(v.string()),
+    modified_template: v.optional(v.string()),
+    expires_in_hours: v.optional(v.number()), // Default 24 hours
+  },
+  handler: async (ctx, args) => {
+    // Authenticate user
+    const { user } = await requirePermission(
+      ctx,
+      args.sessionToken,
+      PERMISSIONS.SAMPLE_DATA, // Developer feature requires sample_data permission
+      { errorMessage: 'Developer permissions required to clone prompts' }
+    );
+
+    // Get the production prompt to clone
+    const productionPrompt = await ctx.db
+      .query("ai_prompts")
+      .withIndex("by_name_and_scope", (q) => 
+        q.eq("prompt_name", args.prompt_name).eq("scope", "production")
+      )
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("is_active"), true),
+          args.subsystem ? q.eq(q.field("subsystem"), args.subsystem) : true
+        )
+      )
+      .order("desc")
+      .first();
+
+    if (!productionPrompt) {
+      throw new ConvexError(`Production prompt not found: ${args.prompt_name}`);
+    }
+
+    // Calculate expiration time
+    const hoursToExpire = args.expires_in_hours || 24;
+    const expiresAt = Date.now() + (hoursToExpire * 60 * 60 * 1000);
+
+    // Create developer-scoped clone
+    const developerPromptId = await ctx.db.insert("ai_prompts", {
+      // Copy all fields from production prompt
+      prompt_name: productionPrompt.prompt_name,
+      prompt_version: productionPrompt.prompt_version + "-dev",
+      prompt_template: args.modified_template || productionPrompt.prompt_template,
+      description: `Developer clone of ${productionPrompt.prompt_name}`,
+      input_schema: productionPrompt.input_schema,
+      output_schema: productionPrompt.output_schema,
+      workflow_step: productionPrompt.workflow_step,
+      subsystem: productionPrompt.subsystem,
+      ai_model: productionPrompt.ai_model,
+      max_tokens: productionPrompt.max_tokens,
+      temperature: productionPrompt.temperature,
+      is_active: true,
+      created_at: Date.now(),
+      created_by: user._id,
+
+      // Developer scoping fields
+      scope: "developer",
+      developer_session_id: args.developer_session_id,
+      parent_prompt_id: productionPrompt._id,
+      expires_at: expiresAt,
+    });
+
+    console.log("🧪 DEVELOPER PROMPT CLONED", {
+      original_id: productionPrompt._id,
+      developer_id: developerPromptId,
+      prompt_name: args.prompt_name,
+      developer_session_id: args.developer_session_id,
+      expires_at: new Date(expiresAt).toISOString(),
+    });
+
+    return {
+      developer_prompt_id: developerPromptId,
+      expires_at: expiresAt,
+      expires_at_iso: new Date(expiresAt).toISOString(),
+    };
+  },
+});
+
+/**
+ * Cleanup expired developer prompts
+ */
+export const cleanupExpiredDeveloperPrompts = mutation({
+  args: {
+    sessionToken: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Authenticate user (admin permission for cleanup)
+    await requirePermission(
+      ctx,
+      args.sessionToken,
+      PERMISSIONS.SAMPLE_DATA,
+      { errorMessage: 'Admin permissions required for prompt cleanup' }
+    );
+
+    const now = Date.now();
+    
+    // Find expired developer prompts
+    const expiredPrompts = await ctx.db
+      .query("ai_prompts")
+      .withIndex("by_expires_at")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("scope"), "developer"),
+          q.lt(q.field("expires_at"), now)
+        )
+      )
+      .collect();
+
+    // Delete expired prompts
+    const deletedIds = [];
+    for (const prompt of expiredPrompts) {
+      await ctx.db.delete(prompt._id);
+      deletedIds.push(prompt._id);
+    }
+
+    console.log("🧹 EXPIRED DEVELOPER PROMPTS CLEANED", {
+      expired_count: expiredPrompts.length,
+      deleted_ids: deletedIds,
+    });
+
+    return {
+      cleaned_count: expiredPrompts.length,
+      deleted_ids: deletedIds,
     };
   },
 });

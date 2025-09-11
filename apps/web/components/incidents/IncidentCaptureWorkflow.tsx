@@ -489,8 +489,8 @@ export function IncidentCaptureWorkflow() {
 
   // Handle workflow completion
   const handleWorkflowComplete = () => {
-    console.log('🐛 Workflow completed, redirecting to dashboard');
-    router.push('/dashboard');
+    console.log('🐛 Workflow completed, redirecting to incidents');
+    router.push('/incidents');
   };
 
   // Developer Tools Bar handlers
@@ -785,10 +785,10 @@ export function IncidentCaptureWorkflow() {
                 </Link>
                 <div>
                   <Link
-                    href="/dashboard"
+                    href="/incidents"
                     className="text-red-600 hover:text-red-500 text-sm"
                   >
-                    Return to Dashboard
+                    Return to Incidents
                   </Link>
                 </div>
               </div>
@@ -846,11 +846,11 @@ export function IncidentCaptureWorkflow() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
             <Link
-              href="/dashboard"
+              href="/incidents"
               className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
             >
               <span className="mr-1">←</span>
-              Dashboard
+              Incidents
             </Link>
             <span className="text-gray-400">/</span>
             <span className="text-sm text-gray-900 dark:text-white">New Incident Report</span>

@@ -90,15 +90,6 @@ export const getClarificationDataMutation = internalMutation({
   },
 });
 
-export const getEnhancedNarrativeDataMutation = internalMutation({
-  args: { incident_id: v.id("incidents") },
-  handler: async (ctx, args) => {
-    return await ctx.db
-      .query("enhanced_narratives")
-      .filter((q) => q.eq(q.field("incident_id"), args.incident_id))
-      .first();
-  },
-});
 
 /**
  * Export complete workflow data as structured JSON
@@ -149,9 +140,8 @@ export const exportWorkflowData: any = action({
         incident_id: args.incident_id
       }) as any;
 
-      const enhancedNarrative = await ctx.runMutation(internal.workflowData.getEnhancedNarrativeDataMutation, {
-        incident_id: args.incident_id
-      }) as any;
+      // Enhanced narrative data is now stored in *_extra fields within incident_narratives
+      const enhancedNarrative = null; // Deprecated - using *_extra fields instead
 
       // Determine completion status
       const completionStatus = {

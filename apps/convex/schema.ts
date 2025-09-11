@@ -234,7 +234,6 @@ export default defineSchema({
     content_preview: v.optional(v.string()), // First 100 chars for preview
     
     // Enhancement completion fields (Story 3.3)
-    enhanced_narrative_id: v.optional(v.id("enhanced_narratives")),
     workflow_completed_at: v.optional(v.number()),
     submitted_by: v.optional(v.id("users")),
     submitted_at: v.optional(v.number()),
@@ -256,7 +255,6 @@ export default defineSchema({
     .index("by_status", ["overall_status"])
     .index("by_created", ["created_at"])
     .index("by_handoff_status", ["handoff_status"])
-    .index("by_enhanced_narrative", ["enhanced_narrative_id"])
     // Story 4.1: Multi-tenant incident listing indices
     .index("by_company_status", ["company_id", "overall_status"])
     .index("by_company_created", ["company_id", "created_at"])
@@ -442,6 +440,12 @@ export default defineSchema({
     input_schema: v.optional(v.string()), // JSON schema for expected inputs
     output_schema: v.optional(v.string()), // JSON schema for expected outputs
     
+    // Developer Scoping (Story 6.3: Database-Scoped Prompt Testing)
+    scope: v.optional(v.union(v.literal("production"), v.literal("developer"))), // Isolate developer prompts from production (temporarily optional for migration)
+    developer_session_id: v.optional(v.string()), // Links developer prompts to testing session
+    parent_prompt_id: v.optional(v.id("ai_prompts")), // Reference to original production prompt
+    expires_at: v.optional(v.number()), // Auto-cleanup timestamp for developer prompts
+    
     // Usage Context
     workflow_step: v.optional(v.string()), // Which workflow step uses this prompt
     subsystem: v.optional(v.string()), // "incidents", "chat", etc.
@@ -465,7 +469,10 @@ export default defineSchema({
     .index("by_name_version", ["prompt_name", "prompt_version"])
     .index("by_active", ["is_active"])
     .index("by_workflow", ["workflow_step"])
-    .index("by_subsystem", ["subsystem"]),
+    .index("by_subsystem", ["subsystem"])
+    .index("by_scope_and_session", ["scope", "developer_session_id"]) // For developer prompt lookups
+    .index("by_name_and_scope", ["prompt_name", "scope"]) // Fast production/developer fallback
+    .index("by_expires_at", ["expires_at"]), // For cleanup of expired developer prompts
 
   // AI request/response logging for performance monitoring and debugging
   ai_request_logs: defineTable({
@@ -549,24 +556,6 @@ export default defineSchema({
     .index("by_company", ["company_id"])
     .index("by_context", ["usage_context"]),
 
-  // Enhanced Narratives Storage (Story 3.3)
-  enhanced_narratives: defineTable({
-    incident_id: v.id("incidents"),
-    original_content: v.string(), // Combined original narratives
-    clarification_responses: v.string(), // Combined clarification answers
-    enhanced_content: v.string(), // AI-enhanced combined narrative
-    enhancement_version: v.number(), // Version tracking for edits
-    ai_model: v.optional(v.string()), // "claude/claude-3-sonnet"
-    enhancement_prompt: v.optional(v.string()),
-    processing_time_ms: v.number(),
-    quality_score: v.optional(v.number()), // AI-assessed quality metrics
-    user_edited: v.boolean(), // Track if user modified AI content
-    user_edits: v.optional(v.string()), // Store user modifications
-    created_at: v.number(),
-    updated_at: v.number(),
-  })
-    .index("by_incident", ["incident_id"])
-    .index("by_version", ["incident_id", "enhancement_version"]),
 
   // Workflow Handoff Notifications (Story 3.3)
   workflow_handoffs: defineTable({

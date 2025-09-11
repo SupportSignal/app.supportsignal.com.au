@@ -58,6 +58,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Get initial session token immediately
   const initialSessionToken = authService.getSessionToken();
   
+  console.log('🔍 AUTH PROVIDER - INITIAL STATE', {
+    hasInitialSessionToken: !!initialSessionToken,
+    sessionToken: initialSessionToken?.substring(0, 8) + '...',
+    sessionTokenLength: initialSessionToken?.length,
+    timestamp: new Date().toISOString()
+  });
+  
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
     sessionToken: initialSessionToken, // Use the actual token if available
@@ -77,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshUser = async () => {
     // Prevent concurrent refresh operations
     if (refreshInProgress.current) {
+      console.log('🔍 AUTH PROVIDER - REFRESH SKIPPED (IN PROGRESS)');
       return;
     }
     
@@ -86,6 +94,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       // Check for impersonation token in URL first, then sessionStorage
       let sessionToken = authService.getSessionToken();
+      
+      // Verify the auth provider state is synchronized with AuthService
+      if (authState.sessionToken !== sessionToken) {
+        console.log('🔍 AUTH PROVIDER - SYNC MISMATCH DETECTED', {
+          authStateToken: authState.sessionToken?.substring(0, 8) + '...',
+          authServiceToken: sessionToken?.substring(0, 8) + '...',
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      console.log('🔍 AUTH PROVIDER - REFRESH USER START', {
+        hasSessionToken: !!sessionToken,
+        sessionToken: sessionToken?.substring(0, 8) + '...',
+        sessionTokenLength: sessionToken?.length,
+        timestamp: new Date().toISOString()
+      });
       let isImpersonating = false;
       
       if (typeof window !== 'undefined') {
@@ -121,12 +145,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (sessionToken) {
         try {
+          console.log('🔍 AUTH PROVIDER - ATTEMPTING USER LOOKUP', {
+            sessionToken: sessionToken?.substring(0, 8) + '...',
+            sessionTokenLength: sessionToken?.length,
+            isImpersonating,
+            timestamp: new Date().toISOString()
+          });
+          
           user = await convex.query(api.users.getCurrentUser, { sessionToken });
+          
+          if (user) {
+            console.log('🔍 AUTH PROVIDER - USER LOOKUP SUCCESS', {
+              userId: user?._id,
+              userEmail: user?.email,
+              sessionToken: sessionToken?.substring(0, 8) + '...',
+              timestamp: new Date().toISOString()
+            });
+          } else {
+            // If getCurrentUser returns null, the session is expired/invalid
+            console.log('🔍 AUTH PROVIDER - SESSION EXPIRED/INVALID (null user returned)', {
+              sessionToken: sessionToken?.substring(0, 8) + '...',
+              isImpersonating,
+              timestamp: new Date().toISOString()
+            });
+            
+            // Trigger the same cleanup logic as if an error was thrown
+            throw new Error('Session expired or invalid - user lookup returned null');
+          }
         } catch (error) {
-          console.error('Authentication failed:', error);
+          console.error('🔍 AUTH PROVIDER - AUTHENTICATION FAILED:', {
+            error: error instanceof Error ? error.message : error,
+            sessionToken: sessionToken?.substring(0, 8) + '...',
+            isImpersonating,
+            timestamp: new Date().toISOString()
+          });
           
           // If we have an impersonation token that failed, it might be expired/invalid
           if (isImpersonating) {
+            console.log('🔍 AUTH PROVIDER - CLEARING IMPERSONATION', {
+              sessionToken: sessionToken?.substring(0, 8) + '...',
+              timestamp: new Date().toISOString()
+            });
             clearImpersonation();
             
             // Fall back to regular session token
@@ -137,8 +196,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               
               try {
                 user = await convex.query(api.users.getCurrentUser, { sessionToken: regularToken });
+                
+                if (user) {
+                  console.log('🔍 AUTH PROVIDER - FALLBACK AUTHENTICATION SUCCESS', {
+                    userId: user?._id,
+                    sessionToken: regularToken?.substring(0, 8) + '...',
+                    timestamp: new Date().toISOString()
+                  });
+                } else {
+                  // Regular token also returned null user
+                  console.log('🔍 AUTH PROVIDER - FALLBACK TOKEN ALSO EXPIRED', {
+                    sessionToken: regularToken?.substring(0, 8) + '...',
+                    timestamp: new Date().toISOString()
+                  });
+                  await authService.logout();
+                  user = null;
+                  sessionToken = null;
+                }
               } catch (fallbackError) {
-                console.error('Fallback authentication also failed:', fallbackError);
+                console.error('🔍 AUTH PROVIDER - FALLBACK AUTHENTICATION FAILED:', fallbackError);
+                // Clear the expired regular session too
+                await authService.logout();
                 user = null;
                 sessionToken = null;
               }
@@ -148,9 +226,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               sessionToken = null;
             }
           } else {
-            // Regular session token failed
+            // Regular session token failed - this is likely an expired session
+            console.log('🔍 AUTH PROVIDER - REGULAR SESSION FAILED, CLEARING ALL AUTH DATA', {
+              sessionToken: sessionToken?.substring(0, 8) + '...',
+              errorMessage: error instanceof Error ? error.message : 'Unknown error',
+              timestamp: new Date().toISOString()
+            });
+            
+            // Clear the expired session token from storage and AuthService
+            await authService.logout();
+            
+            // Also clear any impersonation data just in case
+            clearImpersonation();
+            
+            // CRITICAL: Set these to null to ensure React state is updated
             user = null;
             sessionToken = null;
+            
+            console.log('🔍 AUTH PROVIDER - SESSION CLEANUP COMPLETED', {
+              authServiceToken: authService.getSessionToken(),
+              clearedSessionToken: 'null',
+              timestamp: new Date().toISOString()
+            });
           }
         }
       }
@@ -161,13 +258,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         sessionToken
       } : user;
 
+      console.log('🔍 AUTH PROVIDER - SETTING FINAL AUTH STATE', {
+        hasUser: !!userWithSessionToken,
+        userId: userWithSessionToken?._id,
+        hasSessionToken: !!sessionToken,
+        sessionToken: sessionToken?.substring(0, 8) + '...',
+        sessionTokenLength: sessionToken?.length,
+        authServiceTokenSync: authService.getSessionToken()?.substring(0, 8) + '...',
+        timestamp: new Date().toISOString()
+      });
+
       setAuthState({
         user: userWithSessionToken,
         sessionToken,
         isLoading: false,
       });
     } catch (error) {
-      console.error('Authentication error:', error);
+      console.error('🔍 AUTH PROVIDER - UNEXPECTED ERROR IN REFRESH:', error);
+      
+      // On any unexpected error, ensure we clean up completely
+      try {
+        await authService.logout();
+        clearImpersonation();
+      } catch (cleanupError) {
+        console.error('🔍 AUTH PROVIDER - CLEANUP ERROR:', cleanupError);
+      }
+      
       setAuthState({
         user: null,
         sessionToken: null,
@@ -176,6 +292,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       // Always reset the refresh flag
       refreshInProgress.current = false;
+      
+      console.log('🔍 AUTH PROVIDER - REFRESH COMPLETED', {
+        finalAuthServiceToken: authService.getSessionToken()?.substring(0, 8) + '...' || 'null',
+        timestamp: new Date().toISOString()
+      });
     }
   };
 
@@ -253,18 +374,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
+    console.log('🔍 AUTH PROVIDER - LOGOUT INITIATED', {
+      currentUser: authState.user?._id,
+      timestamp: new Date().toISOString()
+    });
+    
     setAuthState(prev => ({ ...prev, isLoading: true }));
 
-    await authService.logout();
+    try {
+      await authService.logout();
 
-    // Clear any stored impersonation tokens on logout
-    clearImpersonation();
+      // Clear any stored impersonation tokens on logout
+      clearImpersonation();
 
-    setAuthState({
-      user: null,
-      sessionToken: null,
-      isLoading: false,
-    });
+      console.log('🔍 AUTH PROVIDER - LOGOUT COMPLETED', {
+        authServiceToken: authService.getSessionToken(),
+        timestamp: new Date().toISOString()
+      });
+
+      setAuthState({
+        user: null,
+        sessionToken: null,
+        isLoading: false,
+      });
+    } catch (error) {
+      console.error('🔍 AUTH PROVIDER - LOGOUT ERROR:', error);
+      
+      // Even if logout fails, clear the frontend state
+      clearImpersonation();
+      setAuthState({
+        user: null,
+        sessionToken: null,
+        isLoading: false,
+      });
+    }
   };
 
   const changePassword = async (

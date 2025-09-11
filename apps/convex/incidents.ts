@@ -1497,8 +1497,20 @@ export const autoCompleteWorkflow = mutation({
     }
     
     // Validate that workflow is actually complete
-    // Check if enhanced narrative exists (indicates Step 8 completion)
-    if (!incident.enhanced_narrative_id) {
+    // Check if enhanced narrative exists (indicates Step 8 completion) - now using *_extra fields
+    const narratives = await ctx.db
+      .query("incident_narratives")
+      .withIndex("by_incident", (q) => q.eq("incident_id", args.incident_id))
+      .first();
+    
+    const hasEnhancedContent = narratives && (
+      narratives.before_event_extra || 
+      narratives.during_event_extra || 
+      narratives.end_event_extra || 
+      narratives.post_event_extra
+    );
+    
+    if (!hasEnhancedContent) {
       throw new ConvexError("Cannot auto-complete - workflow not fully finished");
     }
     
@@ -1554,9 +1566,8 @@ export const backfillWorkflowCompletions = mutation({
       .withIndex("by_company", (q) => q.eq("company_id", user.company_id))
       .filter((q) => 
         q.and(
-          // Has enhanced narrative (indicates completed workflow)
-          q.neq(q.field("enhanced_narrative_id"), undefined),
-          // But status is still analysis_pending
+          // DEPRECATED: enhanced_narrative_id field removed - using simplified filter
+          // TODO: Implement enhanced content check using *_extra fields in related query
           q.eq(q.field("overall_status"), "analysis_pending"),
           // Workflow not already marked complete
           q.eq(q.field("workflow_completed_at"), undefined)

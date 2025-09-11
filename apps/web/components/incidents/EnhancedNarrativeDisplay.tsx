@@ -30,7 +30,7 @@ import type { Id } from '@/convex/_generated/dataModel';
 
 interface EnhancedNarrativeDisplayProps {
   enhancedNarrative: {
-    _id: Id<"enhanced_narratives">;
+    _id: Id<"incident_narratives">;
     original_content: string;
     clarification_responses: string;
     enhanced_content: string;
@@ -58,8 +58,8 @@ export function EnhancedNarrativeDisplay({
   const [activeTab, setActiveTab] = useState("enhanced");
 
   // Mutation for updating enhanced narrative
-  // @ts-ignore - Temporary workaround for TypeScript inference issue
-  const updateEnhancedNarrative = useMutation(api.aiEnhancement.updateEnhancedNarrative);
+  // DEPRECATED: updateEnhancedNarrative function removed
+  // const updateEnhancedNarrative = useMutation(api.aiEnhancement.updateEnhancedNarrative);
 
   const handleSave = async () => {
     if (!user?.sessionToken) {
@@ -73,11 +73,14 @@ export function EnhancedNarrativeDisplay({
     }
 
     try {
-      await updateEnhancedNarrative({
-        sessionToken: user.sessionToken,
-        enhanced_narrative_id: enhancedNarrative._id,
-        user_edited_content: editedContent
-      });
+      // DEPRECATED: updateEnhancedNarrative function removed
+      // await updateEnhancedNarrative({
+      //   sessionToken: user.sessionToken,
+      //   enhanced_narrative_id: enhancedNarrative._id,
+      //   user_edited_content: editedContent
+      // });
+      
+      toast.error("This feature has been deprecated. Please use the new enhancement system.");
 
       toast.success("Enhanced narrative updated");
       setIsEditing(false);

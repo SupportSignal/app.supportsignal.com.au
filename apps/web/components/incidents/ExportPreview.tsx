@@ -23,7 +23,7 @@ import {
 interface ExportPreviewProps {
   incident_id: Id<"incidents">;
   enhancedNarrative: {
-    _id: Id<"enhanced_narratives">;
+    _id: Id<"incident_narratives">;
     enhanced_content: string;
     user_edited: boolean;
     user_edits?: string;

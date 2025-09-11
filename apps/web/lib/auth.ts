@@ -133,45 +133,93 @@ export class AuthService {
 
   async logout() {
     try {
+      console.log('🔍 AUTH SERVICE - Logout initiated', {
+        hasSessionToken: !!this.sessionToken,
+        timestamp: new Date().toISOString()
+      });
+
       if (this.sessionToken) {
-        await convex.mutation(api.auth.logoutUser, {
-          sessionToken: this.sessionToken,
-        });
+        try {
+          await convex.mutation(api.auth.logoutUser, {
+            sessionToken: this.sessionToken,
+          });
+          console.log('🔍 AUTH SERVICE - Backend logout successful');
+        } catch (backendError) {
+          console.warn('🔍 AUTH SERVICE - Backend logout failed (continuing with local cleanup):', backendError);
+          // Continue with local cleanup even if backend fails
+        }
       }
 
-      this.sessionToken = null;
+      // Always clear local session data
+      await this.clearSessionData();
 
-      // Remove session token and cookies
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('auth_session_token');
-        // Clear remember me cookie
-        document.cookie =
-          'auth_remember_token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Strict';
-      }
+      console.log('🔍 AUTH SERVICE - Logout completed', {
+        timestamp: new Date().toISOString()
+      });
 
       return { success: true };
     } catch (error: any) {
+      console.error('🔍 AUTH SERVICE - Logout error:', error);
+      
+      // Still try to clear local data on error
+      try {
+        await this.clearSessionData();
+      } catch (cleanupError) {
+        console.error('🔍 AUTH SERVICE - Cleanup error:', cleanupError);
+      }
+      
       return { success: false, error: error.message };
     }
   }
 
   async getCurrentUser(): Promise<User | null> {
     if (!this.sessionToken) {
+      console.log('🔍 AUTH SERVICE - No session token available');
       return null;
     }
 
     try {
+      console.log('🔍 AUTH SERVICE - Getting current user', {
+        sessionToken: this.sessionToken.substring(0, 8) + '...',
+        timestamp: new Date().toISOString()
+      });
+      
       const user = await convex.query(api.users.getCurrentUser, {
         sessionToken: this.sessionToken,
       });
+      
+      console.log('🔍 AUTH SERVICE - User retrieved successfully', {
+        userId: user?._id,
+        timestamp: new Date().toISOString()
+      });
+      
       return user;
     } catch (error) {
-      // If session is invalid, clear it
-      this.sessionToken = null;
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('auth_session_token');
-      }
+      console.error('🔍 AUTH SERVICE - Session validation failed, clearing session', {
+        error: error instanceof Error ? error.message : error,
+        sessionToken: this.sessionToken.substring(0, 8) + '...',
+        timestamp: new Date().toISOString()
+      });
+      
+      // If session is invalid, clear it completely
+      await this.clearSessionData();
       return null;
+    }
+  }
+
+  // Helper method to completely clear all session data
+  private async clearSessionData() {
+    console.log('🔍 AUTH SERVICE - Clearing all session data', {
+      hadToken: !!this.sessionToken,
+      timestamp: new Date().toISOString()
+    });
+    
+    this.sessionToken = null;
+    
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('auth_session_token');
+      // Also clear remember me cookie
+      document.cookie = 'auth_remember_token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Strict';
     }
   }
 

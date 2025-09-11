@@ -94,8 +94,8 @@ export function EnhancedReviewStep({
     } : "skip"
   );
 
-  // Actions
-  const generateEnhancement = useAction(api.aiEnhancement.enhanceIncidentNarrative);
+  // Actions - DEPRECATED: enhanceIncidentNarrative function removed
+  // const generateEnhancement = useAction(api.aiEnhancement.enhanceIncidentNarrative);
 
   // Auto-generate first phase enhancement
   useEffect(() => {
@@ -113,19 +113,10 @@ export function EnhancedReviewStep({
     setPhaseStatuses(prev => ({ ...prev, [phase]: 'generating' }));
     
     try {
-      const result = await generateEnhancement({
-        sessionToken: user.sessionToken,
-        incident_id,
-        phase
-      });
-
-      if (result.success) {
-        setPhaseStatuses(prev => ({ ...prev, [phase]: 'enhanced' }));
-        toast.success(`${phases.find(p => p.key === phase)?.title} enhancement completed`);
-      } else {
-        setPhaseStatuses(prev => ({ ...prev, [phase]: 'error' }));
-        toast.error(`Enhancement failed: ${result.error}`);
-      }
+      // DEPRECATED: generateEnhancement function removed with enhanced_narratives table
+      // This component is no longer used - workflow uses EnhancedReviewStepNew instead
+      toast.error("This feature has been deprecated. Please use the new enhancement system.");
+      setPhaseStatuses(prev => ({ ...prev, [phase]: 'error' }));
     } catch (error) {
       console.error("Enhancement generation failed:", error);
       setPhaseStatuses(prev => ({ ...prev, [phase]: 'error' }));

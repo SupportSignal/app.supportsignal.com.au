@@ -33,6 +33,7 @@ import { cn } from '@/lib/utils';
 import { DeveloperToolsBarProps, ToolsBarButtonStates } from '@/types/workflowData';
 import { WorkflowExportButton } from './WorkflowExportButton';
 import { WorkflowImportButton } from './WorkflowImportButton';
+import { PromptTestingPanel } from '../developer/PromptTestingPanel';
 
 // Narrative scenario options that match backend createSampleData scenarios
 const NARRATIVE_SCENARIOS = [
@@ -192,6 +193,7 @@ export function DeveloperToolsBar({
   } as const;
 
   return (
+    <>
     <div className="border-t border-gray-200 bg-gray-50/50 px-4 py-2">
       {/* Header with collapse toggle */}
       <div className="flex items-center justify-between mb-2">
@@ -340,6 +342,18 @@ export function DeveloperToolsBar({
         </div>
       )}
     </div>
+    
+    {/* Prompt Testing Panel */}
+    <PromptTestingPanel
+      user={user}
+      incidentId={incidentId || undefined}
+      currentStep={currentStep}
+      contextData={{
+        currentStep,
+        incidentId: incidentId || undefined,
+      }}
+    />
+    </>
   );
 }
 

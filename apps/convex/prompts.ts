@@ -134,6 +134,7 @@ export const createPrompt = mutation({
       created_at: now,
       created_by: "temp-user-id" as any, // TODO: Set when auth is implemented
       usage_count: 0,
+      scope: "production", // Story 6.3: Default to production scope
     });
   },
 });
