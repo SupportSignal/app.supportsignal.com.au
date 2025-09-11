@@ -601,20 +601,31 @@ export const createEnhancedNarrativeFromImport = internalMutation({
   handler: async (ctx, args) => {
     const { incident_id, enhanced_data } = args;
     
-    return await ctx.db.insert("enhanced_narratives", {
-      incident_id,
-      enhanced_content: enhanced_data.enhanced_content,
-      original_content: enhanced_data.original_content,
-      clarification_responses: enhanced_data.clarification_responses,
-      ai_model: enhanced_data.ai_model,
-      enhancement_prompt: enhanced_data.enhancement_prompt,
-      enhancement_version: enhanced_data.enhancement_version || 1,
-      quality_score: enhanced_data.quality_score,
-      processing_time_ms: enhanced_data.processing_time_ms,
-      user_edited: enhanced_data.user_edited || false,
-      user_edits: enhanced_data.user_edits,
-      created_at: enhanced_data.created_at || Date.now(),
-      updated_at: enhanced_data.updated_at || Date.now(),
+    // Enhanced narratives are now stored in *_extra fields in incident_narratives table
+    // Find the existing narrative record and update it with enhancement data
+    const narrative = await ctx.db
+      .query("incident_narratives")
+      .filter((q) => q.eq(q.field("incident_id"), incident_id))
+      .first();
+
+    if (!narrative) {
+      throw new Error("Cannot import enhanced narrative: base narrative record not found");
+    }
+
+    // Update the narrative record with enhanced content in *_extra fields
+    await ctx.db.patch(narrative._id, {
+      // Store enhanced content in consolidated_narrative field
+      consolidated_narrative: enhanced_data.enhanced_content,
+      enhanced_at: enhanced_data.created_at || Date.now(),
+      updated_at: Date.now(),
     });
+
+    // Update the incident to mark enhancement as complete
+    await ctx.db.patch(incident_id, {
+      narrative_enhanced: true,
+      updated_at: Date.now(),
+    });
+
+    return narrative._id;
   },
 });
