@@ -774,7 +774,7 @@ export function IncidentCaptureWorkflow() {
                 Access Denied
               </h3>
               <p className="text-red-600 mb-4">
-                You don't have permission to view this incident. This incident belongs to a different user or company.
+                You don&apos;t have permission to view this incident. This incident belongs to a different user or company.
               </p>
               <div className="space-y-2">
                 <Link
@@ -816,7 +816,7 @@ export function IncidentCaptureWorkflow() {
                       Read-Only Access
                     </h3>
                     <p className="text-sm text-amber-700 mt-1">
-                      You're viewing an incident created by another user. Only the original reporter can edit incident narratives and answers. You have view-only access.
+                      You&apos;re viewing an incident created by another user. Only the original reporter can edit incident narratives and answers. You have view-only access.
                     </p>
                   </div>
                 </div>
