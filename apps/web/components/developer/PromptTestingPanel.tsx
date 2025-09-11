@@ -74,14 +74,14 @@ export function PromptTestingPanel({
   const [editedTemplate, setEditedTemplate] = useState<string>('');
   const [hasTemplateChanges, setHasTemplateChanges] = useState(false);
 
-  // Check developer access
+  // Check developer access - MOVED BEFORE EARLY RETURN
   const hasDeveloperAccess = useMemo(() => {
     return user?.role === 'system_admin' || 
            user?.role === 'demo_admin' ||
            (process.env.NODE_ENV === 'development' && user?.email?.endsWith('@ideas-men.com.au'));
   }, [user]);
 
-  // Get incident data for variable extraction
+  // Get incident data for variable extraction - MOVED BEFORE EARLY RETURN
   const incident = useQuery(api.incidents.getById, 
     incidentId && user?.sessionToken ? { 
       sessionToken: user.sessionToken,
@@ -89,12 +89,12 @@ export function PromptTestingPanel({
     } : "skip"
   );
 
-  // Get incident narrative data for phase-specific variables
+  // Get incident narrative data for phase-specific variables - MOVED BEFORE EARLY RETURN
   const narrative = useQuery(api.incidents.getIncidentNarrative, 
     incidentId ? { incident_id: incidentId } : "skip"
   );
 
-  // Available prompts - show ALL prompts for developer testing flexibility
+  // Available prompts - show ALL prompts for developer testing flexibility - MOVED BEFORE EARLY RETURN
   const availablePrompts = useMemo(() => {
     return [
       // All clarification question prompts
@@ -107,7 +107,7 @@ export function PromptTestingPanel({
     ];
   }, []);
 
-  // Get current prompt with developer scoping
+  // Get current prompt with developer scoping - MOVED BEFORE EARLY RETURN
   const currentPrompt = useQuery(api.promptManager.getActivePromptWithDeveloperScope,
     selectedPromptName && isTestMode ? {
       prompt_name: selectedPromptName,
@@ -116,10 +116,10 @@ export function PromptTestingPanel({
     } : "skip"
   );
 
-  // Get current template for processing (edited or original)
+  // Get current template for processing (edited or original) - MOVED BEFORE EARLY RETURN
   const currentTemplate = editedTemplate || currentPrompt?.prompt_template || '';
 
-  // Process template with current variables
+  // Process template with current variables - MOVED BEFORE EARLY RETURN
   const templateValidation = useQuery(api.promptManager.processTemplateWithValidationQuery,
     currentTemplate && incident ? {
       template: currentTemplate,
@@ -143,6 +143,39 @@ export function PromptTestingPanel({
       },
     } : "skip"
   );
+
+  // Base variables from incident - MOVED BEFORE EARLY RETURN
+  const baseVariables = useMemo(() => {
+    if (!incident) return {};
+    
+    return {
+      participantName: incident.participant_name || '',
+      reporterName: incident.reporter_name || '',
+      location: incident.location || '',
+      eventDateTime: incident.event_date_time || '',
+      phase: currentStep >= 3 && currentStep <= 6 ? 
+        ['before_event', 'during_event', 'end_event', 'post_event'][currentStep - 3] : 'before_event',
+      
+      // Phase-specific narrative variables  
+      beforeEvent: narrative?.before_event || 'No before event narrative yet',
+      duringEvent: narrative?.during_event || 'No during event narrative yet',
+      endEvent: narrative?.end_event || 'No end event narrative yet', 
+      postEvent: narrative?.post_event || 'No post event narrative yet',
+    };
+  }, [incident, currentStep, narrative]);
+
+  // All variables (base + custom) - MOVED BEFORE EARLY RETURN
+  const allVariables = useMemo(() => ({
+    ...baseVariables,
+    ...customVariables,
+  }), [baseVariables, customVariables]);
+
+  // Sync edited template when prompt changes - MOVED BEFORE EARLY RETURN
+  useEffect(() => {
+    if (currentPrompt && !hasTemplateChanges) {
+      setEditedTemplate(currentPrompt.prompt_template);
+    }
+  }, [currentPrompt, hasTemplateChanges]);
 
   // Don't render if user doesn't have access
   if (!user || !hasDeveloperAccess) {
@@ -209,38 +242,6 @@ export function PromptTestingPanel({
     });
   };
 
-  // Base variables from incident
-  const baseVariables = useMemo(() => {
-    if (!incident) return {};
-    
-    return {
-      participantName: incident.participant_name || '',
-      reporterName: incident.reporter_name || '',
-      location: incident.location || '',
-      eventDateTime: incident.event_date_time || '',
-      phase: currentStep >= 3 && currentStep <= 6 ? 
-        ['before_event', 'during_event', 'end_event', 'post_event'][currentStep - 3] : 'before_event',
-      
-      // Phase-specific narrative variables  
-      beforeEvent: narrative?.before_event || 'No before event narrative yet',
-      duringEvent: narrative?.during_event || 'No during event narrative yet',
-      endEvent: narrative?.end_event || 'No end event narrative yet', 
-      postEvent: narrative?.post_event || 'No post event narrative yet',
-    };
-  }, [incident, currentStep, narrative]);
-
-  // All variables (base + custom)
-  const allVariables = useMemo(() => ({
-    ...baseVariables,
-    ...customVariables,
-  }), [baseVariables, customVariables]);
-
-  // Sync edited template when prompt changes
-  useEffect(() => {
-    if (currentPrompt && !hasTemplateChanges) {
-      setEditedTemplate(currentPrompt.prompt_template);
-    }
-  }, [currentPrompt, hasTemplateChanges]);
 
   return (
     <div className={cn("border-t border-orange-200 bg-orange-50/30", className)}>
