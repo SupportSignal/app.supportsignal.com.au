@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useAction } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useAuth } from '@/components/auth/auth-provider';
+import { hasDeveloperAccess } from '@/lib/utils/developerAccess';
 import { Button } from '@starter/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@starter/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@starter/ui/collapsible';
@@ -368,6 +369,31 @@ export function EnhancedReviewStepNew({
                               {formatNarrativeText(phase.enhanced_content)}
                             </div>
                           </div>
+                          
+                          {/* Developer Regenerate Enhancement Button */}
+                          {hasDeveloperAccess(user) && (
+                            <div className="mt-3 p-3 bg-gray-50 rounded-lg border">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="text-xs font-medium text-gray-600">Developer Tools</p>
+                                  <p className="text-xs text-gray-500">Regenerate this enhancement</p>
+                                </div>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEnhancePhase(phase.phase);
+                                  }}
+                                  disabled={phase.isLoading}
+                                  className="h-7 text-xs flex items-center gap-1"
+                                >
+                                  <RotateCcw className={cn("h-3 w-3", phase.isLoading && "animate-spin")} />
+                                  Regenerate
+                                </Button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
 

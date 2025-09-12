@@ -440,11 +440,11 @@ export default defineSchema({
     input_schema: v.optional(v.string()), // JSON schema for expected inputs
     output_schema: v.optional(v.string()), // JSON schema for expected outputs
     
-    // Developer Scoping (Story 6.3: Database-Scoped Prompt Testing)
-    scope: v.optional(v.union(v.literal("production"), v.literal("developer"))), // Isolate developer prompts from production (temporarily optional for migration)
-    developer_session_id: v.optional(v.string()), // Links developer prompts to testing session
-    parent_prompt_id: v.optional(v.id("ai_prompts")), // Reference to original production prompt
-    expires_at: v.optional(v.number()), // Auto-cleanup timestamp for developer prompts
+    // Developer Scoping (backward compatibility for existing data - fields are optional)
+    scope: v.optional(v.union(v.literal("production"), v.literal("developer"))), 
+    developer_session_id: v.optional(v.string()),
+    parent_prompt_id: v.optional(v.id("ai_prompts")),
+    expires_at: v.optional(v.number()),
     
     // Usage Context
     workflow_step: v.optional(v.string()), // Which workflow step uses this prompt
@@ -469,10 +469,7 @@ export default defineSchema({
     .index("by_name_version", ["prompt_name", "prompt_version"])
     .index("by_active", ["is_active"])
     .index("by_workflow", ["workflow_step"])
-    .index("by_subsystem", ["subsystem"])
-    .index("by_scope_and_session", ["scope", "developer_session_id"]) // For developer prompt lookups
-    .index("by_name_and_scope", ["prompt_name", "scope"]) // Fast production/developer fallback
-    .index("by_expires_at", ["expires_at"]), // For cleanup of expired developer prompts
+    .index("by_subsystem", ["subsystem"]),
 
   // AI request/response logging for performance monitoring and debugging
   ai_request_logs: defineTable({

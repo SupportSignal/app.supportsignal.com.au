@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { v } from "convex/values";
-import { query, mutation, action } from "./_generated/server";
+import { query, mutation, action, internalMutation } from "./_generated/server";
 import { api, internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import { requirePermission, PERMISSIONS } from "./permissions";
@@ -67,6 +67,7 @@ export const generateClarificationQuestions = action({
       v.literal("post_event")
     ),
     narrative_content: v.string(),
+    force_regenerate: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     console.log("🎯 AI CLARIFICATION GENERATE START", {
@@ -108,7 +109,7 @@ export const generateClarificationQuestions = action({
       phase: args.phase,
     });
 
-    if (existingQuestions && existingQuestions.length > 0) {
+    if (existingQuestions && existingQuestions.length > 0 && !args.force_regenerate) {
       console.log("✅ QUESTIONS ALREADY EXIST - RETURNING EXISTING", {
         phase: args.phase,
         incident_id: args.incident_id,
@@ -131,7 +132,27 @@ export const generateClarificationQuestions = action({
       };
     }
 
-    console.log("🚀 NO EXISTING QUESTIONS - GENERATING NEW", {
+    // Handle force regeneration - delete existing questions if requested
+    if (args.force_regenerate && existingQuestions && existingQuestions.length > 0) {
+      console.log("🗑️ FORCE REGENERATE - DELETING EXISTING QUESTIONS", {
+        phase: args.phase,
+        incident_id: args.incident_id,
+        questions_to_delete: existingQuestions.length,
+        timestamp: new Date().toISOString(),
+      });
+
+      // Delete all existing questions for this incident/phase
+      for (const question of existingQuestions) {
+        await ctx.runMutation(internal.aiClarification.deleteQuestion, {
+          question_id: question._id,
+        });
+      }
+      
+      console.log("✅ EXISTING QUESTIONS DELETED - PROCEEDING WITH REGENERATION");
+    }
+
+    const logMessage = args.force_regenerate ? "🔄 REGENERATING QUESTIONS" : "🚀 NO EXISTING QUESTIONS - GENERATING NEW";
+    console.log(logMessage, {
       phase: args.phase,
       incident_id: args.incident_id,
       timestamp: new Date().toISOString(),
@@ -914,5 +935,22 @@ export const generateMockAnswers = action({
       tokens_used: aiResult.tokensUsed,
       cost: aiResult.cost,
     };
+  },
+});
+
+// Delete a clarification question (internal mutation for regeneration)
+export const deleteQuestion = internalMutation({
+  args: {
+    question_id: v.id("clarification_questions"),
+  },
+  handler: async (ctx, args) => {
+    console.log("🗑️ DELETING QUESTION", {
+      question_id: args.question_id,
+      timestamp: new Date().toISOString(),
+    });
+
+    await ctx.db.delete(args.question_id);
+    
+    console.log("✅ QUESTION DELETED SUCCESSFULLY");
   },
 });

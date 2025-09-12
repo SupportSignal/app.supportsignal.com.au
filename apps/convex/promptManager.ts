@@ -199,7 +199,6 @@ export const seedPromptTemplates = mutation({
           usage_count: 0,
           created_at: now,
           created_by: user._id,
-          scope: "production", // Story 6.3: Default to production scope
         });
         promptIds.push(promptId);
       }
@@ -728,9 +727,6 @@ export const resetAndSeedPrompts = mutation({
         usage_count: 0,
         created_at: now,
         created_by: user._id,
-        
-        // Story 6.3: All seeded prompts are production scope
-        scope: "production",
       });
       promptIds.push(promptId);
     }
@@ -745,105 +741,27 @@ export const resetAndSeedPrompts = mutation({
   },
 });
 
-// ============================================================================
-// Story 6.3: Developer-Scoped Prompt Testing Functions
-// ============================================================================
-
-/**
- * Get active prompt with developer scope support
- * Looks for developer-scoped prompts first, falls back to production
- */
-export const getActivePromptWithDeveloperScope = query({
-  args: {
-    prompt_name: v.string(),
-    subsystem: v.optional(v.string()),
-    developer_session_id: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    // Try developer-scoped prompt first if session provided
-    if (args.developer_session_id) {
-      const devPrompt = await ctx.db
-        .query("ai_prompts")
-        .withIndex("by_scope_and_session", (q) => 
-          q.eq("scope", "developer").eq("developer_session_id", args.developer_session_id)
-        )
-        .filter((q) =>
-          q.and(
-            q.eq(q.field("prompt_name"), args.prompt_name),
-            q.eq(q.field("is_active"), true),
-            args.subsystem ? q.eq(q.field("subsystem"), args.subsystem) : true
-          )
-        )
-        .order("desc")
-        .first();
-
-      if (devPrompt) {
-        console.log("🧪 DEVELOPER PROMPT FOUND", {
-          prompt_name: args.prompt_name,
-          developer_session_id: args.developer_session_id,
-          expires_at: devPrompt.expires_at,
-        });
-        return devPrompt;
-      }
-    }
-
-    // Fallback to production prompt (including records without scope field during migration)
-    const productionPrompt = await ctx.db
-      .query("ai_prompts")
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("prompt_name"), args.prompt_name),
-          q.eq(q.field("is_active"), true),
-          args.subsystem ? q.eq(q.field("subsystem"), args.subsystem) : true,
-          // Include records with scope: "production" OR no scope field (migration compatibility)
-          q.or(
-            q.eq(q.field("scope"), "production"),
-            q.eq(q.field("scope"), undefined)
-          )
-        )
-      )
-      .order("desc")
-      .first();
-
-    if (productionPrompt) {
-      console.log("🏭 PRODUCTION PROMPT USED", {
-        prompt_name: args.prompt_name,
-        had_session: !!args.developer_session_id,
-      });
-      return productionPrompt;
-    }
-
-    return null;
-  },
-});
-
-/**
- * Clone a production prompt to developer scope for testing
- */
-export const clonePromptForDeveloper = mutation({
+// Direct template editing mutation for production prompts
+export const updatePromptTemplate = mutation({
   args: {
     sessionToken: v.string(),
     prompt_name: v.string(),
-    developer_session_id: v.string(),
+    new_template: v.string(),
     subsystem: v.optional(v.string()),
-    modified_template: v.optional(v.string()),
-    expires_in_hours: v.optional(v.number()), // Default 24 hours
   },
   handler: async (ctx, args) => {
-    // Authenticate user
+    // Authenticate user with developer permissions
     const { user } = await requirePermission(
       ctx,
       args.sessionToken,
       PERMISSIONS.SAMPLE_DATA, // Developer feature requires sample_data permission
-      { errorMessage: 'Developer permissions required to clone prompts' }
+      { errorMessage: 'Developer permissions required to edit prompt templates' }
     );
 
-    // Get the production prompt to clone
-    const productionPrompt = await ctx.db
+    // Find the active prompt to update
+    const prompt = await ctx.db
       .query("ai_prompts")
-      .withIndex("by_name_and_scope", (q) => 
-        q.eq("prompt_name", args.prompt_name).eq("scope", "production")
-      )
+      .withIndex("by_name", (q) => q.eq("prompt_name", args.prompt_name))
       .filter((q) =>
         q.and(
           q.eq(q.field("is_active"), true),
@@ -853,100 +771,29 @@ export const clonePromptForDeveloper = mutation({
       .order("desc")
       .first();
 
-    if (!productionPrompt) {
-      throw new ConvexError(`Production prompt not found: ${args.prompt_name}`);
+    if (!prompt) {
+      throw new ConvexError(`Active prompt not found: ${args.prompt_name}`);
     }
 
-    // Calculate expiration time
-    const hoursToExpire = args.expires_in_hours || 24;
-    const expiresAt = Date.now() + (hoursToExpire * 60 * 60 * 1000);
-
-    // Create developer-scoped clone
-    const developerPromptId = await ctx.db.insert("ai_prompts", {
-      // Copy all fields from production prompt
-      prompt_name: productionPrompt.prompt_name,
-      prompt_version: productionPrompt.prompt_version + "-dev",
-      prompt_template: args.modified_template || productionPrompt.prompt_template,
-      description: `Developer clone of ${productionPrompt.prompt_name}`,
-      input_schema: productionPrompt.input_schema,
-      output_schema: productionPrompt.output_schema,
-      workflow_step: productionPrompt.workflow_step,
-      subsystem: productionPrompt.subsystem,
-      ai_model: productionPrompt.ai_model,
-      max_tokens: productionPrompt.max_tokens,
-      temperature: productionPrompt.temperature,
-      is_active: true,
-      created_at: Date.now(),
-      created_by: user._id,
-
-      // Developer scoping fields
-      scope: "developer",
-      developer_session_id: args.developer_session_id,
-      parent_prompt_id: productionPrompt._id,
-      expires_at: expiresAt,
+    // Update the prompt template directly
+    await ctx.db.patch(prompt._id, {
+      prompt_template: args.new_template,
     });
 
-    console.log("🧪 DEVELOPER PROMPT CLONED", {
-      original_id: productionPrompt._id,
-      developer_id: developerPromptId,
+    console.log("📝 PROMPT TEMPLATE UPDATED", {
       prompt_name: args.prompt_name,
-      developer_session_id: args.developer_session_id,
-      expires_at: new Date(expiresAt).toISOString(),
+      prompt_id: prompt._id,
+      template_length: args.new_template.length,
+      updated_by: user._id,
     });
 
     return {
-      developer_prompt_id: developerPromptId,
-      expires_at: expiresAt,
-      expires_at_iso: new Date(expiresAt).toISOString(),
+      success: true,
+      prompt_id: prompt._id,
+      prompt_name: args.prompt_name,
+      updated_template_length: args.new_template.length,
     };
   },
 });
 
-/**
- * Cleanup expired developer prompts
- */
-export const cleanupExpiredDeveloperPrompts = mutation({
-  args: {
-    sessionToken: v.string(),
-  },
-  handler: async (ctx, args) => {
-    // Authenticate user (admin permission for cleanup)
-    await requirePermission(
-      ctx,
-      args.sessionToken,
-      PERMISSIONS.SAMPLE_DATA,
-      { errorMessage: 'Admin permissions required for prompt cleanup' }
-    );
-
-    const now = Date.now();
-    
-    // Find expired developer prompts
-    const expiredPrompts = await ctx.db
-      .query("ai_prompts")
-      .withIndex("by_expires_at")
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("scope"), "developer"),
-          q.lt(q.field("expires_at"), now)
-        )
-      )
-      .collect();
-
-    // Delete expired prompts
-    const deletedIds = [];
-    for (const prompt of expiredPrompts) {
-      await ctx.db.delete(prompt._id);
-      deletedIds.push(prompt._id);
-    }
-
-    console.log("🧹 EXPIRED DEVELOPER PROMPTS CLEANED", {
-      expired_count: expiredPrompts.length,
-      deleted_ids: deletedIds,
-    });
-
-    return {
-      cleaned_count: expiredPrompts.length,
-      deleted_ids: deletedIds,
-    };
-  },
-});
+// Developer scope system removed - direct production prompt editing now supported

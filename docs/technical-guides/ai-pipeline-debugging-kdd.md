@@ -21,6 +21,35 @@ Expected: "On 2025-08-24T11:21" (processed)
 
 **Root Cause**: Data mapping mismatches between database fields and template variables
 
+### 1a. **AI Instruction Following Failures** (Story 6.3)
+
+**Symptom**: Template changes are saved and retrieved correctly, but AI ignores instructions
+```
+Template: "Prefix questions with XMEN"
+AI Receives: Template with XMEN instruction (✅ verified in logs)
+AI Response: Questions without XMEN prefix (❌ ignores instruction)
+```
+
+**Root Cause**: AI models treat casual instructions as suggestions, not requirements
+
+**Debug Pattern**:
+```typescript
+// Add comprehensive logging to track instruction flow
+console.log(`🔍 TEMPLATE RETRIEVED`, {
+  has_instruction_text: template.includes("XMEN"),
+  template_preview: template.substring(0, 200)
+});
+
+console.log(`📝 TEMPLATE PROCESSED`, {
+  has_instruction_in_final: interpolatedPrompt.includes("XMEN"), 
+  final_prompt_preview: interpolatedPrompt.substring(0, 300)
+});
+```
+
+**Solution**: Use forceful, explicit instruction language:
+- ❌ Weak: "Prefix questions with XMEN"  
+- ✅ Strong: "CRITICAL: Every question MUST start with 'XMEN:' - this is mandatory"
+
 ### 2. **Database Schema Assumptions**
 
 **Anti-Pattern**: Assuming database indexes exist without verification
@@ -169,6 +198,42 @@ const safeQueryWithIndex = async (ctx, tableName, indexName, callback) => {
 ```
 
 ## Problem Resolution Patterns
+
+### **Issue: Template Save/Regeneration Debugging** (Story 6.3)
+
+**Diagnosis Framework**:
+1. ✅ Check template saves successfully (UI shows success message)
+2. ✅ Verify function deployment status (`bunx convex run function:name` test)  
+3. ✅ Check schema validation errors in deployment logs
+4. ✅ Test template retrieval with debug logging
+5. ✅ Verify AI receives instruction in final prompt
+6. ❌ Confirm AI follows instruction in response
+
+**Debug Logging Pattern**:
+```typescript
+// Template save tracking
+console.log("📝 PROMPT TEMPLATE UPDATED", {
+  prompt_name: args.prompt_name,
+  has_instruction: args.new_template.includes("INSTRUCTION_TEXT"),
+  template_preview: args.new_template.substring(0, 200) + "..."
+});
+
+// Template retrieval tracking  
+console.log("🔍 TEMPLATE RETRIEVED", {
+  has_instruction: prompt.prompt_template.includes("INSTRUCTION_TEXT"),
+  template_preview: prompt.prompt_template.substring(0, 200) + "..."
+});
+
+// Final prompt verification
+console.log("📝 TEMPLATE PROCESSED", {
+  has_instruction_in_final: interpolatedPrompt.includes("INSTRUCTION_TEXT"),
+  final_prompt_preview: interpolatedPrompt.substring(0, 300) + "..."
+});
+```
+
+**Resolution Workflow**:
+1. **Schema Issues** → Add removed fields as optional for backward compatibility
+2. **AI Instruction Following** → Use explicit, forceful language instead of casual instructions
 
 ### **Issue: "Unspecified Date" Despite Available Data**
 

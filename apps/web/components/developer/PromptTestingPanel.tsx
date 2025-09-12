@@ -1,10 +1,40 @@
 // @ts-nocheck
 /**
- * PromptTestingPanel Component - Story 6.3 Database-Scoped Architecture
+ * PromptTestingPanel Component - Direct Production Prompt Editing
  * 
- * Real-time prompt monitoring interface with 2-column layout:
- * Column 1: Dropdown, meta prompt, final prompt with live interpolation
+ * Real-time prompt editing interface with 2-column layout:
+ * Column 1: Dropdown, meta prompt (editable), final prompt with live interpolation
  * Column 2: Property grid with green indicators for template matches
+ * 
+ * DIRECT EDITING CONCEPT:
+ * 
+ * Simplified architecture that directly modifies production prompts:
+ * 
+ * 1. DIRECT PRODUCTION EDITING:
+ *    - No session management or scope complexity
+ *    - Edit production prompts directly in the database
+ *    - Changes take effect immediately for regeneration operations
+ * 
+ * 2. LIVE INTERPOLATION:
+ *    - Real-time template variable substitution preview
+ *    - Shows final prompt that will be sent to AI services
+ *    - Visual indicators for matched vs missing template variables
+ * 
+ * 3. SIMPLIFIED WORKFLOW:
+ *    - Eye icon toggles panel expansion/collapse
+ *    - Select prompt → edit template → save changes → regenerate
+ *    - No session cleanup or expiration management needed
+ * 
+ * 4. VISUAL FEEDBACK:
+ *    - "Direct Production Editing" badge when active
+ *    - Save/Reset buttons appear when template is modified
+ *    - Green indicators show variables matching template placeholders
+ * 
+ * 5. INTERACTION LIFECYCLE:
+ *    - EXPAND: Eye icon clicked → panel expands → select prompt
+ *    - EDIT: Modify template → Save button appears → click Save
+ *    - TEST: Use regenerate buttons in workflow to test changes
+ *    - COLLAPSE: Eye icon clicked again → panel collapses
  */
 
 "use client";
@@ -27,7 +57,8 @@ import {
   Eye,
   EyeOff,
   Settings2,
-  Zap
+  Zap,
+  Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { hasDeveloperAccess } from '@/lib/utils/developerAccess';
@@ -68,13 +99,19 @@ export function PromptTestingPanel({
   className
 }: PromptTestingPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isTestMode, setIsTestMode] = useState(false);
-  const [developerSessionId, setDeveloperSessionId] = useState<string | null>(null);
   const [selectedPromptName, setSelectedPromptName] = useState<string>('');
   const [customVariables, setCustomVariables] = useState<Record<string, any>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [editedTemplate, setEditedTemplate] = useState<string>('');
   const [hasTemplateChanges, setHasTemplateChanges] = useState(false);
+  
+  // Copy button states for visual feedback
+  const [templateCopyStatus, setTemplateCopyStatus] = useState<'idle' | 'copying' | 'success' | 'error'>('idle');
+  const [resolvedCopyStatus, setResolvedCopyStatus] = useState<'idle' | 'copying' | 'success' | 'error'>('idle');
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Mutation for updating prompt template
+  const updatePromptTemplate = useMutation(api.promptManager.updatePromptTemplate);
 
   // Check developer access using shared logic - MOVED BEFORE EARLY RETURN
   const hasAccess = useMemo(() => hasDeveloperAccess(user), [user]);
@@ -105,12 +142,11 @@ export function PromptTestingPanel({
     ];
   }, []);
 
-  // Get current prompt with developer scoping - MOVED BEFORE EARLY RETURN
-  const currentPrompt = useQuery(api.promptManager.getActivePromptWithDeveloperScope,
-    selectedPromptName && isTestMode ? {
+  // Get current prompt - MOVED BEFORE EARLY RETURN
+  const currentPrompt = useQuery(api.promptManager.getActivePrompt,
+    selectedPromptName ? {
       prompt_name: selectedPromptName,
       subsystem: "incidents",
-      developer_session_id: developerSessionId,
     } : "skip"
   );
 
@@ -180,28 +216,16 @@ export function PromptTestingPanel({
     return null;
   }
 
-  // Generate developer session ID
-  const generateSessionId = () => {
-    return `dev_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-  };
-
-  // Note: Individual start/stop functions replaced by toggleTestingAndExpansion
-
-  // Combined toggle for testing session and panel expansion
-  const toggleTestingAndExpansion = () => {
-    if (!isTestMode) {
-      // Start testing mode (same as startTesting)
-      const sessionId = generateSessionId();
-      setDeveloperSessionId(sessionId);
-      setIsTestMode(true);
+  // Toggle panel expansion
+  const toggleExpansion = () => {
+    if (!isExpanded) {
+      // Expand panel
       setIsExpanded(true);
       if (availablePrompts.length > 0 && !selectedPromptName) {
         setSelectedPromptName(availablePrompts[0]);
       }
     } else {
-      // Stop testing mode (same as stopTesting)
-      setDeveloperSessionId(null);
-      setIsTestMode(false);
+      // Collapse panel
       setIsExpanded(false);
       setSelectedPromptName('');
       setCustomVariables({});
@@ -222,29 +246,135 @@ export function PromptTestingPanel({
     setHasTemplateChanges(false);
   };
 
+  // Save template changes to production database
+  const saveTemplateChanges = async () => {
+    if (!currentPrompt || !hasTemplateChanges || !user?.sessionToken || !selectedPromptName) {
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const result = await updatePromptTemplate({
+        sessionToken: user.sessionToken,
+        prompt_name: selectedPromptName,
+        new_template: editedTemplate,
+        subsystem: "incidents",
+      });
+
+      if (result.success) {
+        setHasTemplateChanges(false);
+        toast.success(`Template "${selectedPromptName}" saved to production database`);
+        console.log('✅ Template saved:', result);
+      } else {
+        throw new Error("Update failed");
+      }
+    } catch (error) {
+      console.error('Failed to save template:', error);
+      toast.error(`Failed to save template: ${error.message || 'Unknown error'}`);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // Copy template (raw prompt with variables)
   const copyTemplate = async () => {
+    console.log('🔍 copyTemplate called', { currentTemplate: currentTemplate?.slice(0, 50) });
+    setTemplateCopyStatus('copying');
+    
     try {
+      if (!currentTemplate || !currentTemplate.trim()) {
+        console.log('🔍 No template to copy');
+        setTemplateCopyStatus('error');
+        toast.error("No template content to copy");
+        setTimeout(() => setTemplateCopyStatus('idle'), 2000);
+        return;
+      }
+      
       await navigator.clipboard.writeText(currentTemplate);
+      console.log('🔍 Template copied successfully');
+      setTemplateCopyStatus('success');
       toast.success("Template copied to clipboard");
+      
+      // Reset status after 2 seconds
+      setTimeout(() => setTemplateCopyStatus('idle'), 2000);
     } catch (error) {
-      console.error('Failed to copy template:', error);
+      console.error('🔍 Failed to copy template:', error);
+      setTemplateCopyStatus('error');
       toast.error("Failed to copy template");
+      setTimeout(() => setTemplateCopyStatus('idle'), 3000);
     }
   };
 
   // Copy resolved prompt for external testing
   const copyResolvedPrompt = async () => {
+    console.log('🔍 copyResolvedPrompt called', { 
+      hasValidation: !!templateValidation, 
+      processedTemplate: templateValidation?.processedTemplate?.slice(0, 50) 
+    });
+    setResolvedCopyStatus('copying');
+    
     try {
-      if (templateValidation) {
+      if (templateValidation && templateValidation.processedTemplate) {
         await navigator.clipboard.writeText(templateValidation.processedTemplate);
+        console.log('🔍 Resolved prompt copied successfully');
+        setResolvedCopyStatus('success');
         toast.success("Final prompt copied to clipboard");
+        
+        // Reset status after 2 seconds
+        setTimeout(() => setResolvedCopyStatus('idle'), 2000);
       } else {
+        console.log('🔍 No resolved prompt to copy');
+        setResolvedCopyStatus('error');
         toast.error("No resolved prompt to copy");
+        setTimeout(() => setResolvedCopyStatus('idle'), 2000);
       }
     } catch (error) {
-      console.error('Failed to copy resolved prompt:', error);
+      console.error('🔍 Failed to copy resolved prompt:', error);
+      setResolvedCopyStatus('error');
       toast.error("Failed to copy prompt");
+      setTimeout(() => setResolvedCopyStatus('idle'), 3000);
+    }
+  };
+
+  // Helper functions for copy button visual feedback
+  const getTemplateCopyIcon = () => {
+    switch (templateCopyStatus) {
+      case 'copying':
+        return <Loader2 className="h-3 w-3 animate-spin text-blue-500" />;
+      case 'success':
+        return <CheckCircle className="h-3 w-3 text-green-500" />;
+      case 'error':
+        return <AlertCircle className="h-3 w-3 text-red-500" />;
+      default:
+        return <Copy className="h-3 w-3" />;
+    }
+  };
+
+  const getResolvedCopyIcon = () => {
+    switch (resolvedCopyStatus) {
+      case 'copying':
+        return <Loader2 className="h-3 w-3 animate-spin text-blue-500" />;
+      case 'success':
+        return <CheckCircle className="h-3 w-3 text-green-500" />;
+      case 'error':
+        return <AlertCircle className="h-3 w-3 text-red-500" />;
+      default:
+        return <Copy className="h-3 w-3" />;
+    }
+  };
+
+  const getCopyButtonClassName = (status: 'idle' | 'copying' | 'success' | 'error') => {
+    const baseClass = "h-6 w-6 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100";
+    
+    switch (status) {
+      case 'copying':
+        return `${baseClass} text-blue-500`;
+      case 'success':
+        return `${baseClass} text-green-500`;
+      case 'error':
+        return `${baseClass} text-red-500`;
+      default:
+        return baseClass;
     }
   };
 
@@ -270,9 +400,9 @@ export function PromptTestingPanel({
         <div className="flex items-center gap-2">
           <Code2 className="h-3 w-3 text-gray-400" />
           <span className="text-xs text-gray-500 font-medium">Prompt Testing</span>
-          {isTestMode && (
+          {isExpanded && (
             <Badge variant="outline" className="text-xs border-gray-300 text-gray-600">
-              Developer Session Active
+              Direct Production Editing
             </Badge>
           )}
           {templateValidation && (
@@ -286,18 +416,18 @@ export function PromptTestingPanel({
           <Button
             variant="ghost"
             size="sm"
-            onClick={toggleTestingAndExpansion}
+            onClick={toggleExpansion}
             disabled={isLoading}
             className="h-6 w-6 p-0 text-gray-500 hover:bg-gray-100"
-            title={isTestMode ? "Stop testing and collapse panel" : "Start testing and expand panel"}
+            title={isExpanded ? "Collapse testing panel" : "Expand testing panel"}
           >
-            {isTestMode && isExpanded ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+            {isExpanded ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
           </Button>
         </div>
       </div>
 
       {/* 2-Column Testing Interface */}
-      {isExpanded && isTestMode && (
+      {isExpanded && (
         <div className="px-4 pb-4 space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
@@ -305,13 +435,8 @@ export function PromptTestingPanel({
             <div className="space-y-4">
               {/* Prompt Dropdown */}
               <div>
-                <Label className="text-xs font-medium text-gray-700 flex items-center gap-2">
+                <Label className="text-xs font-medium text-gray-700">
                   Active Prompt
-                  {currentPrompt?.scope === 'developer' && (
-                    <Badge variant="outline" className="text-xs px-1.5 py-0 border-gray-300 text-gray-600">
-                      Developer Override
-                    </Badge>
-                  )}
                 </Label>
                 <select
                   value={selectedPromptName}
@@ -358,20 +483,32 @@ export function PromptTestingPanel({
                         size="sm"
                         variant="ghost"
                         onClick={copyTemplate}
-                        className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                        disabled={templateCopyStatus === 'copying'}
+                        className={getCopyButtonClassName(templateCopyStatus)}
                         title="Copy template"
                       >
-                        <Copy className="h-3 w-3" />
+                        {getTemplateCopyIcon()}
                       </Button>
                       {hasTemplateChanges && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={resetTemplate}
-                          className="h-6 text-xs text-gray-600 hover:bg-gray-100"
-                        >
-                          Reset
-                        </Button>
+                        <>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={saveTemplateChanges}
+                            disabled={isSaving}
+                            className="h-6 text-xs text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                          >
+                            {isSaving ? 'Saving...' : 'Save'}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={resetTemplate}
+                            className="h-6 text-xs text-gray-600 hover:bg-gray-100"
+                          >
+                            Reset
+                          </Button>
+                        </>
                       )}
                     </div>
                   </div>
@@ -414,10 +551,11 @@ export function PromptTestingPanel({
                         size="sm"
                         variant="ghost"
                         onClick={copyResolvedPrompt}
-                        className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                        disabled={resolvedCopyStatus === 'copying'}
+                        className={getCopyButtonClassName(resolvedCopyStatus)}
                         title="Copy final prompt"
                       >
-                        <Copy className="h-3 w-3" />
+                        {getResolvedCopyIcon()}
                       </Button>
                       {templateValidation.missingPlaceholders.length === 0 ? (
                         <div className="flex items-center gap-1 text-green-600">
@@ -642,7 +780,6 @@ export function PromptTestingPanel({
           {/* Status Bar */}
           <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t">
             <div className="flex items-center gap-4">
-              <span>Session: {developerSessionId}</span>
               {templateValidation && (
                 <>
                   <span>Variables: {Object.keys(allVariables).length}</span>
@@ -650,8 +787,8 @@ export function PromptTestingPanel({
                 </>
               )}
             </div>
-            <div className="text-green-600">
-              ● Live Monitoring Active
+            <div className="text-blue-600">
+              ● Production Prompt Editing Active
             </div>
           </div>
         </div>

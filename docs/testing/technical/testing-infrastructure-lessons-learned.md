@@ -18,6 +18,42 @@ This document captures extensive challenges and solutions encountered while impl
 
 **Root Cause**: Database schemas and backend code evolved independently, creating cascading failures across the application.
 
+## ⚠️ CRITICAL ADDITION: Schema Backward Compatibility Issues (Story 6.3)
+
+**Root Cause**: Schema changes made without considering existing database records, preventing Convex deployments and causing function availability issues.
+
+### Problem Pattern: Schema Validation Breaking Deployments
+**Symptom**: Functions appear to work locally but fail to deploy, causing "function not found" errors
+```
+Logs show: "Schema validation failed" 
+Frontend shows: "Could not find public function for 'promptManager:updatePromptTemplate'"
+```
+
+**Root Cause**: Schema changes removed fields while existing database records still contained those fields
+
+**Debug Process**:
+1. ✅ Check function exists locally (works in dev mode)  
+2. ✅ Test function with CLI (`bunx convex run function:name`)  
+3. ❌ Deployment fails due to schema validation  
+4. ✅ Add removed fields back as optional for backward compatibility
+
+**Solution Pattern**: Schema Backward Compatibility
+```typescript
+// Instead of removing fields completely:
+// ai_prompts: defineTable({
+//   prompt_name: v.string(),
+//   // REMOVED: scope, developer_session_id
+// })
+
+// Add removed fields as optional:
+ai_prompts: defineTable({
+  prompt_name: v.string(),
+  // Backward compatibility for existing data
+  scope: v.optional(v.union(v.literal("production"), v.literal("developer"))),
+  developer_session_id: v.optional(v.string()),
+})
+```
+
 ### Problem Categories Identified
 
 1. **API Contract Violations** (4 incidents)

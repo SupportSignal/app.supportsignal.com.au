@@ -18,7 +18,8 @@ import {
 } from "@/types/clarification";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/auth/auth-provider";
-import { AlertCircle, Loader2, RefreshCw, CheckCircle2, ChevronDown, ChevronUp, BookOpen } from "lucide-react";
+import { hasDeveloperAccess } from "@/lib/utils/developerAccess";
+import { AlertCircle, Loader2, RefreshCw, CheckCircle2, ChevronDown, ChevronUp, BookOpen, RotateCcw } from "lucide-react";
 
 // Auto-save delay (in milliseconds) - Standardized to 3 seconds across all components
 const AUTO_SAVE_DELAY = 3000;
@@ -122,10 +123,11 @@ export function ClarificationStep({
   }, [existingQuestions]);
 
   // Manual question generation (user-triggered only)
-  const handleGenerateQuestions = useCallback(async () => {
+  const handleGenerateQuestions = useCallback(async (forceRegenerate = false) => {
     console.log("🎯 FRONTEND: Generate questions triggered", {
       phase,
       incident_id,
+      forceRegenerate,
       hasSessionToken: !!sessionToken,
       hasIncident: !!incident,
       hasNarrative: !!incident?.narrative,
@@ -159,6 +161,7 @@ export function ClarificationStep({
         incident_id,
         phase,
         narrative_content: phaseNarrative,
+        force_regenerate: forceRegenerate,
       });
 
       // Questions will automatically appear via useQuery reactivity
@@ -493,6 +496,30 @@ export function ClarificationStep({
             autoSaveStates={autoSaveStates}
             disabled={isLoading || isGeneratingMockAnswers}
           />
+
+          {/* Developer Regenerate Questions Button */}
+          {hasDeveloperAccess(user) && (
+            <Card className="mt-4">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Developer Tools</p>
+                    <p className="text-xs text-gray-500">Regenerate questions for this phase</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleGenerateQuestions(true)}
+                    disabled={isGenerating || !incident?.narrative}
+                    className="flex items-center gap-2"
+                  >
+                    <RotateCcw className={cn("h-3 w-3", isGenerating && "animate-spin")} />
+                    {isGenerating ? "Regenerating..." : "Regenerate Questions"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
         </>
       )}

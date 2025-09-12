@@ -70,7 +70,7 @@ const generateQuestionsWithTemplate = async (
     });
 
     // Get the prompt template
-    const prompt = await ctx.runQuery(internal.promptManager.getActivePromptWithDeveloperScope, {
+    const prompt = await ctx.runQuery(internal.promptManager.getActivePrompt, {
       prompt_name: templateName,
       subsystem: "incidents",
     });
@@ -78,6 +78,7 @@ const generateQuestionsWithTemplate = async (
     if (!prompt) {
       throw new Error(`Template not found: ${templateName}`);
     }
+
 
     // Process template with variables
     const templateResult = await ctx.runQuery(internal.promptManager.processTemplateWithValidationQuery, {
