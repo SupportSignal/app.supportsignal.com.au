@@ -30,6 +30,7 @@ import {
   Zap
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { hasDeveloperAccess } from '@/lib/utils/developerAccess';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { Id } from '../../../convex/_generated/dataModel';
@@ -74,12 +75,8 @@ export function PromptTestingPanel({
   const [editedTemplate, setEditedTemplate] = useState<string>('');
   const [hasTemplateChanges, setHasTemplateChanges] = useState(false);
 
-  // Check developer access - MOVED BEFORE EARLY RETURN
-  const hasDeveloperAccess = useMemo(() => {
-    return user?.role === 'system_admin' || 
-           user?.role === 'demo_admin' ||
-           (process.env.NODE_ENV === 'development' && user?.email?.endsWith('@ideas-men.com.au'));
-  }, [user]);
+  // Check developer access using shared logic - MOVED BEFORE EARLY RETURN
+  const hasAccess = useMemo(() => hasDeveloperAccess(user), [user]);
 
   // Get incident data for variable extraction - MOVED BEFORE EARLY RETURN
   const incident = useQuery(api.incidents.getById, 
@@ -178,7 +175,7 @@ export function PromptTestingPanel({
   }, [currentPrompt, hasTemplateChanges]);
 
   // Don't render if user doesn't have access
-  if (!user || !hasDeveloperAccess) {
+  if (!user || !hasAccess) {
     return null;
   }
 

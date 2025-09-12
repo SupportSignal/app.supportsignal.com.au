@@ -30,6 +30,7 @@ import {
   Settings 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { hasDeveloperAccess } from '@/lib/utils/developerAccess';
 import { DeveloperToolsBarProps, ToolsBarButtonStates } from '@/types/workflowData';
 import { WorkflowExportButton } from './WorkflowExportButton';
 import { WorkflowImportButton } from './WorkflowImportButton';
@@ -87,34 +88,7 @@ const NARRATIVE_SCENARIOS = [
   },
 ] as const;
 
-/**
- * Check if user has sample data permissions based on multiple criteria
- */
-const hasSampleDataPermissions = (userRole?: string, userEmail?: string): boolean => {
-  // Admin roles always have access
-  if (userRole && ['system_admin', 'demo_admin'].includes(userRole)) {
-    return true;
-  }
-  
-  // Allow specific email addresses (from env var)
-  const allowedEmails = process.env.NEXT_PUBLIC_SAMPLE_DATA_EMAILS?.split(',').map(e => e.trim()) || [];
-  if (userEmail && allowedEmails.includes(userEmail)) {
-    return true;
-  }
-  
-  // Allow specific email domains (from env var)
-  const allowedDomains = process.env.NEXT_PUBLIC_SAMPLE_DATA_DOMAINS?.split(',').map(d => d.trim()) || [];
-  if (userEmail && allowedDomains.some(domain => userEmail.endsWith(`@${domain}`))) {
-    return true;
-  }
-  
-  // Allow team_lead and company_admin in development
-  if (process.env.NODE_ENV === 'development' && userRole && ['team_lead', 'company_admin'].includes(userRole)) {
-    return true;
-  }
-  
-  return false;
-};
+// Note: Developer access logic moved to shared utility @/lib/utils/developerAccess
 
 /**
  * Calculate which buttons should be active based on current workflow context
@@ -154,7 +128,7 @@ export function DeveloperToolsBar({
   );
   
   // Check permissions - return null if no access
-  if (!user || !hasSampleDataPermissions(user.role, user.email)) {
+  if (!user || !hasDeveloperAccess(user)) {
     return null;
   }
 
