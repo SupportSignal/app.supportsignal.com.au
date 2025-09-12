@@ -221,10 +221,29 @@ export function PromptTestingPanel({
     setHasTemplateChanges(false);
   };
 
+  // Copy template (raw prompt with variables)
+  const copyTemplate = async () => {
+    try {
+      await navigator.clipboard.writeText(currentTemplate);
+      toast.success("Template copied to clipboard");
+    } catch (error) {
+      console.error('Failed to copy template:', error);
+      toast.error("Failed to copy template");
+    }
+  };
+
   // Copy resolved prompt for external testing
-  const copyResolvedPrompt = () => {
-    if (templateValidation) {
-      navigator.clipboard.writeText(templateValidation.processedTemplate);
+  const copyResolvedPrompt = async () => {
+    try {
+      if (templateValidation) {
+        await navigator.clipboard.writeText(templateValidation.processedTemplate);
+        toast.success("Final prompt copied to clipboard");
+      } else {
+        toast.error("No resolved prompt to copy");
+      }
+    } catch (error) {
+      console.error('Failed to copy resolved prompt:', error);
+      toast.error("Failed to copy prompt");
     }
   };
 
@@ -333,16 +352,27 @@ export function PromptTestingPanel({
                         </Badge>
                       )}
                     </Label>
-                    {hasTemplateChanges && (
+                    <div className="flex items-center gap-1">
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={resetTemplate}
-                        className="h-6 text-xs text-gray-600 hover:bg-gray-100"
+                        onClick={copyTemplate}
+                        className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                        title="Copy template"
                       >
-                        Reset
+                        <Copy className="h-3 w-3" />
                       </Button>
-                    )}
+                      {hasTemplateChanges && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={resetTemplate}
+                          className="h-6 text-xs text-gray-600 hover:bg-gray-100"
+                        >
+                          Reset
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   <div className="relative">
                     <Textarea
@@ -379,6 +409,15 @@ export function PromptTestingPanel({
                   <div className="flex items-center justify-between mb-1">
                     <Label className="text-xs font-medium text-gray-700">Final Prompt (Live Interpolation)</Label>
                     <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={copyResolvedPrompt}
+                        className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                        title="Copy final prompt"
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
                       {templateValidation.missingPlaceholders.length === 0 ? (
                         <div className="flex items-center gap-1 text-green-600">
                           <CheckCircle className="h-3 w-3" />
@@ -444,18 +483,7 @@ export function PromptTestingPanel({
                       )}
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={copyResolvedPrompt}
-                        className="text-xs"
-                      >
-                        <Copy className="h-3 w-3 mr-1" />
-                        Copy Final Prompt
-                      </Button>
-                    </div>
+                    {/* Action Buttons - Copy functionality moved to header icons */}
                   </div>
                 </div>
               )}
