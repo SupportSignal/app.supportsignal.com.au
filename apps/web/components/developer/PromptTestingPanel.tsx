@@ -184,26 +184,29 @@ export function PromptTestingPanel({
     return `dev_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
   };
 
-  // Start testing mode
-  const startTesting = () => {
-    const sessionId = generateSessionId();
-    setDeveloperSessionId(sessionId);
-    setIsTestMode(true);
-    setIsExpanded(true);
-    if (availablePrompts.length > 0 && !selectedPromptName) {
-      setSelectedPromptName(availablePrompts[0]);
-    }
-  };
+  // Note: Individual start/stop functions replaced by toggleTestingAndExpansion
 
-  // Stop testing mode
-  const stopTesting = () => {
-    setDeveloperSessionId(null);
-    setIsTestMode(false);
-    setIsExpanded(false);
-    setSelectedPromptName('');
-    setCustomVariables({});
-    setEditedTemplate('');
-    setHasTemplateChanges(false);
+  // Combined toggle for testing session and panel expansion
+  const toggleTestingAndExpansion = () => {
+    if (!isTestMode) {
+      // Start testing mode (same as startTesting)
+      const sessionId = generateSessionId();
+      setDeveloperSessionId(sessionId);
+      setIsTestMode(true);
+      setIsExpanded(true);
+      if (availablePrompts.length > 0 && !selectedPromptName) {
+        setSelectedPromptName(availablePrompts[0]);
+      }
+    } else {
+      // Stop testing mode (same as stopTesting)
+      setDeveloperSessionId(null);
+      setIsTestMode(false);
+      setIsExpanded(false);
+      setSelectedPromptName('');
+      setCustomVariables({});
+      setEditedTemplate('');
+      setHasTemplateChanges(false);
+    }
   };
 
   // Handle template editing
@@ -260,35 +263,15 @@ export function PromptTestingPanel({
         </div>
         
         <div className="flex items-center gap-1">
-          {!isTestMode ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={startTesting}
-              disabled={isLoading}
-              className="h-6 text-xs text-gray-500 hover:bg-gray-100"
-            >
-              <Zap className="h-3 w-3 mr-1" />
-              Start Testing
-            </Button>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={stopTesting}
-              className="h-6 text-xs text-gray-500 hover:bg-gray-100"
-            >
-              Stop Testing
-            </Button>
-          )}
-          
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setIsExpanded(!isExpanded)}
+            onClick={toggleTestingAndExpansion}
+            disabled={isLoading}
             className="h-6 w-6 p-0 text-gray-500 hover:bg-gray-100"
+            title={isTestMode ? "Stop testing and collapse panel" : "Start testing and expand panel"}
           >
-            {isExpanded ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+            {isTestMode && isExpanded ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
           </Button>
         </div>
       </div>
