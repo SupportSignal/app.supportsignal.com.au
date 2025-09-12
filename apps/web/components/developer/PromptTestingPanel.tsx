@@ -241,14 +241,14 @@ export function PromptTestingPanel({
 
 
   return (
-    <div className={cn("border-t border-orange-200 bg-orange-50/30", className)}>
+    <div className={cn("border-t border-gray-200 bg-gray-50/50", className)}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2">
         <div className="flex items-center gap-2">
-          <Code2 className="h-3 w-3 text-orange-500" />
-          <span className="text-xs text-orange-600 font-medium">Prompt Testing</span>
+          <Code2 className="h-3 w-3 text-gray-400" />
+          <span className="text-xs text-gray-500 font-medium">Prompt Testing</span>
           {isTestMode && (
-            <Badge variant="outline" className="text-xs border-orange-300 text-orange-600">
+            <Badge variant="outline" className="text-xs border-gray-300 text-gray-600">
               Developer Session Active
             </Badge>
           )}
@@ -266,7 +266,7 @@ export function PromptTestingPanel({
               size="sm"
               onClick={startTesting}
               disabled={isLoading}
-              className="h-6 text-xs text-orange-600 hover:bg-orange-100"
+              className="h-6 text-xs text-gray-500 hover:bg-gray-100"
             >
               <Zap className="h-3 w-3 mr-1" />
               Start Testing
@@ -276,7 +276,7 @@ export function PromptTestingPanel({
               variant="ghost"
               size="sm"
               onClick={stopTesting}
-              className="h-6 text-xs text-orange-600 hover:bg-orange-100"
+              className="h-6 text-xs text-gray-500 hover:bg-gray-100"
             >
               Stop Testing
             </Button>
@@ -286,7 +286,7 @@ export function PromptTestingPanel({
             variant="ghost"
             size="sm"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="h-6 w-6 p-0 text-orange-600 hover:bg-orange-100"
+            className="h-6 w-6 p-0 text-gray-500 hover:bg-gray-100"
           >
             {isExpanded ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
           </Button>
@@ -305,7 +305,7 @@ export function PromptTestingPanel({
                 <Label className="text-xs font-medium text-gray-700 flex items-center gap-2">
                   Active Prompt
                   {currentPrompt?.scope === 'developer' && (
-                    <Badge variant="outline" className="text-xs px-1.5 py-0 border-orange-300 text-orange-600">
+                    <Badge variant="outline" className="text-xs px-1.5 py-0 border-gray-300 text-gray-600">
                       Developer Override
                     </Badge>
                   )}
@@ -345,7 +345,7 @@ export function PromptTestingPanel({
                     <Label className="text-xs font-medium text-gray-700 flex items-center gap-2">
                       Meta Prompt (Template)
                       {hasTemplateChanges && (
-                        <Badge variant="outline" className="text-xs px-1.5 py-0 border-orange-300 text-orange-600">
+                        <Badge variant="outline" className="text-xs px-1.5 py-0 border-gray-300 text-gray-600">
                           Modified
                         </Badge>
                       )}
@@ -367,7 +367,7 @@ export function PromptTestingPanel({
                       onChange={(e) => handleTemplateChange(e.target.value)}
                       className={`text-xs h-64 font-mono resize-none ${
                         hasTemplateChanges 
-                          ? 'bg-orange-50 border-orange-200 focus:border-orange-400' 
+                          ? 'bg-gray-50 border-gray-200 focus:border-gray-400' 
                           : 'bg-gray-50 border-gray-200'
                       }`}
                       placeholder="Edit prompt template..."
@@ -494,7 +494,7 @@ export function PromptTestingPanel({
                   </div>
                   <span>•</span>
                   <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                    <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
                     <span>Custom</span>
                   </div>
                 </div>
@@ -559,10 +559,10 @@ export function PromptTestingPanel({
                     <div key={key} className="bg-white rounded border p-2">
                       <div className="flex items-center gap-2 mb-2">
                         <div className={`w-2 h-2 rounded-full ${
-                          isMatched ? 'bg-green-500' : 'bg-orange-500'
+                          isMatched ? 'bg-green-500' : 'bg-gray-500'
                         }`} />
                         <Label className="text-xs font-medium text-gray-700 flex-1">{key}</Label>
-                        <Badge variant="outline" className="text-xs px-1.5 py-0 border-orange-300 text-orange-600">
+                        <Badge variant="outline" className="text-xs px-1.5 py-0 border-gray-300 text-gray-600">
                           custom
                         </Badge>
                         <Button
