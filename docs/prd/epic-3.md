@@ -179,6 +179,93 @@ Implement automatic incident completion when users finish the final workflow ste
 
 ---
 
+### Story 3.5: Mobile-First Responsive Incident Capture
+
+**Priority**: HIGH  
+**Estimated Effort**: 1.5-2 weeks  
+**Dependencies**: Stories 3.1-3.3 (complete incident capture workflow)
+
+#### Requirements
+Optimize the complete 8-step incident capture workflow for mobile devices, ensuring frontline workers can efficiently report incidents from smartphones and tablets in real-world scenarios.
+
+**Mobile-First Design Principles**:
+- **Touch-Friendly Interface**: Large touch targets, swipe gestures, mobile-optimized form controls
+- **Responsive Layout**: Seamless experience across phone (375px+), tablet (768px+), and desktop viewports
+- **Progressive Enhancement**: Mobile-first approach with desktop enhancements
+- **Network Resilience**: Offline capabilities, optimized data usage, graceful degradation
+
+**Key Mobile Optimizations**:
+- **Wizard Navigation**: Mobile-optimized step navigation with swipe support and clear progress indicators
+- **Form Controls**: Large input fields, mobile-friendly date/time pickers, optimized text areas
+- **Narrative Input**: Mobile keyboard optimization, voice-to-text integration considerations
+- **AI Integration**: Mobile-optimized loading states, progress indicators for AI processing
+- **Performance**: Optimized bundle size, lazy loading, efficient rendering on mobile devices
+
+#### Acceptance Criteria
+- [ ] **Mobile Navigation**: Touch-friendly wizard navigation with swipe gestures and haptic feedback
+- [ ] **Responsive Forms**: All form controls optimized for mobile input with proper keyboard types
+- [ ] **Viewport Optimization**: Perfect rendering on screen sizes from 375px to 1920px+ width
+- [ ] **Touch Targets**: All interactive elements meet 44px minimum touch target size
+- [ ] **Mobile Performance**: <3 second initial load, <1 second step transitions on mobile
+- [ ] **Offline Support**: Basic offline capabilities with data sync when connection restored
+- [ ] **Accessibility**: WCAG 2.1 AA compliance maintained across all viewport sizes
+- [ ] **Testing**: Comprehensive testing on iOS Safari, Android Chrome, and mobile browsers
+- [ ] **User Testing**: Validation with actual frontline workers using mobile devices
+- [ ] **Progressive Web App**: PWA capabilities for app-like experience on mobile devices
+
+#### Technical Implementation
+```typescript
+// Mobile-first responsive breakpoints
+const breakpoints = {
+  mobile: '375px',    // Minimum mobile support
+  tablet: '768px',    // Tablet landscape
+  desktop: '1024px',  // Desktop and larger
+  wide: '1440px'      // Large desktop displays
+};
+
+// Mobile-optimized component structure
+interface MobileWizardStep {
+  id: string;
+  title: string;
+  mobileTitle?: string;        // Shortened title for mobile
+  component: React.Component;
+  mobileComponent?: React.Component;  // Mobile-specific variant
+  touchGestures: {
+    swipeLeft?: () => void;    // Next step
+    swipeRight?: () => void;   // Previous step
+    pullDown?: () => void;     // Refresh/reload
+  };
+  mobileValidation: ValidationRule[];
+}
+
+// Responsive layout system
+const MobileLayout = styled.div`
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100vh;
+  
+  @media (max-width: ${breakpoints.tablet}) {
+    padding: 1rem;
+    gap: 1rem;
+  }
+  
+  @media (min-width: ${breakpoints.tablet}) {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+`;
+```
+
+#### Mobile UX Patterns
+- **Wizard Progress**: Horizontal progress bar with step numbers, mobile-collapsed navigation
+- **Form Layout**: Single-column layout on mobile, multi-column on tablet+
+- **Input Optimization**: Appropriate `inputMode` attributes, mobile keyboards, validation patterns
+- **Loading States**: Mobile-friendly loading indicators, skeleton screens, progress feedback
+- **Error Handling**: Mobile-optimized error messages, inline validation, accessible error states
+
+---
+
 **Note**: Story 3.5 (AI Prompt Management) has been moved to Epic 6 as Story 6.2.
 
 ---
@@ -189,14 +276,16 @@ Implement automatic incident completion when users finish the final workflow ste
 - [ ] **Complete Workflow**: All 8 steps implemented and fully functional
 - [ ] **Auto-Completion**: Automatic workflow completion when Step 8 is finished
 - [ ] **AI Integration**: 95%+ success rate for question generation and enhancement
-- [ ] **Mobile Responsive**: Full functionality on iOS and Android browsers
+- [ ] **Mobile Responsive**: Full functionality on iOS and Android browsers with touch optimization
 - [ ] **Performance**: <2 second step transitions, <10 second AI processing
+- [ ] **Cross-Device Consistency**: Seamless experience across mobile, tablet, and desktop
 
 ### User Experience Requirements
 - [ ] **Completion Rate**: >90% of started incidents reach completion in user testing
-- [ ] **Time Efficiency**: <15 minutes average completion time for typical incidents
-- [ ] **Error Rates**: <5% user errors requiring support intervention
+- [ ] **Time Efficiency**: <15 minutes average completion time for typical incidents (mobile and desktop)
+- [ ] **Error Rates**: <5% user errors requiring support intervention across all devices
 - [ ] **Satisfaction**: >4.5/5 user satisfaction rating from frontline workers
+- [ ] **Mobile Usability**: >4.0/5 mobile-specific usability rating from field testing
 
 ---
 
