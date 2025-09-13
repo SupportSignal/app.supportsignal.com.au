@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/components/auth/auth-provider';
 import { cn } from '@/lib/utils';
+import { hasDeveloperAccess } from '@/lib/utils/developerAccess';
 
 interface AdminCardData {
   id: string;
@@ -189,10 +190,14 @@ function AdminCard({ card }: { card: AdminCardData }) {
   );
 }
 
-function AdminSection({ section, userRole }: { section: typeof ADMIN_SECTIONS[0], userRole: string }) {
-  const visibleCards = section.cards.filter(card => 
-    hasRequiredRole(userRole, card.requiredRole)
-  );
+function AdminSection({ section, userRole, user }: { section: typeof ADMIN_SECTIONS[0], userRole: string, user: any }) {
+  const visibleCards = section.cards.filter(card => {
+    // Special case for AI prompt templates - use developer access
+    if (card.id === 'ai-prompt-templates') {
+      return hasDeveloperAccess(user);
+    }
+    return hasRequiredRole(userRole, card.requiredRole);
+  });
 
   if (visibleCards.length === 0) {
     return null;
@@ -231,9 +236,20 @@ export default function AdminDashboard() {
     );
   }
 
-  const visibleSections = ADMIN_SECTIONS.filter(section =>
-    hasRequiredRole(user.role, section.requiredRole)
-  );
+  const visibleSections = ADMIN_SECTIONS.filter(section => {
+    // Special case for system-admin section - also show if user has developer access and there are developer-accessible cards
+    if (section.id === 'system-admin') {
+      if (hasRequiredRole(user.role, section.requiredRole)) {
+        return true;
+      }
+      // Check if this section has any cards accessible to developer users
+      const developerAccessibleCards = section.cards.filter(card => 
+        card.id === 'ai-prompt-templates' && hasDeveloperAccess(user)
+      );
+      return developerAccessibleCards.length > 0;
+    }
+    return hasRequiredRole(user.role, section.requiredRole);
+  });
 
   if (visibleSections.length === 0) {
     return (
@@ -264,6 +280,7 @@ export default function AdminDashboard() {
           key={section.id}
           section={section}
           userRole={user.role}
+          user={user}
         />
       ))}
     </div>

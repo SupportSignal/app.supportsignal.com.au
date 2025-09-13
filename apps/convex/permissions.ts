@@ -17,6 +17,33 @@ import { ConvexError } from 'convex/values';
 import { Id } from './_generated/dataModel';
 import { getUserFromSession } from './lib/sessionResolver';
 
+/**
+ * Check if user has developer access to advanced tooling
+ * @param user - User object with role and email
+ * @returns boolean - true if user has developer access
+ */
+function hasDeveloperAccess(user?: any | null): boolean {
+  if (!user) return false;
+
+  // Specific users granted developer access
+  const allowedDeveloperEmails = [
+    'angela@supportingpotential.com.au',
+    'rony@kiros.com.au'
+  ];
+
+  return Boolean(
+    // System administrators and demo admins
+    user.role === 'system_admin' || 
+    user.role === 'demo_admin' ||
+    
+    // Development environment: ideas-men.com.au emails
+    (process.env.NODE_ENV === 'development' && user.email?.endsWith('@ideas-men.com.au')) ||
+    
+    // Specific whitelisted users
+    (user.email && allowedDeveloperEmails.includes(user.email))
+  );
+}
+
 // Permission constants for type safety
 export const ROLES = {
   SYSTEM_ADMIN: 'system_admin',
@@ -597,6 +624,11 @@ async function hasUserPermission(
   const inheritedPermissions = getInheritedPermissions(userRole);
   if (inheritedPermissions.includes(permission)) {
     return true;
+  }
+
+  // Special case for SAMPLE_DATA permission - use developer access logic
+  if (permission === PERMISSIONS.SAMPLE_DATA) {
+    return hasDeveloperAccess(user);
   }
 
   // Special cases for resource-specific permissions

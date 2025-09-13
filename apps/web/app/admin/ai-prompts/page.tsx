@@ -8,6 +8,7 @@ import { AIPromptTemplate } from '@/types/prompt-templates';
 import { Button } from '@starter/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@starter/ui/card';
 import { ArrowLeft, Settings } from 'lucide-react';
+import { hasDeveloperAccess } from '@/lib/utils/developerAccess';
 
 type ViewMode = 'list' | 'seeder';
 
@@ -15,14 +16,14 @@ export default function AIPromptsAdminPage() {
   const { user } = useAuth();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
 
-  // Access control - only system admins
-  if (!user || user.role !== 'system_admin') {
+  // Access control - developer access required
+  if (!user || !hasDeveloperAccess(user)) {
     return (
       <div className="flex items-center justify-center min-h-96">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Access Denied</h2>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
-            System administrator privileges required to manage AI prompt templates.
+            Developer access required to manage AI prompt templates.
           </p>
         </div>
       </div>
