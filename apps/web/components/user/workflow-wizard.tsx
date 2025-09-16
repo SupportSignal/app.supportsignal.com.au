@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@starter/ui';
 import { Button } from '@starter/ui';
 import { Badge } from '@starter/ui';
 import { cn } from '@/lib/utils';
+import { useViewport } from '@/hooks/mobile/useViewport';
+import { MobileWizardShell } from '@/components/mobile/MobileWizardShell';
+import { TouchNavigationBar } from '@/components/mobile/TouchNavigationBar';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -37,6 +40,7 @@ export interface WizardStep {
   estimatedTime?: number; // in minutes
   helpContent?: string;
   dependencies?: string[];
+  onCompleteStep?: () => void; // Custom callback for form-based steps
 }
 
 export interface WorkflowWizardProps {
@@ -80,6 +84,7 @@ export const WorkflowWizard = React.forwardRef<HTMLDivElement, WorkflowWizardPro
 }, ref) => {
   const [validationError, setValidationError] = React.useState<string | null>(null);
   const [showingHelp, setShowingHelp] = React.useState(false);
+  const viewport = useViewport();
 
   const currentStep = steps[currentStepIndex];
   const totalSteps = steps.length;
@@ -135,6 +140,14 @@ export const WorkflowWizard = React.forwardRef<HTMLDivElement, WorkflowWizardPro
   };
 
   const handleCompleteStep = () => {
+    // For steps with custom onCompleteStep (like narrative), call it first to trigger form submission
+    if (currentStep.onCompleteStep) {
+      currentStep.onCompleteStep();
+      // For form-based steps, don't validate immediately as the form submission will handle completion
+      return;
+    }
+    
+    // For other steps, validate first then complete
     if (validateCurrentStep()) {
       onStepComplete(currentStep.id);
       if (autoSave && onSave) {
@@ -160,7 +173,105 @@ export const WorkflowWizard = React.forwardRef<HTMLDivElement, WorkflowWizardPro
     }
   };
 
+  // Mobile-first rendering with MobileWizardShell
+  if (viewport.isMobile) {
+    return (
+      <div ref={ref} className={cn('mobile-wizard-container', className)}>
+        <MobileWizardShell
+          title={title}
+          description={description}
+          currentStep={currentStepIndex + 1}
+          totalSteps={totalSteps}
+          remainingTime={remainingTime}
+          showEstimates={showEstimates}
+          onSwipeLeft={canGoNext ? handleNext : undefined}
+          onSwipeRight={canGoPrevious ? handlePrevious : undefined}
+          readonly={readonly}
+        >
+          {/* Current Step Content - Mobile Optimized */}
+          <div className="pb-20"> {/* Padding for fixed navigation bar */}
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2 mb-3">
+                <h3 className="text-lg font-semibold text-healthcare-primary">
+                  {currentStep.title}
+                </h3>
+                
+                {currentStep.isOptional && (
+                  <Badge variant="outline" className="text-xs">Optional</Badge>
+                )}
+                
+                {currentStep.isComplete && (
+                  <Badge className="bg-ss-success text-white text-xs">
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                    Complete
+                  </Badge>
+                )}
+              </div>
+              
+              <p className="text-sm text-gray-600 mb-4">
+                {currentStep.description}
+              </p>
+              
+              {/* Step Component */}
+              {currentStep.component && (
+                <div className="mb-4">
+                  {currentStep.component}
+                </div>
+              )}
+              
+              {/* Validation Error */}
+              {validationError && (
+                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                  <div className="flex items-center space-x-2">
+                    <AlertTriangle className="w-4 h-4 text-red-600" />
+                    <span className="text-sm text-red-700 font-medium">
+                      {validationError}
+                    </span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Help Content */}
+              {showingHelp && currentStep.helpContent && (
+                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <div className="flex items-start space-x-2">
+                    <Info className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <div className="text-sm text-blue-700">
+                      {currentStep.helpContent}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </MobileWizardShell>
 
+        {/* Fixed Mobile Navigation Bar */}
+        <TouchNavigationBar
+          currentStep={currentStepIndex + 1}
+          totalSteps={totalSteps}
+          canGoPrevious={canGoPrevious}
+          canGoNext={canGoNext}
+          isLastStep={isLastStep}
+          allStepsComplete={allStepsComplete}
+          isCurrentStepComplete={currentStep.isComplete}
+          isCurrentStepSkippable={currentStep.isSkippable}
+          showHelp={showHelp && !!currentStep.helpContent}
+          isHelpVisible={showingHelp}
+          readonly={readonly}
+          onPrevious={handlePrevious}
+          onNext={handleNext}
+          onComplete={handleComplete}
+          onCompleteStep={handleCompleteStep}
+          onSkipStep={handleSkipStep}
+          onToggleHelp={() => setShowingHelp(!showingHelp)}
+          onSave={onSave}
+        />
+      </div>
+    );
+  }
+
+  // Desktop/Tablet rendering (existing layout)
   return (
     <Card ref={ref} className={cn('', className)}>
       <CardHeader>
@@ -256,82 +367,82 @@ export const WorkflowWizard = React.forwardRef<HTMLDivElement, WorkflowWizardPro
         {/* Current Step - Only show in interactive mode */}
         {!readonly && (
           <Card className="border-l-4 border-l-ss-teal bg-ss-teal/5">
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center space-x-2 mb-2">
-                  <h3 className="text-healthcare-lg font-semibold text-healthcare-primary">
-                    {currentStep.title}
-                  </h3>
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <h3 className="text-healthcare-lg font-semibold text-healthcare-primary">
+                      {currentStep.title}
+                    </h3>
+                    
+                    {currentStep.isOptional && (
+                      <Badge variant="outline" className="text-xs">Optional</Badge>
+                    )}
+                    
+                    {currentStep.isComplete && (
+                      <Badge className="bg-ss-success text-white text-xs">
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        Complete
+                      </Badge>
+                    )}
+                    
+                    {showEstimates && currentStep.estimatedTime && (
+                      <Badge variant="outline" className="text-xs">
+                        <Clock className="w-3 h-3 mr-1" />
+                        ~{currentStep.estimatedTime}m
+                      </Badge>
+                    )}
+                  </div>
                   
-                  {currentStep.isOptional && (
-                    <Badge variant="outline" className="text-xs">Optional</Badge>
+                  <p className="text-healthcare-sm text-gray-600 mb-4">
+                    {currentStep.description}
+                  </p>
+                  
+                  {/* Step Component */}
+                  {currentStep.component && (
+                    <div className="mb-4">
+                      {currentStep.component}
+                    </div>
                   )}
                   
-                  {currentStep.isComplete && (
-                    <Badge className="bg-ss-success text-white text-xs">
-                      <CheckCircle className="w-3 h-3 mr-1" />
-                      Complete
-                    </Badge>
-                  )}
-                  
-                  {showEstimates && currentStep.estimatedTime && (
-                    <Badge variant="outline" className="text-xs">
-                      <Clock className="w-3 h-3 mr-1" />
-                      ~{currentStep.estimatedTime}m
-                    </Badge>
+                  {/* Validation Error */}
+                  {validationError && (
+                    <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                      <div className="flex items-center space-x-2">
+                        <AlertTriangle className="w-4 h-4 text-red-600" />
+                        <span className="text-healthcare-sm text-red-700 font-medium">
+                          {validationError}
+                        </span>
+                      </div>
+                    </div>
                   )}
                 </div>
                 
-                <p className="text-healthcare-sm text-gray-600 mb-4">
-                  {currentStep.description}
-                </p>
-                
-                {/* Step Component */}
-                {currentStep.component && (
-                  <div className="mb-4">
-                    {currentStep.component}
-                  </div>
-                )}
-                
-                {/* Validation Error */}
-                {validationError && (
-                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                    <div className="flex items-center space-x-2">
-                      <AlertTriangle className="w-4 h-4 text-red-600" />
-                      <span className="text-healthcare-sm text-red-700 font-medium">
-                        {validationError}
-                      </span>
-                    </div>
-                  </div>
+                {/* Help */}
+                {showHelp && currentStep.helpContent && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShowingHelp(!showingHelp)}
+                  >
+                    <HelpCircle className="w-4 h-4" />
+                  </Button>
                 )}
               </div>
               
-              {/* Help */}
-              {showHelp && currentStep.helpContent && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setShowingHelp(!showingHelp)}
-                >
-                  <HelpCircle className="w-4 h-4" />
-                </Button>
-              )}
-            </div>
-            
-            {/* Help Content */}
-            {showingHelp && currentStep.helpContent && (
-              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                <div className="flex items-start space-x-2">
-                  <Info className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                  <div className="text-healthcare-sm text-blue-700">
-                    {currentStep.helpContent}
+              {/* Help Content */}
+              {showingHelp && currentStep.helpContent && (
+                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <div className="flex items-start space-x-2">
+                    <Info className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <div className="text-healthcare-sm text-blue-700">
+                      {currentStep.helpContent}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+          </Card>
         )}
       </CardContent>
     </Card>

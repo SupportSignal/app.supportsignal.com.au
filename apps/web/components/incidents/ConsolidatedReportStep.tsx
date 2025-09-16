@@ -27,6 +27,8 @@ import { CompletionChecklist } from './CompletionChecklist';
 import { ExportPreview } from './ExportPreview';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
+import { useViewport } from '@/hooks/mobile/useViewport';
+import { cn } from '@/lib/utils';
 import type { Id } from '@/convex/_generated/dataModel';
 
 interface ConsolidatedReportStepProps {
@@ -43,6 +45,7 @@ export function ConsolidatedReportStep({
   onNavigateToStep
 }: ConsolidatedReportStepProps) {
   const { user } = useAuth();
+  const viewport = useViewport();
   const [activeTab, setActiveTab] = useState("summary");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -208,16 +211,33 @@ export function ConsolidatedReportStep({
   }
 
   return (
-    <div className="space-y-6">
+    <div className={cn(
+      "space-y-6",
+      viewport.isMobile ? "px-4" : ""
+    )}>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Complete Incident Report</h2>
-          <p className="text-muted-foreground">
+      <div className={cn(
+        "flex items-center",
+        viewport.isMobile ? "flex-col space-y-4" : "justify-between"
+      )}>
+        <div className={cn(
+          viewport.isMobile ? "text-center" : ""
+        )}>
+          <h2 className={cn(
+            "font-bold",
+            viewport.isMobile ? "text-xl" : "text-2xl"
+          )}>Complete Incident Report</h2>
+          <p className={cn(
+            "text-muted-foreground",
+            viewport.isMobile ? "text-sm" : ""
+          )}>
             Comprehensive overview of all captured information and workflow completion status
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className={cn(
+          "flex items-center gap-2",
+          viewport.isMobile ? "w-full justify-center" : ""
+        )}>
           <Badge variant={workflowValidation.all_complete ? "default" : "secondary"}>
             {workflowValidation.all_complete ? "Complete" : "Incomplete"}
           </Badge>
@@ -228,55 +248,118 @@ export function ConsolidatedReportStep({
       </div>
 
       {/* Incident Overview Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <Card className={cn(
+        viewport.isMobile ? "border-0 shadow-sm" : ""
+      )}>
+        <CardHeader className={cn(
+          viewport.isMobile ? "pb-3 px-3" : ""
+        )}>
+          <CardTitle className={cn(
+            "flex items-center gap-2",
+            viewport.isMobile ? "text-base justify-center" : ""
+          )}>
             <FileText className="h-5 w-5" />
             Incident Overview
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm">
-                <User className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium">Reporter:</span>
-                <span>{incident.reporter_name}</span>
+        <CardContent className={cn(
+          viewport.isMobile ? "px-3 pb-3" : ""
+        )}>
+          <div className={cn(
+            "gap-4",
+            viewport.isMobile ? "grid grid-cols-1 space-y-3" : "grid grid-cols-1 md:grid-cols-2"
+          )}>
+            <div className={cn(
+              viewport.isMobile ? "space-y-2" : "space-y-3"
+            )}>
+              <div className={cn(
+                "flex items-center gap-2",
+                viewport.isMobile ? "text-sm justify-between" : "text-sm"
+              )}>
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">Reporter:</span>
+                </div>
+                <span className={cn(
+                  viewport.isMobile ? "text-right" : ""
+                )}>{incident.reporter_name}</span>
               </div>
-              <div className="flex items-center gap-2 text-sm">
-                <User className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium">Participant:</span>
-                <span>{incident.participant_name}</span>
+              <div className={cn(
+                "flex items-center gap-2",
+                viewport.isMobile ? "text-sm justify-between" : "text-sm"
+              )}>
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">Participant:</span>
+                </div>
+                <span className={cn(
+                  viewport.isMobile ? "text-right" : ""
+                )}>{incident.participant_name}</span>
               </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium">Date/Time:</span>
-                <span>{incident.event_date_time}</span>
+              <div className={cn(
+                "flex items-center gap-2",
+                viewport.isMobile ? "text-sm justify-between" : "text-sm"
+              )}>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">Date/Time:</span>
+                </div>
+                <span className={cn(
+                  viewport.isMobile ? "text-right text-xs" : ""
+                )}>{incident.event_date_time}</span>
               </div>
-              <div className="flex items-center gap-2 text-sm">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium">Location:</span>
-                <span>{incident.location}</span>
+              <div className={cn(
+                "flex items-center gap-2",
+                viewport.isMobile ? "text-sm justify-between" : "text-sm"
+              )}>
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">Location:</span>
+                </div>
+                <span className={cn(
+                  viewport.isMobile ? "text-right" : ""
+                )}>{incident.location}</span>
               </div>
             </div>
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium">Created:</span>
-                <span>{formatDistanceToNow(incident.created_at)} ago</span>
+            <div className={cn(
+              viewport.isMobile ? "space-y-2" : "space-y-3"
+            )}>
+              <div className={cn(
+                "flex items-center gap-2",
+                viewport.isMobile ? "text-sm justify-between" : "text-sm"
+              )}>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">Created:</span>
+                </div>
+                <span className={cn(
+                  viewport.isMobile ? "text-right" : ""
+                )}>{formatDistanceToNow(incident.created_at)} ago</span>
               </div>
-              <div className="flex items-center gap-2 text-sm">
-                <FileText className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium">Status:</span>
+              <div className={cn(
+                "flex items-center gap-2",
+                viewport.isMobile ? "text-sm justify-between" : "text-sm"
+              )}>
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">Status:</span>
+                </div>
                 <Badge variant="outline" className="text-xs">
                   {incident.overall_status}
                 </Badge>
               </div>
               {incident.workflow_completed_at && (
-                <div className="flex items-center gap-2 text-sm">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span className="font-medium">Completed:</span>
-                  <span>{formatDateTime(incident.workflow_completed_at)}</span>
+                <div className={cn(
+                  "flex items-center gap-2",
+                  viewport.isMobile ? "text-sm justify-between" : "text-sm"
+                )}>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <span className="font-medium">Completed:</span>
+                  </div>
+                  <span className={cn(
+                    viewport.isMobile ? "text-right text-xs" : ""
+                  )}>{formatDateTime(incident.workflow_completed_at)}</span>
                 </div>
               )}
             </div>
@@ -292,35 +375,78 @@ export function ConsolidatedReportStep({
         }
         setActiveTab(tab);
       }} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="summary" className="flex items-center gap-2">
+        <TabsList className={cn(
+          "grid w-full",
+          viewport.isMobile ? "grid-cols-2 h-auto" : "grid-cols-4"
+        )}>
+          <TabsTrigger 
+            value="summary" 
+            className={cn(
+              "flex items-center gap-2",
+              viewport.isMobile ? "h-12 text-xs flex-col gap-1" : ""
+            )}
+          >
             <FileText className="h-4 w-4" />
-            Summary
+            <span className={cn(viewport.isMobile ? "hidden" : "")}>Summary</span>
+            {viewport.isMobile && <span>Summary</span>}
           </TabsTrigger>
-          <TabsTrigger value="completion" className="flex items-center gap-2">
+          <TabsTrigger 
+            value="completion" 
+            className={cn(
+              "flex items-center gap-2",
+              viewport.isMobile ? "h-12 text-xs flex-col gap-1" : ""
+            )}
+          >
             <CheckCircle className="h-4 w-4" />
-            Completion
+            <span className={cn(viewport.isMobile ? "hidden" : "")}>Completion</span>
+            {viewport.isMobile && <span>Complete</span>}
           </TabsTrigger>
-          <TabsTrigger value="preview" className="flex items-center gap-2">
+          <TabsTrigger 
+            value="preview" 
+            className={cn(
+              "flex items-center gap-2",
+              viewport.isMobile ? "h-12 text-xs flex-col gap-1" : ""
+            )}
+          >
             <Eye className="h-4 w-4" />
-            Export Preview
+            <span className={cn(viewport.isMobile ? "hidden" : "")}>Export Preview</span>
+            {viewport.isMobile && <span>Preview</span>}
           </TabsTrigger>
-          <TabsTrigger value="handoff" className="flex items-center gap-2">
+          <TabsTrigger 
+            value="handoff" 
+            className={cn(
+              "flex items-center gap-2",
+              viewport.isMobile ? "h-12 text-xs flex-col gap-1" : ""
+            )}
+          >
             <Send className="h-4 w-4" />
-            Handoff
+            <span className={cn(viewport.isMobile ? "hidden" : "")}>Handoff</span>
+            {viewport.isMobile && <span>Handoff</span>}
           </TabsTrigger>
         </TabsList>
 
         {/* Incident Summary Tab */}
-        <TabsContent value="summary" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Complete Incident Information</CardTitle>
-              <CardDescription>
+        <TabsContent value="summary" className={cn(
+          viewport.isMobile ? "space-y-3" : "space-y-4"
+        )}>
+          <Card className={cn(
+            viewport.isMobile ? "border-0 shadow-sm" : ""
+          )}>
+            <CardHeader className={cn(
+              viewport.isMobile ? "pb-3 px-3" : ""
+            )}>
+              <CardTitle className={cn(
+                viewport.isMobile ? "text-base text-center" : ""
+              )}>Complete Incident Information</CardTitle>
+              <CardDescription className={cn(
+                viewport.isMobile ? "text-xs text-center" : ""
+              )}>
                 All captured narratives, clarifications, and enhancements
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className={cn(
+              viewport.isMobile ? "px-3 pb-3" : ""
+            )}>
               <IncidentSummaryDisplay 
                 incident_id={incident_id}
                 incident={incident}
@@ -332,15 +458,27 @@ export function ConsolidatedReportStep({
         </TabsContent>
 
         {/* Completion Checklist Tab */}
-        <TabsContent value="completion" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Workflow Completion Status</CardTitle>
-              <CardDescription>
+        <TabsContent value="completion" className={cn(
+          viewport.isMobile ? "space-y-3" : "space-y-4"
+        )}>
+          <Card className={cn(
+            viewport.isMobile ? "border-0 shadow-sm" : ""
+          )}>
+            <CardHeader className={cn(
+              viewport.isMobile ? "pb-3 px-3" : ""
+            )}>
+              <CardTitle className={cn(
+                viewport.isMobile ? "text-base text-center" : ""
+              )}>Workflow Completion Status</CardTitle>
+              <CardDescription className={cn(
+                viewport.isMobile ? "text-xs text-center" : ""
+              )}>
                 Verification of all required workflow steps and data quality
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className={cn(
+              viewport.isMobile ? "px-3 pb-3" : ""
+            )}>
               <CompletionChecklist 
                 validation={workflowValidation}
                 incident_id={incident_id}
@@ -350,15 +488,27 @@ export function ConsolidatedReportStep({
         </TabsContent>
 
         {/* Export Preview Tab */}
-        <TabsContent value="preview" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Analysis Workflow Preview</CardTitle>
-              <CardDescription>
+        <TabsContent value="preview" className={cn(
+          viewport.isMobile ? "space-y-3" : "space-y-4"
+        )}>
+          <Card className={cn(
+            viewport.isMobile ? "border-0 shadow-sm" : ""
+          )}>
+            <CardHeader className={cn(
+              viewport.isMobile ? "pb-3 px-3" : ""
+            )}>
+              <CardTitle className={cn(
+                viewport.isMobile ? "text-base text-center" : ""
+              )}>Analysis Workflow Preview</CardTitle>
+              <CardDescription className={cn(
+                viewport.isMobile ? "text-xs text-center" : ""
+              )}>
                 How this incident will appear in the analysis workflow system
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className={cn(
+              viewport.isMobile ? "px-3 pb-3" : ""
+            )}>
               {(() => {
                 console.log('🔍 Export Preview Tab - Enhanced Narrative Check:', {
                   enhancedNarrativeExists: !!enhancedNarrative,
@@ -384,15 +534,27 @@ export function ConsolidatedReportStep({
         </TabsContent>
 
         {/* Handoff Information Tab */}
-        <TabsContent value="handoff" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Analysis Workflow Handoff</CardTitle>
-              <CardDescription>
+        <TabsContent value="handoff" className={cn(
+          viewport.isMobile ? "space-y-3" : "space-y-4"
+        )}>
+          <Card className={cn(
+            viewport.isMobile ? "border-0 shadow-sm" : ""
+          )}>
+            <CardHeader className={cn(
+              viewport.isMobile ? "pb-3 px-3" : ""
+            )}>
+              <CardTitle className={cn(
+                viewport.isMobile ? "text-base text-center" : ""
+              )}>Analysis Workflow Handoff</CardTitle>
+              <CardDescription className={cn(
+                viewport.isMobile ? "text-xs text-center" : ""
+              )}>
                 Information about transitioning this incident to the analysis workflow
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className={cn(
+              viewport.isMobile ? "px-3 pb-3" : ""
+            )}>
               <div className="space-y-4">
                 {workflowValidation.all_complete ? (
                   <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
@@ -453,15 +615,24 @@ export function ConsolidatedReportStep({
       </Tabs>
 
       {/* Actions */}
-      <div className="flex items-center justify-between pt-6 border-t">
+      <div className={cn(
+        "flex items-center pt-6 border-t",
+        viewport.isMobile ? "flex-col space-y-3" : "justify-between"
+      )}>
         <Button
           variant="outline"
           onClick={onPrevious}
+          className={cn(
+            viewport.isMobile ? "w-full h-12" : ""
+          )}
         >
           Previous: Enhanced Review
         </Button>
 
-        <div className="flex items-center gap-2">
+        <div className={cn(
+          "flex items-center gap-2",
+          viewport.isMobile ? "w-full flex-col space-y-2" : ""
+        )}>
           {incident.handoff_status !== "ready_for_analysis" && incident.overall_status !== "ready_for_analysis" && (
             <Button
               variant="outline"
@@ -471,17 +642,23 @@ export function ConsolidatedReportStep({
                 console.log('Workflow validation status:', workflowValidation);
                 setActiveTab("completion");
               }}
-              className="flex items-center gap-2"
+              className={cn(
+                "flex items-center gap-2",
+                viewport.isMobile ? "w-full h-12" : ""
+              )}
             >
               <CheckCircle className="h-4 w-4" />
-              Review Completion
+              {viewport.isMobile ? "Review Completion" : "Review Completion"}
             </Button>
           )}
           
           <Button
             onClick={handleSubmitForAnalysis}
             disabled={!workflowValidation.all_complete || !enhancedNarrative || isSubmitting || incident.handoff_status === "ready_for_analysis" || incident.overall_status === "ready_for_analysis"}
-            className="flex items-center gap-2"
+            className={cn(
+              "flex items-center gap-2 bg-ss-teal text-white",
+              viewport.isMobile ? "w-full h-12" : ""
+            )}
           >
             {isSubmitting ? (
               <>
@@ -491,12 +668,15 @@ export function ConsolidatedReportStep({
             ) : (incident.handoff_status === "ready_for_analysis" || incident.overall_status === "ready_for_analysis") ? (
               <>
                 <CheckCircle className="h-4 w-4" />
-                {incident.handoff_status === "ready_for_analysis" ? "Already Submitted" : "Workflow Complete"}
+                {incident.handoff_status === "ready_for_analysis" ? 
+                  (viewport.isMobile ? "Submitted" : "Already Submitted") : 
+                  (viewport.isMobile ? "Complete" : "Workflow Complete")
+                }
               </>
             ) : (
               <>
                 <Send className="h-4 w-4" />
-                Submit for Analysis
+                {viewport.isMobile ? "Submit for Analysis" : "Submit for Analysis"}
               </>
             )}
           </Button>

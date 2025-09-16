@@ -12,6 +12,8 @@ import { Alert, AlertDescription } from '@starter/ui/alert';
 import { ParticipantSelector } from '@/components/participants/ParticipantSelector';
 import { Id } from '@/convex/_generated/dataModel';
 import { Participant } from '@/types/participants';
+import { useViewport } from '@/hooks/mobile/useViewport';
+import { cn } from '@/lib/utils';
 
 interface User {
   _id: string;
@@ -52,6 +54,7 @@ export function IncidentMetadataForm({
   onComplete, 
   existingIncidentId 
 }: IncidentMetadataFormProps) {
+  const viewport = useViewport();
   const [formData, setFormDataInternal] = useState<FormData>(() => {
     const initialDateTime = new Date().toISOString().slice(0, 16);
     console.log('🔍 DEBUG: Initial form state creation:');
@@ -416,18 +419,43 @@ export function IncidentMetadataForm({
                      formData.location.trim();
 
   return (
-    <Card className="w-full max-w-6xl mx-auto">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            📋 Step 1: Incident Details
-            <span className="text-sm font-normal text-gray-500">
+    <Card className={cn(
+      "w-full mx-auto",
+      viewport.isMobile 
+        ? "max-w-none border-0 shadow-none" 
+        : "max-w-6xl"
+    )}>
+      <CardHeader className={cn(
+        viewport.isMobile ? "p-4 pb-2" : ""
+      )}>
+        <CardTitle className={cn(
+          "flex items-center",
+          viewport.isMobile 
+            ? "flex-col space-y-1 text-center" 
+            : "justify-between"
+        )}>
+          <div className={cn(
+            "flex items-center gap-2",
+            viewport.isMobile ? "flex-col space-y-1" : ""
+          )}>
+            <span className={cn(
+              "text-healthcare-primary",
+              viewport.isMobile ? "text-lg" : ""
+            )}>
+              📋 Step 1: Incident Details
+            </span>
+            <span className={cn(
+              "text-sm font-normal text-gray-500",
+              viewport.isMobile ? "text-xs" : ""
+            )}>
               (Required Information)
             </span>
           </div>
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className={cn(
+        viewport.isMobile ? "p-4 pt-0" : ""
+      )}>
         {/* Sample Data Error Alert */}
         {sampleDataError && (
           <Alert className="mb-6 border-orange-200 bg-orange-50">
@@ -462,21 +490,34 @@ export function IncidentMetadataForm({
           </Alert>
         )}
         
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className={cn(
+          viewport.isMobile ? "space-y-5" : "space-y-6"
+        )}>
           {/* Reporter Name */}
           <div className="space-y-2">
-            <Label htmlFor="reporter_name" className="text-sm font-medium">
+            <Label htmlFor="reporter_name" className={cn(
+              "text-sm font-medium",
+              viewport.isMobile ? "text-base" : ""
+            )}>
               Reporter Name
             </Label>
             <Input
               id="reporter_name"
               type="text"
+              inputMode="text"
+              autoComplete="name"
               value={formData.reporter_name}
               onChange={(e) => handleFieldChange('reporter_name', e.target.value)}
               placeholder="Enter reporter name"
-              className={errors.reporter_name ? 'border-red-500' : ''}
+              className={cn(
+                errors.reporter_name ? 'border-red-500' : '',
+                viewport.isMobile ? 'h-12 text-base' : ''
+              )}
             />
-            <p className="text-xs text-gray-500">
+            <p className={cn(
+              "text-xs text-gray-500",
+              viewport.isMobile ? "text-sm" : ""
+            )}>
               Pre-filled from your account. Edit if reporting on behalf of someone else.
             </p>
             {errors.reporter_name && (
@@ -511,17 +552,27 @@ export function IncidentMetadataForm({
 
           {/* Event Date/Time */}
           <div className="space-y-2">
-            <Label htmlFor="event_date_time" className="text-sm font-medium">
+            <Label htmlFor="event_date_time" className={cn(
+              "text-sm font-medium",
+              viewport.isMobile ? "text-base" : ""
+            )}>
               Event Date & Time <span className="text-red-500">*</span>
             </Label>
             <Input
               id="event_date_time"
               type="datetime-local"
+              inputMode="none" // Prevents custom keyboard on mobile for date picker
               value={formData.event_date_time}
               onChange={(e) => handleFieldChange('event_date_time', e.target.value)}
-              className={errors.event_date_time ? 'border-red-500' : ''}
+              className={cn(
+                errors.event_date_time ? 'border-red-500' : '',
+                viewport.isMobile ? 'h-12 text-base' : ''
+              )}
             />
-            <p className="text-xs text-gray-500">
+            <p className={cn(
+              "text-xs text-gray-500",
+              viewport.isMobile ? "text-sm" : ""
+            )}>
               When did the incident occur? Defaults to current date and time.
             </p>
             {errors.event_date_time && (
@@ -535,18 +586,29 @@ export function IncidentMetadataForm({
 
           {/* Location */}
           <div className="space-y-2">
-            <Label htmlFor="location" className="text-sm font-medium">
+            <Label htmlFor="location" className={cn(
+              "text-sm font-medium",
+              viewport.isMobile ? "text-base" : ""
+            )}>
               Location <span className="text-red-500">*</span>
             </Label>
             <Input
               id="location"
               type="text"
+              inputMode="text"
+              autoComplete="off"
               value={formData.location}
               onChange={(e) => handleFieldChange('location', e.target.value)}
               placeholder="Where did the incident occur?"
-              className={errors.location ? 'border-red-500' : ''}
+              className={cn(
+                errors.location ? 'border-red-500' : '',
+                viewport.isMobile ? 'h-12 text-base' : ''
+              )}
             />
-            <p className="text-xs text-gray-500">
+            <p className={cn(
+              "text-xs text-gray-500",
+              viewport.isMobile ? "text-sm" : ""
+            )}>
               Specific location where the incident took place (e.g., &quot;Main activity room&quot;, &quot;Client&apos;s home&quot;).
             </p>
             {errors.location && (
@@ -559,14 +621,22 @@ export function IncidentMetadataForm({
           </div>
 
           {/* Form Actions */}
-          <div className="flex justify-between items-center pt-6 border-t">
-            {/* Empty div for consistent spacing since there's no Previous on Step 1 */}
-            <div></div>
+          <div className={cn(
+            "flex items-center pt-6 border-t",
+            viewport.isMobile 
+              ? "flex-col space-y-3" 
+              : "justify-between"
+          )}>
+            {/* Empty div for consistent spacing since there's no Previous on Step 1 - hide on mobile */}
+            {!viewport.isMobile && <div></div>}
             
             <Button
               type="submit"
               disabled={!isFormValid || isSubmitting}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className={cn(
+                "bg-ss-teal text-white",
+                viewport.isMobile ? "w-full h-12 text-base" : ""
+              )}
             >
               {isSubmitting ? (
                 <>

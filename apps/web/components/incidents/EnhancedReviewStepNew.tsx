@@ -22,6 +22,8 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useViewport } from '@/hooks/mobile/useViewport';
+import { cn } from '@/lib/utils';
 import type { Id } from '@/convex/_generated/dataModel';
 import type { ClarificationPhase } from '@/types/clarification';
 
@@ -80,6 +82,7 @@ export function EnhancedReviewStepNew({
   onPrevious 
 }: EnhancedReviewStepNewProps) {
   const { user } = useAuth();
+  const viewport = useViewport();
   const [openPanels, setOpenPanels] = useState<Set<ClarificationPhase>>(new Set());
   const [phaseEnhancements, setPhaseEnhancements] = useState<Record<ClarificationPhase, PhaseEnhancement>>({
     before_event: {
@@ -270,25 +273,45 @@ export function EnhancedReviewStepNew({
   }
 
   return (
-    <div className="space-y-6">
+    <div className={cn(
+      "space-y-6",
+      viewport.isMobile ? "px-4" : ""
+    )}>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Enhanced Review</h2>
-          <p className="text-muted-foreground">
+      <div className={cn(
+        "flex items-center",
+        viewport.isMobile ? "flex-col space-y-4" : "justify-between"
+      )}>
+        <div className={cn(
+          viewport.isMobile ? "text-center" : ""
+        )}>
+          <h2 className={cn(
+            "font-bold",
+            viewport.isMobile ? "text-xl" : "text-2xl"
+          )}>Enhanced Review</h2>
+          <p className={cn(
+            "text-muted-foreground",
+            viewport.isMobile ? "text-sm" : ""
+          )}>
             Review AI-enhanced narratives for each phase of the incident
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className={cn(
+          "flex items-center gap-2",
+          viewport.isMobile ? "w-full justify-center" : ""
+        )}>
           <Badge variant={allPhasesComplete ? "default" : "secondary"}>
             {allPhasesComplete ? "Complete" : "In Progress"}
           </Badge>
           <Button
             variant="outline" 
-            size="sm"
+            size={viewport.isMobile ? "default" : "sm"}
             onClick={handleEnhanceAll}
             disabled={allPhasesComplete}
-            className="flex items-center gap-2"
+            className={cn(
+              "flex items-center gap-2",
+              viewport.isMobile ? "h-12 px-4" : ""
+            )}
           >
             <Wand2 className="h-4 w-4" />
             Enhance All
@@ -297,49 +320,82 @@ export function EnhancedReviewStepNew({
       </div>
 
       {/* Phase Enhancement Accordion */}
-      <div className="space-y-4">
+      <div className={cn(
+        viewport.isMobile ? "space-y-3" : "space-y-4"
+      )}>
         {Object.values(phaseEnhancements).map((phase) => {
           const status = getPhaseStatus(phase);
           const StatusIcon = status.icon;
           const isOpen = openPanels.has(phase.phase);
 
           return (
-            <Card key={phase.phase}>
+            <Card key={phase.phase} className={cn(
+              viewport.isMobile ? "border-0 shadow-sm" : ""
+            )}>
               <Collapsible 
                 open={isOpen} 
                 onOpenChange={() => togglePanel(phase.phase)}
               >
-                <CardHeader className="pb-4">
+                <CardHeader className={cn(
+                  viewport.isMobile ? "pb-3 px-3" : "pb-4"
+                )}>
                   <CollapsibleTrigger asChild>
-                    <div className="flex items-center justify-between cursor-pointer hover:bg-muted/50 -m-4 p-4 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        {isOpen ? (
-                          <ChevronDown className="h-5 w-5 text-muted-foreground" />
-                        ) : (
-                          <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                        )}
-                        <div>
-                          <CardTitle className="text-lg">{phase.title}</CardTitle>
-                          <CardDescription className="mt-1">
-                            {phase.description}
-                          </CardDescription>
+                    <div className={cn(
+                      "flex items-center cursor-pointer hover:bg-muted/50 -m-4 p-4 rounded-lg",
+                      viewport.isMobile ? "flex-col space-y-3 min-h-[48px] items-start" : "justify-between"
+                    )}>
+                      <div className={cn(
+                        "flex items-center space-x-3",
+                        viewport.isMobile ? "w-full justify-between" : ""
+                      )}>
+                        <div className="flex items-center space-x-3">
+                          {isOpen ? (
+                            <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                          ) : (
+                            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                          )}
+                          <div>
+                            <CardTitle className={cn(
+                              viewport.isMobile ? "text-base" : "text-lg"
+                            )}>{phase.title}</CardTitle>
+                            <CardDescription className={cn(
+                              "mt-1",
+                              viewport.isMobile ? "text-xs" : ""
+                            )}>
+                              {phase.description}
+                            </CardDescription>
+                          </div>
                         </div>
+                        {viewport.isMobile && (
+                          <Badge variant={status.color as any}>
+                            <StatusIcon className="h-3 w-3 mr-1" />
+                            {status.text}
+                          </Badge>
+                        )}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant={status.color as any}>
-                          <StatusIcon className="h-3 w-3 mr-1" />
-                          {status.text}
-                        </Badge>
+                      <div className={cn(
+                        "flex items-center gap-2",
+                        viewport.isMobile ? "w-full justify-center" : ""
+                      )}>
+                        {!viewport.isMobile && (
+                          <Badge variant={status.color as any}>
+                            <StatusIcon className="h-3 w-3 mr-1" />
+                            {status.text}
+                          </Badge>
+                        )}
                         {!phase.isComplete && phase.original_content?.trim() && (
                           <Button
                             variant="outline"
-                            size="sm"
+                            size={viewport.isMobile ? "default" : "sm"}
                             onClick={(e) => {
                               e.stopPropagation();
                               handleEnhancePhase(phase.phase);
                             }}
                             disabled={phase.isLoading}
-                            className="flex items-center gap-2"
+                            className={cn(
+                              "flex items-center gap-2",
+                              viewport.isMobile ? "h-12 w-full" : ""
+                            )}
                           >
                             {phase.isLoading ? (
                               <Loader2 className="h-3 w-3 animate-spin" />
@@ -355,38 +411,66 @@ export function EnhancedReviewStepNew({
                 </CardHeader>
 
                 <CollapsibleContent>
-                  <CardContent className="pt-0">
-                    <div className="space-y-4">
+                  <CardContent className={cn(
+                    "pt-0",
+                    viewport.isMobile ? "px-3 pb-3" : ""
+                  )}>
+                    <div className={cn(
+                      viewport.isMobile ? "space-y-3" : "space-y-4"
+                    )}>
                       {/* Enhanced Content */}
                       {phase.enhanced_content && (
                         <div>
-                          <div className="flex items-center gap-2 mb-2">
+                          <div className={cn(
+                            "flex items-center gap-2 mb-2",
+                            viewport.isMobile ? "justify-center" : ""
+                          )}>
                             <CheckCircle className="h-4 w-4 text-green-600" />
-                            <h4 className="font-medium">Enhanced Narrative</h4>
+                            <h4 className={cn(
+                              "font-medium",
+                              viewport.isMobile ? "text-sm" : ""
+                            )}>Enhanced Narrative</h4>
                           </div>
-                          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-                            <div className="text-sm leading-relaxed space-y-3">
+                          <div className={cn(
+                            "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg",
+                            viewport.isMobile ? "p-3" : "p-4"
+                          )}>
+                            <div className={cn(
+                              "leading-relaxed space-y-3",
+                              viewport.isMobile ? "text-sm" : "text-sm"
+                            )}>
                               {formatNarrativeText(phase.enhanced_content)}
                             </div>
                           </div>
                           
                           {/* Developer Regenerate Enhancement Button */}
                           {hasDeveloperAccess(user) && (
-                            <div className="mt-3 p-3 bg-gray-50 rounded-lg border">
-                              <div className="flex items-center justify-between">
-                                <div>
+                            <div className={cn(
+                              "mt-3 bg-gray-50 rounded-lg border",
+                              viewport.isMobile ? "p-2" : "p-3"
+                            )}>
+                              <div className={cn(
+                                "flex items-center",
+                                viewport.isMobile ? "flex-col space-y-2" : "justify-between"
+                              )}>
+                                <div className={cn(
+                                  viewport.isMobile ? "text-center" : ""
+                                )}>
                                   <p className="text-xs font-medium text-gray-600">Developer Tools</p>
                                   <p className="text-xs text-gray-500">Regenerate this enhancement</p>
                                 </div>
                                 <Button
                                   variant="outline"
-                                  size="sm"
+                                  size={viewport.isMobile ? "default" : "sm"}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleEnhancePhase(phase.phase);
                                   }}
                                   disabled={phase.isLoading}
-                                  className="h-7 text-xs flex items-center gap-1"
+                                  className={cn(
+                                    "flex items-center gap-1",
+                                    viewport.isMobile ? "h-10 w-full" : "h-7 text-xs"
+                                  )}
                                 >
                                   <RotateCcw className={cn("h-3 w-3", phase.isLoading && "animate-spin")} />
                                   Regenerate
@@ -400,11 +484,20 @@ export function EnhancedReviewStepNew({
                       {/* Original Content */}
                       {phase.original_content && (
                         <div>
-                          <div className="flex items-center gap-2 mb-2">
+                          <div className={cn(
+                            "flex items-center gap-2 mb-2",
+                            viewport.isMobile ? "justify-center" : ""
+                          )}>
                             <FileText className="h-4 w-4 text-muted-foreground" />
-                            <h4 className="font-medium text-muted-foreground">Original Narrative</h4>
+                            <h4 className={cn(
+                              "font-medium text-muted-foreground",
+                              viewport.isMobile ? "text-sm" : ""
+                            )}>Original Narrative</h4>
                           </div>
-                          <div className="bg-muted border rounded-lg p-4">
+                          <div className={cn(
+                            "bg-muted border rounded-lg",
+                            viewport.isMobile ? "p-3" : "p-4"
+                          )}>
                             <p className="text-sm leading-relaxed text-muted-foreground">{phase.original_content}</p>
                           </div>
                         </div>
@@ -412,17 +505,32 @@ export function EnhancedReviewStepNew({
 
                       {/* Error State */}
                       {phase.error && (
-                        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                          <div className="flex items-center gap-2 text-red-800 dark:text-red-200">
+                        <div className={cn(
+                          "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg",
+                          viewport.isMobile ? "p-3" : "p-4"
+                        )}>
+                          <div className={cn(
+                            "flex items-center gap-2 text-red-800 dark:text-red-200",
+                            viewport.isMobile ? "justify-center" : ""
+                          )}>
                             <AlertCircle className="h-4 w-4" />
-                            <p className="text-sm font-medium">Enhancement Failed</p>
+                            <p className={cn(
+                              "font-medium",
+                              viewport.isMobile ? "text-sm" : "text-sm"
+                            )}>Enhancement Failed</p>
                           </div>
-                          <p className="text-sm text-red-700 dark:text-red-300 mt-1">{phase.error}</p>
+                          <p className={cn(
+                            "text-red-700 dark:text-red-300 mt-1",
+                            viewport.isMobile ? "text-xs text-center" : "text-sm"
+                          )}>{phase.error}</p>
                           <Button
                             variant="outline"
-                            size="sm"
+                            size={viewport.isMobile ? "default" : "sm"}
                             onClick={() => handleEnhancePhase(phase.phase)}
-                            className="mt-2 flex items-center gap-2"
+                            className={cn(
+                              "mt-2 flex items-center gap-2",
+                              viewport.isMobile ? "w-full h-12" : ""
+                            )}
                           >
                             <RotateCcw className="h-3 w-3" />
                             Retry Enhancement
@@ -432,12 +540,24 @@ export function EnhancedReviewStepNew({
 
                       {/* No Content State */}
                       {!phase.original_content?.trim() && (
-                        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-                          <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
+                        <div className={cn(
+                          "bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg",
+                          viewport.isMobile ? "p-3" : "p-4"
+                        )}>
+                          <div className={cn(
+                            "flex items-center gap-2 text-yellow-800 dark:text-yellow-200",
+                            viewport.isMobile ? "justify-center" : ""
+                          )}>
                             <AlertCircle className="h-4 w-4" />
-                            <p className="text-sm font-medium">No Content Available</p>
+                            <p className={cn(
+                              "font-medium",
+                              viewport.isMobile ? "text-sm" : "text-sm"
+                            )}>No Content Available</p>
                           </div>
-                          <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+                          <p className={cn(
+                            "text-yellow-700 dark:text-yellow-300 mt-1",
+                            viewport.isMobile ? "text-xs text-center" : "text-sm"
+                          )}>
                             No original narrative was provided for this phase, so enhancement is not available.
                           </p>
                         </div>
@@ -452,22 +572,37 @@ export function EnhancedReviewStepNew({
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-between pt-6 border-t">
+      <div className={cn(
+        "flex items-center pt-6 border-t",
+        viewport.isMobile ? "flex-col space-y-3" : "justify-between"
+      )}>
         <Button
           variant="outline"
           onClick={onPrevious}
+          className={cn(
+            viewport.isMobile ? "w-full h-12" : ""
+          )}
         >
           Previous: Post-Event Questions
         </Button>
 
-        <div className="flex items-center gap-2">
+        <div className={cn(
+          "flex items-center gap-2",
+          viewport.isMobile ? "w-full" : ""
+        )}>
           <Button
             onClick={() => onComplete({ success: true })}
             disabled={!hasAnyEnhancements}
-            className="flex items-center gap-2"
+            className={cn(
+              "flex items-center gap-2 bg-ss-teal text-white",
+              viewport.isMobile ? "w-full h-12" : ""
+            )}
           >
             <CheckCircle className="h-4 w-4" />
-            {allPhasesComplete ? "Continue to Complete Report" : "Continue with Current Enhancements"}
+            {allPhasesComplete ? 
+              (viewport.isMobile ? "Continue to Report" : "Continue to Complete Report") : 
+              (viewport.isMobile ? "Continue with Enhancements" : "Continue with Current Enhancements")
+            }
           </Button>
         </div>
       </div>

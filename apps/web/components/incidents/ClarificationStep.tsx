@@ -19,6 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/auth/auth-provider";
 import { hasDeveloperAccess } from "@/lib/utils/developerAccess";
+import { useViewport } from "@/hooks/mobile/useViewport";
 import { AlertCircle, Loader2, RefreshCw, CheckCircle2, ChevronDown, ChevronUp, BookOpen, RotateCcw } from "lucide-react";
 
 // Auto-save delay (in milliseconds) - Standardized to 3 seconds across all components
@@ -33,6 +34,7 @@ export function ClarificationStep({
   isLoading = false 
 }: ClarificationStepProps) {
   const { sessionToken, user } = useAuth();
+  const viewport = useViewport();
   
   // Simple state management
   const [questions, setQuestions] = useState<ClarificationQuestion[]>([]);
@@ -323,23 +325,42 @@ export function ClarificationStep({
   }
 
   return (
-    <div className="space-y-6">
+    <div className={cn(
+      "space-y-6",
+      viewport.isMobile ? "px-2" : ""
+    )}>
       {/* Phase header */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl font-semibold text-gray-900 flex items-center justify-between">
+      <Card className={cn(
+        viewport.isMobile ? "border-0 shadow-none" : ""
+      )}>
+        <CardHeader className={cn(
+          viewport.isMobile ? "p-4 pb-2" : ""
+        )}>
+          <CardTitle className={cn(
+            "text-xl font-semibold text-gray-900 flex items-center justify-between",
+            viewport.isMobile ? "flex-col space-y-2 text-lg text-center" : ""
+          )}>
             <span>Step {getStepNumber(phase)}: {PHASE_NAMES[phase]} Clarification</span>
           </CardTitle>
-          <p className="text-gray-600 leading-relaxed">
+          <p className={cn(
+            "text-gray-600 leading-relaxed",
+            viewport.isMobile ? "text-sm text-center" : ""
+          )}>
             {PHASE_DESCRIPTIONS[phase]}
           </p>
           
           {totalQuestions > 0 && (
-            <div className="flex items-center gap-4 text-sm">
+            <div className={cn(
+              "flex items-center gap-4 text-sm",
+              viewport.isMobile ? "flex-col space-y-2" : ""
+            )}>
               <span className="text-gray-600">
                 Progress: {answeredQuestions} of {totalQuestions} answered
               </span>
-              <div className="flex-1 bg-gray-200 rounded-full h-2">
+              <div className={cn(
+                "bg-gray-200 rounded-full h-2",
+                viewport.isMobile ? "w-full" : "flex-1"
+              )}>
                 <div 
                   className="h-2 bg-blue-500 rounded-full transition-all duration-300"
                   style={{ width: `${totalQuestions > 0 ? (answeredQuestions / totalQuestions) * 100 : 0}%` }}
@@ -524,45 +545,66 @@ export function ClarificationStep({
         </>
       )}
 
-      {/* Navigation */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <Button
-              variant="outline"
-              onClick={onPrevious}
-              disabled={isLoading}
-            >
-              Previous Step
-            </Button>
-            
-            <div className="flex items-center gap-3 text-sm text-gray-600">
+      {/* Navigation - Hide on mobile when TouchNavigationBar handles navigation */}
+      {!viewport.isMobile && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              {/* Progress/Status Info */}
+              <div className="flex items-center gap-3 text-sm text-gray-600">
+                {answeredQuestions > 0 && (
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <span>{answeredQuestions} questions answered</span>
+                  </div>
+                )}
+                <span className="text-gray-400">•</span>
+                <span>All questions are optional</span>
+              </div>
+              
+              {/* Navigation Buttons */}
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  onClick={onPrevious}
+                  disabled={isLoading}
+                >
+                  Previous Step
+                </Button>
+                
+                <Button
+                  onClick={onNext}
+                  disabled={!canProceed || isLoading}
+                  className="min-w-[120px] bg-ss-teal text-white"
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : null}
+                  Next Step
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Mobile Status Info - Show when TouchNavigationBar handles navigation */}
+      {viewport.isMobile && (
+        <Card className="border-0 shadow-none">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-center gap-3 text-sm text-gray-600">
               {answeredQuestions > 0 && (
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-green-500" />
                   <span>{answeredQuestions} questions answered</span>
                 </div>
               )}
-              <span className="text-gray-400">•</span>
-              <span>All questions are optional</span>
+              {answeredQuestions > 0 && <span className="text-gray-400">•</span>}
+              <span className="text-center">All questions are optional</span>
             </div>
-            
-            <div className="flex items-center gap-3">
-              
-              <Button
-                onClick={onNext}
-                disabled={!canProceed || isLoading}
-                className="min-w-[120px]"
-              >
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : null}
-                Next Step
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

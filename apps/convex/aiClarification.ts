@@ -859,7 +859,36 @@ export const generateMockAnswers = action({
         jsonContent = markdownMatch[1].trim();
       }
       
-      parsedAnswers = JSON.parse(jsonContent);
+      // Enhanced JSON parsing with better error handling
+      try {
+        parsedAnswers = JSON.parse(jsonContent);
+      } catch (parseError) {
+        console.warn("Initial JSON parse failed, attempting to fix common AI response issues...");
+        
+        // Try to fix common AI response formatting issues
+        let fixedContent = jsonContent
+          // Fix unescaped quotes in strings (basic heuristic)
+          .replace(/"([^"]*)"([^"]*)"([^"]*)"/g, '"$1\\"$2\\"$3"')
+          // Fix unescaped newlines
+          .replace(/\n/g, '\\n')
+          .replace(/\r/g, '\\r')
+          // Fix unescaped tabs
+          .replace(/\t/g, '\\t')
+          // Fix trailing commas
+          .replace(/,(\s*[}\]])/g, '$1');
+        
+        try {
+          parsedAnswers = JSON.parse(fixedContent);
+          console.log("✅ Successfully parsed AI response after fixing formatting issues");
+        } catch (secondParseError) {
+          // If still failing, log the problematic content for debugging
+          console.error("❌ AI Response parsing failed even after fixes:");
+          console.error("Original response:", jsonContent.substring(0, 500) + "...");
+          console.error("Fixed response:", fixedContent.substring(0, 500) + "...");
+          throw new Error(`JSON parsing failed: ${secondParseError instanceof Error ? secondParseError.message : 'Unknown parsing error'}`);
+        }
+      }
+      
       if (!Array.isArray(parsedAnswers)) {
         throw new Error("AI response is not an array");
       }

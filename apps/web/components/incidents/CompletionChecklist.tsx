@@ -5,6 +5,8 @@ import { CheckCircle, XCircle, Clock, AlertTriangle } from 'lucide-react';
 import { Badge } from '@starter/ui/badge';
 import { Progress } from '@starter/ui/progress';
 import { Alert, AlertDescription } from '@starter/ui/alert';
+import { useViewport } from '@/hooks/mobile/useViewport';
+import { cn } from '@/lib/utils';
 import type { Id } from '@/convex/_generated/dataModel';
 
 interface CompletionChecklistProps {
@@ -31,6 +33,8 @@ interface ChecklistItem {
 }
 
 export function CompletionChecklist({ validation }: CompletionChecklistProps) {
+  const viewport = useViewport();
+  
   // Debug logging for validation data
   React.useEffect(() => {
     console.log('CompletionChecklist - Validation data:', validation);

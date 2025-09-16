@@ -3,6 +3,7 @@
 import { QuestionCard } from "./QuestionCard";
 import { QuestionsListProps } from "@/types/clarification";
 import { cn } from "@/lib/utils";
+import { useViewport } from "@/hooks/mobile/useViewport";
 import { Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Alert, AlertDescription } from "@starter/ui/alert";
 
@@ -13,6 +14,8 @@ export function QuestionsList({
   disabled = false,
   className 
 }: QuestionsListProps) {
+  const viewport = useViewport();
+  
   if (questions.length === 0) {
     return (
       <div className={cn("space-y-4", className)}>
@@ -32,22 +35,43 @@ export function QuestionsList({
   return (
     <div className={cn("space-y-6", className)}>
       {/* Progress summary */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      <div className={cn(
+        "bg-blue-50 border border-blue-200 rounded-lg",
+        viewport.isMobile ? "p-3" : "p-4"
+      )}>
+        <div className={cn(
+          "flex items-center",
+          viewport.isMobile ? "flex-col space-y-3 text-center" : "justify-between"
+        )}>
+          <div className={cn(
+            "flex items-center gap-3",
+            viewport.isMobile ? "flex-col text-center" : ""
+          )}>
             <CheckCircle2 className="h-5 w-5 text-blue-600" />
             <div>
-              <h3 className="font-medium text-blue-900">
+              <h3 className={cn(
+                "font-medium text-blue-900",
+                viewport.isMobile ? "text-sm" : ""
+              )}>
                 Progress: {answeredQuestions} of {totalQuestions} questions answered
               </h3>
-              <p className="text-sm text-blue-700 mt-1">
+              <p className={cn(
+                "text-sm text-blue-700 mt-1",
+                viewport.isMobile ? "text-xs" : ""
+              )}>
                 {completedQuestions} complete • {answeredQuestions - completedQuestions} in progress • {totalQuestions - answeredQuestions} not started
               </p>
             </div>
           </div>
           
-          <div className="text-right">
-            <div className="text-2xl font-bold text-blue-900">
+          <div className={cn(
+            "text-right",
+            viewport.isMobile ? "text-center" : ""
+          )}>
+            <div className={cn(
+              "text-2xl font-bold text-blue-900",
+              viewport.isMobile ? "text-xl" : ""
+            )}>
               {Math.round((answeredQuestions / totalQuestions) * 100)}%
             </div>
             <div className="text-xs text-blue-700">answered</div>
@@ -64,7 +88,9 @@ export function QuestionsList({
       </Alert>
 
       {/* Questions list */}
-      <div className="space-y-6">
+      <div className={cn(
+        viewport.isMobile ? "space-y-4" : "space-y-6"
+      )}>
         {questions.map((question) => (
           <QuestionCard
             key={question._id}

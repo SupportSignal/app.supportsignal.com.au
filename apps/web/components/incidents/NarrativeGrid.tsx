@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Card, CardHeader, CardTitle, CardContent } from '@starter/ui/card';
@@ -12,11 +12,17 @@ import { Badge } from '@starter/ui/badge';
 import { AutoSaveIndicator } from '@/components/ui/auto-save-indicator';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { Id } from '@/convex/_generated/dataModel';
+import { useViewport } from '@/hooks/mobile/useViewport';
+import { cn } from '@/lib/utils';
 
 interface NarrativeGridProps {
   incidentId: Id<"incidents">;
   onComplete: (narrativeData: NarrativeData) => void;
   onBack: () => void;
+}
+
+export interface NarrativeGridRef {
+  submitForm: () => void;
 }
 
 interface NarrativeData {
@@ -38,7 +44,8 @@ interface NarrativeData {
  * - Minimum content requirements (at least one phase with 50+ characters)
  * - Mobile-responsive design (converts to single column on small screens)
  */
-export function NarrativeGrid({ incidentId, onComplete, onBack }: NarrativeGridProps) {
+export const NarrativeGrid = forwardRef<NarrativeGridRef, NarrativeGridProps>(function NarrativeGrid({ incidentId, onComplete, onBack }, ref) {
+  const viewport = useViewport();
   const [narrativeData, setNarrativeData] = useState<NarrativeData>({
     before_event: '',
     during_event: '',
@@ -215,17 +222,49 @@ export function NarrativeGrid({ incidentId, onComplete, onBack }: NarrativeGridP
     narrative.trim().length >= 50
   );
 
+  // Expose form submission method to parent components
+  useImperativeHandle(ref, () => ({
+    submitForm: () => {
+      if (hasMinimumContent) {
+        handleSubmit(new Event('submit') as any);
+      }
+    }
+  }), [hasMinimumContent, narrativeData]);
+
 
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-6">
+    <div className={cn(
+      "w-full mx-auto space-y-6",
+      viewport.isMobile ? "max-w-none px-2" : "max-w-6xl"
+    )}>
       {/* Header */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              📝 Step 2: Incident Narrative
-              <span className="text-sm font-normal text-gray-500">
+      <Card className={cn(
+        viewport.isMobile ? "border-0 shadow-none" : ""
+      )}>
+        <CardHeader className={cn(
+          viewport.isMobile ? "p-4 pb-2" : ""
+        )}>
+          <CardTitle className={cn(
+            "flex items-center",
+            viewport.isMobile 
+              ? "flex-col space-y-2 text-center" 
+              : "justify-between"
+          )}>
+            <div className={cn(
+              "flex items-center gap-2",
+              viewport.isMobile ? "flex-col space-y-1" : ""
+            )}>
+              <span className={cn(
+                "text-healthcare-primary",
+                viewport.isMobile ? "text-lg" : ""
+              )}>
+                📝 Step 2: Incident Narrative
+              </span>
+              <span className={cn(
+                "text-sm font-normal text-gray-500",
+                viewport.isMobile ? "text-xs" : ""
+              )}>
                 (Detailed Description)
               </span>
             </div>
@@ -237,7 +276,10 @@ export function NarrativeGrid({ incidentId, onComplete, onBack }: NarrativeGridP
               />
             </div>
           </CardTitle>
-          <p className="text-sm text-gray-600">
+          <p className={cn(
+            "text-sm text-gray-600",
+            viewport.isMobile ? "text-sm text-center" : ""
+          )}>
             Provide detailed descriptions for each phase of the incident. At least one phase must contain meaningful content.
           </p>
         </CardHeader>
@@ -246,13 +288,28 @@ export function NarrativeGrid({ incidentId, onComplete, onBack }: NarrativeGridP
 
       {/* Narrative Grid */}
       <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className={cn(
+          "grid gap-6",
+          viewport.isMobile 
+            ? "grid-cols-1 space-y-2" 
+            : "grid-cols-1 md:grid-cols-2"
+        )}>
           {/* Before Event */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center justify-between">
-                🔍 Before Event
-                <div className="flex gap-2">
+          <Card className={cn(
+            viewport.isMobile ? "border-l-4 border-l-blue-500" : ""
+          )}>
+            <CardHeader className={cn(
+              viewport.isMobile ? "p-4 pb-2" : ""
+            )}>
+              <CardTitle className={cn(
+                "text-lg flex items-center justify-between",
+                viewport.isMobile ? "flex-col space-y-2 text-base" : ""
+              )}>
+                <span>🔍 Before Event</span>
+                <div className={cn(
+                  "flex gap-2",
+                  viewport.isMobile ? "text-xs" : ""
+                )}>
                   <Badge variant="outline" className="text-xs">
                     {getCharacterCount(narrativeData.before_event)} chars
                   </Badge>
@@ -262,25 +319,45 @@ export function NarrativeGrid({ incidentId, onComplete, onBack }: NarrativeGridP
                 </div>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <Label className="text-sm text-gray-600 mb-2 block">
+            <CardContent className={cn(
+              viewport.isMobile ? "p-4 pt-0" : ""
+            )}>
+              <Label className={cn(
+                "text-sm text-gray-600 mb-2 block",
+                viewport.isMobile ? "text-sm" : ""
+              )}>
                 What was happening before the incident? What were the circumstances or conditions leading up to it?
               </Label>
               <textarea
                 value={narrativeData.before_event}
                 onChange={(e) => handleNarrativeChange('before_event', e.target.value)}
                 placeholder="Describe the situation, environment, activities, or conditions that existed before the incident occurred..."
-                className="w-full h-32 p-3 border rounded-md resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={cn(
+                  "w-full border rounded-md resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
+                  viewport.isMobile 
+                    ? "h-24 p-3 text-base" 
+                    : "h-32 p-3"
+                )}
               />
             </CardContent>
           </Card>
 
           {/* During Event */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center justify-between">
-                ⚡ During Event
-                <div className="flex gap-2">
+          <Card className={cn(
+            viewport.isMobile ? "border-l-4 border-l-red-500" : ""
+          )}>
+            <CardHeader className={cn(
+              viewport.isMobile ? "p-4 pb-2" : ""
+            )}>
+              <CardTitle className={cn(
+                "text-lg flex items-center justify-between",
+                viewport.isMobile ? "flex-col space-y-2 text-base" : ""
+              )}>
+                <span>⚡ During Event</span>
+                <div className={cn(
+                  "flex gap-2",
+                  viewport.isMobile ? "text-xs" : ""
+                )}>
                   <Badge variant="outline" className="text-xs">
                     {getCharacterCount(narrativeData.during_event)} chars
                   </Badge>
@@ -290,25 +367,45 @@ export function NarrativeGrid({ incidentId, onComplete, onBack }: NarrativeGridP
                 </div>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <Label className="text-sm text-gray-600 mb-2 block">
+            <CardContent className={cn(
+              viewport.isMobile ? "p-4 pt-0" : ""
+            )}>
+              <Label className={cn(
+                "text-sm text-gray-600 mb-2 block",
+                viewport.isMobile ? "text-sm" : ""
+              )}>
                 What happened during the incident? Describe the event as it unfolded.
               </Label>
               <textarea
                 value={narrativeData.during_event}
                 onChange={(e) => handleNarrativeChange('during_event', e.target.value)}
                 placeholder="Describe exactly what happened during the incident, including actions, behaviors, and sequence of events..."
-                className="w-full h-32 p-3 border rounded-md resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={cn(
+                  "w-full border rounded-md resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
+                  viewport.isMobile 
+                    ? "h-24 p-3 text-base" 
+                    : "h-32 p-3"
+                )}
               />
             </CardContent>
           </Card>
 
           {/* End Event */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center justify-between">
-                🏁 End Event
-                <div className="flex gap-2">
+          <Card className={cn(
+            viewport.isMobile ? "border-l-4 border-l-green-500" : ""
+          )}>
+            <CardHeader className={cn(
+              viewport.isMobile ? "p-4 pb-2" : ""
+            )}>
+              <CardTitle className={cn(
+                "text-lg flex items-center justify-between",
+                viewport.isMobile ? "flex-col space-y-2 text-base" : ""
+              )}>
+                <span>🏁 End Event</span>
+                <div className={cn(
+                  "flex gap-2",
+                  viewport.isMobile ? "text-xs" : ""
+                )}>
                   <Badge variant="outline" className="text-xs">
                     {getCharacterCount(narrativeData.end_event)} chars
                   </Badge>
@@ -318,25 +415,45 @@ export function NarrativeGrid({ incidentId, onComplete, onBack }: NarrativeGridP
                 </div>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <Label className="text-sm text-gray-600 mb-2 block">
+            <CardContent className={cn(
+              viewport.isMobile ? "p-4 pt-0" : ""
+            )}>
+              <Label className={cn(
+                "text-sm text-gray-600 mb-2 block",
+                viewport.isMobile ? "text-sm" : ""
+              )}>
                 How did the incident end? What actions were taken to resolve or conclude it?
               </Label>
               <textarea
                 value={narrativeData.end_event}
                 onChange={(e) => handleNarrativeChange('end_event', e.target.value)}
                 placeholder="Describe how the incident concluded, what interventions were used, and how the situation was resolved..."
-                className="w-full h-32 p-3 border rounded-md resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={cn(
+                  "w-full border rounded-md resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
+                  viewport.isMobile 
+                    ? "h-24 p-3 text-base" 
+                    : "h-32 p-3"
+                )}
               />
             </CardContent>
           </Card>
 
           {/* Post-Event Support */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center justify-between">
-                🤝 Post-Event Support
-                <div className="flex gap-2">
+          <Card className={cn(
+            viewport.isMobile ? "border-l-4 border-l-purple-500" : ""
+          )}>
+            <CardHeader className={cn(
+              viewport.isMobile ? "p-4 pb-2" : ""
+            )}>
+              <CardTitle className={cn(
+                "text-lg flex items-center justify-between",
+                viewport.isMobile ? "flex-col space-y-2 text-base" : ""
+              )}>
+                <span>🤝 Post-Event Support</span>
+                <div className={cn(
+                  "flex gap-2",
+                  viewport.isMobile ? "text-xs" : ""
+                )}>
                   <Badge variant="outline" className="text-xs">
                     {getCharacterCount(narrativeData.post_event)} chars
                   </Badge>
@@ -346,15 +463,25 @@ export function NarrativeGrid({ incidentId, onComplete, onBack }: NarrativeGridP
                 </div>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <Label className="text-sm text-gray-600 mb-2 block">
+            <CardContent className={cn(
+              viewport.isMobile ? "p-4 pt-0" : ""
+            )}>
+              <Label className={cn(
+                "text-sm text-gray-600 mb-2 block",
+                viewport.isMobile ? "text-sm" : ""
+              )}>
                 What support was provided after the incident? Follow-up actions or care given?
               </Label>
               <textarea
                 value={narrativeData.post_event}
                 onChange={(e) => handleNarrativeChange('post_event', e.target.value)}
                 placeholder="Describe any immediate support, care, or follow-up provided after the incident concluded..."
-                className="w-full h-32 p-3 border rounded-md resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={cn(
+                  "w-full border rounded-md resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
+                  viewport.isMobile 
+                    ? "h-24 p-3 text-base" 
+                    : "h-32 p-3"
+                )}
               />
             </CardContent>
           </Card>
@@ -369,18 +496,9 @@ export function NarrativeGrid({ incidentId, onComplete, onBack }: NarrativeGridP
           </Alert>
         )}
 
-        {/* Form Actions */}
-        <div className="flex justify-between items-center mt-6 pt-6 border-t">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onBack}
-            disabled={isSubmitting}
-          >
-            ← Back to Incident Details
-          </Button>
-
-          <div className="flex items-center space-x-4">
+        {/* Form Actions - Hide on mobile when TouchNavigationBar handles navigation */}
+        {!viewport.isMobile && (
+          <div className="mt-6 pt-6 border-t flex justify-between items-center">
             {/* Content Requirements Indicator */}
             <div className="text-sm">
               {hasMinimumContent ? (
@@ -394,25 +512,50 @@ export function NarrativeGrid({ incidentId, onComplete, onBack }: NarrativeGridP
               )}
             </div>
 
+            <div className="flex items-center space-x-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onBack}
+                disabled={isSubmitting}
+              >
+                ← Back to Incident Details
+              </Button>
 
-            <Button
-              type="submit"
-              disabled={!hasMinimumContent || isSubmitting}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              {isSubmitting ? (
-                <>
-                  <span className="animate-spin mr-2">⏳</span>
-                  Saving...
-                </>
-              ) : (
-                'Complete Step 2 →'
-              )}
-            </Button>
+              <Button
+                type="submit"
+                disabled={!hasMinimumContent || isSubmitting}
+                className="bg-ss-teal text-white"
+              >
+                {isSubmitting ? (
+                  <>
+                    <span className="animate-spin mr-2">⏳</span>
+                    Saving...
+                  </>
+                ) : (
+                  'Complete Step 2 →'
+                )}
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Mobile Status Info - Show when TouchNavigationBar handles navigation */}
+        {viewport.isMobile && (
+          <div className="mt-6 pt-6 border-t flex justify-center">
+            {hasMinimumContent ? (
+              <Badge className="bg-green-100 text-green-800">
+                ✓ Minimum content met
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-gray-600">
+                Need 50+ chars in any phase
+              </Badge>
+            )}
+          </div>
+        )}
 
       </form>
     </div>
   );
-}
+});
