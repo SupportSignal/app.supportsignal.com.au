@@ -67,6 +67,7 @@ Following BMAD methodology, these documents form the foundation:
 - **[BMAD Context Engineering](./methodology/bmad-context-engineering.md)** - Structured AI development approach
 - **[Agentic Architect Developer Persona](./methodology/agentic-architect-developer-persona.md)** - AI personas for requirements gathering
 - **[Multi-Layer Manifest Architecture KDD](./methodology/multi-layer-manifest-architecture-kdd.md)** - Knowledge management system for complex multi-layer templates
+- **[Mobile Optimization Story 3.5](./methodology/mobile-optimization-story-3.5.md)** - Mobile-first responsive design implementation progress and UAT testing plan
 
 ### 🔧 Technical Guides
 
