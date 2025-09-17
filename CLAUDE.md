@@ -211,6 +211,54 @@ This project follows the BMAD (Before, Model, After, Document) method with integ
 - **Document CI lessons** - maintain institutional CI knowledge
 - **Use tester agent** for complex CI debugging during any phase
 
+### BMAD Agent System
+
+This project includes a comprehensive BMAD agent system located in `.bmad-core/`:
+
+#### Available BMAD Agents
+
+The system provides specialized agents for different development roles:
+
+- **bmad-master.md** - Universal task executor and BMAD method expert (🧙)
+- **architect.md** - Technical architecture and system design specialist
+- **dev.md** - Development implementation and coding expert
+- **pm.md** - Project management and coordination specialist
+- **po.md** - Product owner and requirements expert
+- **qa.md** - Quality assurance and testing specialist
+- **analyst.md** - Business analysis and requirements gathering
+- **ux-expert.md** - User experience and interface design
+- **sm.md** - Scrum master and agile process expert
+- **test-dev.md** - Test development and automation specialist
+- **bmad-orchestrator.md** - Multi-agent workflow orchestration
+
+#### BMAD Agent Usage
+
+To work with a specific BMAD agent persona:
+
+1. **Agent Selection**: Choose the appropriate agent based on the task domain
+2. **Agent Activation**: Load the agent file to adopt the specialized persona
+3. **Task Execution**: Use agent-specific commands and workflows
+4. **Resource Access**: Agents can access tasks, templates, checklists from `.bmad-core/`
+
+#### BMAD Commands and Resources
+
+Each agent can execute specialized commands with `*` prefix:
+- `*help` - Show available commands
+- `*task {task}` - Execute specific task workflow
+- `*create-doc {template}` - Generate documents from templates
+- `*execute-checklist {checklist}` - Run quality assurance checklists
+
+**Resource Structure**:
+```
+.bmad-core/
+├── agents/           # Specialized agent personas
+├── tasks/            # Executable task workflows
+├── templates/        # Document generation templates
+├── checklists/       # Quality assurance checklists
+├── workflows/        # Multi-step process definitions
+└── data/             # Knowledge base and reference materials
+```
+
 ### BMAD Documentation Structure
 
 The project uses sharded documentation for AI agent consumption:
@@ -527,9 +575,10 @@ Before creating ANY new files, Claude MUST follow this discovery protocol:
    - Look for relevant sections that show where new content should go
 
 2. **Check BMAD Methodology**
-   - Look for `.bmad-core/tasks/` directory for task-specific guidance
-   - Check for templates in `.bmad-core/templates/`
-   - Follow established naming conventions (e.g., `story-acceptance-test-{epic}.{story}.md`)
+   - **BMAD Agent System**: Consider using specialized BMAD agents from `.bmad-core/agents/` for domain-specific tasks
+   - **Task Workflows**: Look for `.bmad-core/tasks/` directory for executable task guidance
+   - **Templates**: Check for templates in `.bmad-core/templates/` for document generation
+   - **Follow established naming conventions** (e.g., `story-acceptance-test-{epic}.{story}.md`)
 
 3. **Verify File Placement**
    - Ensure new files follow existing documentation hierarchy
@@ -596,7 +645,7 @@ This protocol prevents incorrect file placement and maintains project consistenc
 - **Web App**: `apps/web/`
 - **Convex Backend**: `apps/convex/`
 - **Documentation**: `docs/`
-- **Agent Configs**: `.bmad-core/` (if exists)
+- **BMAD Agent System**: `.bmad-core/` (comprehensive agent system with 11 specialized agents)
 - **Claude Config**: `.claude/` (if exists)
 
 ### Troubleshooting Navigation Issues
