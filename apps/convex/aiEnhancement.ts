@@ -7,6 +7,7 @@ import { ConvexError } from "convex/values";
 import { requirePermission, PERMISSIONS } from './permissions';
 import { internal } from './_generated/api';
 import { api } from './_generated/api';
+import { generateCorrelationId } from './aiService';
 
 
 
