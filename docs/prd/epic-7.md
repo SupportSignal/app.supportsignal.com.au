@@ -197,15 +197,18 @@ graph TD
 
 #### Requirements
 
-**Problem**: System administrators need simple overview of all companies in the system for monitoring and lifecycle management.
+**Problem**: System administrators need simple overview of all companies in the system for monitoring and lifecycle management. Additionally, test companies created during development and testing need to be safely removed along with all their related data.
 
-**Solution**: Implement system-wide company management interface providing company listing, basic metrics, and lifecycle management tools.
+**Solution**: Implement system-wide company management interface providing company listing, basic metrics, lifecycle management tools, and comprehensive cleanup capabilities for test companies.
 
 **Technical Implementation**:
 - **Company Listing Interface**: Simple table view of all companies with key metrics
 - **Company Lifecycle Management**: Activate, suspend, and reactivate companies
 - **System Overview**: Total counts and system-wide health indicators
 - **Company Status Management**: Easy status updates and monitoring
+- **Test Company Cleanup System**: Safe removal of test companies with comprehensive data preview
+- **Cascade Deletion Engine**: Remove all related data across tables (users, participants, incidents, sessions, etc.)
+- **Cleanup Audit Trail**: Complete logging of all cleanup operations for compliance
 
 #### Acceptance Criteria
 - [ ] **Company Listing**: System admin interface at `/admin/companies/list`
@@ -216,6 +219,10 @@ graph TD
 - [ ] **Search and Filter**: Find companies by name, status, activity level
 - [ ] **Bulk Operations**: Perform actions on multiple companies
 - [ ] **Lifecycle Tracking**: Monitor company creation and activity patterns
+- [ ] **Test Company Cleanup**: Remove companies with status "test" and all related data
+- [ ] **Cleanup Preview**: Show detailed list of data to be deleted before confirmation
+- [ ] **Cascade Deletion**: Remove all related users, participants, incidents, and dependent data
+- [ ] **Cleanup Logging**: Comprehensive audit trail of cleanup operations
 
 ---
 
@@ -233,6 +240,8 @@ companies.admin.getCompanyDashboard         // Company-specific analytics
 companies.admin.listAllCompanies           // System admin company listing
 companies.lifecycle.suspendCompany         // Company deactivation
 companies.lifecycle.reactivateCompany      // Company reactivation
+companies.cleanup.previewTestCompanyCleanup // Preview data to be deleted for test companies
+companies.cleanup.executeTestCompanyCleanup // Execute cleanup of test companies with full cascade deletion
 ```
 
 #### User Management Functions (BetterAuth Integration)

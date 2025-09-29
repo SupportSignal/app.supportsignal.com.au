@@ -131,11 +131,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           // Check for stored impersonation token in sessionStorage
           const storedImpersonationToken = sessionStorage.getItem('impersonation_token');
-          
+
           if (storedImpersonationToken) {
-            // Use stored impersonation token
-            sessionToken = storedImpersonationToken;
-            isImpersonating = true;
+            // SECURITY FIX: Validate stored impersonation token against localStorage
+            // If localStorage has a different token, the impersonation token might be stale
+            const localStorageToken = localStorage.getItem('auth_session_token');
+
+            if (localStorageToken && storedImpersonationToken !== localStorageToken) {
+              console.log('🔍 AUTH PROVIDER - DETECTED POTENTIAL STALE IMPERSONATION TOKEN', {
+                storedImpersonationToken: storedImpersonationToken.substring(0, 10) + '...',
+                localStorageToken: localStorageToken.substring(0, 10) + '...',
+                timestamp: new Date().toISOString()
+              });
+
+              // Clear the potentially stale impersonation token
+              sessionStorage.removeItem('impersonation_token');
+              console.log('🔍 AUTH PROVIDER - CLEARED STALE IMPERSONATION TOKEN');
+
+              // Continue with regular authentication flow
+            } else {
+              // Use stored impersonation token (it matches localStorage or localStorage is empty)
+              sessionToken = storedImpersonationToken;
+              isImpersonating = true;
+            }
           }
         }
       }

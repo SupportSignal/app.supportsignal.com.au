@@ -13,7 +13,7 @@ export default defineSchema({
     name: v.string(), // "Support Signal", "ABC NDIS Provider"
     slug: v.string(), // URL-friendly identifier: "support-signal", "ndis-test"
     contact_email: v.string(), // Primary contact
-    status: v.union(v.literal("active"), v.literal("trial"), v.literal("suspended")),
+    status: v.union(v.literal("active"), v.literal("trial"), v.literal("suspended"), v.literal("test")),
     created_at: v.number(),
     created_by: v.optional(v.id("users")), // Temporarily optional for seed data - should be required in production
   })

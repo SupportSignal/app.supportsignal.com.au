@@ -1,30 +1,58 @@
 /* eslint-disable no-console, no-restricted-syntax */
-import { mutation, MutationCtx } from './_generated/server';
+import { action } from './_generated/server';
 import { v } from 'convex/values';
-import { getPasswordResetTemplate } from '../web/lib/email/email-templates';
 
-// Mock email sending function for development
-export const sendPasswordResetEmail = mutation({
+// Real email sending via Cloudflare Worker
+export const sendPasswordResetEmail = action({
   args: {
     email: v.string(),
     token: v.string(),
+    sessionToken: v.optional(v.string()),
   },
-  handler: async (ctx: MutationCtx, args: { email: string; token: string }) => {
-    // In development, we'll log the email instead of sending it
-    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password?token=${args.token}`;
-    const template = getPasswordResetTemplate(resetUrl);
+  handler: async (ctx, args: { email: string; token: string; sessionToken?: string }) => {
+    try {
+      const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password?token=${args.token}`;
 
-    console.log('📧 MOCK EMAIL SENT - PASSWORD RESET');
-    console.log('==================================');
-    console.log(`To: ${args.email}`);
-    console.log(`Subject: ${template.subject}`);
-    console.log(`Token: ${args.token}`);
-    console.log(`Reset URL: ${resetUrl}`);
-    console.log(`Sent at: ${new Date().toISOString()}`);
-    console.log('==================================');
+      console.log('📧 SENDING REAL PASSWORD RESET EMAIL');
+      console.log('====================================');
+      console.log(`To: ${args.email}`);
+      console.log(`Reset URL: ${resetUrl}`);
+      console.log(`Token: ${args.token}`);
+      console.log(`Timestamp: ${new Date().toISOString()}`);
 
-    // In a real implementation, you would send the email here
-    // For now, we'll just return success
-    return { success: true };
+      const response = await fetch('https://supportsignal-email-with-resend.david-0b1.workers.dev', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'password_reset',
+          to: args.email,
+          resetUrl,
+          token: args.token,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error('❌ EMAIL WORKER ERROR:', result);
+        throw new Error(`Email service failed: ${result.error || 'Unknown error'}`);
+      }
+
+      console.log('✅ REAL EMAIL SENT SUCCESSFULLY');
+      console.log('Email service response:', result);
+      console.log('====================================');
+
+      return {
+        success: true,
+        emailId: result.data?.id,
+        message: 'Password reset email sent successfully'
+      };
+
+    } catch (error) {
+      console.error('❌ FAILED TO SEND EMAIL:', error);
+      throw new Error(`Failed to send password reset email: ${error.message}`);
+    }
   },
 });

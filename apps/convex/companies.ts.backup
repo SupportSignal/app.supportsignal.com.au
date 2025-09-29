@@ -46,20 +46,8 @@ export const listActiveCompanies = query({
   },
 });
 
-// List ALL companies (both active and inactive) - admin only
-export const listAllCompanies = query({
-  args: {},
-  handler: async (ctx) => {
-    // TODO: Add authentication check for system_admin role
-    return await ctx.db
-      .query("companies")
-      .order("desc")
-      .collect();
-  },
-});
-
-// Create a new company (legacy - no authentication)
-export const createCompanyLegacy = mutation({
+// Create a new company
+export const createCompany = mutation({
   args: {
     name: v.string(),
     slug: v.string(),
@@ -96,44 +84,22 @@ export const createCompanyLegacy = mutation({
 export const updateCompanyStatus = mutation({
   args: {
     companyId: v.id("companies"),
-    status: v.union(v.literal("active"), v.literal("trial"), v.literal("suspended"), v.literal("test")),
-    sessionToken: v.optional(v.string()),
+    status: v.union(v.literal("active"), v.literal("trial"), v.literal("suspended")),
   },
-  handler: withAuthMutation(async (ctx, args) => {
-    // Verify system admin role
-    if (ctx.session.user.role !== "system_admin") {
-      throw new ConvexError("System administrator access required");
-    }
-
-    // Get the company to update
+  handler: async (ctx, args) => {
+    // TODO: Add authentication check for system_admin role
+    
     const company = await ctx.db.get(args.companyId);
     if (!company) {
       throw new ConvexError("Company not found");
     }
 
-    // Update the company status
     await ctx.db.patch(args.companyId, {
       status: args.status,
     });
 
-    console.log('🔍 COMPANY STATUS UPDATED', {
-      companyId: args.companyId,
-      companyName: company.name,
-      oldStatus: company.status,
-      newStatus: args.status,
-      updatedBy: ctx.session.user.email,
-      timestamp: new Date().toISOString()
-    });
-
-    return {
-      success: true,
-      companyId: args.companyId,
-      companyName: company.name,
-      oldStatus: company.status,
-      newStatus: args.status,
-      message: `Company "${company.name}" status changed from ${company.status} to ${args.status}`,
-    };
-  }),
+    return { success: true };
+  },
 });
 
 // Get company statistics
@@ -255,14 +221,13 @@ export const seedSupportSignalCompany = mutation({
   },
 });
 
-// Create a new company with authentication and admin user creation
-export const createCompany = mutation({
+// Story 7.1: Enhanced company creation with authentication and admin assignment
+export const createCompanyWithAuth = mutation({
   args: {
     name: v.string(),
     contactEmail: v.string(),
     adminEmail: v.string(),
     adminName: v.string(),
-    status: v.optional(v.union(v.literal("active"), v.literal("trial"), v.literal("suspended"), v.literal("test"))),
     sessionToken: v.optional(v.string()),
   },
   handler: withAuthMutation(async (ctx, args) => {
@@ -279,7 +244,7 @@ export const createCompany = mutation({
       name: args.name,
       slug,
       contact_email: args.contactEmail,
-      status: args.status || "active",
+      status: "active",
       created_at: Date.now(),
       created_by: ctx.session.userId,
     });
@@ -291,34 +256,11 @@ export const createCompany = mutation({
       companyId,
     });
 
-    // Generate real password reset token and store in database
-    const resetToken = Array.from(crypto.getRandomValues(new Uint8Array(32)))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
-    const expires = Date.now() + 60 * 60 * 1000; // 1 hour from now
-
-    // Clean up any existing tokens for this user
-    const existingTokens = await ctx.db
-      .query('password_reset_tokens')
-      .withIndex('by_user_id', q => q.eq('userId', adminUserId))
-      .collect();
-
-    for (const existingToken of existingTokens) {
-      await ctx.db.delete(existingToken._id);
-    }
-
-    // Create new reset token in database
-    await ctx.db.insert('password_reset_tokens', {
-      userId: adminUserId,
-      token: resetToken,
-      expires,
-    });
-
-    console.log('🔑 REAL PASSWORD RESET TOKEN CREATED', {
+    // Send welcome email
+    await sendWelcomeEmail({
+      companyName: args.name,
+      adminName: args.adminName,
       adminEmail: args.adminEmail,
-      tokenGenerated: true,
-      expiresAt: new Date(expires).toISOString(),
-      timestamp: new Date().toISOString()
     });
 
     return {
@@ -326,8 +268,6 @@ export const createCompany = mutation({
       companyId,
       adminUserId,
       slug,
-      resetToken,
-      adminEmail: args.adminEmail,
       message: `Company '${args.name}' created successfully with admin '${args.adminName}'`,
     };
   }),
@@ -398,3 +338,55 @@ async function createInitialAdmin(ctx: any, args: {
   });
 }
 
+// Helper function to send welcome email via Cloudflare Worker
+async function sendWelcomeEmail(args: {
+  companyName: string;
+  adminName: string;
+  adminEmail: string;
+}): Promise<void> {
+  const emailEndpoint = "https://supportsignal-email-with-resend.david-0b1.workers.dev";
+
+  const message = `
+    <h2>Welcome to SupportSignal!</h2>
+    <p>Dear ${args.adminName},</p>
+    <p>Your company <strong>${args.companyName}</strong> has been successfully created in the SupportSignal platform.</p>
+    <p>You have been assigned as the Company Administrator with the following privileges:</p>
+    <ul>
+      <li>Manage users within your organization</li>
+      <li>Oversee participant management</li>
+      <li>Access company analytics and reports</li>
+      <li>Configure company settings</li>
+    </ul>
+    <p>Next steps:</p>
+    <ol>
+      <li>Log in to the platform using your email: ${args.adminEmail}</li>
+      <li>Set up your password (you'll receive a separate password reset email)</li>
+      <li>Start inviting your team members</li>
+      <li>Configure your company settings</li>
+    </ol>
+    <p>If you have any questions, please contact our support team.</p>
+    <p>Best regards,<br>The SupportSignal Team</p>
+  `;
+
+  try {
+    const response = await fetch(emailEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: args.adminEmail,
+        name: args.adminName,
+        message: message,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (result.error) {
+      console.error('Welcome email failed:', result.error);
+      // Don't throw - email failure shouldn't block company creation
+    }
+  } catch (error) {
+    console.error('Welcome email network error:', error);
+    // Don't throw - email failure shouldn't block company creation
+  }
+}

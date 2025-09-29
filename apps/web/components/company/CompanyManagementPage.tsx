@@ -115,7 +115,7 @@ export function CompanyManagementPage({
     );
   }
 
-  const company = companyData.company as Company;
+  const company = companyData as Company;
 
   return (
     <div className="max-w-4xl mx-auto p-6">

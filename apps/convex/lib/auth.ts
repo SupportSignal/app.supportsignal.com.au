@@ -12,6 +12,7 @@ export interface AuthenticatedUser {
   name: string;
   email: string;
   role: string;
+  company_id?: Id<'companies'>;
   profile_image_url?: string;
   _creationTime: number;
 }
@@ -34,7 +35,15 @@ export async function validateSession(
   ctx: QueryCtx | MutationCtx,
   sessionToken: string | null | undefined
 ): Promise<{ userId: Id<'users'>; user: AuthenticatedUser } | null> {
+  console.log('🔍 BACKEND VALIDATE SESSION', {
+    hasToken: !!sessionToken,
+    tokenPrefix: sessionToken ? sessionToken.substring(0, 10) + '...' : 'NULL/UNDEFINED',
+    tokenLength: sessionToken?.length,
+    timestamp: new Date().toISOString()
+  });
+
   if (!sessionToken || sessionToken.trim().length === 0) {
+    console.log('🔍 BACKEND VALIDATE SESSION - FAILED: No token provided');
     return null;
   }
 
@@ -43,15 +52,30 @@ export async function validateSession(
     .withIndex('by_session_token', q => q.eq('sessionToken', sessionToken))
     .first();
 
-  if (!session || session.expires < Date.now()) {
+  if (!session) {
+    console.log('🔍 BACKEND VALIDATE SESSION - FAILED: Session not found in database');
+    return null;
+  }
+
+  if (session.expires < Date.now()) {
+    console.log('🔍 BACKEND VALIDATE SESSION - FAILED: Session expired', {
+      expires: new Date(session.expires).toISOString(),
+      now: new Date().toISOString()
+    });
     return null;
   }
 
   // Get the user
   const user = await ctx.db.get(session.userId);
   if (!user) {
+    console.log('🔍 BACKEND VALIDATE SESSION - FAILED: User not found');
     return null;
   }
+
+  console.log('🔍 BACKEND VALIDATE SESSION - SUCCESS', {
+    userEmail: user.email,
+    userRole: user.role
+  });
 
   return {
     userId: session.userId,
@@ -60,6 +84,7 @@ export async function validateSession(
       name: user.name,
       email: user.email,
       role: user.role,
+      company_id: user.company_id,
       profile_image_url: user.profile_image_url,
       _creationTime: user._creationTime,
     },

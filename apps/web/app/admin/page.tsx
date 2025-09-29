@@ -85,6 +85,14 @@ const ADMIN_SECTIONS = [
         requiredRole: ['system_admin'],
       },
       {
+        id: 'company-management',
+        title: 'Company Management',
+        description: 'Create and manage organizations in the SupportSignal platform',
+        icon: '🏢',
+        href: '/admin/companies',
+        requiredRole: ['system_admin'],
+      },
+      {
         id: 'ai-prompt-templates',
         title: 'AI Prompt Templates',
         description: 'Manage AI prompt templates for incident processing and analysis',

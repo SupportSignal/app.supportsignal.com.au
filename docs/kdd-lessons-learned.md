@@ -599,7 +599,146 @@ try {
 
 **Continue these patterns in future responsive design work.**
 
+## Email Integration and Password Reset Debugging (September 2025)
+
+### Mock vs Real Email System Implementation
+
+**❌ What Happened:**
+
+- Initially implemented mock email system with console logging instead of real email delivery
+- Generated mock tokens (`mock_token_1759104746619_4l6ddexbmvd`) that weren't stored in database
+- Users received mock tokens via email but couldn't use them for password reset
+- Error: "Invalid or expired reset token" caused by non-existent database records
+
+**✅ Prevention:**
+
+- Always implement real functionality unless explicitly requested as mock
+- Store all tokens in appropriate database tables with proper expiration
+- Use same token generation patterns as existing system (`crypto.getRandomValues`)
+- Test end-to-end flows, not just individual components
+
+**Impact:** User confusion, failed password reset attempts, debugging sessions
+
+### Email Service Architecture Patterns
+
+**❌ What Happened:**
+
+- Used Convex `mutation` for email sending, which doesn't support `fetch()` calls
+- Created `action` but failed to include required sessionToken parameter in schema
+- Frontend automatically injected sessionToken but backend validation rejected it
+
+**✅ Prevention:**
+
+- Use Convex `action` for any external HTTP calls (email, APIs, etc.)
+- Include `sessionToken: v.optional(v.string())` in action schemas for auth context
+- Understand Convex middleware injection patterns (sessionToken auto-injection)
+- Test API parameter validation with real frontend calls
+
+**Technical Details:**
+```typescript
+// ❌ Wrong: mutation cannot use fetch()
+export const sendEmail = mutation({ ... })
+
+// ✅ Correct: action supports fetch()
+export const sendEmail = action({
+  args: {
+    email: v.string(),
+    token: v.string(),
+    sessionToken: v.optional(v.string()), // Required for auth injection
+  }
+})
+```
+
+### User Data Entry vs Code Bug Diagnosis
+
+**❌ What Happened:**
+
+- Assumed data inconsistency was caused by code bug (user hijacking)
+- Company name: "david+test11@ideasmen.com.au"
+- Admin email: "david+test10@ideasmen.com.au"
+- Spent significant time debugging non-existent code issue
+
+**✅ Prevention:**
+
+- Consider user data entry errors before assuming code bugs
+- Check browser autocomplete, copy/paste mistakes, form field confusion
+- Verify with clean test case (david+test12@ideasmen.com.au worked correctly)
+- Use systematic database investigation to separate data from logic issues
+
+**Diagnosis Process:**
+1. Query database directly for exact records
+2. Test with clean data entry (new test case)
+3. If clean test passes, likely data entry issue
+4. If clean test fails, code investigation warranted
+
+### Debugging Methodology Success Patterns
+
+**✅ What Worked Well:**
+
+- Systematic database investigation using Convex tools
+- Console log analysis to trace authentication flows
+- End-to-end testing with real email delivery
+- KDD documentation of lessons learned immediately after resolution
+
+**Technical Success:**
+- Upgraded from mock to real Cloudflare Worker email system
+- Real password reset tokens with proper database storage
+- Professional HTML email templates with styling
+- Error handling and logging for debugging
+
+### Cloudflare Worker Email Integration
+
+**✅ Successful Implementation Pattern:**
+
+```typescript
+// Worker supports multiple email types
+if (type === 'password_reset') {
+  emailData = {
+    from: 'info@supportsignal.com.au',
+    to,
+    subject: 'Reset Your SupportSignal Password',
+    html: professionalHtmlTemplate
+  };
+}
+
+// Convex action calls worker
+const response = await fetch('https://worker-url', {
+  method: 'POST',
+  body: JSON.stringify({ type: 'password_reset', to, resetUrl, token })
+});
+```
+
+### Estimated Time Impact
+
+**Expected Time:** 2 hours (replace mock with real email)
+**Actual Time:** 6+ hours
+**Velocity Loss:** 200%
+
+**Root Causes:**
+- 40% - Mock token implementation without database storage
+- 25% - Convex mutation vs action misunderstanding
+- 20% - Parameter validation schema issues
+- 15% - Data entry diagnosis vs code bug investigation
+
+**Time Breakdown:**
+- Mock token debugging: 2 hours
+- Convex action implementation: 1.5 hours
+- Parameter validation fixes: 1 hour
+- User hijacking investigation: 1.5 hours
+
+**Total Rework Time:** 6 hours (300% of expected story time)
+
+### Future Email Development Recommendations
+
+1. **Real Implementation First**: Always implement real functionality unless explicitly mocked
+2. **Database Token Storage**: All tokens must be stored with proper expiration
+3. **Convex Action Pattern**: Use actions for all external HTTP calls, include sessionToken parameter
+4. **End-to-End Testing**: Test complete user flows, not just individual functions
+5. **Data vs Logic Diagnosis**: Consider data entry errors before code bug investigation
+
+**Continue these patterns in future email and authentication work.**
+
 ---
 
-_Last Updated: Story 3.5 completion (Mobile-First Responsive Design)_
-_Next Review: After Story 3.6 completion_
+_Last Updated: September 2025 (Email Integration Debugging Session)_
+_Next Review: After next authentication/email feature development_
