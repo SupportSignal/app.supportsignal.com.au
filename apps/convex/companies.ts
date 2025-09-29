@@ -74,9 +74,19 @@ export const createCompanyLegacy = mutation({
       .query("companies")
       .withIndex("by_slug", (q) => q.eq("slug", args.slug))
       .first();
-    
+
     if (existingCompany) {
       throw new ConvexError(`Company with slug '${args.slug}' already exists`);
+    }
+
+    // Check if contact email already exists
+    const existingCompanyByEmail = await ctx.db
+      .query("companies")
+      .filter((q) => q.eq(q.field("contact_email"), args.contactEmail))
+      .first();
+
+    if (existingCompanyByEmail) {
+      throw new ConvexError(`Company with contact email '${args.contactEmail}' already exists`);
     }
 
     const now = Date.now();
@@ -269,6 +279,16 @@ export const createCompany = mutation({
     // Verify system admin role
     if (ctx.session.user.role !== "system_admin") {
       throw new ConvexError("System administrator access required");
+    }
+
+    // Check if contact email already exists
+    const existingCompanyByEmail = await ctx.db
+      .query("companies")
+      .filter((q) => q.eq(q.field("contact_email"), args.contactEmail))
+      .first();
+
+    if (existingCompanyByEmail) {
+      throw new ConvexError(`Company with contact email '${args.contactEmail}' already exists`);
     }
 
     // Generate unique slug
