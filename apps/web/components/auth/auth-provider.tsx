@@ -355,6 +355,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error: any) {
       // Handle any unhandled exceptions from authService.login()
       console.error('🔍 AUTH PROVIDER - Login exception caught:', error);
+      // Force deployment update to ensure production gets this error handling
 
       // Extract user-friendly error message
       let errorMessage = 'Login failed. Please try again.';
