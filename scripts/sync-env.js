@@ -44,15 +44,17 @@ const WORKER_DIR = path.join(ROOT_DIR, 'apps/workers/log-ingestion');
 
 // Parse command line arguments
 const args = process.argv.slice(2);
-const deploymentArg = args.find(arg => arg.startsWith('--deployment='))?.split('=')[1];
+const modeArg = args.find(arg => arg.startsWith('--mode='))?.split('=')[1] || 'local';
 
-// Require explicit deployment parameter
-if (!deploymentArg) {
-    console.error('🚨 ERROR: Deployment parameter is required');
+// Validate mode parameter
+const validModes = ['local', 'deploy-dev', 'deploy-prod'];
+if (!validModes.includes(modeArg)) {
+    console.error('🚨 ERROR: Invalid mode parameter');
     console.error('');
     console.error('Usage:');
-    console.error('  bun run sync-env --deployment=dev      # For development environment');
-    console.error('  bun run sync-env --deployment=production # For production environment (blocked by safety)');
+    console.error('  bun run sync-env --mode=local         # Generate local .env files (dev values only)');
+    console.error('  bun run sync-env --mode=deploy-dev    # Deploy to dev Convex deployment');
+    console.error('  bun run sync-env --mode=deploy-prod   # Deploy to prod Convex deployment');
     console.error('');
     console.error('Options:');
     console.error('  --dry-run     Show what would be changed without applying');
@@ -62,17 +64,20 @@ if (!deploymentArg) {
 
 const options = {
   dryRun: args.includes('--dry-run'),
-  deployment: deploymentArg,
-  verbose: args.includes('--verbose')
+  mode: modeArg,
+  verbose: args.includes('--verbose'),
+  // Derive deployment from mode for backward compatibility
+  deployment: modeArg === 'deploy-prod' ? 'production' : 'dev'
 };
 
 /**
- * Parses the human-readable environment source file
+ * Parses the human-readable environment source file and returns both dev and prod values
+ * @param {string} targetEnvironment - 'dev' for local files, 'production' for deployment
  * @returns {Array} Array of environment variable objects
  */
-function parseSourceFile() {
+function parseSourceFile(targetEnvironment = 'dev') {
     console.log('📖 Reading environment source file...');
-    
+
     if (!fs.existsSync(SOURCE_FILE)) {
         console.error(`❌ Source file not found: ${SOURCE_FILE}`);
         console.log('💡 Please create .env.source-of-truth.local with your environment configuration');
@@ -81,35 +86,44 @@ function parseSourceFile() {
 
     const content = fs.readFileSync(SOURCE_FILE, 'utf8');
     const lines = content.split('\n').filter(line => line.trim() && !line.startsWith('|---'));
-    
+
     const envVars = [];
-    
+
     for (const line of lines) {
         if (line.startsWith('|') && line.includes('|')) {
             const parts = line.split('|').map(part => part.trim()).filter(part => part);
-            
+
             if (parts.length >= 4 && parts[0] !== 'TARGET') { // Skip header row
                 const targets = parts[0].split(',').map(t => t.trim().toUpperCase());
                 const group = parts[1].trim();
                 const key = parts[2].trim();
-                
+
                 // Handle both old format (4 columns) and new format (5 columns)
-                let value;
+                let value, devValue, prodValue;
                 if (parts.length === 5) {
                     // New format with DEV_VALUE and PROD_VALUE
-                    const devValue = parts[3].trim();
-                    const prodValue = parts[4].trim();
-                    
-                    // Select value based on deployment
-                    value = options.deployment === 'production' ? prodValue : devValue;
+                    devValue = parts[3].trim();
+                    prodValue = parts[4].trim();
+
+                    // CRITICAL FIX: Local files ALWAYS use dev values
+                    if (options.mode === 'local') {
+                        value = devValue;
+                    } else {
+                        // Only for deployment modes, select based on target environment
+                        value = targetEnvironment === 'production' ? prodValue : devValue;
+                    }
                 } else {
                     // Old format with single VALUE column (backward compatibility)
                     value = parts[3].trim();
+                    devValue = value;
+                    prodValue = value;
                 }
-                
+
                 envVars.push({
                     key: key,
                     value: value,
+                    devValue: devValue,
+                    prodValue: prodValue,
                     group: group,
                     targets: targets,
                     // Backward compatibility
@@ -120,8 +134,8 @@ function parseSourceFile() {
             }
         }
     }
-    
-    console.log(`✅ Parsed ${envVars.length} environment variables from source`);
+
+    console.log(`✅ Parsed ${envVars.length} environment variables from source (target: ${targetEnvironment})`);
     return envVars;
 }
 
@@ -814,67 +828,85 @@ function syncWorkerSecrets(envVars, deployment) {
 function main() {
     console.log('🚀 Starting advanced environment sync...');
     console.log('=' .repeat(60));
-    
+
     // Show command line options
     if (options.dryRun) {
         console.log('🔍 DRY RUN MODE - No changes will be applied to deployments');
     }
-    console.log(`🎯 Target deployment: ${options.deployment}`);
+    console.log(`🎯 Mode: ${options.mode}`);
     console.log('');
-    
+
     try {
-        // Parse the source file
-        const envVars = parseSourceFile();
-        
-        // Validate environment variables
-        validateEnvironmentVariables(envVars);
-        
-        // Generate local configuration files
-        const nextjsCount = generateNextjsEnv(envVars);
-        const convexCount = generateConvexEnv(envVars);
-        const workerCount = generateWorkerEnv(envVars);
-        
-        // Sync Convex deployment environment
-        console.log('\n' + '='.repeat(60));
-        const deploymentResult = syncConvexDeploymentEnv(envVars, options.deployment);
-        
-        // Sync Worker secrets
-        console.log('\n' + '='.repeat(60));
-        const workerResult = syncWorkerSecrets(envVars, options.deployment);
-        
-        // Summary
-        console.log('\n' + '='.repeat(60));
-        console.log('✅ Environment sync completed successfully!');
-        console.log('');
-        console.log('📊 Summary:');
-        console.log(`   • Total variables processed: ${envVars.length}`);
-        console.log(`   • Next.js variables: ${nextjsCount}`);
-        console.log(`   • Convex local variables: ${convexCount}`);
-        console.log(`   • Worker local variables: ${workerCount}`);
-        console.log(`   • Convex deployment sync: ${deploymentResult === 0 ? 'Success' : 'Failed'}`);
-        console.log(`   • Worker secrets sync: ${workerResult === 0 ? 'Success' : 'Failed'}`);
-        console.log('');
-        console.log('📁 Files generated:');
-        console.log(`   • ${WEB_ENV_FILE}`);
-        if (convexCount > 0) {
-            console.log(`   • ${CONVEX_ENV_FILE}`);
+        if (options.mode === 'local') {
+            // LOCAL MODE: Generate local .env files with dev values only
+            console.log('📁 LOCAL MODE: Generating local development environment files...');
+            console.log('   (Local files always use development values for localhost)');
+            console.log('');
+
+            const envVars = parseSourceFile('dev');
+            validateEnvironmentVariables(envVars);
+
+            const nextjsCount = generateNextjsEnv(envVars);
+            const convexCount = generateConvexEnv(envVars);
+            const workerCount = generateWorkerEnv(envVars);
+
+            console.log('\n' + '='.repeat(60));
+            console.log('✅ Local environment files generated successfully!');
+            console.log('');
+            console.log('📊 Summary:');
+            console.log(`   • Total variables processed: ${envVars.length}`);
+            console.log(`   • Next.js variables: ${nextjsCount}`);
+            console.log(`   • Convex local variables: ${convexCount}`);
+            console.log(`   • Worker local variables: ${workerCount}`);
+            console.log('');
+            console.log('📁 Files generated (development values):');
+            console.log(`   • ${WEB_ENV_FILE}`);
+            if (convexCount > 0) {
+                console.log(`   • ${CONVEX_ENV_FILE}`);
+            }
+            if (workerCount > 0) {
+                console.log(`   • ${WORKER_ENV_FILE}`);
+            }
+
+        } else {
+            // DEPLOYMENT MODE: Deploy to cloud platforms
+            const targetEnv = options.mode === 'deploy-prod' ? 'production' : 'dev';
+            console.log(`🚀 DEPLOYMENT MODE: Deploying to ${targetEnv} environment...`);
+            console.log('   (Local files are not modified in deployment mode)');
+            console.log('');
+
+            const envVars = parseSourceFile(targetEnv);
+            validateEnvironmentVariables(envVars);
+
+            // Deploy to Convex
+            console.log('\n' + '='.repeat(60));
+            const deploymentResult = syncConvexDeploymentEnv(envVars, options.deployment);
+
+            // Deploy to Worker
+            console.log('\n' + '='.repeat(60));
+            const workerResult = syncWorkerSecrets(envVars, options.deployment);
+
+            console.log('\n' + '='.repeat(60));
+            console.log(`✅ ${targetEnv.toUpperCase()} deployment completed!`);
+            console.log('');
+            console.log('📊 Summary:');
+            console.log(`   • Total variables processed: ${envVars.length}`);
+            console.log(`   • Convex deployment sync: ${deploymentResult === 0 ? 'Success' : 'Failed'}`);
+            console.log(`   • Worker secrets sync: ${workerResult === 0 ? 'Success' : 'Failed'}`);
+
+            // Exit with appropriate code
+            const finalResult = Math.max(deploymentResult, workerResult);
+            process.exit(finalResult);
         }
-        if (workerCount > 0) {
-            console.log(`   • ${WORKER_ENV_FILE}`);
-        }
-        console.log(`   • ${BACKUP_FILE} (backup)`);
+
         console.log('');
         console.log('🔒 Security reminders:');
         console.log('   • Never commit .env.local files to version control');
-        console.log('   • Regularly rotate API keys and secrets');
+        console.log('   • Local files always contain development values');
+        console.log('   • Production values are deployed directly to cloud platforms');
         console.log('   • Use NEXT_PUBLIC_ prefix only for non-sensitive data');
         console.log('   • Keep .env.source-of-truth.local secure and update as needed');
-        console.log('   • Production deployments require manual management');
-        
-        // Exit with appropriate code (success only if both Convex and Worker succeeded)
-        const finalResult = Math.max(deploymentResult, workerResult);
-        process.exit(finalResult);
-        
+
     } catch (error) {
         console.error('❌ Environment sync failed:', error.message);
         if (options.verbose) {

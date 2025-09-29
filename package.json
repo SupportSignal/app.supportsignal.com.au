@@ -83,7 +83,10 @@
     "env:validate": "test -f ~/.env-configs/app.supportsignal.com.au.env && echo '✅ Environment file exists' || echo '❌ Run: bun env:setup'",
     "sync": "./scripts/sync.sh",
     "sync:force": "./scripts/sync.sh --force",
-    "sync-env": "node ./scripts/sync-env.js",
+    "sync-env": "node ./scripts/sync-env.js --mode=local",
+    "sync-env:local": "node ./scripts/sync-env.js --mode=local",
+    "sync-env:deploy-dev": "node ./scripts/sync-env.js --mode=deploy-dev",
+    "sync-env:deploy-prod": "node ./scripts/sync-env.js --mode=deploy-prod",
     "// === SYSTEM ===": "",
     "prepare": "echo 'Skipping husky in CI' && exit 0"
   },

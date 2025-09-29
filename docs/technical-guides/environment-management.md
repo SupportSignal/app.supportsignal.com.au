@@ -2,56 +2,62 @@
 
 ## Overview
 
-This guide documents the advanced environment variable synchronization system built around the `sync-env.js` script and `.env.source-of-truth.local` file. This system provides centralized environment management across Next.js, Convex, and deployment environments with validation, security checks, and automatic backup.
+This guide documents the advanced environment variable synchronization system built around the `sync-env.js` script and source-of-truth configuration. This system provides centralized environment management with **CRITICAL ARCHITECTURAL SEPARATION** between local development and production deployment.
+
+**🚨 CRITICAL PRINCIPLE**: Local `.env.local` files NEVER contain production values. Production values are deployed directly to cloud platforms.
 
 ## Architecture
 
-### Single Source of Truth Approach
+### CORRECTED Architecture Approach
+
+**🚨 ARCHITECTURAL PRINCIPLE**: Local files vs Production deployment are SEPARATE concerns.
 
 ```
-.env.source-of-truth.local (Master)
-           ↓
-    scripts/sync-env.js
-         ↙     ↘
-apps/web/.env.local   apps/convex/.env.local
-         ↓                    ↓
-  Next.js Frontend    Convex Backend
-                            ↓
-                  Convex Deployment
+LOCAL MODE:
+~/.env-configs/[project].env → Local .env files (ALWAYS dev values)
+                            → apps/web/.env.local
+                            → apps/convex/.env.local
+
+DEPLOYMENT MODE:
+~/.env-configs/[project].env → Cloud Platforms (dev/prod values)
+                            → Convex deployment
+                            → Cloudflare Pages
+                            → Workers
 ```
 
 **Benefits**:
 
-- **Centralized Management**: All environment variables in one file
-- **Automatic Distribution**: Script handles generating app-specific files
+- **Architectural Separation**: Local development vs production deployment
+- **Security**: Local files never contain production secrets
+- **Centralized Source**: All values in one configuration file
+- **Automatic Distribution**: Script handles both local and cloud deployment
 - **Validation**: Built-in security and consistency checks
-- **Backup**: Automatic backup before changes
-- **Documentation**: Human-readable table format
+- **Backup**: Automatic backup before cloud changes
 
 ## Source File Format
 
 ### Table Structure
 
-The `.env.source-of-truth.local` file uses a human-readable table format:
+The `~/.env-configs/[project].env` file uses a human-readable table format with **DEV_VALUE** and **PROD_VALUE** columns:
 
 ```
-| NEXTJS | CONVEX | GROUP             | KEY                       | VALUE                                    |
-|--------|--------|-------------------|---------------------------|------------------------------------------|
-| true   | false  | Local Development | NEXT_PUBLIC_APP_URL       | http://localhost:3000                    |
-| true   | false  | Local Development | PORT                      | 3000                                     |
-| false  | true   | GitHub OAuth      | GITHUB_CLIENT_ID          | Ov23l-xxxxx-xxxxxx                      |
-| false  | true   | GitHub OAuth      | GITHUB_CLIENT_SECRET      | 799ad-xxxxx-xxxxxx                      |
-| true   | true   | Convex            | CONVEX_DEPLOYMENT         | dev:helpful-567                          |
-| true   | true   | Convex            | NEXT_PUBLIC_CONVEX_URL    | https://helpful-567.convex.cloud         |
+| TARGET               | GROUP             | KEY                       | DEV_VALUE                     | PROD_VALUE                    |
+|----------------------|-------------------|---------------------------|-------------------------------|-------------------------------|
+| NEXTJS,CONVEX        | Local Development | NEXT_PUBLIC_APP_URL       | http://localhost:3200         | https://app.supportsignal.com.au |
+| NEXTJS,CONVEX        | Local Development | PORT                      | 3200                          | 3200                          |
+| CONVEX               | GitHub OAuth      | GITHUB_CLIENT_ID          | Ov23l-xxxxx-xxxxxx           | Ov23l-xxxxx-xxxxxx           |
+| CONVEX               | GitHub OAuth      | GITHUB_CLIENT_SECRET      | 799ad-xxxxx-xxxxxx           | 799ad-xxxxx-xxxxxx           |
+| CONVEX               | Convex            | CONVEX_DEPLOYMENT         | dev:beaming-gull-639         | prod:graceful-shrimp-355     |
+| NEXTJS,CONVEX        | Convex            | NEXT_PUBLIC_CONVEX_URL    | https://beaming-gull-639.convex.cloud | https://graceful-shrimp-355.convex.cloud |
 ```
 
 ### Column Definitions
 
-- **NEXTJS**: `true/false` - Include in Next.js environment file
-- **CONVEX**: `true/false` - Include in Convex environment file
+- **TARGET**: Comma-separated list (NEXTJS, CONVEX, LOG_WORKER) - Which applications need this variable
 - **GROUP**: Descriptive category for organization
 - **KEY**: Environment variable name
-- **VALUE**: Environment variable value
+- **DEV_VALUE**: Value used for local development and dev deployments
+- **PROD_VALUE**: Value used for production deployments
 
 ### Groups Organization
 
@@ -70,9 +76,9 @@ Common groups used:
 
 ```bash
 # 1. Edit the source file
-nano .env.source-of-truth.local
+nano ~/.env-configs/app.supportsignal.com.au.env
 
-# 2. Sync environment variables
+# 2. Sync local environment files (always dev values)
 bun run sync-env
 
 # 3. Restart services to pick up changes
@@ -82,13 +88,13 @@ bun dev
 ### Initial Repository Setup
 
 ```bash
-# 1. Copy the example file
-cp .env.source-of-truth.example .env.source-of-truth.local
+# 1. Set up environment configuration (see setup guide)
+bun run env:setup
 
 # 2. Fill in your actual values
-nano .env.source-of-truth.local
+nano ~/.env-configs/app.supportsignal.com.au.env
 
-# 3. Sync environment variables
+# 3. Generate local environment files
 bun run sync-env
 
 # 4. Start development
@@ -100,14 +106,14 @@ bun dev
 1. **Add to Source File**:
 
    ```bash
-   # Add new row to .env.source-of-truth.local
-   | false  | true   | New Service       | NEW_API_KEY               | your-actual-key-here                     |
+   # Add new row to ~/.env-configs/app.supportsignal.com.au.env
+   | CONVEX | New Service | NEW_API_KEY | dev-key-value | prod-key-value |
    ```
 
-2. **Sync Changes**:
+2. **Sync Local Files**:
 
    ```bash
-   bun run sync-env
+   bun run sync-env  # Generates local files with dev values
    ```
 
 3. **Restart Services**:
@@ -138,44 +144,100 @@ bun dev
 
 ## Script Commands & Options
 
-### Basic Usage
+### LOCAL MODE (Most Common)
 
 ```bash
-# Standard sync (most common)
-bun run sync-env
+# Generate local .env files with development values (default)
+bun run sync-env              # Default: local mode
+bun run sync-env:local        # Explicit local mode
 
-# Preview changes without applying
+# Preview what would be generated
 bun run sync-env --dry-run
 
 # Verbose logging for debugging
 bun run sync-env --verbose
 ```
 
-### Advanced Usage
+**Files Generated** (always with dev values):
+- `apps/web/.env.local`
+- `apps/convex/.env.local`
+- `apps/workers/log-ingestion/.dev.vars`
+
+### DEPLOYMENT MODE
 
 ```bash
-# Direct script execution with options
-node ./scripts/sync-env.js --dry-run --verbose
+# Deploy development values to dev Convex deployment
+bun run sync-env:deploy-dev --dry-run    # Test first
+bun run sync-env:deploy-dev              # Execute
 
-# Target specific deployment
-node ./scripts/sync-env.js --deployment=preview
-
-# Full help
-node ./scripts/sync-env.js --help
+# Deploy production values (BLOCKED for security)
+bun run sync-env:deploy-prod             # Will fail with security message
 ```
 
-### Deployment Targeting
+**🚨 CRITICAL**: Production deployment requires manual management via platform-specific methods (see Platform Environment Locations below).
 
+## Platform Environment Locations
+
+### **Next.js App Layer**
+
+| Environment | Location | Management Method | Runtime Access |
+|-------------|----------|------------------|----------------|
+| **Development** | `apps/web/.env.local` (auto-generated) | `bun run sync-env` | Node.js process env |
+| **Production** | Cloudflare Pages Dashboard | Manual dashboard entry | Build-time injection |
+
+**Production Management**:
+1. Go to Cloudflare Pages Dashboard
+2. Select your project → Settings → Environment Variables
+3. Add variables to "Production" environment
+4. Trigger redeployment to pick up changes
+
+### **Convex Backend Layer**
+
+| Environment | Location | Management Method | Runtime Access |
+|-------------|----------|------------------|----------------|
+| **Development** | `apps/convex/.env.local` (auto-generated) | `bun run sync-env` | Local dev server |
+| **Production** | Convex Cloud (`prod:graceful-shrimp-355`) | `bunx convex env set --prod` | Convex functions runtime |
+
+**Production Management**:
 ```bash
-# Development deployment (default)
-bun run sync-env --deployment=dev
+# Set individual variables
+bunx convex env set --prod VARIABLE_NAME "value"
 
-# Preview deployment
-bun run sync-env --deployment=preview
+# List current production variables
+bunx convex env list --prod
 
-# Production (blocked for security)
-# Use manual Convex commands for production
+# Remove variables
+bunx convex env remove --prod VARIABLE_NAME
 ```
+
+### **Log Ingestion Worker Layer**
+
+| Environment | Location | Management Method | Runtime Access |
+|-------------|----------|------------------|----------------|
+| **Development** | `apps/workers/log-ingestion/.dev.vars` | `bun run sync-env` | Wrangler dev server |
+| **Production** | Cloudflare Workers Secrets | `wrangler secret put` | Worker runtime |
+
+**Production Management**:
+```bash
+# Set secrets (values are encrypted)
+echo "secret-value" | wrangler secret put VARIABLE_NAME
+
+# List current secrets (names only, values hidden)
+wrangler secret list
+
+# Delete secrets
+wrangler secret delete VARIABLE_NAME
+```
+
+### **Environment Location Summary**
+
+**🚨 KEY PRINCIPLE**: **All local files contain ONLY development values** (never production)
+
+| App Layer | Development File | Production Platform | Production Location |
+|-----------|------------------|-------------------|-------------------|
+| **Next.js** | `apps/web/.env.local` | Cloudflare Pages | Dashboard → Environment Variables |
+| **Convex** | `apps/convex/.env.local` | Convex Cloud | `prod:graceful-shrimp-355` deployment |
+| **Worker** | `apps/workers/log-ingestion/.dev.vars` | Cloudflare Workers | Encrypted secrets storage |
 
 ## Generated Files
 

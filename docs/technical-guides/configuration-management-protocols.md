@@ -25,7 +25,7 @@
 ### Configuration Flow
 
 1. **Single Source of Truth**: `~/.env-configs/app.supportsignal.com.au.env`
-2. **Deployment Tool**: `scripts/sync-env.js --deployment=dev`
+2. **Deployment Tool**: `scripts/sync-env.js --mode=local` (local) or `--mode=deploy-dev` (deployment)
 3. **Application Consumption**: `config.ts` reads from environment variables
 
 ## Protocols
@@ -40,9 +40,9 @@ vim ~/.env-configs/app.supportsignal.com.au.env
 # 2. Add new configuration line
 | CONVEX | My Feature | NEW_CONFIG_KEY | development_value | production_value |
 
-# 3. Deploy to environments  
+# 3. Deploy to local environment files
 cd /path/to/project
-bun run sync-env --deployment=dev
+bun run sync-env
 
 # 4. Use in code via getEnvVar()
 const newConfig = getEnvVar('NEW_CONFIG_KEY', true);
@@ -74,8 +74,8 @@ vim ~/.env-configs/app.supportsignal.com.au.env
 # 2. Change the value(s)
 | CONVEX | LLM Config | LLM_MODEL | openai/gpt-4o-mini | openai/gpt-4o-mini |
 
-# 3. Deploy changes
-bun run sync-env --deployment=dev
+# 3. Deploy changes to local files
+bun run sync-env
 
 # 4. Verify in application
 # (Configuration automatically picks up new values)
@@ -101,11 +101,14 @@ const defaultModel = 'openai/gpt-4o-mini'; // FORCE working model
 
 **Deployment**:
 ```bash
-# Development environment
-bun run sync-env --deployment=dev
+# Local development files (always dev values)
+bun run sync-env
 
-# Production environment (when approved)
-bun run sync-env --deployment=production
+# Deploy to dev Convex deployment
+bun run sync-env:deploy-dev
+
+# Production deployment (manual only)
+# Use: bunx convex env set --prod VARIABLE value
 ```
 
 ### 4. AI Model Configuration Changes
@@ -115,8 +118,8 @@ bun run sync-env --deployment=production
 # 1. Update environment configuration
 vim ~/.env-configs/app.supportsignal.com.au.env
 
-# 2. Deploy configuration 
-bun run sync-env --deployment=dev
+# 2. Deploy configuration to local files
+bun run sync-env
 
 # 3. MANDATORY: Validate model actually works
 bunx convex run llmTest:llmSpeedTest
@@ -135,14 +138,14 @@ bunx convex run llmTest:llmSpeedTest
 **Never Do This**:
 ```bash
 # ❌ WRONG - Deploy AI model changes without validation
-bun run sync-env --deployment=dev
+bun run sync-env
 # Deploy to production without testing actual content generation
 ```
 
 **Always Do This**:
 ```bash
 # ✅ CORRECT - Validate AI models produce actual content
-bun run sync-env --deployment=dev
+bun run sync-env
 bunx convex run llmTest:llmSpeedTest
 # Check output: response_content should contain actual text, not ""
 # Test both primary and fallback models independently
@@ -248,7 +251,7 @@ export function validateConfig(config: AppConfig): void {
 Before deploying configuration changes:
 
 - [ ] Updated source of truth (`~/.env-configs/[project].env`)
-- [ ] Ran `bun run sync-env --deployment=dev`
+- [ ] Ran `bun run sync-env` (for local files)
 - [ ] Verified application startup with new configuration
 - [ ] Tested affected functionality
 - [ ] Documented reason for configuration change
@@ -260,7 +263,7 @@ Before deploying configuration changes:
 
 1. **Check environment sync status**:
    ```bash
-   bun run sync-env --deployment=dev --dry-run
+   bun run sync-env --dry-run
    ```
 
 2. **Restore from backup**:
@@ -279,9 +282,9 @@ Before deploying configuration changes:
    ```bash
    # Fix the configuration file
    vim ~/.env-configs/app.supportsignal.com.au.env
-   
-   # Re-deploy properly  
-   bun run sync-env --deployment=dev
+
+   # Re-deploy properly
+   bun run sync-env
    ```
 
 ## Code Review Guidelines

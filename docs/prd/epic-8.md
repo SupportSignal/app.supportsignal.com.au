@@ -156,6 +156,57 @@ CONVEX_DEPLOYMENT=prod:graceful-shrimp-355
 
 ---
 
+## Environment Management System Operations
+
+**🚨 ARCHITECTURAL ISSUE IDENTIFIED AND FIXED**: The sync-env.js script had a critical architectural flaw where local files could be overwritten with production values. This has been corrected.
+
+**Key Principle**: **Local `.env.local` files NEVER contain production values.**
+
+### **Primary Documentation**
+
+For complete sync-env.js operational details, see:
+- **[Environment Management Technical Guide](../technical-guides/environment-management.md)** - Complete operational documentation
+- **[Configuration Management Protocols](../technical-guides/configuration-management-protocols.md)** - Usage best practices
+
+### **Critical Architecture Summary**
+
+```
+LOCAL MODE (Default):
+~/.env-configs/[project].env → Local files (ALWAYS dev values)
+                             → apps/web/.env.local
+                             → apps/convex/.env.local
+
+DEPLOYMENT MODE:
+~/.env-configs/[project].env → Cloud platforms (dev/prod values)
+                             → Convex deployment
+                             → Cloudflare Pages dashboard
+                             → Workers via wrangler
+```
+
+### **Required Manual Source-of-Truth Updates**
+
+**Status**: ✅ **COMPLETED** - User has updated `~/.env-configs/app.supportsignal.com.au.env` with correct production values.
+
+**Key Changes Made**:
+- `CONVEX_DEPLOYMENT`: `dev:beaming-gull-639` → `prod:graceful-shrimp-355`
+- `NEXT_PUBLIC_CONVEX_URL`: `beaming-gull-639.convex.cloud` → `graceful-shrimp-355.convex.cloud`
+- `ALLOWED_ORIGINS`: Updated for production URLs
+
+### **Quick Commands Reference**
+
+```bash
+# LOCAL (Most Common - Always dev values)
+bun run sync-env                    # Generate local dev files
+
+# DEPLOYMENT (Cloud platforms only)
+bun run sync-env:deploy-dev         # Deploy to dev Convex
+bun run sync-env:deploy-prod        # BLOCKED (security)
+```
+
+For detailed commands, features, troubleshooting, and verification procedures, see the **[Environment Management Technical Guide](../technical-guides/environment-management.md)**.
+
+---
+
 ## Risk Assessment
 
 ### **High Risk Items**
