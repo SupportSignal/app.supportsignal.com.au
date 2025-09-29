@@ -323,33 +323,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     password: string,
     rememberMe?: boolean
   ) => {
-    const result = await authService.login(email, password, rememberMe);
+    try {
+      const result = await authService.login(email, password, rememberMe);
 
-    if (result.success) {
-      // Map user structure to User interface
-      const mappedUser = result.user
-        ? {
-            _id: result.user.id,
-            name: result.user.name,
-            email: result.user.email,
-            role: result.user.role,
-            profile_image_url: (result.user as { profile_image_url?: string })
-              .profile_image_url,
-            
-            sessionToken: result.sessionToken,
-            _creationTime: Date.now(), // Login users don't have creation time from backend
-          }
-        : null;
+      if (result.success) {
+        // Map user structure to User interface
+        const mappedUser = result.user
+          ? {
+              _id: result.user.id,
+              name: result.user.name,
+              email: result.user.email,
+              role: result.user.role,
+              profile_image_url: (result.user as { profile_image_url?: string })
+                .profile_image_url,
 
-      setAuthState({
-        user: mappedUser,
-        sessionToken: result.sessionToken || null,
-        isLoading: false,
-      });
-      return { success: true };
-    } else {
-      // Don't change loading state on error to prevent re-renders
-      return { success: false, error: result.error };
+              sessionToken: result.sessionToken,
+              _creationTime: Date.now(), // Login users don't have creation time from backend
+            }
+          : null;
+
+        setAuthState({
+          user: mappedUser,
+          sessionToken: result.sessionToken || null,
+          isLoading: false,
+        });
+        return { success: true };
+      } else {
+        // Don't change loading state on error to prevent re-renders
+        return { success: false, error: result.error };
+      }
+    } catch (error: any) {
+      // Handle any unhandled exceptions from authService.login()
+      console.error('🔍 AUTH PROVIDER - Login exception caught:', error);
+
+      // Extract user-friendly error message
+      let errorMessage = 'Login failed. Please try again.';
+
+      if (error?.message) {
+        if (error.message.includes('Invalid email or password')) {
+          errorMessage = 'Invalid email or password. Please check your credentials.';
+        } else if (error.message.includes('Server Error')) {
+          errorMessage = 'Unable to sign in. Please check your credentials or try again later.';
+        } else if (error.message.includes('ConvexError')) {
+          // Extract ConvexError message if possible
+          const match = error.message.match(/ConvexError:\s*(.+?)(?:\n|$)/);
+          errorMessage = match ? match[1].trim() : 'Invalid email or password. Please check your credentials.';
+        } else {
+          errorMessage = 'Login failed. Please try again.';
+        }
+      }
+
+      return { success: false, error: errorMessage };
     }
   };
 

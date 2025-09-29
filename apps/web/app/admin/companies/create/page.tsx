@@ -190,6 +190,12 @@ export default function CreateCompanyPage() {
           'Please use a different email address for the company administrator. ' +
           'If you need to transfer an existing user to this company, please contact support.'
         );
+      } else if (errorMessage.includes('Company with contact email') && errorMessage.includes('already exists')) {
+        setError(
+          'A company with this contact email address already exists in the system. ' +
+          'Each company must have a unique contact email address. ' +
+          'Please use a different contact email address.'
+        );
       } else {
         setError(errorMessage);
       }
