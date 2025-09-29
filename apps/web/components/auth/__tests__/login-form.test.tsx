@@ -188,7 +188,7 @@ describe('LoginForm', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(/an unexpected error occurred/i)
+        screen.getByText(/login failed. please try again/i)
       ).toBeInTheDocument();
     });
   });
