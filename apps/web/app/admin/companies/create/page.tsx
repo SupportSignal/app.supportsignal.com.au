@@ -34,6 +34,7 @@ interface FormErrors {
   contactEmail?: string;
   adminName?: string;
   adminEmail?: string;
+  status?: string;
 }
 
 export default function CreateCompanyPage() {

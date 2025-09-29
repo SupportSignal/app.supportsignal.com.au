@@ -52,7 +52,7 @@ export const sendPasswordResetEmail = action({
 
     } catch (error) {
       console.error('❌ FAILED TO SEND EMAIL:', error);
-      throw new Error(`Failed to send password reset email: ${error.message}`);
+      throw new Error(`Failed to send password reset email: ${(error as Error).message}`);
     }
   },
 });
