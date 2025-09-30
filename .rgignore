@@ -1,0 +1,15 @@
+# Ripgrep ignore file for Claude Code file search
+# This prevents .git directory files from appearing in @ file search typeahead
+
+# Git internal files
+.git/
+
+# Other directories that shouldn't appear in file search
+node_modules/
+.next/
+.turbo/
+.convex/
+.wrangler/
+dist/
+build/
+coverage/
