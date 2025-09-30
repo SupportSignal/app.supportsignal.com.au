@@ -100,7 +100,7 @@ export const createUser = mutation({
       password: HASHED_PASSWORD,
       role,
       company_id: company._id,
-      has_llm_access: role === 'system_admin' || role === 'demo_admin' || role === 'company_admin' || role === 'team_lead',
+      created_at: Date.now(),
     });
 
     return {
@@ -167,15 +167,12 @@ export const createAllTestUsers = mutation({
           }
 
           // Create user
-          const has_llm_access = userData.role === 'system_admin' || userData.role === 'demo_admin' || userData.role === 'company_admin' || userData.role === 'team_lead';
-          
           const userId = await ctx.db.insert('users', {
             name: userData.name,
             email: userData.email.toLowerCase(),
             password: HASHED_PASSWORD,
             role: userData.role,
             company_id: company._id,
-            has_llm_access,
             created_at: Date.now(),
           });
 

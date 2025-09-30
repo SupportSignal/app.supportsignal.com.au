@@ -2,6 +2,23 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Table of Contents
+
+- Project Overview
+- Import Path Guidelines
+- Development Commands
+- Architecture & Key Patterns
+- Development Workflow
+- Important Conventions
+- Database Access & Environment Context
+- Specialized Agent Delegation
+- Testing Documentation Priority
+- File Creation Discovery Protocol
+- Claude Navigation & Directory Awareness
+- CI Verification Scripts & Monitoring Tools
+- Important Instruction Reminders
+- Quick Reference
+
 ## Project Overview
 
 **SupportSignal Application** - A Next.js AI-powered application built from the starter-nextjs-convex-ai template designed for AI-first development using:
@@ -97,7 +114,6 @@ bunx convex run monitoring:traces                 # Find traces generating lots 
 bunx convex run cleanup:safe                      # Normal maintenance - expired/old logs only
 bunx convex run cleanup:force                     # Testing/emergency - delete ALL logs
 ./scripts/cleanup-logs.sh                         # Automated cleanup script
-```
 
 ## Architecture & Key Patterns
 
@@ -108,8 +124,8 @@ bunx convex run cleanup:force                     # Testing/emergency - delete A
 ├── apps/web/           # Next.js application
 │   ├── app/           # App Router pages and layouts
 │   ├── components/    # React components
-│   ├── lib/          # Utilities and shared code
-│   └── convex/       # Convex backend functions
+│   └── lib/          # Utilities and shared code
+├── apps/convex/       # Convex backend functions
 ├── packages/
 │   ├── ui/           # Shared UI components library
 │   └── convex/       # Shared Convex schemas/helpers
@@ -141,6 +157,7 @@ The project includes a comprehensive navigation system providing always-current,
 **Benefits**: Always-current project structure, optimal AI context, zero maintenance overhead.
 
 ### Key Architectural Patterns
+*Last Updated: September 30, 2025*
 
 1. **Convex Integration**
    - All backend logic lives in `convex/` directory
@@ -152,12 +169,12 @@ The project includes a comprehensive navigation system providing always-current,
    - Server Components by default in `app/` directory
    - Client Components marked with `"use client"`
    - UI components use ShadCN pattern with Radix UI primitives
-   - Form handling with `react-hook-form` and Zod validation
+   - Styling with Tailwind CSS and clsx for conditional classes
 
 3. **State Management**
    - Server state: Convex (real-time, persistent)
    - Client state: Zustand (lightweight, type-safe)
-   - Form state: react-hook-form with Zod schemas
+   - Theme state: next-themes for dark/light mode
 
 4. **Authentication**
    - BetterAuth with Convex adapter
@@ -165,9 +182,9 @@ The project includes a comprehensive navigation system providing always-current,
    - Protected routes using middleware
 
 5. **Error Handling**
-   - Sentry for production error tracking
    - Custom error boundaries for graceful degradation
    - Convex error handling with proper status codes
+   - Toast notifications with Sonner
 
 ## Development Workflow
 
@@ -416,6 +433,121 @@ git push origin main  # Triggers automatic deployment
    - Optimize images with Next.js Image
    - Implement proper loading states
    - Cache Convex queries appropriately
+
+## Database Access & Environment Context
+*Last Updated: September 30, 2025*
+
+### **Production vs Development Data Access**
+
+**When user asks for "production data"**: Use `bunx convex data --prod`
+**When user asks for "development data"**: Use `bunx convex data` (default)
+
+### **Environment State (Current)**
+- **Production Database**: 10 users, 3 companies, 0 participants (minimal production data)
+- **Development Database**: 30 users, 32 companies, 11 participants (extensive test data)
+- **Environments**: Properly separated (confirmed via Convex CLI and dashboard screenshots)
+
+### **MCP Configuration Lessons Learned**
+- **Convex MCP integration attempted but failed**: Admin key authentication not working with MCP servers
+- **Current MCP setup**: Reverted to basic single `convex` server in `.mcp.json` (non-functional)
+- **Working alternative**: Direct Convex CLI access with `--prod` flag for production, default for development
+- **Authentication**: CLI uses standard user authentication (no admin keys needed)
+- **Data verification method**: Always verify which environment by checking data counts
+
+### **Database Query Patterns**
+```bash
+# Production (minimal production data)
+bunx convex data --prod users --limit 3        # Shows 10 users
+bunx convex data --prod companies --limit 3    # Shows 3 companies
+bunx convex data --prod participants --limit 3 # Empty table
+
+# Development (extensive test data)
+bunx convex data users --limit 3               # Shows 30 users
+bunx convex data companies --limit 3           # Shows 32 companies
+bunx convex data participants --limit 3        # Shows 11 participants
+```
+
+### **Available Convex CLI Operations**
+
+**Data Operations:**
+- `bunx convex data [table]` - Query tables
+- `bunx convex run [function]` - Run queries/mutations
+- `bunx convex import` - Import data
+- `bunx convex export` - Export data
+
+**Environment Management:**
+- `bunx convex env list` - List environment variables
+- `bunx convex env set` - Set environment variables
+
+**Development:**
+- `bunx convex logs` - View deployment logs
+- `bunx convex function-spec` - List available functions
+
+**Examples:**
+```bash
+# Query production data
+bunx convex data --prod users --limit 10
+
+# Run a specific function
+bunx convex run getCompanies '{"limit": 5}'
+
+# Export production data
+bunx convex export --prod
+```
+
+**Note:** Admin keys are NOT required for CLI operations - uses standard user authentication from `npx convex dev` login session.
+
+## Environment Variables Management
+*Last Updated: September 30, 2025*
+
+### **Source of Truth System**
+
+All environment variables are managed through a centralized source of truth system:
+
+**Location**: `~/.env-configs/app.supportsignal.com.au.env`
+
+**Format**: Table format with DEV_VALUE and PROD_VALUE columns
+```
+| TARGET               | GROUP                       | KEY                       | DEV_VALUE                 | PROD_VALUE                |
+|----------------------|-----------------------------|---------------------------|---------------------------|---------------------------|
+| NEXTJS,CONVEX        | Local Development           | NEXT_PUBLIC_APP_URL       | http://localhost:3200     | https://app.supportsignal.com.au |
+| CONVEX               | GitHub OAuth                | GITHUB_CLIENT_ID          | Ov23liMO6dymiqZKmiBS      | Ov23liMO6dymiqZKmiBS      |
+```
+
+### **Sync Environment Script**
+
+Use the sync-env script to generate environment files:
+
+```bash
+# Generate local .env files (always uses DEV_VALUE)
+bun run sync-env --mode=local
+
+# Deploy to cloud platforms
+bun run sync-env --mode=deploy-dev    # Deploy dev values to Convex
+bun run sync-env --mode=deploy-prod   # Deploy prod values to Convex
+
+# Options
+--dry-run    # Show what would change without applying
+--verbose    # Show detailed output
+```
+
+### **Key Environment Variables**
+
+**Convex:**
+- `CONVEX_DEPLOYMENT` - Deployment identifier (dev:beaming-gull-639 / prod:graceful-shrimp-355)
+- `NEXT_PUBLIC_CONVEX_URL` - Public Convex endpoint
+- `OPENAI_API_KEY` - AI model access
+- `GITHUB_CLIENT_ID/SECRET` - OAuth authentication
+
+**Cloudflare:**
+- `CLOUDFLARE_ACCOUNT_ID` - Account identifier
+- `CLOUDFLARE_API_TOKEN` - API access token
+- `NEXT_PUBLIC_LOG_WORKER_URL` - Log ingestion worker
+
+**Architecture Principle:**
+- **Local files (.env.local)**: Always contain development values
+- **Production values**: Deployed directly to cloud platforms (Convex, Cloudflare)
+- **Never commit**: .env.local files to version control
 
 # important-instruction-reminders
 
@@ -765,3 +897,88 @@ For comprehensive CI setup and troubleshooting:
 - **[CI/CD Pipeline Setup Guide](docs/technical-guides/cicd-pipeline-setup.md)** - Complete setup instructions
 - **[Testing Infrastructure Lessons](docs/testing/technical/testing-infrastructure-lessons-learned.md)** - CI debugging patterns
 - **[Chat Component KDD](docs/testing/technical/chat-component-testing-lessons.md)** - Testing methodology improvements
+
+## Quick Reference
+*Last Updated: September 30, 2025*
+
+### Essential Development Commands
+```bash
+# Core Development
+bun dev              # Start development server
+bun build            # Build for production
+bun test             # Run all tests
+bun run typecheck    # TypeScript validation
+bun run lint         # ESLint validation
+
+# CI Verification (MANDATORY before story completion)
+bun run ci:status    # Check CI status
+bun run ci:watch     # Monitor CI runs
+bun run push         # Smart push with CI monitoring
+
+# Convex Backend
+bunx convex dev      # Start Convex dev server
+bunx convex deploy   # Deploy functions
+bunx convex data [table] --limit [n]  # Query development data
+bunx convex data --prod [table] --limit [n]  # Query production data
+```
+
+### Environment & Deployment
+```bash
+# Environment Sync
+bun run sync-env --mode=local        # Generate local .env files
+bun run sync-env --mode=deploy-dev   # Deploy to dev
+bun run sync-env --mode=deploy-prod  # Deploy to prod
+
+# Cloudflare Pages
+cd apps/web && bun run build:pages  # Build for Pages
+bun run pages:deploy                 # Manual deployment
+
+# Database Monitoring
+bunx convex run monitoring:usage    # Database usage stats
+bunx convex run cleanup:safe        # Clean expired logs
+```
+
+### Testing Commands
+```bash
+# Unit Tests
+bun test              # All tests
+bun test:web          # Web app tests
+bun test:convex       # Convex tests
+bun test:worker       # Worker tests
+
+# E2E Tests
+bun test:e2e          # Playwright E2E
+bun test:e2e:ui       # E2E with UI
+
+# Coverage
+bun test:coverage     # Coverage reports
+```
+
+### Project Structure Quick Guide
+```
+apps/web/           # Next.js application
+apps/convex/        # Convex backend functions
+apps/workers/       # Cloudflare Workers
+packages/ui/        # Shared UI components
+tests/              # Centralized test files
+```
+
+### Version Information
+```
+Node.js: 18+ required
+Bun: Latest (package manager)
+Next.js: 14.2.15
+React: 18.2.0
+Convex: 1.25.4+
+TypeScript: 5.4.5+
+```
+
+### Key Dependencies
+```
+UI Framework: ShadCN + Radix UI
+Styling: Tailwind CSS 3.4.14
+Authentication: BetterAuth 1.2.12
+State Management: Zustand
+Icons: Lucide React
+Testing: Jest + Playwright
+```
