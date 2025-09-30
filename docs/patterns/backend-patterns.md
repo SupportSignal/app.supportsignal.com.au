@@ -786,6 +786,140 @@ export const requirePermission = (
 - Use actions for external API calls
 - Don't block queries/mutations on external services
 
+## AI Integration Patterns
+
+### AI Prompt Template Management Pattern
+
+**Context**: Managing configurable AI prompts with variable substitution for system-level control
+**Implementation**:
+
+- Store prompt templates with `{{variable}}` placeholder syntax
+- Implement type-safe variable validation and substitution
+- Use template resolution service with performance caching
+- Enable system administrator control without code changes
+
+**Example**:
+```typescript
+// Template storage pattern
+ai_prompt_templates: defineTable({
+  name: v.string(), // "generate_clarification_questions"
+  prompt_template: v.string(), // "Generate questions for {{incident_type}} involving {{participant_name}}"
+  variables: v.array(v.object({
+    name: v.string(), // "participant_name"
+    type: v.union(v.literal("string"), v.literal("number"), v.literal("boolean")),
+    required: v.boolean(),
+    default_value: v.optional(v.string()),
+  })),
+  is_active: v.boolean(),
+  version: v.number(),
+})
+
+// Template resolution service
+export const resolvePromptTemplate = query({
+  args: {
+    sessionToken: v.string(),
+    template_name: v.string(),
+    variables: v.any(), // Key-value pairs for substitution
+  },
+  handler: async (ctx, args) => {
+    // 1. Load active template by name with caching
+    const template = await getTemplateFromCache(ctx, args.template_name);
+
+    // 2. Validate required variables are provided
+    const missingRequired = template.variables
+      .filter(v => v.required && !(v.name in args.variables))
+      .map(v => v.name);
+
+    if (missingRequired.length > 0) {
+      throw new ConvexError(`Missing required variables: ${missingRequired.join(', ')}`);
+    }
+
+    // 3. Perform variable substitution with type validation
+    let resolvedPrompt = template.prompt_template;
+    for (const variable of template.variables) {
+      const value = args.variables[variable.name] || variable.default_value || '';
+
+      // Type validation
+      if (variable.type === 'number' && isNaN(Number(value))) {
+        throw new ConvexError(`Variable ${variable.name} must be a number`);
+      }
+
+      resolvedPrompt = resolvedPrompt.replace(
+        new RegExp(`\\{\\{${variable.name}\\}\\}`, 'g'),
+        String(value)
+      );
+    }
+
+    return resolvedPrompt;
+  }
+});
+```
+
+**Rationale**:
+- Enables prompt optimization without code deployments
+- Type-safe variable system prevents runtime errors
+- Template versioning supports A/B testing and rollbacks
+- System administrator control maintains prompt quality
+
+
+### AI Service Integration Pattern
+
+**Context**: Integrating prompt templates with AI service calls
+**Implementation**:
+
+- Resolve prompts at AI service call time
+- Include prompt resolution in AI service logging
+- Graceful fallback when templates unavailable
+- Track prompt effectiveness for optimization
+
+**Example**:
+```typescript
+// AI service integration with prompt templates
+export const generateWithPrompt = action({
+  args: {
+    sessionToken: v.string(),
+    templateName: v.string(),
+    variables: v.any(),
+    additionalContext: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // 1. Resolve prompt template
+    const resolvedPrompt = await ctx.runQuery(api.promptTemplates.resolvePromptTemplate, {
+      sessionToken: args.sessionToken,
+      template_name: args.templateName,
+      variables: args.variables,
+    });
+
+    // 2. Add any additional context
+    const finalPrompt = args.additionalContext
+      ? `${resolvedPrompt}\n\nAdditional Context: ${args.additionalContext}`
+      : resolvedPrompt;
+
+    // 3. Call AI service with resolved prompt
+    const aiResponse = await callOpenAI({
+      prompt: finalPrompt,
+      model: "gpt-4",
+    });
+
+    // 4. Log prompt usage for analytics
+    await ctx.runMutation(api.promptUsageLogs.logUsage, {
+      prompt_template_id: args.templateName,
+      variables_used: args.variables,
+      resolved_prompt: finalPrompt,
+      ai_response: aiResponse,
+      processing_time_ms: Date.now() - startTime,
+    });
+
+    return aiResponse;
+  },
+});
+```
+
+**Rationale**:
+- Separation of prompt resolution from AI service calls enables reusability
+- Usage logging provides data for prompt optimization
+- Fallback mechanisms ensure system reliability
+
 ## Related Documentation
 
 - [Frontend Patterns](frontend-patterns.md) - For client-side integration patterns
