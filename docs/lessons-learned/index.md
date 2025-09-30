@@ -44,6 +44,7 @@ Critical insights about environment management, deployment configuration, and OA
 
 - **[Convex Platform Constraints](./convex-platform-constraints.md)** - File naming rules, module imports, and platform-specific limitations discovered during implementation (Added: 2025-09-30)
 - **[OAuth Environment Variable Configuration KDD](./oauth-environment-variable-configuration-kdd.md)** - Comprehensive root cause analysis and solution for OAuth production environment variable configuration failures
+- **[OAuth Production Setup Implementation KDD](./oauth-production-setup-implementation-kdd.md)** - Comprehensive lessons from Story 8.3 OAuth production application setup, covering single OAuth application strategy, centralized URL generation effectiveness, and comprehensive testing patterns (Added: 2025-09-30)
 - **[Dual Deployment and Environment Variable Troubleshooting KDD](./dual-deployment-and-environment-variable-troubleshooting-kdd.md)** - Lessons from environment variable configuration issues
 - **[Build Output Standardization KDD](./build-output-standardization-kdd.md)** - Standardizing build outputs for deployment consistency
 

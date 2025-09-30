@@ -254,6 +254,87 @@ export function loadUrlConfig(): UrlConfig {
 
 ## Authentication & Authorization Patterns
 
+### OAuth Production Environment Separation Pattern
+
+**Context**: Managing OAuth applications across development and production environments with identical client IDs but different callback URLs
+**Implementation**: Environment-specific OAuth application setup with centralized URL generation
+
+**Example**:
+```typescript
+// OAuth callback URL generation with environment awareness
+export function generateOAuthCallbackUrl(provider: 'github' | 'google'): string {
+  if (!provider || !['github', 'google'].includes(provider)) {
+    throw new Error('Provider must be either "github" or "google"');
+  }
+
+  const config = getUrlConfig();
+  return `${config.baseUrl}/auth/${provider}/callback`;
+}
+
+// Environment-specific OAuth configurations
+const OAUTH_ENVIRONMENTS = {
+  development: {
+    github: {
+      clientId: 'Ov23liMO6dymiqZKmiBS',
+      callbackUrl: 'http://localhost:3200/auth/github/callback'
+    },
+    google: {
+      clientId: '524819461298-2nil4kfhehgpn04srd4qv8939s04qq4f.apps.googleusercontent.com',
+      callbackUrl: 'http://localhost:3200/auth/google/callback'
+    }
+  },
+  production: {
+    github: {
+      clientId: 'Ov23liMO6dymiqZKmiBS', // Same client ID
+      callbackUrl: 'https://app.supportsignal.com.au/auth/github/callback'
+    },
+    google: {
+      clientId: '524819461298-2nil4kfhehgpn04srd4qv8939s04qq4f.apps.googleusercontent.com', // Same client ID
+      callbackUrl: 'https://app.supportsignal.com.au/auth/google/callback'
+    }
+  }
+};
+```
+
+**OAuth Provider Configuration Strategy**:
+- **Same Client Applications**: Use identical OAuth client IDs across environments
+- **Different Callback URLs**: Configure environment-specific callback URLs in OAuth provider settings
+- **Multiple Authorized URLs**: Add both development and production callbacks to single OAuth application
+- **Environment Detection**: Generate appropriate callback URL based on runtime environment
+
+**Environment Variable Pattern**:
+```typescript
+// Production OAuth deployment pattern
+const OAUTH_ENV_VARIABLES = {
+  // Same client IDs used across environments
+  GITHUB_CLIENT_ID: 'Ov23liMO6dymiqZKmiBS',
+  GOOGLE_CLIENT_ID: '524819461298-2nil4kfhehgpn04srd4qv8939s04qq4f.apps.googleusercontent.com',
+
+  // Environment-specific client secrets (never shared)
+  GITHUB_CLIENT_SECRET: '<environment-specific-secret>',
+  GOOGLE_CLIENT_SECRET: '<environment-specific-secret>',
+
+  // Base URL determines callback generation
+  NEXT_PUBLIC_APP_URL: process.env.NODE_ENV === 'production'
+    ? 'https://app.supportsignal.com.au'
+    : 'http://localhost:3200'
+};
+```
+
+**Benefits**:
+- **Simplified OAuth Management**: Single OAuth application per provider handles both environments
+- **Consistent Client IDs**: Reduces configuration complexity and credential management
+- **Environment-Aware Callbacks**: Automatic URL generation based on deployment environment
+- **Easy Provider Configuration**: Add multiple authorized redirect URIs to single OAuth app
+
+**Testing Strategy**:
+- **Unit Tests**: Validate URL generation for all environments and providers
+- **Integration Tests**: Test complete authentication workflows in both environments
+- **Cross-Environment Validation**: Ensure same OAuth credentials work with different callback URLs
+- **URL Format Validation**: Verify generated URLs match OAuth provider requirements
+
+**Rationale**: Simplifies OAuth management while maintaining environment isolation and security. Single OAuth applications with multiple callback URLs reduce provider management overhead while centralized URL generation ensures consistency.
+
 ### Role-Based Permission System Pattern
 
 **Context**: Implementing hierarchical role-based access control with Convex
