@@ -114,6 +114,19 @@ Following BMAD methodology, these documents form the foundation:
 
 **Comprehensive guides and systematic knowledge libraries:**
 
+**Last Updated**: 2025-09-30 | **Knowledge Base Stats**: 7+ patterns | 15+ examples | 11+ lessons learned
+
+#### Recent Knowledge Assets Added
+
+**Latest Patterns** (September 2025):
+- **[Environment-Aware URL Configuration](./technical-guides/environment-aware-url-configuration-kdd.md)** - Centralized URL configuration with environment detection (Story 8.2)
+
+**Latest Examples** (September 2025):
+- **[URL Configuration Implementation](./examples/backend/)** - Working environment-aware URL system with comprehensive test suite
+
+**Latest Lessons** (September 2025):
+- **[Jest/Bun Test Runner Compatibility](./technical-guides/environment-aware-url-configuration-kdd.md)** - API differences between test runners affecting implementation
+
 #### [Implementation Guides](./guides/)
 
 Complete implementation and usage guides for AI agents and developers:
@@ -132,31 +145,35 @@ Video creation briefs for sharing knowledge and demonstrations:
 
 **Knowledge Libraries for systematic development:**
 
-#### [Patterns Library](./patterns/)
+#### [Patterns Library](./patterns/) - 7+ Established Patterns
 
-Established architectural patterns and best practices:
+**Purpose**: Architectural patterns and best practices validated through real implementations
 
 - **[Frontend Patterns](./patterns/frontend-patterns.md)** - React, Next.js, and UI patterns
-- **[Backend Patterns](./patterns/backend-patterns.md)** - Convex, API, and server-side patterns
-- **[Testing Patterns](./testing/technical/testing-patterns.md)** - Testing strategies across all layers
+- **[Backend Patterns](./patterns/backend-patterns.md)** - Convex, API, and server-side patterns (Updated: 2025-09-30)
+- **[Testing Patterns](./testing/technical/testing-patterns.md)** - Testing strategies across all layers (Updated: 2025-09-30)
 - **[Architecture Patterns](./patterns/architecture-patterns.md)** - System design patterns
 - **[Development Workflow Patterns](./patterns/development-workflow-patterns.md)** - Process and collaboration patterns
 
-#### [Examples Library](./examples/)
+**📋 [Pattern Index](./patterns/index.md)** - Complete pattern navigation and usage guidelines
 
-Real implementation examples from the project:
+#### [Examples Library](./examples/) - 15+ Working Examples
+
+**Purpose**: Real implementation examples extracted from successful story completions
 
 - **[Monorepo Setup](./examples/monorepo-setup/)** - Complete Bun/Turborepo configuration example
 - **[Frontend Examples](./examples/frontend/)** - React and Next.js implementation examples
-- **[Backend Examples](./examples/backend/)** - Convex function examples and runtime patterns
+- **[Backend Examples](./examples/backend/)** - Convex function examples and runtime patterns (Updated: 2025-09-30)
   - **[Knowledge Ingestion Deployment Patterns](./examples/backend/knowledge-ingestion-deployment-patterns.md)** - Vector storage deployment patterns and configuration management
 - **[Testing Examples](./examples/testing/)** - Comprehensive testing examples
 - **[CI/CD Deployment Examples](./examples/cicd-deployment/)** - Complete CI/CD pipeline and deployment examples
 - **[Configuration Examples](./examples/configuration/)** - Project configuration examples
 
-#### [Lessons Learned](./lessons-learned/)
+**📋 [Examples Index](./examples/index.md)** - Complete examples navigation with setup instructions
 
-Cross-story insights and knowledge capture:
+#### [Lessons Learned](./lessons-learned/) - 11+ Captured Insights
+
+**Purpose**: Cross-story insights and breakthroughs captured from real development challenges
 
 - **[Story Lessons](./lessons-learned/stories/)** - Insights from individual story implementations
   - **[Story 1.6 Lessons](./lessons-learned/stories/story-1-6-lessons.md)** - CI/CD Pipeline implementation learnings
@@ -165,6 +182,28 @@ Cross-story insights and knowledge capture:
 - **[Process Lessons](./lessons-learned/process/)** - Development workflow insights
 - **[Anti-Patterns](./lessons-learned/anti-patterns/)** - Approaches to avoid
   - **[React + Convex Patterns KDD](./technical-guides/react-convex-patterns-kdd.md)** - Critical anti-patterns that cause useEffect recursion and performance issues
+
+**📋 [Lessons Index](./lessons-learned/index.md)** - Complete lessons navigation organized by category and impact
+
+#### Knowledge Base Health & Maintenance
+
+**📊 Knowledge Base Statistics** (Last Updated: 2025-09-30):
+- **Total Knowledge Assets**: 33+ files
+- **Patterns**: 7+ established architectural patterns
+- **Examples**: 15+ working implementation examples
+- **Lessons**: 11+ insights from story implementations
+- **Cross-References**: Maintained via KDD process
+
+**🔄 Maintenance Schedule**:
+- **KDD Updates**: After every story completion (automatic)
+- **TOC Maintenance**: During KDD execution (systematic)
+- **Health Checks**: Monthly via `.bmad-core/templates/toc-update-tmpl.md`
+- **Quarterly Reviews**: Pattern consolidation and structure optimization
+
+**🛠 Knowledge Base Tools**:
+- **[KDD Complete Guide](./methodology/kdd-complete-guide.md)** - Full KDD methodology
+- **[TOC Update Templates](./.bmad-core/templates/toc-update-tmpl.md)** - Standardized TOC maintenance
+- **[KDD Quick Reference](./methodology/kdd-quick-reference.md)** - Commands and checklists
 
 #### [Peer Reviews](./peer-reviews/)
 

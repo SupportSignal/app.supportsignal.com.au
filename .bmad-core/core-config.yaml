@@ -13,11 +13,13 @@ architecture:
   architectureShardedLocation: docs/architecture
 customTechnicalDocuments: null
 devLoadAlwaysFiles:
+  - docs/methodology/kdd-complete-guide.md
+  - docs/patterns/backend-patterns.md
+  - docs/patterns/testing-patterns.md
   - docs/architecture/coding-standards.md
   - docs/architecture/tech-stack.md
   - docs/architecture/source-tree.md
   - docs/testing/technical/testing-infrastructure-lessons-learned.md
-  - docs/testing/technical/testing-patterns.md
   - docs/testing/technical/test-strategy-and-standards.md
 devDebugLog: .ai/debug-log.md
 devStoryLocation: docs/stories

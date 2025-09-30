@@ -52,6 +52,14 @@ This checklist ensures that Knowledge-Driven Development principles are properly
 - [ ] **Example library updates**: Add new examples to `docs/examples/`
 - [ ] **Lessons learned updates**: Add insights to `docs/lessons-learned/`
 
+### TOC Maintenance (Knowledge Base Discoverability)
+
+- [ ] **Category TOC updates**: Update relevant category TOCs (`docs/patterns/index.md`, `docs/examples/index.md`, `docs/lessons-learned/index.md`)
+- [ ] **Master TOC updates**: Update `docs/index.md` KDD sections if significant additions or new categories
+- [ ] **Cross-reference validation**: Ensure bidirectional links between related knowledge assets
+- [ ] **TOC entry templates**: Use standardized TOC entry templates from `.bmad-core/templates/toc-update-tmpl.md`
+- [ ] **Metadata inclusion**: Include timestamps, categories, and relationship metadata in TOC entries
+
 ## Knowledge Quality Assurance
 
 ### Pattern Documentation Quality
@@ -74,6 +82,14 @@ This checklist ensures that Knowledge-Driven Development principles are properly
 - [ ] **Searchability**: Knowledge is properly indexed and cross-referenced
 - [ ] **Actionability**: Knowledge provides clear guidance for future implementations
 - [ ] **Sustainability**: Knowledge capture process is sustainable and scalable
+
+### TOC System Health Validation
+
+- [ ] **Orphaned file detection**: Verify no knowledge assets exist without TOC references
+- [ ] **Broken link validation**: Check all cross-references point to existing files
+- [ ] **TOC completeness**: Ensure all new knowledge assets are properly indexed
+- [ ] **Cross-reference integrity**: Validate bidirectional linking between related assets
+- [ ] **TOC template compliance**: Confirm entries follow standardized format from templates
 
 ## Cross-Story Learning Validation
 
@@ -101,6 +117,8 @@ A story successfully implements KDD when:
 - Lessons learned have been captured for future stories
 - Documentation remains synchronized with implementation
 - Knowledge is accessible and actionable for future development
+- **TOC system is properly maintained**: All knowledge assets are indexed in relevant TOCs with proper cross-references
+- **Knowledge base health**: No orphaned files, broken links, or missing cross-references
 
 ## Notes
 
@@ -111,4 +129,16 @@ This checklist should be used by:
 - **QA Agent**: During review for knowledge capture and pattern compliance
 - **Product Owner**: For documentation debt management and process oversight
 
-The goal is to create a self-improving development environment where each story contributes to and validates against the collective knowledge base.
+### TOC Maintenance Tools
+
+- **TOC Update Templates**: Use `.bmad-core/templates/toc-update-tmpl.md` for standardized TOC entries
+- **Health Check Commands**: Run validation commands for orphaned files and broken links
+- **Cross-Reference Validation**: Ensure bidirectional linking between knowledge assets
+
+### Integration with KDD Process
+
+- **TOC maintenance is mandatory** in KDD execution (Step 9 of `capture-kdd-knowledge.md`)
+- **Knowledge base statistics** tracked in `docs/index.md` master TOC
+- **Quarterly reviews** planned for TOC health and consolidation
+
+The goal is to create a self-improving development environment where each story contributes to and validates against the collective knowledge base, with systematic TOC maintenance ensuring knowledge remains discoverable and actionable.

@@ -359,10 +359,33 @@ For systematic development, reference specific epics and architectural component
 
 #### Integration with BMAD Phases
 
-**Before Phase**: Verify CI status of current branch  
-**Model Phase**: Include CI considerations in implementation planning  
-**After Phase**: Mandatory CI verification before completion  
+**Before Phase**: Verify CI status of current branch
+**Model Phase**: Include CI considerations in implementation planning
+**After Phase**: Mandatory CI verification before completion
 **Document Phase**: Capture CI-related lessons learned
+
+#### KDD (Knowledge-Driven Development) Integration
+
+**MANDATORY**: Every story completion MUST execute KDD knowledge capture:
+
+```bash
+# After story implementation completion:
+*task capture-kdd-knowledge    # Extract patterns and lessons to knowledge base
+```
+
+**KDD writes to knowledge base, NOT stories:**
+- `docs/patterns/` - Architectural patterns and best practices
+- `docs/examples/` - Working implementation examples
+- `docs/lessons-learned/` - Technical insights and breakthroughs
+
+**KDD Process:**
+1. **Git Analysis**: Focus on files that actually changed during story
+2. **Pattern Extraction**: Document new architectural patterns discovered
+3. **Example Creation**: Extract reusable code and configurations
+4. **Lesson Capture**: Record technical insights for future development
+5. **Minimal Story Reference**: Brief summary with links to knowledge assets
+
+**Why KDD Matters**: Transforms individual implementations into institutional knowledge that accelerates future development and prevents knowledge loss.
 
 ### Deployment
 
