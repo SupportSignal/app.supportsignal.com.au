@@ -370,7 +370,7 @@ export const loginUser = mutation({
       const sessionToken = Array.from(crypto.getRandomValues(new Uint8Array(32)))
         .map(b => b.toString(16).padStart(2, '0'))
         .join('');
-      
+
       // Extended session for "Remember Me" (30 days) or regular session (24 hours)
       const sessionDuration = args.rememberMe
         ? 30 * 24 * 60 * 60 * 1000 // 30 days for Remember Me
