@@ -14,6 +14,7 @@ import { api } from './_generated/api';
 import { ConvexError } from 'convex/values';
 import { ROLES } from './permissions';
 import { Id } from './_generated/dataModel';
+import { generatePasswordResetUrl, generateOAuthCallbackUrl } from './lib/urlConfig';
 
 // Password validation constants
 const PASSWORD_REQUIREMENTS = {
@@ -607,9 +608,8 @@ export const requestPasswordReset = mutation({
     console.log('==================================');
     console.log(`To: ${args.email}`);
     console.log(`Token: ${token}`);
-    console.log(
-      `Reset URL: ${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3200'}/reset-password?token=${token}`
-    );
+    const resetUrl = generatePasswordResetUrl(token);
+    console.log(`Reset URL: ${resetUrl}`);
     console.log(`Expires: ${new Date(expires).toISOString()}`);
     console.log(`Sent at: ${new Date().toISOString()}`);
     console.log('==================================');
@@ -1150,7 +1150,7 @@ export const googleOAuthLogin = action({
           client_secret: process.env.GOOGLE_CLIENT_SECRET!,
           code: args.code,
           grant_type: 'authorization_code',
-          redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3200'}/auth/google/callback`,
+          redirect_uri: generateOAuthCallbackUrl('google'),
         }),
       });
 
@@ -1267,7 +1267,7 @@ export const getGitHubOAuthUrl = query({
     );
     console.log('GitHub Client ID exists:', !!clientId);
 
-    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3200'}/auth/github/callback`;
+    const redirectUri = generateOAuthCallbackUrl('github');
     console.log('Final redirect URI:', redirectUri);
 
     const params = new URLSearchParams({
@@ -1296,7 +1296,7 @@ export const getGoogleOAuthUrl = query({
     const state = Array.from(crypto.getRandomValues(new Uint8Array(16)))
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');
-    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3200'}/auth/google/callback`;
+    const redirectUri = generateOAuthCallbackUrl('google');
 
     const params = new URLSearchParams({
       client_id: clientId,

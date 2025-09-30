@@ -3,19 +3,13 @@ import { httpAction } from './_generated/server';
 import { action } from './_generated/server';
 import { api } from './_generated/api';
 import { v } from 'convex/values';
+import { generateWorkerUrl } from './lib/urlConfig';
 
 // Get Redis statistics without importing data
 export const getRedisStats = httpAction(async (ctx, request) => {
-  const workerUrl = process.env.NEXT_PUBLIC_LOG_WORKER_URL;
-  if (!workerUrl) {
-    return new Response(
-      JSON.stringify({ error: 'NEXT_PUBLIC_LOG_WORKER_URL not configured' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
-  }
-
   try {
-    const healthResponse = await fetch(`${workerUrl}/health`);
+    const healthUrl = generateWorkerUrl('health');
+    const healthResponse = await fetch(healthUrl);
     if (!healthResponse.ok) {
       throw new Error(`Worker health check failed: ${healthResponse.status}`);
     }
@@ -27,8 +21,17 @@ export const getRedisStats = httpAction(async (ctx, request) => {
     });
   } catch (error) {
     console.error('Failed to fetch Redis stats:', error);
+
+    // Handle worker URL configuration errors specifically
+    if (error instanceof Error && error.message.includes('Worker URL') && error.message.includes('not configured')) {
+      return new Response(
+        JSON.stringify({ error: 'NEXT_PUBLIC_LOG_WORKER_URL not configured' }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: 'Failed to fetch Redis statistics',
         details: error instanceof Error ? error.message : 'Unknown error'
       }),
@@ -44,11 +47,6 @@ export const syncAllLogs = action({
   },
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   handler: async (ctx, { sessionToken }): Promise<{ success: boolean; totalSynced: number; syncedAt: number; deletedCount: number }> => {
-    const workerUrl = process.env.LOG_WORKER_URL || 'https://log-ingestion-worker.david-0b1.workers.dev';
-    if (!workerUrl) {
-      throw new Error('LOG_WORKER_URL not configured');
-    }
-
     try {
       // STEP 1: Clear all existing debug logs for true sync behavior
       console.log('Clearing existing debug logs for true sync...');
@@ -56,7 +54,8 @@ export const syncAllLogs = action({
       console.log(`Cleared ${deletedCount} existing logs from Convex`);
 
       // STEP 2: Fetch current Redis traces
-      const tracesResponse = await fetch(`${workerUrl}/traces/recent`);
+      const tracesUrl = generateWorkerUrl('traces/recent');
+      const tracesResponse = await fetch(tracesUrl);
       if (!tracesResponse.ok) {
         throw new Error(`Failed to fetch traces: ${tracesResponse.status}`);
       }
@@ -67,7 +66,8 @@ export const syncAllLogs = action({
 
       // STEP 3: Import all current Redis logs
       for (const trace of tracesData.traces) {
-        const logsResponse = await fetch(`${workerUrl}/logs?trace_id=${trace.trace_id || trace.id}`);
+        const logsUrl = generateWorkerUrl(`logs?trace_id=${trace.trace_id || trace.id}`);
+        const logsResponse = await fetch(logsUrl);
         if (!logsResponse.ok) {
           console.warn(`Failed to fetch logs for trace ${trace.trace_id || trace.id}: ${logsResponse.status}`);
           continue;
@@ -110,11 +110,6 @@ export const syncAllLogs = action({
 export const syncByTrace = action({
   args: { trace_id: v.string() },
   handler: async (ctx, { trace_id }): Promise<{ success: boolean; trace_id: string; totalSynced: number; syncedAt: number; deletedCount: number }> => {
-    const workerUrl = process.env.LOG_WORKER_URL;
-    if (!workerUrl) {
-      throw new Error('LOG_WORKER_URL not configured');
-    }
-
     try {
       // STEP 1: Clear existing logs for this trace (true sync behavior)
       console.log(`Clearing existing logs for trace ${trace_id}...`);
@@ -122,7 +117,8 @@ export const syncByTrace = action({
       console.log(`Cleared ${deletedCount} existing logs for trace ${trace_id}`);
 
       // STEP 2: Fetch current Redis logs for this trace
-      const logsResponse = await fetch(`${workerUrl}/logs?trace_id=${trace_id}`);
+      const logsUrl = generateWorkerUrl(`logs?trace_id=${trace_id}`);
+      const logsResponse = await fetch(logsUrl);
       if (!logsResponse.ok) {
         throw new Error(`Failed to fetch logs for trace ${trace_id}: ${logsResponse.status}`);
       }
@@ -162,11 +158,6 @@ export const syncByTrace = action({
 export const syncByUser = action({
   args: { user_id: v.string() },
   handler: async (ctx, { user_id }): Promise<{ success: boolean; user_id: string; totalSynced: number; syncedAt: number; deletedCount: number }> => {
-    const workerUrl = process.env.LOG_WORKER_URL;
-    if (!workerUrl) {
-      throw new Error('LOG_WORKER_URL not configured');
-    }
-
     try {
       // STEP 1: Clear existing logs for this user (true sync behavior)
       console.log(`Clearing existing logs for user ${user_id}...`);
@@ -176,7 +167,8 @@ export const syncByUser = action({
       // STEP 2: Fetch all current Redis traces to find user logs
       // Note: Worker may not support user_id filtering directly
       // We'll fetch all logs and filter client-side for now
-      const tracesResponse = await fetch(`${workerUrl}/traces/recent`);
+      const tracesUrl = generateWorkerUrl('traces/recent');
+      const tracesResponse = await fetch(tracesUrl);
       if (!tracesResponse.ok) {
         throw new Error(`Failed to fetch traces: ${tracesResponse.status}`);
       }
@@ -187,7 +179,8 @@ export const syncByUser = action({
 
       // Check each trace for user_id match
       for (const trace of tracesData.traces) {
-        const logsResponse = await fetch(`${workerUrl}/logs?trace_id=${trace.trace_id || trace.id}`);
+        const logsUrl = generateWorkerUrl(`logs?trace_id=${trace.trace_id || trace.id}`);
+        const logsResponse = await fetch(logsUrl);
         if (!logsResponse.ok) {
           console.warn(`Failed to fetch logs for trace ${trace.trace_id || trace.id}: ${logsResponse.status}`);
           continue;
@@ -261,13 +254,9 @@ export const clearRedisLogs = action({
   },
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   handler: async (_ctx, { sessionToken }): Promise<{ success: boolean; cleared_logs: number; cleared_traces: number }> => {
-    const workerUrl = process.env.LOG_WORKER_URL;
-    if (!workerUrl) {
-      throw new Error('LOG_WORKER_URL not configured');
-    }
-
     try {
-      const response = await fetch(`${workerUrl}/logs/clear`, {
+      const clearUrl = generateWorkerUrl('logs/clear');
+      const response = await fetch(clearUrl, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

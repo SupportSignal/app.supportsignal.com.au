@@ -1,6 +1,7 @@
 /* eslint-disable no-console, no-restricted-syntax */
 import { action } from './_generated/server';
 import { v } from 'convex/values';
+import { generatePasswordResetUrl } from './lib/urlConfig';
 
 // Real email sending via Cloudflare Worker
 export const sendPasswordResetEmail = action({
@@ -11,7 +12,7 @@ export const sendPasswordResetEmail = action({
   },
   handler: async (ctx, args: { email: string; token: string; sessionToken?: string }) => {
     try {
-      const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3200'}/reset-password?token=${args.token}`;
+      const resetUrl = generatePasswordResetUrl(args.token);
 
       console.log('📧 SENDING REAL PASSWORD RESET EMAIL');
       console.log('====================================');

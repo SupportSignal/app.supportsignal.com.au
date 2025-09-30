@@ -48,6 +48,180 @@ This document outlines established patterns for Convex backend development, API 
 
 **Rationale**: Separates concerns and maintains transaction integrity
 
+## Environment Configuration Patterns
+
+### Centralized Environment Configuration Pattern
+
+**Context**: Managing environment-specific URLs and configuration without hardcoding values
+**Implementation**: Centralized configuration module with environment detection
+
+**Example**:
+```typescript
+// apps/convex/lib/urlConfig.ts
+export interface UrlConfig {
+  baseUrl: string;
+  environment: 'development' | 'production' | 'test';
+  workerUrl?: string;
+}
+
+export function loadUrlConfig(): UrlConfig {
+  const environment = (process.env.NODE_ENV as 'development' | 'production' | 'test') || 'development';
+
+  // In CI/test environments, make URLs optional to allow backend startup
+  const isTestEnvironment = environment === 'test' || process.env.CI === 'true';
+
+  // Environment-specific defaults
+  const defaultBaseUrl = environment === 'production'
+    ? 'https://app.supportsignal.com.au'
+    : 'http://localhost:3200';
+
+  // Get URLs from environment with fallbacks
+  let baseUrl = getEnvVar(
+    'NEXT_PUBLIC_APP_URL',
+    !isTestEnvironment,
+    isTestEnvironment ? 'http://localhost:3200' : undefined
+  );
+
+  return { baseUrl, environment, workerUrl };
+}
+
+// Specific URL generators replace hardcoded values
+export function generatePasswordResetUrl(token: string): string {
+  const config = getUrlConfig();
+  return `${config.baseUrl}/reset-password?token=${encodeURIComponent(token)}`;
+}
+```
+
+**Benefits**:
+- Eliminates hardcoded localhost URLs in production systems
+- Provides graceful degradation in test environments
+- Centralized URL generation prevents inconsistencies
+- Environment-aware defaults reduce configuration burden
+
+**Rationale**: Prevents hardcoded URLs while maintaining environment flexibility
+
+### Environment-Aware URL Generation Pattern
+
+**Context**: Generating URLs for emails, OAuth callbacks, and API endpoints across environments
+**Implementation**: Function-based URL generators with environment-specific logic
+
+**Example**:
+```typescript
+// Generate OAuth callback URLs
+export function generateOAuthCallbackUrl(provider: 'github' | 'google'): string {
+  if (!provider || !['github', 'google'].includes(provider)) {
+    throw new Error('Provider must be either "github" or "google"');
+  }
+
+  const config = getUrlConfig();
+  return `${config.baseUrl}/auth/${provider}/callback`;
+}
+
+// Generate worker URLs with endpoints
+export function generateWorkerUrl(endpoint?: string): string {
+  const config = getUrlConfig();
+
+  if (!config.workerUrl || config.workerUrl.trim().length === 0) {
+    throw new Error('Worker URL (NEXT_PUBLIC_LOG_WORKER_URL) is not configured');
+  }
+
+  if (!endpoint) {
+    return config.workerUrl;
+  }
+
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+  return `${config.workerUrl}/${cleanEndpoint}`;
+}
+```
+
+**Benefits**:
+- Consistent URL format across all environments
+- Type-safe URL generation with validation
+- Clear error messages for misconfiguration
+- Centralized endpoint management
+
+**Rationale**: Ensures URL consistency and reduces environment-specific bugs
+
+### Defensive Environment Variable Access Pattern
+
+**Context**: Accessing environment variables safely without violating coding standards
+**Implementation**: Wrapper functions with validation and fallbacks
+
+**Example**:
+```typescript
+function getEnvVar(key: string, required: boolean = true, defaultValue?: string): string {
+  const value = process.env[key] || defaultValue;
+
+  if (required && (!value || value.trim().length === 0)) {
+    throw new Error(`Required environment variable ${key} is not set`);
+  }
+
+  return value || '';
+}
+
+function validateUrl(url: string, urlName: string): void {
+  if (!url || url.trim().length === 0) {
+    throw new Error(`${urlName} cannot be empty`);
+  }
+
+  try {
+    new URL(url);
+  } catch {
+    throw new Error(`${urlName} must be a valid URL: ${url}`);
+  }
+
+  // Prevent trailing slash issues
+  if (url.endsWith('/')) {
+    throw new Error(`${urlName} should not end with a trailing slash: ${url}`);
+  }
+}
+```
+
+**Benefits**:
+- Prevents direct process.env access in business logic
+- Comprehensive validation with clear error messages
+- Consistent error handling across configuration
+- Support for required vs optional variables
+
+**Rationale**: Maintains coding standards while providing safe environment access
+
+### Test-Environment Accommodation Pattern
+
+**Context**: Supporting CI and test environments without compromising production safety
+**Implementation**: Conditional validation logic with environment detection
+
+**Example**:
+```typescript
+export function loadUrlConfig(): UrlConfig {
+  const environment = (process.env.NODE_ENV as 'development' | 'production' | 'test') || 'development';
+
+  // In CI/test environments, make URLs optional to allow backend startup
+  const isTestEnvironment = environment === 'test' || process.env.CI === 'true';
+
+  // Get URLs with test-aware requirements
+  let baseUrl = getEnvVar(
+    'NEXT_PUBLIC_APP_URL',
+    !isTestEnvironment, // Not required in test environments
+    isTestEnvironment ? 'http://localhost:3200' : undefined
+  );
+
+  // Validate URLs only in non-test environments
+  if (!isTestEnvironment) {
+    validateUrl(baseUrl, 'Base URL (NEXT_PUBLIC_APP_URL)');
+  }
+
+  return config;
+}
+```
+
+**Benefits**:
+- Allows backend startup in CI/test environments
+- Maintains strict validation in production
+- Graceful degradation with sensible defaults
+- Clear separation of test vs production concerns
+
+**Rationale**: Enables testing while maintaining production safety standards
+
 ## Data Modeling Patterns
 
 ### Schema Definition

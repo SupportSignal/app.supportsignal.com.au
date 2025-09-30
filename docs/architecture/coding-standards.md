@@ -14,6 +14,9 @@ A minimal, strict set of mandatory rules for all developers (human and AI), incl
 
 - **No Direct process.env**: Direct access to `process.env` is banned
 - **Configuration Pattern**: Use centralized configuration management
+- **Environment-Aware Patterns**: Follow established patterns for environment detection and URL generation
+- **Defensive Configuration**: Validate environment variables with meaningful error messages
+- **Configuration Caching**: Implement caching with reset capability for test isolation
 
 ### Repository Pattern
 

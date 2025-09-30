@@ -647,6 +647,164 @@ describe('WorkerTests', () => {
 
 **Rationale**: Prevents test interdependence and ensures reliable, repeatable test results
 
+## Environment Variable Testing Patterns
+
+### Context: Testing Environment-Aware Configuration Modules
+
+Environment variable testing requires careful management of test isolation and realistic scenario simulation. These patterns ensure configuration modules work correctly across all deployment environments.
+
+### Environment Mock Testing Pattern
+
+**Context**: Testing environment-aware configuration modules
+**Implementation**: Comprehensive environment variable mocking with proper cleanup
+
+**Example**:
+```typescript
+describe('Environment Configuration', () => {
+  const originalEnv = process.env;
+
+  const mockEnvironments = {
+    development: {
+      NEXT_PUBLIC_APP_URL: 'http://localhost:3200',
+      NEXT_PUBLIC_LOG_WORKER_URL: 'https://worker.dev',
+      NODE_ENV: 'development',
+    },
+    production: {
+      NEXT_PUBLIC_APP_URL: 'https://app.example.com',
+      NEXT_PUBLIC_LOG_WORKER_URL: 'https://worker.prod',
+      NODE_ENV: 'production',
+    },
+    missingConfig: {
+      NODE_ENV: 'development',
+      // Missing NEXT_PUBLIC_APP_URL
+    },
+    testEnvironment: {
+      NODE_ENV: 'test',
+      CI: 'true',
+    },
+  };
+
+  beforeEach(() => {
+    resetConfigCache();
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+    resetConfigCache();
+  });
+
+  it('should handle missing configuration gracefully', () => {
+    process.env = { ...mockEnvironments.missingConfig };
+
+    expect(() => loadConfig()).toThrow('Required environment variable');
+  });
+
+  it('should provide test environment defaults', () => {
+    process.env = { ...mockEnvironments.testEnvironment };
+
+    const config = loadConfig();
+    expect(config.baseUrl).toBe('http://localhost:3200');
+  });
+});
+```
+
+**Key Principles**:
+- Mock complete environment scenarios, not individual variables
+- Test graceful degradation in test/CI environments
+- Always clean up environment state between tests
+- Test both success and failure scenarios
+
+**Rationale**: Ensures environment-aware configuration works correctly across all deployment scenarios
+
+### Configuration Cache Testing Pattern
+
+**Context**: Testing configuration modules with caching mechanisms
+**Implementation**: Reset cache between tests to ensure isolation
+
+**Example**:
+```typescript
+describe('Configuration Caching', () => {
+  beforeEach(() => {
+    resetUrlConfig(); // Reset configuration cache
+  });
+
+  it('should cache configuration on first load', () => {
+    process.env = { ...mockEnvironments.development };
+
+    const config1 = getUrlConfig();
+    const config2 = getUrlConfig();
+
+    // Should return same object reference (cached)
+    expect(config1).toBe(config2);
+  });
+
+  it('should load fresh configuration after reset', () => {
+    process.env = { ...mockEnvironments.development };
+    const config1 = getUrlConfig();
+
+    // Change environment and reset
+    process.env = { ...mockEnvironments.production };
+    resetUrlConfig();
+
+    const config2 = getUrlConfig();
+    expect(config1.baseUrl).not.toBe(config2.baseUrl);
+  });
+});
+```
+
+**Benefits**:
+- Prevents test pollution from cached state
+- Validates caching behavior works correctly
+- Ensures configuration updates properly
+- Tests cache invalidation scenarios
+
+**Rationale**: Configuration caching improves performance but must not interfere with testing
+
+### URL Generation Testing Pattern
+
+**Context**: Testing URL generation functions across environments
+**Implementation**: Test all URL generators with different environment configurations
+
+**Example**:
+```typescript
+describe('URL Generation', () => {
+  it('should generate correct OAuth URLs in development', () => {
+    process.env = { ...mockEnvironments.development };
+    resetUrlConfig();
+
+    const githubUrl = generateOAuthCallbackUrl('github');
+    const googleUrl = generateOAuthCallbackUrl('google');
+
+    expect(githubUrl).toBe('http://localhost:3200/auth/github/callback');
+    expect(googleUrl).toBe('http://localhost:3200/auth/google/callback');
+  });
+
+  it('should generate correct OAuth URLs in production', () => {
+    process.env = { ...mockEnvironments.production };
+    resetUrlConfig();
+
+    const githubUrl = generateOAuthCallbackUrl('github');
+    expect(githubUrl).toBe('https://app.example.com/auth/github/callback');
+  });
+
+  it('should validate URL parameters', () => {
+    process.env = { ...mockEnvironments.development };
+    resetUrlConfig();
+
+    expect(() => generateOAuthCallbackUrl('invalid' as any)).toThrow('Provider must be either "github" or "google"');
+    expect(() => generatePasswordResetUrl('')).toThrow('Token is required');
+  });
+});
+```
+
+**Benefits**:
+- Validates URL format across environments
+- Tests error handling for invalid inputs
+- Ensures consistent URL generation
+- Covers both success and error scenarios
+
+**Rationale**: URL generation must be consistent and properly validated across all environments
+
 ## Rate Limiter Testing Patterns
 
 ### Context: Business Logic Systems with Cost Implications

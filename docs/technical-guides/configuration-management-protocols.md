@@ -57,11 +57,16 @@ const endpoint = 'https://api.example.com';
 ```
 
 **Always Do This**:
-```typescript  
+```typescript
 // ✅ CORRECT - Environment-driven
 const apiKey = getEnvVar('API_KEY', true);
-const modelName = getEnvVar('MODEL_NAME', true); 
+const modelName = getEnvVar('MODEL_NAME', true);
 const endpoint = getEnvVar('API_ENDPOINT', true);
+
+// ✅ URL Configuration Pattern (Story 8.2)
+import { generatePasswordResetUrl, generateOAuthCallbackUrl } from '@/lib/urlConfig';
+const resetUrl = generatePasswordResetUrl(token);
+const callbackUrl = generateOAuthCallbackUrl('github');
 ```
 
 ### 2. Changing Existing Configuration
@@ -87,9 +92,17 @@ bun run sync-env
 const defaultModel = 'openai/gpt-4o-mini'; // FORCE working model
 ```
 
-### 3. Environment-Specific Values  
+### 3. Environment-Specific Values
 
 **Pattern**: Use DEV_VALUE and PROD_VALUE columns in configuration file.
+
+**URL Configuration Example** (from Story 8.2):
+```
+| TARGET | GROUP | KEY | DEV_VALUE | PROD_VALUE |
+|--------|-------|-----|-----------|------------|
+| NEXTJS,CONVEX | URL Config | NEXT_PUBLIC_APP_URL | http://localhost:3200 | https://app.supportsignal.com.au |
+| CONVEX | Worker | NEXT_PUBLIC_LOG_WORKER_URL | https://dev-worker.example.com | https://log-worker.example.com |
+```
 
 **Example**:
 ```
@@ -201,11 +214,16 @@ if (process.env.NODE_ENV === 'development') {
 ```typescript
 // ✅ Configuration-driven
 const apiEndpoint = getEnvVar('API_ENDPOINT', true);
+
+// ✅ URL Configuration Pattern (from Story 8.2)
+import { generateWorkerUrl } from '@/lib/urlConfig';
+const workerEndpoint = generateWorkerUrl('api/data');
 ```
 
 With configuration:
 ```
 | CONVEX | API Config | API_ENDPOINT | http://localhost:3000 | https://api.production.com |
+| CONVEX | Worker Config | NEXT_PUBLIC_LOG_WORKER_URL | https://dev-worker.example.com | https://prod-worker.example.com |
 ```
 
 ## Configuration Types
@@ -302,6 +320,8 @@ When reviewing code, specifically check for:
 - [Environment Sync Script Documentation](../scripts/sync-env-documentation.md)
 - [Configuration Loading Architecture](../architecture/configuration-loading.md)
 - [Deployment Environment Management](../deployment/environment-management.md)
+- [Environment-Aware URL Configuration KDD](environment-aware-url-configuration-kdd.md) - Comprehensive patterns from Story 8.2
+- [Backend Patterns: Environment Configuration](../patterns/backend-patterns.md#environment-configuration-patterns)
 
 ---
 **Last Updated**: 2025-08-20  
