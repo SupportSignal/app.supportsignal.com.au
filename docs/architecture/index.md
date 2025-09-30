@@ -22,7 +22,7 @@
   - [Infrastructure and Deployment](./infrastructure-and-deployment.md)
   - [Error Handling Strategy](./error-handling-strategy.md)
   - [Coding Standards](./coding-standards.md)
-  - [Test Strategy and Standards](./test-strategy-and-standards.md)
+  - [Test Strategy and Standards](../testing/technical/test-strategy-and-standards.md)
   - [Security](./security.md)
   - [Real-time User Data Synchronization KDD](./real-time-user-data-synchronization-kdd.md)
   - [Architectural Addendum: Final Clarifications](#architectural-addendum-final-clarifications)

@@ -463,6 +463,196 @@ const PERMISSION_MATRIX = {
 - Testing interfaces enable non-technical validation
 - Real-time feedback helps users understand system boundaries
 
+### Multi-Tenant Data Isolation Pattern
+
+**Context**: Enforcing company boundary isolation in multi-tenant applications
+**Implementation**:
+
+- All database queries MUST include company-scoped filtering
+- Use `requirePermission()` with company boundary validation
+- Implement permission-based query selection with graceful fallback
+- Company ID validation at every data access point
+
+**Example**:
+```typescript
+// Multi-tenant query pattern with company scoping
+export const getAllCompanyIncidents = query({
+  args: {
+    sessionToken: v.string(),
+    filters: v.optional(v.object({
+      status: v.optional(v.string()),
+      searchText: v.optional(v.string())
+    }))
+  },
+  handler: async (ctx, args) => {
+    // CRITICAL: Use permission-based access control
+    const { user, correlationId } = await requirePermission(
+      ctx,
+      args.sessionToken,
+      PERMISSIONS.VIEW_ALL_COMPANY_INCIDENTS
+    );
+
+    // MUST filter by companyId - NO exceptions
+    const query = ctx.db
+      .query("incidents")
+      .withIndex("by_company", (q) => q.eq("companyId", user.company_id));
+
+    // Apply additional filters while maintaining company scope
+    return await query
+      .filter((q) => {
+        let filter = q.eq(q.field("companyId"), user.company_id); // Double-check company boundary
+
+        if (args.filters?.status) {
+          filter = q.and(filter, q.eq(q.field("status"), args.filters.status));
+        }
+
+        return filter;
+      })
+      .collect();
+  }
+});
+
+// Permission-based query selection with fallback
+export const searchIncidents = query({
+  args: {
+    sessionToken: v.string(),
+    searchText: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Try broad permission first for company-wide search
+    try {
+      const { user } = await requirePermission(
+        ctx,
+        args.sessionToken,
+        PERMISSIONS.VIEW_ALL_COMPANY_INCIDENTS
+      );
+
+      // Search across all company incidents with company boundary enforcement
+      return await ctx.db
+        .query("incidents")
+        .withIndex("by_company", (q) => q.eq("companyId", user.company_id))
+        .filter((q) => q.eq(q.field("incident_summary"), args.searchText))
+        .collect();
+
+    } catch (error) {
+      // Fall back to personal incidents only - still company-scoped
+      const { user } = await requirePermission(
+        ctx,
+        args.sessionToken,
+        PERMISSIONS.VIEW_MY_INCIDENTS
+      );
+
+      // Search only user's own incidents within company
+      return await ctx.db
+        .query("incidents")
+        .withIndex("by_company_user", (q) =>
+          q.eq("companyId", user.company_id).eq("userId", user._id)
+        )
+        .filter((q) => q.eq(q.field("incident_summary"), args.searchText))
+        .collect();
+    }
+  }
+});
+```
+
+**Database Schema Requirements**:
+```typescript
+// Multi-tenant schema with proper indexing
+incidents: defineTable({
+  // CRITICAL: Company ID for multi-tenant isolation
+  companyId: v.id("companies"),
+  userId: v.id("users"),
+  participantId: v.id("participants"),
+
+  // Business data...
+  status: v.string(),
+  incident_summary: v.optional(v.string()),
+
+  created_at: v.number(),
+  updated_at: v.number(),
+})
+  // REQUIRED indexes for efficient company-scoped queries
+  .index("by_company", ["companyId"])
+  .index("by_company_user", ["companyId", "userId"])
+  .index("by_company_status", ["companyId", "status"])
+```
+
+**Security Rules**:
+1. **Never allow cross-company data access** - all queries must include `companyId` filtering
+2. **Double-validate company boundaries** - check both in `requirePermission()` and query filters
+3. **Use permission-based query selection** - try broad permissions first, fall back to restricted
+4. **Index all company-scoped queries** - ensure performance doesn't degrade with company growth
+
+**Rationale**:
+- Guarantees data isolation in multi-tenant environments
+- Permission-based fallback provides flexible access control
+- Company boundary double-checking prevents data leakage bugs
+- Proper indexing maintains performance at scale
+
+### Status Display Consistency Pattern
+
+**Context**: Maintaining consistent status representations across UI components and data filters
+**Implementation**:
+
+- Centralized status mapping functions for consistent labeling
+- Badge components that mirror filter option values
+- Status transition validation to prevent inconsistent states
+- Comprehensive status workflow documentation
+
+**Example**:
+```typescript
+// Centralized status definitions
+export const INCIDENT_STATUS = {
+  DRAFT: "draft",
+  CAPTURE_PENDING: "capture_pending",
+  ANALYSIS_PENDING: "analysis_pending",
+  COMPLETED: "completed"
+} as const;
+
+// Status display mapping for consistency
+export const getStatusDisplayLabel = (status: string): string => {
+  const statusMap = {
+    [INCIDENT_STATUS.DRAFT]: "Draft",
+    [INCIDENT_STATUS.CAPTURE_PENDING]: "Capture Pending",
+    [INCIDENT_STATUS.ANALYSIS_PENDING]: "Analysis Pending",
+    [INCIDENT_STATUS.COMPLETED]: "Completed"
+  };
+
+  return statusMap[status] || "Unknown Status";
+};
+
+// Status badge component using centralized mapping
+export const IncidentStatusBadge = ({ status }: { status: string }) => {
+  const displayLabel = getStatusDisplayLabel(status);
+
+  return (
+    <Badge variant={getStatusVariant(status)}>
+      {displayLabel}
+    </Badge>
+  );
+};
+
+// Filter options using same mapping for consistency
+export const statusFilterOptions = [
+  { value: INCIDENT_STATUS.DRAFT, label: getStatusDisplayLabel(INCIDENT_STATUS.DRAFT) },
+  { value: INCIDENT_STATUS.CAPTURE_PENDING, label: getStatusDisplayLabel(INCIDENT_STATUS.CAPTURE_PENDING) },
+  { value: INCIDENT_STATUS.ANALYSIS_PENDING, label: getStatusDisplayLabel(INCIDENT_STATUS.ANALYSIS_PENDING) },
+  { value: INCIDENT_STATUS.COMPLETED, label: getStatusDisplayLabel(INCIDENT_STATUS.COMPLETED) }
+];
+```
+
+**Implementation Rules**:
+1. **Single source of truth** - one status mapping function used everywhere
+2. **Badge-filter alignment** - badges and filters must show identical labels
+3. **Status transition validation** - prevent impossible status changes
+4. **Centralized constants** - avoid hardcoded status strings in components
+
+**Rationale**:
+- Prevents user confusion from inconsistent status displays
+- Reduces bugs from status string mismatches
+- Enables easy status workflow changes from single location
+- Improves maintainability of status-related code
+
 ## Error Handling Patterns
 
 ### Function Error Responses
