@@ -70,17 +70,21 @@ export class AuthService {
     } catch (error: any) {
       // Extract the actual error message from Convex error format
       let errorMessage = 'Registration failed';
-      if (error.message) {
+
+      // In production, ConvexError puts the message in error.data, not error.message
+      const errorText = error.data || error.message || '';
+
+      if (errorText) {
         // Check if it's a Convex formatted error
-        if (error.message.includes('User with this email already exists')) {
+        if (errorText.includes('User with this email already exists')) {
           errorMessage =
             'An account with this email already exists. Please sign in instead.';
-        } else if (error.message.includes('Uncaught Error:')) {
+        } else if (errorText.includes('Uncaught Error:')) {
           // Extract the error message after "Uncaught Error:"
-          const match = error.message.match(/Uncaught Error:\s*(.+?)(?:\n|$)/);
-          errorMessage = match ? match[1].trim() : error.message;
+          const match = errorText.match(/Uncaught Error:\s*(.+?)(?:\n|$)/);
+          errorMessage = match ? match[1].trim() : errorText;
         } else {
-          errorMessage = error.message;
+          errorMessage = errorText;
         }
       }
       return { success: false, error: errorMessage };
@@ -117,15 +121,19 @@ export class AuthService {
     } catch (error: any) {
       // Extract the actual error message from Convex error format
       let errorMessage = 'Login failed';
-      if (error.message) {
-        if (error.message.includes('Invalid email or password')) {
+
+      // In production, ConvexError puts the message in error.data, not error.message
+      const errorText = error.data || error.message || '';
+
+      if (errorText) {
+        if (errorText.includes('Invalid email or password')) {
           errorMessage =
             'Invalid email or password. Please check your credentials.';
-        } else if (error.message.includes('Uncaught Error:')) {
-          const match = error.message.match(/Uncaught Error:\s*(.+?)(?:\n|$)/);
-          errorMessage = match ? match[1].trim() : error.message;
+        } else if (errorText.includes('Uncaught Error:')) {
+          const match = errorText.match(/Uncaught Error:\s*(.+?)(?:\n|$)/);
+          errorMessage = match ? match[1].trim() : errorText;
         } else {
-          errorMessage = error.message;
+          errorMessage = errorText;
         }
       }
       return { success: false, error: errorMessage };
@@ -263,14 +271,18 @@ export class AuthService {
       return { success: true };
     } catch (error: any) {
       let errorMessage = 'Password change failed';
-      if (error.message) {
-        if (error.message.includes('Current password is incorrect')) {
+
+      // In production, ConvexError puts the message in error.data, not error.message
+      const errorText = error.data || error.message || '';
+
+      if (errorText) {
+        if (errorText.includes('Current password is incorrect')) {
           errorMessage = 'Current password is incorrect';
-        } else if (error.message.includes('Uncaught Error:')) {
-          const match = error.message.match(/Uncaught Error:\s*(.+?)(?:\n|$)/);
-          errorMessage = match ? match[1].trim() : error.message;
+        } else if (errorText.includes('Uncaught Error:')) {
+          const match = errorText.match(/Uncaught Error:\s*(.+?)(?:\n|$)/);
+          errorMessage = match ? match[1].trim() : errorText;
         } else {
-          errorMessage = error.message;
+          errorMessage = errorText;
         }
       }
       return { success: false, error: errorMessage };
@@ -285,14 +297,18 @@ export class AuthService {
       return { success: true };
     } catch (error: any) {
       let errorMessage = 'Password reset request failed';
-      if (error.message) {
-        if (error.message.includes('User not found')) {
+
+      // In production, ConvexError puts the message in error.data, not error.message
+      const errorText = error.data || error.message || '';
+
+      if (errorText) {
+        if (errorText.includes('User not found')) {
           errorMessage = 'No account found with this email address';
-        } else if (error.message.includes('Uncaught Error:')) {
-          const match = error.message.match(/Uncaught Error:\s*(.+?)(?:\n|$)/);
-          errorMessage = match ? match[1].trim() : error.message;
+        } else if (errorText.includes('Uncaught Error:')) {
+          const match = errorText.match(/Uncaught Error:\s*(.+?)(?:\n|$)/);
+          errorMessage = match ? match[1].trim() : errorText;
         } else {
-          errorMessage = error.message;
+          errorMessage = errorText;
         }
       }
       return { success: false, error: errorMessage };
@@ -308,14 +324,18 @@ export class AuthService {
       return { success: true };
     } catch (error: any) {
       let errorMessage = 'Password reset failed';
-      if (error.message) {
-        if (error.message.includes('Invalid or expired token')) {
+
+      // In production, ConvexError puts the message in error.data, not error.message
+      const errorText = error.data || error.message || '';
+
+      if (errorText) {
+        if (errorText.includes('Invalid or expired token')) {
           errorMessage = 'Invalid or expired reset token';
-        } else if (error.message.includes('Uncaught Error:')) {
-          const match = error.message.match(/Uncaught Error:\s*(.+?)(?:\n|$)/);
-          errorMessage = match ? match[1].trim() : error.message;
+        } else if (errorText.includes('Uncaught Error:')) {
+          const match = errorText.match(/Uncaught Error:\s*(.+?)(?:\n|$)/);
+          errorMessage = match ? match[1].trim() : errorText;
         } else {
-          errorMessage = error.message;
+          errorMessage = errorText;
         }
       }
       return { success: false, error: errorMessage };
@@ -352,12 +372,16 @@ export class AuthService {
       };
     } catch (error: any) {
       let errorMessage = 'GitHub OAuth login failed';
-      if (error.message) {
-        if (error.message.includes('Uncaught Error:')) {
-          const match = error.message.match(/Uncaught Error:\s*(.+?)(?:\n|$)/);
-          errorMessage = match ? match[1].trim() : error.message;
+
+      // In production, ConvexError puts the message in error.data, not error.message
+      const errorText = error.data || error.message || '';
+
+      if (errorText) {
+        if (errorText.includes('Uncaught Error:')) {
+          const match = errorText.match(/Uncaught Error:\s*(.+?)(?:\n|$)/);
+          errorMessage = match ? match[1].trim() : errorText;
         } else {
-          errorMessage = error.message;
+          errorMessage = errorText;
         }
       }
       return { success: false, error: errorMessage };
@@ -394,12 +418,16 @@ export class AuthService {
       };
     } catch (error: any) {
       let errorMessage = 'Google OAuth login failed';
-      if (error.message) {
-        if (error.message.includes('Uncaught Error:')) {
-          const match = error.message.match(/Uncaught Error:\s*(.+?)(?:\n|$)/);
-          errorMessage = match ? match[1].trim() : error.message;
+
+      // In production, ConvexError puts the message in error.data, not error.message
+      const errorText = error.data || error.message || '';
+
+      if (errorText) {
+        if (errorText.includes('Uncaught Error:')) {
+          const match = errorText.match(/Uncaught Error:\s*(.+?)(?:\n|$)/);
+          errorMessage = match ? match[1].trim() : errorText;
         } else {
-          errorMessage = error.message;
+          errorMessage = errorText;
         }
       }
       return { success: false, error: errorMessage };
