@@ -608,7 +608,7 @@ export const requestPasswordReset = mutation({
     console.log(`To: ${args.email}`);
     console.log(`Token: ${token}`);
     console.log(
-      `Reset URL: ${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password?token=${token}`
+      `Reset URL: ${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3200'}/reset-password?token=${token}`
     );
     console.log(`Expires: ${new Date(expires).toISOString()}`);
     console.log(`Sent at: ${new Date().toISOString()}`);
@@ -1150,7 +1150,7 @@ export const googleOAuthLogin = action({
           client_secret: process.env.GOOGLE_CLIENT_SECRET!,
           code: args.code,
           grant_type: 'authorization_code',
-          redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/google/callback`,
+          redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3200'}/auth/google/callback`,
         }),
       });
 
@@ -1267,7 +1267,7 @@ export const getGitHubOAuthUrl = query({
     );
     console.log('GitHub Client ID exists:', !!clientId);
 
-    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/github/callback`;
+    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3200'}/auth/github/callback`;
     console.log('Final redirect URI:', redirectUri);
 
     const params = new URLSearchParams({
@@ -1296,7 +1296,7 @@ export const getGoogleOAuthUrl = query({
     const state = Array.from(crypto.getRandomValues(new Uint8Array(16)))
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');
-    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/google/callback`;
+    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3200'}/auth/google/callback`;
 
     const params = new URLSearchParams({
       client_id: clientId,

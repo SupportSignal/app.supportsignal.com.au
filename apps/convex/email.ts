@@ -11,7 +11,7 @@ export const sendPasswordResetEmail = action({
   },
   handler: async (ctx, args: { email: string; token: string; sessionToken?: string }) => {
     try {
-      const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password?token=${args.token}`;
+      const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3200'}/reset-password?token=${args.token}`;
 
       console.log('📧 SENDING REAL PASSWORD RESET EMAIL');
       console.log('====================================');
