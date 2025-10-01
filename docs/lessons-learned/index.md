@@ -42,6 +42,7 @@ Learnings about system design decisions, both successful and problematic:
 
 Critical insights about environment management, deployment configuration, and OAuth setup:
 
+- **[Deployment Operations Implementation KDD](./deployment-operations-implementation-kdd.md)** - Comprehensive lessons from Story 8.4: Multi-platform deployment coordination, configuration management patterns, automated verification tooling, platform-specific rollback procedures, and macOS bash compatibility (Added: 2025-10-01)
 - **[Convex Platform Constraints](./convex-platform-constraints.md)** - File naming rules, module imports, and platform-specific limitations discovered during implementation (Added: 2025-09-30)
 - **[OAuth Environment Variable Configuration KDD](./oauth-environment-variable-configuration-kdd.md)** - Comprehensive root cause analysis and solution for OAuth production environment variable configuration failures
 - **[OAuth Production Setup Implementation KDD](./oauth-production-setup-implementation-kdd.md)** - Comprehensive lessons from Story 8.3 OAuth production application setup, covering single OAuth application strategy, centralized URL generation effectiveness, and comprehensive testing patterns (Added: 2025-09-30)

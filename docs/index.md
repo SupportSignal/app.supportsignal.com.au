@@ -95,6 +95,30 @@ Following BMAD methodology, these documents form the foundation:
 - **[Cloudflare Pages Troubleshooting](./technical-guides/cloudflare-pages-deployment-troubleshooting.md)** - Systematic troubleshooting for deployment issues
 - **[Implementing Manifest Systems Guide](./technical-guides/implementing-manifest-systems-guide.md)** - Step-by-step guide for adopting Multi-Layer Manifest Architecture
 
+### 🚀 Operations & Deployment
+
+**[operations/](./operations/)** - Production deployment and operations procedures
+
+**Deployment Operations:**
+- **[Deployment Guide](./operations/deployment-guide.md)** - Comprehensive deployment procedures for all platforms (Cloudflare Pages, Convex, Workers)
+- **[Deployment Verification](./operations/deployment-verification.md)** - Post-deployment verification and health check procedures
+- **[Rollback Procedures](./operations/rollback-procedures.md)** - Platform-specific rollback and incident response procedures
+
+**Configuration Management:**
+- **[Configuration Management](./operations/configuration-management.md)** - Environment configuration protocols and sync-env usage patterns
+- **[Configuration Drift Detection](./operations/configuration-drift-detection.md)** - Automated drift detection and prevention procedures
+
+**CI/CD Operations:**
+- **[CI/CD Pipeline Operations](./operations/cicd-pipeline-operations.md)** - Pipeline monitoring, troubleshooting, and failure response
+
+**Verification Scripts:** (See `scripts/` directory)
+- `verify-deployment.sh` - Comprehensive deployment verification across all platforms
+- `verify-worker-health.sh` - Detailed Cloudflare Worker health checks
+- `verify-environment.sh` - Environment detection and configuration validation
+- `validate-config.sh` - Configuration validation and consistency checks
+- `check-config-drift.sh` - Configuration drift detection
+- `health-check.sh` - Quick service health verification
+
 ### 🧪 Testing
 
 **[testing/](./testing/)**
@@ -171,10 +195,13 @@ Video creation briefs for sharing knowledge and demonstrations:
 
 **📋 [Examples Index](./examples/index.md)** - Complete examples navigation with setup instructions
 
-#### [Lessons Learned](./lessons-learned/) - 11+ Captured Insights
+#### [Lessons Learned](./lessons-learned/) - 12+ Captured Insights
 
 **Purpose**: Cross-story insights and breakthroughs captured from real development challenges
 
+- **[Configuration & Environment](./lessons-learned/)** - Critical environment and deployment insights
+  - **[Deployment Operations Implementation KDD](./lessons-learned/deployment-operations-implementation-kdd.md)** - Story 8.4 lessons: Multi-platform deployment, configuration management, automated verification, rollback procedures (Added: 2025-10-01)
+  - **[OAuth Production Setup Implementation KDD](./lessons-learned/oauth-production-setup-implementation-kdd.md)** - Story 8.3 lessons: OAuth production setup, centralized URL generation (Added: 2025-09-30)
 - **[Story Lessons](./lessons-learned/stories/)** - Insights from individual story implementations
   - **[Story 1.6 Lessons](./lessons-learned/stories/story-1-6-lessons.md)** - CI/CD Pipeline implementation learnings
   - **[Story 4.2 Knowledge Ingestion Lessons](./lessons-learned/stories/story-4.2-knowledge-ingestion-lessons.md)** - Cloudflare Vectorize integration and vector storage patterns

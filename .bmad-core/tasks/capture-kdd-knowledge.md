@@ -157,15 +157,16 @@ To systematically capture implementation knowledge, patterns, and learnings from
 
 ### 10. Reference in Story (Minimal Summary)
 
-**IMPORTANT**: Only add brief references and links to story, NOT full KDD details.
+**CRITICAL**: Only add brief references and links to story, NOT full KDD details.
 
 **Dev Agent Record → Completion Notes:**
 - Add brief summary of key technical insights (2-3 bullet points max)
 - Reference knowledge base files created/updated with links
 
-**QA Results → Knowledge Capture:**
-- List knowledge assets created: `docs/patterns/[files]`, `docs/examples/[dirs]`, `docs/lessons-learned/[files]`
-- Brief statement of patterns validated and new patterns established
+**QA Results → Knowledge Capture Reference:**
+- **List ONLY file paths** to knowledge base assets created: `docs/patterns/[files]`, `docs/examples/[dirs]`, `docs/lessons-learned/[files]`
+- **1-2 sentence summary** of key insights maximum
+- **NO detailed lessons/patterns/examples** - those belong in knowledge base files, not stories
 
 ### 11. Generate Knowledge Summary
 

@@ -208,14 +208,19 @@ sections:
           - What documentation needs updating based on this story?
         owner: qa-agent
         editors: [qa-agent]
-      - id: knowledge-capture
-        title: Knowledge Capture
+      - id: knowledge-capture-reference
+        title: Knowledge Capture Reference
         instruction: |
-          Document lessons learned and knowledge for future reference:
-          - What worked well in this implementation?
-          - What challenges were encountered and how were they solved?
-          - What should future developers know about this approach?
-          - What patterns or anti-patterns were discovered?
+          **MINIMAL REFERENCE ONLY** - Full KDD documentation goes to knowledge base files.
+
+          List knowledge base files created/updated during KDD process:
+          - `docs/patterns/[file].md` - Pattern files created/updated (if new architectural patterns)
+          - `docs/examples/[dir]/` - Example code extracted (if reusable implementations)
+          - `docs/lessons-learned/[file]-kdd.md` - Lessons learned document (required)
+
+          Brief 1-2 sentence summary of key insights (details are in knowledge base files above).
+
+          **DO NOT write detailed KDD content here - it belongs in the knowledge base!**
         owner: qa-agent
         editors: [qa-agent]
       - id: velocity-data

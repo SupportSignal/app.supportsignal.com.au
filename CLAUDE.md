@@ -385,6 +385,12 @@ For systematic development, reference specific epics and architectural component
 4. **Lesson Capture**: Record technical insights for future development
 5. **Minimal Story Reference**: Brief summary with links to knowledge assets
 
+**CRITICAL - Story Template Compliance:**
+- Story files have "Knowledge Capture Reference" section for **LINKS ONLY**
+- **DO NOT write detailed KDD content in stories** - they are not referenced by future agents
+- Stories should contain **only file paths** to knowledge base and **1-2 sentence summary** maximum
+- All detailed lessons, patterns, and examples go to permanent knowledge base files
+
 **Why KDD Matters**: Transforms individual implementations into institutional knowledge that accelerates future development and prevents knowledge loss.
 
 ### Deployment
