@@ -42,7 +42,7 @@ export default defineSchema({
     .index('by_email', ['email'])
     .index('by_company', ['company_id']),
 
-  // BetterAuth sessions table
+  // Sessions table for user authentication
   sessions: defineTable({
     userId: v.id('users'),
     sessionToken: v.string(),
@@ -52,7 +52,7 @@ export default defineSchema({
     .index('by_session_token', ['sessionToken'])
     .index('by_user_id', ['userId']),
 
-  // BetterAuth accounts table for oauth providers (future use)
+  // OAuth accounts table for GitHub/Google
   accounts: defineTable({
     userId: v.id('users'),
     type: v.string(),

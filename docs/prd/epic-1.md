@@ -392,6 +392,82 @@ export const createIncident = mutation({
 
 ---
 
+### Story 1.6: Remove BetterAuth Dependencies
+
+**Priority**: LOW
+**Estimated Effort**: 2-3 hours
+**Dependencies**: Story 1.3 (Convex Auth working correctly)
+
+#### Requirements
+Remove all remaining BetterAuth references and dependencies from the codebase following the decision to use Convex Auth instead of BetterAuth for authentication.
+
+**Context**: An attempted migration to BetterAuth (Story 1.6 original) was abandoned after discovering the existing Convex Auth system already provided all required functionality. This cleanup story removes the minimal BetterAuth artifacts that remain.
+
+**Current BetterAuth Remnants**:
+- Package dependency: `better-auth: ^1.2.12` in `apps/web/package.json`
+- Environment variable: `BETTER_AUTH_SECRET` in configuration
+- Config references in `apps/web/lib/config.ts`
+- Schema comments mentioning "BetterAuth" in `apps/convex/schema.ts`
+- Documentation references (19 files - to be updated with historical context)
+
+#### Acceptance Criteria
+- [ ] All BetterAuth code references removed from active codebase
+- [ ] `better-auth` package removed from `package.json`
+- [ ] Environment variables cleaned from `.env.local` and sync source
+- [ ] Config file cleaned of unused `betterAuthSecret` and `betterAuthUrl` exports
+- [ ] Schema comments updated to remove "BetterAuth" terminology
+- [ ] All authentication methods verified working (email/password, GitHub OAuth, Google OAuth)
+- [ ] No TypeScript errors or build failures after removal
+- [ ] Documentation updated to reflect Convex Auth as chosen solution
+
+#### Technical Implementation - 4 Phases
+
+**Phase 1: Remove Unused Code References** (Safe, No Functional Impact)
+```typescript
+// apps/web/lib/config.ts - Remove these exports:
+betterAuthSecret: process.env.BETTER_AUTH_SECRET,  // DELETE
+betterAuthUrl: process.env.BETTER_AUTH_URL,        // DELETE
+
+// apps/convex/schema.ts - Update comments:
+// Line 45: "BetterAuth sessions table" → "Sessions table for user authentication"
+// Line 55: "BetterAuth accounts table" → "OAuth accounts table for GitHub/Google"
+```
+
+**Phase 2: Remove Environment Variables** (Low Risk)
+- Remove `BETTER_AUTH_SECRET` from `apps/web/.env.local`
+- Remove from environment sync source if present
+
+**Phase 3: Remove Package Dependency** (Medium Risk)
+```json
+// apps/web/package.json - Remove:
+"better-auth": "^1.2.12"  // DELETE
+```
+- Run `bun install` to update lockfile
+- Verify build succeeds
+
+**Phase 4: Update Documentation** (Archival) - ✅ COMPLETED
+- ✅ Historical note added to Epic 1
+- ✅ All BetterAuth artifacts removed from codebase
+- ✅ Story docs preserved for audit trail
+
+**Historical Note**: Story 1.6 originally planned a BetterAuth migration, but was abandoned after discovering Convex Auth already provided all required functionality (email/password, GitHub OAuth, Google OAuth). This cleanup story (also 1.6) removed the minimal BetterAuth artifacts that remained from the exploration.
+
+#### Test Strategy
+**Before Each Phase**:
+- Verify email/password login works
+- Verify GitHub OAuth works
+- Verify Google OAuth works
+- Run `bun run typecheck` and `bun run lint`
+
+**After Each Phase**:
+- Re-verify all authentication methods
+- Re-run typecheck and lint
+- Test both dev and production builds
+
+**Rollback**: Simple `git revert` for each phase if issues discovered
+
+---
+
 ## Epic Success Criteria
 
 ### Technical Validation

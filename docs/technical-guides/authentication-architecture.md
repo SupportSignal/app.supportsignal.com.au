@@ -4,17 +4,22 @@
 
 This document describes the authentication architecture implemented in Story 1.5, including security decisions, architectural patterns, and implementation details for the custom authentication system.
 
-## Architecture Decision: Custom Authentication vs BetterAuth
+## Architecture Decision: Convex Auth (Final)
 
-### Original Specification
-- **Story 1.5 Requirements**: BetterAuth integration with Convex adapter
-- **Reality**: BetterAuth Convex adapter does not exist (`@better-auth/convex` package 404)
+### Evolution History
+1. **Story 1.5**: Attempted BetterAuth integration - discovered Convex adapter doesn't exist
+2. **Story 1.5**: Built custom Convex Auth system instead
+3. **Story 1.6**: Removed BetterAuth exploration artifacts - confirmed Convex Auth as final solution
 
-### Implemented Solution
-- **Custom Authentication System**: Built using Convex native mutations/queries
+### Final Implemented Solution
+- **Convex Auth System**: Native Convex mutations/queries for all authentication
 - **Security Level**: Production-ready with bcrypt hashing and secure session management
-- **Functionality**: Equivalent to BetterAuth core features
-- **Extensibility**: Designed for future BetterAuth migration when adapter becomes available
+- **Authentication Methods**:
+  - Email/password authentication
+  - GitHub OAuth integration
+  - Google OAuth integration
+- **Session Management**: Convex-native sessions with 30-day expiration
+- **Future Direction**: Convex Auth is the permanent solution (BetterAuth exploration abandoned)
 
 ## Security Architecture
 
