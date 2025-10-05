@@ -8,7 +8,6 @@ export async function GET() {
   // Get all NEXT_PUBLIC environment variables
   const envVars = {
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'NOT_SET',
-    NEXT_PUBLIC_PROD_APP_URL: process.env.NEXT_PUBLIC_PROD_APP_URL || 'NOT_SET',
     NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL || 'NOT_SET',
     NEXT_PUBLIC_LOG_WORKER_URL:
       process.env.NEXT_PUBLIC_LOG_WORKER_URL || 'NOT_SET',
