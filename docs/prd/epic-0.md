@@ -262,6 +262,163 @@ This dead code creates maintenance burden, confusion, and makes the codebase har
 
 ---
 
+### Story 0.4: Technical Debt - Apply Coding Standards from Inconsistencies Audit
+
+**Priority**: P1 (High)
+**Estimated Effort**: Large (12-20 hours)
+**Category**: Technical Debt / Code Quality
+**Discovered**: October 2025 - Story 0.3 dead code analysis revealed significant coding inconsistencies
+**Dependencies**: Story 0.3 (inconsistencies audit completed)
+
+#### Problem Statement
+
+Story 0.3's systematic code analysis discovered 10 major coding inconsistencies across 246 Convex functions, 40 Next.js routes, and 116 React components. These inconsistencies create:
+- **High false positive rates in static analysis** (50-78% false positives)
+- **Maintenance burden** requiring multiple grep patterns for same analysis
+- **Developer confusion** about which patterns to use
+- **TypeScript safety violations** via `(api as any)` type casts
+- **Inconsistent import patterns** making refactoring fragile
+
+The coding inconsistencies audit (`docs/auditing/coding-inconsistencies-audit.md`) provides detailed impact analysis and prioritized recommendations. This story implements the highest-impact improvements to establish consistent coding standards.
+
+#### Scope
+
+**Phased Implementation Based on Priority**:
+
+**Phase 1: Critical Fixes (Immediate Impact)**
+1. **Ban `(api as any)` type casts**
+   - Find all instances of `(api as any)` pattern in codebase
+   - Fix TypeScript types to enable proper type inference
+   - Add ESLint rule to prevent future violations
+   - **Impact**: Eliminates 50% false positive rate in Convex function analysis
+
+2. **Centralize route definitions**
+   - Create `routes.ts` with type-safe route helpers
+   - Migrate object-based routes to centralized definitions
+   - Replace template literals with typed route functions
+   - **Impact**: Eliminates 72% false positive rate in route analysis
+
+3. **Establish POC code markers**
+   - Document standard POC header format
+   - Add markers to existing experimental code
+   - Update coding standards documentation
+   - **Impact**: Reduces wasted investigation time
+
+**Phase 2: High Priority (Developer Experience)**
+1. **Standardize component exports**
+   - Choose single export pattern (prefer `export function`)
+   - Document decision in coding standards
+   - Add ESLint rule to enforce pattern
+   - Optional: Migrate existing code with codemod
+
+2. **Document barrel export policy**
+   - Define when to create index.ts files
+   - Document in coding standards
+   - Optional: Apply policy to existing directories
+
+3. **Component organization guide**
+   - Document structure: features/ vs ui/ vs pages/
+   - Add guidance to coding standards
+   - Optional: Reorganize existing components
+
+**Phase 3: Medium Priority (Optional Enhancements)**
+1. **File naming migration** - PascalCase → kebab-case (codemod)
+2. **Import path cleanup** - Relative → @/ alias (codemod)
+3. **Test organization** - Centralize remaining __tests__ directories
+
+**Out of Scope**:
+- Automated enforcement of all standards (defer to future story)
+- Complete codebase migration (focus on critical patterns first)
+- Developer onboarding documentation (separate initiative)
+
+#### Acceptance Criteria
+
+**Phase 1 (Critical - Required)**:
+- [ ] All `(api as any)` type casts removed and replaced with proper typing
+- [ ] ESLint rule added preventing `any` type casts on API object
+- [ ] Centralized `routes.ts` created with type-safe helpers
+- [ ] All object-based and template literal routes migrated to centralized system
+- [ ] POC code marker standard documented in coding standards
+- [ ] Existing POC code marked with standard headers
+
+**Phase 2 (High Priority - Recommended)**:
+- [ ] Component export pattern chosen and documented
+- [ ] ESLint rule added for component export consistency
+- [ ] Barrel export policy documented in coding standards
+- [ ] Component organization guide added to coding standards
+
+**Phase 3 (Medium Priority - Optional)**:
+- [ ] File naming standard implemented (if team approves)
+- [ ] Import path cleanup completed (if team approves)
+
+**Validation (All Phases)**:
+- [ ] `bun run typecheck` passes with zero errors
+- [ ] `bun run lint` passes with zero warnings
+- [ ] `bun test` passes (all tests green)
+- [ ] `bun run build` completes successfully
+- [ ] Updated coding standards documentation published
+
+**Documentation**:
+- [ ] `docs/architecture/coding-standards.md` updated with new standards
+- [ ] Migration decisions documented in story completion notes
+- [ ] ESLint configuration updated and documented
+
+#### Implementation Notes
+
+**Team Discussion Required**:
+- Before implementation, conduct team review of coding inconsistencies audit
+- Prioritize which standards to adopt (Critical = required, others = optional)
+- Decide on migration strategy (big bang vs incremental)
+- Determine ESLint rule strictness (error vs warning)
+
+**Type Cast Fix Strategy**:
+- Investigate root cause of `(api as any)` usage
+- Fix Convex TypeScript type generation if needed
+- Update import patterns to get proper typing
+- Document correct patterns in coding standards
+
+**Route Centralization Approach**:
+```typescript
+// Example routes.ts structure
+export const ROUTES = {
+  admin: {
+    analytics: '/admin/analytics',
+    users: '/admin/users',
+  },
+  auth: {
+    resetPassword: (token: string) => `/reset-password?token=${token}`,
+  }
+} as const;
+```
+
+**POC Header Format**:
+```typescript
+/**
+ * ⚠️ PROOF OF CONCEPT - [Feature Name]
+ *
+ * STATUS: Experimental - Not production ready
+ * CREATED: [Date]
+ * PURPOSE: [Brief description]
+ *
+ * DO NOT USE IN PRODUCTION
+ * DO NOT DELETE WITHOUT TEAM APPROVAL
+ */
+```
+
+**Risk Considerations**:
+- Type cast removal may reveal hidden type errors
+- Route centralization requires comprehensive testing
+- Component export pattern changes are breaking (decide on migration vs enforcement for new code)
+- Coordinate with ongoing feature development to minimize conflicts
+
+**Success Metrics**:
+- Static analysis false positive rate: 50-78% → <20%
+- Time to perform code analysis: 4-8 iterations → 1-2 iterations
+- Developer confidence in static analysis results: Low → High
+- ESLint violations for new code: Zero
+
+---
+
 ## Future Story Candidates
 
 As additional technical debt, bugs, or improvements are discovered, they will be added to Epic 0 following the story template:
@@ -309,7 +466,7 @@ Technical approach or constraints
 
 **Current Status**: Active (Ongoing)
 **Stories Completed**: 2 (0.1, 0.2)
-**Stories In Progress**: 0
-**Stories Planned**: 1 (0.3)
+**Stories In Progress**: 1 (0.3)
+**Stories Planned**: 1 (0.4)
 
 **Last Updated**: October 5, 2025
