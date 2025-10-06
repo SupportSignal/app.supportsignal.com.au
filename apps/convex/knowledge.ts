@@ -2,6 +2,28 @@ import { v } from 'convex/values';
 import { query, QueryCtx } from './_generated/server';
 
 /**
+ * ⚠️ PROOF OF CONCEPT - Knowledge Ingestion System
+ *
+ * This file contains POC code for RAG (Retrieval-Augmented Generation) knowledge ingestion.
+ *
+ * TABLES USED (currently removed from schema):
+ * - source_documents: Stores uploaded documents and metadata
+ * - document_chunks: Vector embeddings for semantic search
+ *
+ * STATUS: Experimental - Not production ready
+ * - TypeScript errors expected (tables removed from schema.ts)
+ * - Functions demonstrate document chunking and vectorization patterns
+ * - Tests may fail - skip if needed
+ *
+ * FUTURE WORK:
+ * - Reintegrate when RAG feature is prioritized
+ * - Update schema with proper validation
+ * - Complete test coverage
+ *
+ * DO NOT REMOVE: Contains valuable implementation patterns for future RAG features
+ */
+
+/**
  * Handler function for getting document by file path
  */
 export async function getDocumentByPathHandler(

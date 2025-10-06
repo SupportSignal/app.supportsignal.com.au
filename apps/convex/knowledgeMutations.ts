@@ -5,6 +5,28 @@ import { internal } from './_generated/api';
 import { Id } from './_generated/dataModel';
 
 /**
+ * ⚠️ PROOF OF CONCEPT - Knowledge Ingestion Mutations
+ *
+ * This file contains POC mutations for RAG knowledge base management.
+ *
+ * TABLES USED (currently removed from schema):
+ * - source_documents: Document storage and metadata
+ * - document_chunks: Chunked content with vector embeddings
+ *
+ * STATUS: Experimental - Not production ready
+ * - @ts-nocheck required due to removed schema tables
+ * - Demonstrates document upload, chunking, and vectorization workflows
+ * - Tests may fail - skip if needed
+ *
+ * KEY PATTERNS:
+ * - Document ingestion with file type detection
+ * - Automatic chunking for vector search
+ * - Vectorize integration for semantic search
+ *
+ * DO NOT REMOVE: Contains valuable implementation patterns for future RAG features
+ */
+
+/**
  * Simple unique ID generation for V8 runtime (without crypto dependency)
  */
 function generateSimpleId(): string {

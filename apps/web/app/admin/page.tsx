@@ -124,14 +124,6 @@ const ADMIN_SECTIONS = [
         requiredRole: ['system_admin'],
       },
       {
-        id: 'chat-interface',
-        title: 'Chat Interface',
-        description: 'Test chat and messaging interfaces',
-        icon: '💬',
-        href: '/chat',
-        requiredRole: ['system_admin'],
-      },
-      {
         id: 'debug-logs',
         title: 'Debug Logs',
         description: 'View and analyze system debug logs',

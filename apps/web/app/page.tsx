@@ -16,7 +16,6 @@ import {
 } from 'lucide-react';
 
 export default function HomePage() {
-  const testMessage = useQuery(api.queries.getTestMessage);
   const { user } = useAuth();
 
   // If user is signed in, show direct access to app functions
@@ -96,21 +95,6 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-
-        {/* System Status (Development) */}
-        {testMessage && (
-          <div className="container mx-auto px-6 pb-8">
-            <div className="max-w-md mx-auto bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-4 rounded-lg">
-              <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
-                <CheckCircle className="w-5 h-5" />
-                <span className="font-medium">System Status: Connected</span>
-              </div>
-              <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                All systems operational • Database: {testMessage.status}
-              </p>
-            </div>
-          </div>
-        )}
       </div>
     );
   }

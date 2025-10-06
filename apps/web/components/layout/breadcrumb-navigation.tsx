@@ -80,8 +80,8 @@ function generateBreadcrumbs(pathname: string): BreadcrumbItem[] {
   const adminToolPaths = [
     // Company Administration tools
     '/users', '/reports',
-    // Developer tools  
-    '/debug-logs', '/debug', '/test-llm', '/dev', '/showcase', '/chat', '/wizard-demo'
+    // Developer tools
+    '/debug-logs', '/debug', '/test-llm', '/dev', '/showcase', '/wizard-demo'
   ];
   
   // Check if current path is an admin tool (including sub-paths under /admin/)

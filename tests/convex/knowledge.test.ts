@@ -1,5 +1,14 @@
 // @ts-nocheck
 /**
+ * ⚠️ PROOF OF CONCEPT - Knowledge System Tests
+ *
+ * STATUS: POC tests for experimental RAG knowledge ingestion feature
+ * - Tests reference removed schema tables (source_documents, document_chunks)
+ * - May fail due to schema mismatches - skip if needed
+ * - Demonstrates testing patterns for document queries and chunking
+ *
+ * DO NOT REMOVE: Valuable test patterns for future RAG feature implementation
+ *
  * Comprehensive tests for knowledge.ts - Query functions
  * Tests: getDocumentByPathHandler, getDocumentsHandler, getDocumentChunksHandler, getChunkByVectorizeIdHandler
  */

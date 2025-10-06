@@ -1,5 +1,14 @@
 // @ts-nocheck
 /**
+ * ⚠️ PROOF OF CONCEPT - Knowledge Actions Tests
+ *
+ * STATUS: POC tests for experimental RAG knowledge ingestion actions
+ * - Tests reference removed schema tables and vectorization workflows
+ * - May fail due to schema mismatches - skip if needed
+ * - Demonstrates testing patterns for vector similarity and document workflows
+ *
+ * DO NOT REMOVE: Valuable test patterns for future RAG feature implementation
+ *
  * Comprehensive tests for knowledgeActions.ts
  * Tests: addDocumentHandler action, queryVectorSimilarityHandler, deduplication logic, integration workflows
  */

@@ -1,5 +1,14 @@
 // @ts-nocheck
 /**
+ * ⚠️ PROOF OF CONCEPT - Knowledge Mutations Tests
+ *
+ * STATUS: POC tests for experimental RAG knowledge ingestion mutations
+ * - Tests reference removed schema tables (source_documents, document_chunks)
+ * - May fail due to schema mismatches - skip if needed
+ * - Demonstrates testing patterns for document CRUD and chunk management
+ *
+ * DO NOT REMOVE: Valuable test patterns for future RAG feature implementation
+ *
  * Comprehensive tests for knowledgeMutations.ts
  * Tests: CRUD operations, ID generation, document management, chunk management
  */
