@@ -4,7 +4,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { QuestionsList } from "./QuestionsList";
+import { QuestionsList } from "./questions-list";
 import { Card, CardContent, CardHeader, CardTitle } from "@starter/ui/card";
 import { Button } from "@starter/ui/button";
 import { Alert, AlertDescription } from "@starter/ui/alert";

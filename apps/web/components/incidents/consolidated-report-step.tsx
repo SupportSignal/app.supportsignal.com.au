@@ -22,9 +22,9 @@ import {
   Loader2,
   AlertCircle
 } from 'lucide-react';
-import { IncidentSummaryDisplay } from './IncidentSummaryDisplay';
-import { CompletionChecklist } from './CompletionChecklist';
-import { ExportPreview } from './ExportPreview';
+import { IncidentSummaryDisplay } from './incident-summary-display';
+import { CompletionChecklist } from './completion-checklist';
+import { ExportPreview } from './export-preview';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { useViewport } from '@/hooks/mobile/useViewport';

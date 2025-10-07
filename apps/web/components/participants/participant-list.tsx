@@ -10,8 +10,8 @@ import { Input } from '@starter/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '@starter/ui/card';
 import { Select } from '@starter/ui/select';
 import { Badge } from '@starter/ui/badge';
-import { ParticipantCard } from './ParticipantCard';
-import { ParticipantSearch } from './ParticipantSearch';
+import { ParticipantCard } from './participant-card';
+import { ParticipantSearch } from './participant-search';
 import { 
   Participant, 
   ParticipantListFilters,

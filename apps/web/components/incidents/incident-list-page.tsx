@@ -13,9 +13,9 @@ import { Badge } from '@starter/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@starter/ui/select';
 import { Skeleton } from '@starter/ui/skeleton';
 import { CalendarIcon, SearchIcon, FilterIcon, PlusIcon } from 'lucide-react';
-import { IncidentTable } from './IncidentTable';
-import { IncidentFilters } from './IncidentFilters';
-import { IncidentStatusBadge } from './IncidentStatusBadge';
+import { IncidentTable } from './incident-table';
+import { IncidentFilters } from './incident-filters';
+import { IncidentStatusBadge } from './incident-status-badge';
 
 // Types
 interface IncidentFilter {
