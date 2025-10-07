@@ -97,14 +97,17 @@
     "zustand": "^5.0.7"
   },
   "devDependencies": {
+    "@babel/parser": "^7.28.4",
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
     "@types/bun": "latest",
+    "@types/jscodeshift": "^17.3.0",
     "@types/minimatch": "^6.0.0",
     "@typescript-eslint/eslint-plugin": "^8.37.0",
     "@typescript-eslint/parser": "^8.37.0",
     "eslint": "^8.57.0",
     "husky": "^9.1.7",
+    "jscodeshift": "^17.3.0",
     "lint-staged": "^16.1.2",
     "prettier": "^3.6.2",
     "tsx": "^4.20.3",
