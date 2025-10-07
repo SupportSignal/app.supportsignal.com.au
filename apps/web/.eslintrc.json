@@ -20,6 +20,12 @@
     "@typescript-eslint/consistent-type-assertions": ["error", {
       "assertionStyle": "as",
       "objectLiteralTypeAssertions": "allow-as-parameter"
+    }],
+    // Enforce function declarations for React components (not arrow functions)
+    // Exceptions: Higher-order components, wrapped components, utility functions
+    "react/function-component-definition": ["warn", {
+      "namedComponents": "function-declaration",
+      "unnamedComponents": "arrow-function"
     }]
   },
   "overrides": [

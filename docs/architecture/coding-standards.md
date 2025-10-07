@@ -49,6 +49,45 @@ import { ROUTES } from '@/lib/routes';
 <Link href={ROUTES.admin.companies.create}>Create</Link>
 ```
 
+### Component Organization
+
+- **Export Style**: Use `export function ComponentName()` for all React components
+  - **Never use**: `export const ComponentName = () => {}` arrow function syntax
+  - **ESLint enforcement**: `react/function-component-definition` rule enabled
+  - **Benefits**: Better stack traces, hoisting support, industry standard
+  - **Exceptions**: Higher-order components, wrapped components, utility functions
+
+- **Barrel Exports**: Use `index.ts` files strategically for public API aggregation
+  - **When to use**: Feature directories with multiple related components
+  - **When to avoid**: Simple directories with 1-2 components, performance-critical code
+  - **Pattern**: Export only public-facing components, keep internal helpers private
+
+- **Directory Structure**: Organize components by purpose
+  - `components/ui/` - Reusable UI primitives (buttons, cards, inputs)
+  - `components/features/` - Feature-specific components (user-profile, incident-form)
+  - `app/*/components/` - Page-specific components (not reused elsewhere)
+
+**Component Export Example**:
+```typescript
+// ❌ Bad - arrow function export
+export const UserProfile = () => {
+  return <div>Profile</div>;
+};
+
+// ✅ Good - function declaration
+export function UserProfile() {
+  return <div>Profile</div>;
+}
+```
+
+**Barrel Export Example**:
+```typescript
+// components/features/user/index.ts
+export { UserProfile } from './user-profile';
+export { UserSettings } from './user-settings';
+// Internal components NOT exported: user-avatar.tsx, user-badge.tsx
+```
+
 ### POC/Experimental Code Markers
 
 When writing proof-of-concept or experimental code that may be removed or refactored, use standardized header comments:
