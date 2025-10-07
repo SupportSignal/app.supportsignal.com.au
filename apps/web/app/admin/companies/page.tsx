@@ -1,5 +1,4 @@
 'use client';
-// @ts-nocheck - Temporary workaround for complex nested API type issues
 
 import React, { useState } from 'react';
 import { useQuery, useMutation } from 'convex/react';
@@ -23,12 +22,12 @@ export default function CompaniesPage() {
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
 
   // Use real API query for ALL companies (not just active)
-  // @ts-ignore - Complex nested type issue workaround
-  const companies = useQuery((api as any).companies.listAllCompanies) || [];
+  // @ts-expect-error - Convex type inference limitation with complex API types
+  const companies = useQuery(api.companies.listAllCompanies) || [];
 
   // Mutation to update company status
-  // @ts-ignore - Complex nested type issue workaround
-  const updateCompanyStatus = useMutation((api as any).companies.updateCompanyStatus);
+  // @ts-expect-error - Convex type inference limitation with complex API types
+  const updateCompanyStatus = useMutation(api.companies.updateCompanyStatus);
 
   // Change company status
   const handleChangeStatus = async (companyId: string, newStatus: string) => {

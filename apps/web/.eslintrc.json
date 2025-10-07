@@ -1,5 +1,7 @@
 {
-  "extends": ["next/core-web-vitals"],
+  "extends": ["next/core-web-vitals", "plugin:@typescript-eslint/recommended"],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint"],
   "env": {
     "browser": true,
     "jest": true,
@@ -7,7 +9,18 @@
   },
   "rules": {
     "no-console": "warn",
-    "prefer-const": "error"
+    "prefer-const": "error",
+    // Prevent type casts to any - specifically targeting (api as any) pattern
+    // Use @ts-expect-error with explanation for unavoidable Convex type inference issues
+    // Note: Set to "warn" to allow existing code to build while preventing new violations
+    "@typescript-eslint/no-explicit-any": ["warn", {
+      "ignoreRestArgs": false
+    }],
+    // Prevent unsafe type assertions
+    "@typescript-eslint/consistent-type-assertions": ["error", {
+      "assertionStyle": "as",
+      "objectLiteralTypeAssertions": "allow-as-parameter"
+    }]
   },
   "overrides": [
     {

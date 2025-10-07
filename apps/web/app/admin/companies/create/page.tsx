@@ -1,5 +1,4 @@
 'use client';
-// @ts-nocheck - Temporary workaround for complex nested API type issues
 
 import React, { useState } from 'react';
 import { useMutation, useAction } from 'convex/react';
@@ -41,12 +40,10 @@ export default function CreateCompanyPage() {
   const { user, sessionToken } = useAuth();
   const router = useRouter();
   // Use real API mutation for company creation
-  // @ts-ignore - Complex nested type issue workaround
-  const createCompanyMutation = useMutation((api as any).companies.createCompany);
+  const createCompanyMutation = useMutation(api.companies.createCompany);
 
   // Email action for sending password reset emails (real emails via Cloudflare Worker)
-  // @ts-ignore - Complex nested type issue workaround
-  const sendPasswordResetEmail = useAction((api as any).email.sendPasswordResetEmail);
+  const sendPasswordResetEmail = useAction(api.email.sendPasswordResetEmail);
 
   const createCompany = async (args: any) => {
     try {
