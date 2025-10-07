@@ -140,14 +140,6 @@ const ADMIN_SECTIONS = [
         requiredRole: ['system_admin'],
       },
       {
-        id: 'llm-testing',
-        title: 'LLM Testing',
-        description: 'Test and configure AI/LLM integrations',
-        icon: '🤖',
-        href: '/test-llm',
-        requiredRole: ['system_admin'],
-      },
-      {
         id: 'dev-utils',
         title: 'Dev Utils',
         description: 'Development utilities and helper tools',

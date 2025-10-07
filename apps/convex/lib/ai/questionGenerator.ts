@@ -147,11 +147,10 @@ const generateQuestionsWithTemplate = async (
     });
 
     // Record prompt usage
-    await ctx.runMutation(api.prompts.recordPromptUsage, {
-      promptName: prompt.prompt_name,
-      promptVersion: prompt.prompt_version || 'v1.0.0',
-      responseTime: aiResponse.processingTimeMs,
-      successful: aiResponse.success,
+    await ctx.runMutation(api.promptManager.updatePromptUsage, {
+      prompt_name: prompt.prompt_name,
+      response_time_ms: aiResponse.processingTimeMs,
+      success: aiResponse.success,
     });
 
     if (!aiResponse.success) {

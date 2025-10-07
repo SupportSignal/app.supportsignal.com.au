@@ -92,8 +92,10 @@ bun run ci:status    # Verify CI pipeline status
 bun run ci:watch     # Monitor CI completion (when CI is running)
 
 # Convex Backend
-bunx convex dev      # Start Convex development server
-bunx convex deploy   # Deploy Convex functions
+bunx convex dev              # Start Convex development server
+bun run convex:deploy:dev    # Deploy to dev environment (beaming-gull-639)
+bun run convex:deploy:prod   # Deploy to prod environment (graceful-shrimp-355)
+bun run convex:deploy        # Legacy: prompts for prod (avoid)
 
 # Cloudflare Pages Deployment
 cd apps/web

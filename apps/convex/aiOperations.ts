@@ -146,11 +146,10 @@ export const generateClarificationQuestions = action({
       );
 
       // Record prompt usage
-      await ctx.runMutation(api.prompts.recordPromptUsage, {
-        promptName: processedPrompt.name,
-        promptVersion: processedPrompt.version,
-        responseTime: aiResponse.processingTimeMs,
-        successful: aiResponse.success,
+      await ctx.runMutation(api.promptManager.updatePromptUsage, {
+        prompt_name: processedPrompt.name,
+        response_time_ms: aiResponse.processingTimeMs,
+        success: aiResponse.success,
       });
 
       if (!aiResponse.success) {
@@ -416,11 +415,10 @@ export const enhanceNarrativeContent = action({
       );
 
       // Record prompt usage
-      await ctx.runMutation(api.prompts.recordPromptUsage, {
-        promptName: processedPrompt.name,
-        promptVersion: processedPrompt.version,
-        responseTime: aiResponse.processingTimeMs,
-        successful: aiResponse.success,
+      await ctx.runMutation(api.promptManager.updatePromptUsage, {
+        prompt_name: processedPrompt.name,
+        response_time_ms: aiResponse.processingTimeMs,
+        success: aiResponse.success,
       });
 
       if (!aiResponse.success) {
@@ -585,11 +583,10 @@ export const analyzeContributingConditions = action({
       );
 
       // Record prompt usage
-      await ctx.runMutation(api.prompts.recordPromptUsage, {
-        promptName: processedPrompt.name,
-        promptVersion: processedPrompt.version,
-        responseTime: aiResponse.processingTimeMs,
-        successful: aiResponse.success,
+      await ctx.runMutation(api.promptManager.updatePromptUsage, {
+        prompt_name: processedPrompt.name,
+        response_time_ms: aiResponse.processingTimeMs,
+        success: aiResponse.success,
       });
 
       if (!aiResponse.success) {
@@ -725,11 +722,10 @@ export const generateMockAnswers = action({
       );
 
       // Record prompt usage
-      await ctx.runMutation(api.prompts.recordPromptUsage, {
-        promptName: processedPrompt.name,
-        promptVersion: processedPrompt.version,
-        responseTime: aiResponse.processingTimeMs,
-        successful: aiResponse.success,
+      await ctx.runMutation(api.promptManager.updatePromptUsage, {
+        prompt_name: processedPrompt.name,
+        response_time_ms: aiResponse.processingTimeMs,
+        success: aiResponse.success,
       });
 
       if (!aiResponse.success) {

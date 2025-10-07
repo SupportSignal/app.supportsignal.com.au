@@ -55,6 +55,8 @@
     "// === BACKEND SERVICES ===": "",
     "convex:dev": "cd apps/convex && npx convex dev",
     "convex:deploy": "cd apps/convex && npx convex deploy",
+    "convex:deploy:dev": "bunx convex dev --once --typecheck=disable",
+    "convex:deploy:prod": "cd apps/convex && npx convex deploy --prod",
     "worker:dev": "cd apps/workers/log-ingestion && bun run dev",
     "worker:deploy": "cd apps/workers/log-ingestion && bun run deploy",
     "worker:deploy:production": "cd apps/workers/log-ingestion && bun run deploy:production",
