@@ -4,8 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/lib/convex-api';
 import { useAuth } from '@/components/auth/auth-provider';
-import { CompanyDetailsView } from './CompanyDetailsView';
-import { CompanyEditForm } from './CompanyEditForm';
+import { CompanyDetailsView } from './company-details-view';
+import { CompanyEditForm } from './company-edit-form';
 import { Company, CompanyUpdateForm } from '@/types/company';
 import { 
   Card,

@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/components/auth/auth-provider';
-import { PromptTemplateList } from '@/components/admin/PromptTemplateList';
-import { TemplateSeederInterface } from '@/components/admin/TemplateSeederInterface';
+import { PromptTemplateList } from '@/components/admin/prompt-template-list';
+import { TemplateSeederInterface } from '@/components/admin/template-seeder-interface';
 import { AIPromptTemplate } from '@/types/prompt-templates';
 import { Button } from '@starter/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@starter/ui/card';

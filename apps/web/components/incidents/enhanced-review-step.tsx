@@ -10,9 +10,9 @@ import { Alert, AlertDescription } from '@starter/ui/alert';
 import { Badge } from '@starter/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@starter/ui/collapsible';
 import { Loader2, CheckCircle, AlertCircle, FileText, Send, ChevronDown, ChevronRight, RefreshCw } from 'lucide-react';
-import { EnhancedNarrativeDisplay } from './EnhancedNarrativeDisplay';
-import { CompletionChecklist } from './CompletionChecklist';
-import { ExportPreview } from './ExportPreview';
+import { EnhancedNarrativeDisplay } from './enhanced-narrative-display';
+import { CompletionChecklist } from './completion-checklist';
+import { ExportPreview } from './export-preview';
 import { toast } from 'sonner';
 import type { Id } from '@/convex/_generated/dataModel';
 

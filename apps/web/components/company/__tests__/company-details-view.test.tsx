@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { CompanyDetailsView } from '@/components/company/CompanyDetailsView';
+import { CompanyDetailsView } from '@/components/company/company-details-view';
 import { Company } from '@/types/company';
 
 // Mock company data for testing

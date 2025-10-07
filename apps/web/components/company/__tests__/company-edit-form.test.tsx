@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { CompanyEditForm } from '@/components/company/CompanyEditForm';
+import { CompanyEditForm } from '@/components/company/company-edit-form';
 import { Company } from '@/types/company';
 
 // Mock company data for testing

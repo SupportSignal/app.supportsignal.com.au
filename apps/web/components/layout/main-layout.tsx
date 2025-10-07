@@ -9,7 +9,7 @@ import { NAVIGATION_CONFIG } from '@/lib/navigation/navigation-config';
 import { SidebarNavigation } from './sidebar-navigation';
 import { HeaderNavigation } from './header-navigation';
 import { FooterNavigation } from './footer-navigation';
-import { ImpersonationBanner } from '@/components/admin/impersonation/ImpersonationBanner';
+import { ImpersonationBanner } from '@/components/admin/impersonation/impersonation-banner';
 import { cn } from '@/lib/utils';
 
 interface MainLayoutProps {

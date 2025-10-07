@@ -1,6 +1,6 @@
 "use client";
 
-import { QuestionCard } from "./QuestionCard";
+import { QuestionCard } from "./question-card";
 import { QuestionsListProps } from "@/types/clarification";
 import { cn } from "@/lib/utils";
 import { useViewport } from "@/hooks/mobile/useViewport";

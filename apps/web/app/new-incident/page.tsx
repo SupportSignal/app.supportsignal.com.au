@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense } from 'react';
-import { IncidentCaptureWorkflow } from '@/components/incidents/IncidentCaptureWorkflow';
+import { IncidentCaptureWorkflow } from '@/components/incidents/incident-capture-workflow';
 
 export default function NewIncidentPage() {
   return (

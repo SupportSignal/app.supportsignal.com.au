@@ -22,7 +22,7 @@ import {
   ChevronRightIcon,
   BarChart3Icon,
 } from 'lucide-react';
-import { IncidentStatusBadge } from './IncidentStatusBadge';
+import { IncidentStatusBadge } from './incident-status-badge';
 
 // Types
 interface Incident {

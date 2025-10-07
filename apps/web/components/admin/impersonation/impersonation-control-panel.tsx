@@ -13,9 +13,9 @@ import { AlertTriangle, Users, Clock, Shield, Search } from 'lucide-react';
 import { Alert, AlertDescription } from '@starter/ui/alert';
 import { useAuth } from '@/components/auth/auth-provider';
 import { ImpersonationSearchResult } from '@/types/impersonation';
-import { UserSearchInput } from './UserSearchInput';
-import { ImpersonationConfirmDialog } from './ImpersonationConfirmDialog';
-import { ActiveSessionsManager } from './ActiveSessionsManager';
+import { UserSearchInput } from './user-search-input';
+import { ImpersonationConfirmDialog } from './impersonation-confirm-dialog';
+import { ActiveSessionsManager } from './active-sessions-manager';
 
 export function ImpersonationControlPanel() {
   const { user, sessionToken } = useAuth();
@@ -27,6 +27,7 @@ export function ImpersonationControlPanel() {
   const [error, setError] = useState<string | null>(null);
 
   // Convex mutations and queries
+  // @ts-expect-error - Convex type inference limitation with complex API types
   const startImpersonation = useMutation(api.impersonation.startImpersonation);
   const searchUsers = useQuery(api.impersonation.searchUsersForImpersonation, {
     admin_session_token: sessionToken || '',
@@ -69,6 +70,7 @@ export function ImpersonationControlPanel() {
         // Store the impersonation token and redirect to use it
         window.location.href = `/?impersonate_token=${result.impersonation_token}`;
       } else {
+        // @ts-expect-error - Convex type inference limitation with error handling
         setError(result.error || 'Failed to start impersonation session');
       }
     } catch (err) {

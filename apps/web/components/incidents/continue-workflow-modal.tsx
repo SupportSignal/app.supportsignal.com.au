@@ -12,7 +12,7 @@ import {
 } from '@starter/ui/alert-dialog';
 import { Button } from '@starter/ui/button';
 import { Plus } from 'lucide-react';
-import { IncidentPreviewCard, type IncidentPreview } from './IncidentPreviewCard';
+import { IncidentPreviewCard, type IncidentPreview } from './incident-preview-card';
 
 interface ContinueWorkflowModalProps {
   isOpen: boolean;

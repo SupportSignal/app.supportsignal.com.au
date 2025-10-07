@@ -32,7 +32,7 @@ import { useAutoSave } from '@/hooks/useAutoSave';
 import { ConditionsEditor, ClassificationDisplay, ConfidenceIndicator, AnalysisWorkflow } from '@/components/analysis';
 import { UserProfile, PermissionIndicator, SessionStatus, WorkflowWizard } from '@/components/user';
 import { LiveStatusIndicator, CollaborationBadge, NotificationCenter, RealTimeSubscriptionManager } from '@/components/realtime';
-import { AutoSaveDemo } from '@/components/demo/AutoSaveDemo';
+import { AutoSaveDemo } from '@/components/demo/auto-save-demo';
 
 // Sample Data Definitions for Showcase Playground
 const sampleParticipants = [

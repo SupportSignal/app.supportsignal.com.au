@@ -9,18 +9,18 @@
  */
 
 // Main workflow components
-export { IncidentCaptureWorkflow } from './IncidentCaptureWorkflow';
-export { IncidentMetadataForm } from './IncidentMetadataForm';
-export { NarrativeGrid } from './NarrativeGrid';
+export { IncidentCaptureWorkflow } from './incident-capture-workflow';
+export { IncidentMetadataForm } from './incident-metadata-form';
+export { NarrativeGrid } from './narrative-grid';
 
 // AI clarification components (Story 3.2)
-export { ClarificationStep } from './ClarificationStep';
-export { QuestionsList } from './QuestionsList';
-export { QuestionCard } from './QuestionCard';
-export { ClarificationProgress } from './ClarificationProgress';
+export { ClarificationStep } from './clarification-step';
+export { QuestionsList } from './questions-list';
+export { QuestionCard } from './question-card';
+export { ClarificationProgress } from './clarification-progress';
 
 // Story 4.1: Incident listing components
-export { IncidentListPage } from './IncidentListPage';
-export { IncidentTable } from './IncidentTable';
-export { IncidentStatusBadge } from './IncidentStatusBadge';
-export { IncidentFilters } from './IncidentFilters';
+export { IncidentListPage } from './incident-list-page';
+export { IncidentTable } from './incident-table';
+export { IncidentStatusBadge } from './incident-status-badge';
+export { IncidentFilters } from './incident-filters';

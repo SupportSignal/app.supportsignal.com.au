@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { ImpersonationControlPanel } from '@/components/admin/impersonation/ImpersonationControlPanel';
+import { ImpersonationControlPanel } from '@/components/admin/impersonation/impersonation-control-panel';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
 
 export const metadata: Metadata = {

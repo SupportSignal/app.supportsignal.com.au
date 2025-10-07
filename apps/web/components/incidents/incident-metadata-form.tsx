@@ -9,7 +9,7 @@ import { Input } from '@starter/ui/input';
 import { Label } from '@starter/ui/label';
 import { Button } from '@starter/ui/button';
 import { Alert, AlertDescription } from '@starter/ui/alert';
-import { ParticipantSelector } from '@/components/participants/ParticipantSelector';
+import { ParticipantSelector } from '@/components/participants/participant-selector';
 import { Id } from '@/convex/_generated/dataModel';
 import { Participant } from '@/types/participants';
 import { useViewport } from '@/hooks/mobile/useViewport';

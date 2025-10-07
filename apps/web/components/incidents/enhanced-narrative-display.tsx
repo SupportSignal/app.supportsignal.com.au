@@ -21,8 +21,8 @@ import {
   History,
   FileText
 } from 'lucide-react';
-import { OriginalContentCollapse } from './OriginalContentCollapse';
-import { QADisplayCollapse } from './QADisplayCollapse';
+import { OriginalContentCollapse } from './original-content-collapse';
+import { QADisplayCollapse } from './qa-display-collapse';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import ReactMarkdown from 'react-markdown';

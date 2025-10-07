@@ -32,9 +32,9 @@ import {
 import { cn } from '@/lib/utils';
 import { hasDeveloperAccess } from '@/lib/utils/developerAccess';
 import { DeveloperToolsBarProps, ToolsBarButtonStates } from '@/types/workflowData';
-import { WorkflowExportButton } from './WorkflowExportButton';
-import { WorkflowImportButton } from './WorkflowImportButton';
-import { PromptTestingPanel } from '../developer/PromptTestingPanel';
+import { WorkflowExportButton } from './workflow-export-button';
+import { WorkflowImportButton } from './workflow-import-button';
+import { PromptTestingPanel } from '../developer/prompt-testing-panel';
 
 // Narrative scenario options that match backend createSampleData scenarios
 const NARRATIVE_SCENARIOS = [

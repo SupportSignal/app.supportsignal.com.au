@@ -9,7 +9,7 @@ import { Badge } from '@starter/ui/badge';
 import { Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useViewport } from '@/hooks/mobile/useViewport';
-import { SwipeHandler } from './SwipeHandler';
+import { SwipeHandler } from './swipe-handler';
 
 export interface MobileWizardShellProps {
   title: string;

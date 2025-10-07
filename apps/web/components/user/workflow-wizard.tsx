@@ -6,8 +6,8 @@ import { Button } from '@starter/ui';
 import { Badge } from '@starter/ui';
 import { cn } from '@/lib/utils';
 import { useViewport } from '@/hooks/mobile/useViewport';
-import { MobileWizardShell } from '@/components/mobile/MobileWizardShell';
-import { TouchNavigationBar } from '@/components/mobile/TouchNavigationBar';
+import { MobileWizardShell } from '@/components/mobile/mobile-wizard-shell';
+import { TouchNavigationBar } from '@/components/mobile/touch-navigation-bar';
 import { 
   ChevronLeft, 
   ChevronRight, 

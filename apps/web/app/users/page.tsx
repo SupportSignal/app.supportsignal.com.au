@@ -4,9 +4,9 @@ import React, { useState } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useAuth } from '@/components/auth/auth-provider';
-import { UserTable } from '@/components/users/UserTable';
-import { UserForm } from '@/components/users/UserForm';
-import { OwnerProtectionWarning } from '@/components/users/OwnerBadge';
+import { UserTable } from '@/components/users/user-table';
+import { UserForm } from '@/components/users/user-form';
+import { OwnerProtectionWarning } from '@/components/users/owner-badge';
 import { Alert, AlertDescription } from '@starter/ui/alert';
 import { Button } from '@starter/ui/button';
 import { 
