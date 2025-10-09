@@ -1,5 +1,7 @@
 # Epic 4: Incident Management & Listing
 
+> **Quick Navigation:** [4.1](#story-41-incident-listing-foundation) · [4.2](#story-42-workflow-continuation-system) · [4.3](#story-43-incident-status-management) · [4.4](#story-44-incident-click-through-actions)
+
 ## Epic Overview
 
 **Goal**: Implement comprehensive incident listing and management capabilities that enable both Team Leaders and Frontline Workers to view, filter, and manage incidents through two strategic entry points - a dedicated incidents page and workflow continuation prompts.
@@ -25,6 +27,16 @@ Epic 4 solves critical workflow gaps that emerge as incident volume scales. With
 - **Frontline Worker**: "I started an incident yesterday but can't find it" → Clear personal incident access
 - **Team Leader**: "I need to see all incidents to manage team workload" → Comprehensive incident dashboard
 - **Organization**: "Incidents are getting lost between capture and analysis" → Systematic workflow bridging
+
+---
+
+## Quick Navigation
+
+**Stories in this Epic:**
+- [Story 4.1: Incident Listing Foundation](#story-41-incident-listing-foundation) - ✅ **Complete** (Critical)
+- [Story 4.2: Workflow Continuation System](#story-42-workflow-continuation-system) - ✅ **Complete** (High)
+- [Story 4.3: Incident Status Management](#story-43-incident-status-management) - 📋 **Planned** (Medium)
+- [Story 4.4: Incident Click-Through Actions](#story-44-incident-click-through-actions) - 📋 **Planned** (High)
 
 ---
 

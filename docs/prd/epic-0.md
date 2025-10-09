@@ -1,5 +1,7 @@
 # Epic 0: Technical Debt & Continuous Improvement
 
+> **Quick Navigation:** [0.1](#story-01-technical-debt---environment-variable-deduplication-audit) · [0.2](#story-02-technical-debt---database-schema-audit--cleanup) · [0.3](#story-03-technical-debt---dead-code-discovery--cleanup-functions-routes-components-workers) · [0.4](#story-04-technical-debt---apply-coding-standards-from-inconsistencies-audit)
+
 ## Epic Overview
 
 **Goal**: Maintain platform quality, eliminate technical debt, and continuously improve developer experience and system reliability through ongoing maintenance and refinement work.
@@ -26,6 +28,16 @@ Epic 0 represents the critical but often invisible work that keeps the SupportSi
 - Prioritize by impact: P0 (blocking) > P1 (important) > P2 (nice to have)
 - Balance technical debt with feature development
 - Track Epic 0 velocity separately to monitor health trends
+
+---
+
+## Quick Navigation
+
+**Stories in this Epic:**
+- [Story 0.1: Environment Variable Deduplication Audit](#story-01-technical-debt---environment-variable-deduplication-audit) - 📋 **Planned** (P1 - High)
+- [Story 0.2: Database Schema Audit & Cleanup](#story-02-technical-debt---database-schema-audit--cleanup) - ✅ **Complete** (P2 - Medium)
+- [Story 0.3: Dead Code Discovery & Cleanup](#story-03-technical-debt---dead-code-discovery--cleanup-functions-routes-components-workers) - 🔄 **In Progress** (P2 - Medium)
+- [Story 0.4: Apply Coding Standards from Inconsistencies Audit](#story-04-technical-debt---apply-coding-standards-from-inconsistencies-audit) - 📋 **Planned** (P1 - High)
 
 ---
 

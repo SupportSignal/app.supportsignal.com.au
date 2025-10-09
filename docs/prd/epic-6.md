@@ -1,5 +1,7 @@
 # Epic 6: AI Prompt Management System
 
+> **Quick Navigation:** [6.1](#story-61-core-ai-prompt-management-foundation-) · [6.2](#story-62-phase-specific-question-generation-prompts) · [6.3](#story-63-developer-prompt-testing--interpolation-interface) · [6.4](#story-64-advanced-prompt-management--analytics-future) · [6.5](#story-65-multi-tenant-prompt-management-future) · [6.6](#story-66-prompt-version-management-future)
+
 ## Epic Overview
 
 **Goal**: Provide comprehensive AI prompt template management capabilities that enable system administrators to configure, customize, and control AI prompts used throughout the entire SupportSignal platform.
@@ -26,6 +28,18 @@ Epic 6 establishes the foundational infrastructure for AI prompt management that
 - **Admin Adoption**: System administrators actively manage and optimize prompts
 - **Response Quality**: Measurable improvement in AI response quality through prompt optimization
 - **Configuration Stability**: Zero AI service disruptions due to prompt management operations
+
+---
+
+## Quick Navigation
+
+**Stories in this Epic:**
+- [Story 6.1: Core AI Prompt Management Foundation](#story-61-core-ai-prompt-management-foundation-) - ✅ **Complete** (Critical)
+- [Story 6.2: Phase-Specific Question Generation Prompts](#story-62-phase-specific-question-generation-prompts) - 📋 **Planned** (High)
+- [Story 6.3: Developer Prompt Testing & Interpolation Interface](#story-63-developer-prompt-testing--interpolation-interface) - 📋 **Planned** (Medium)
+- [Story 6.4: Advanced Prompt Management & Analytics](#story-64-advanced-prompt-management--analytics-future) - 🔮 **Future** (Low)
+- [Story 6.5: Multi-Tenant Prompt Management](#story-65-multi-tenant-prompt-management-future) - 🔮 **Future** (Low)
+- [Story 6.6: Prompt Version Management](#story-66-prompt-version-management-future) - 🔮 **Future** (Low)
 
 ---
 

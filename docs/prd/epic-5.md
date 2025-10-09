@@ -1,5 +1,7 @@
 # Epic 5: Incident Analysis Workflow
 
+> **Quick Navigation:** [5.1](#story-51-analysis-workflow-setup) · [5.2](#story-32-contributing-conditions-analysis) · [5.3](#story-33-incident-classification-system) · [5.4](#story-34-analysis-completion--export)
+
 ## Epic Overview
 
 **Goal**: Implement the complete 4-step incident analysis workflow for team leaders, featuring AI-powered contributing conditions analysis, intelligent incident classification, and comprehensive reporting capabilities.
@@ -26,6 +28,16 @@ Epic 3 completes the SupportSignal value proposition by transforming captured in
 - **Time to Analysis**: <2 hours from capture completion to analysis start
 - **Analysis Quality**: Measurable improvement in depth and consistency vs. manual analysis
 - **Export Utilization**: >70% of completed analyses exported for compliance and operational use
+
+---
+
+## Quick Navigation
+
+**Stories in this Epic:**
+- [Story 5.1: Analysis Workflow Setup](#story-51-analysis-workflow-setup) - 📋 **Planned** (Critical)
+- [Story 5.2: Contributing Conditions Analysis](#story-32-contributing-conditions-analysis) - 📋 **Planned** (Critical)
+- [Story 5.3: Incident Classification System](#story-33-incident-classification-system) - 📋 **Planned** (Critical)
+- [Story 5.4: Analysis Completion & Export](#story-34-analysis-completion--export) - 📋 **Planned** (High)
 
 ---
 

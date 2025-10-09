@@ -1,5 +1,7 @@
 # Epic 9: Service Provider Self-Service Operations
 
+> **Quick Navigation:** [9.1](#story-91-company-admin-dashboard-with-health-metrics) · [9.2](#story-92-full-user-lifecycle-management-company-admin) · [9.3](#story-93-full-participant-lifecycle-management-company-admin) · [9.4](#story-94-bulk-operations--data-management) · [9.5](#story-95-compliance-reporting--advanced-analytics)
+
 ## Epic Overview
 
 **Goal**: Enable service provider company administrators to independently manage their organization's users, participants, and operations without requiring system administrator intervention. This epic provides comprehensive self-service tools for full operational management.
@@ -32,6 +34,19 @@ Epic 9 empowers service provider organizations to independently manage their ope
 - **Admin Workload**: 90% reduction in system admin routine tasks
 - **Onboarding Speed**: Company admins can add new team members in <5 minutes
 - **Data Quality**: 95% accuracy in participant data with validation and compliance checks
+
+---
+
+## Quick Navigation
+
+**Stories in this Epic:**
+- [Story 9.1: Company Admin Dashboard with Health Metrics](#story-91-company-admin-dashboard-with-health-metrics) - 📋 **Planned** (High)
+- [Story 9.2: Full User Lifecycle Management (Company Admin)](#story-92-full-user-lifecycle-management-company-admin) - 📋 **Planned** (Critical)
+- [Story 9.3: Full Participant Lifecycle Management (Company Admin)](#story-93-full-participant-lifecycle-management-company-admin) - 📋 **Planned** (Critical)
+- [Story 9.4: Bulk Operations & Data Management](#story-94-bulk-operations--data-management) - 📋 **Planned** (High)
+- [Story 9.5: Compliance Reporting & Advanced Analytics](#story-95-compliance-reporting--advanced-analytics) - 📋 **Planned** (Medium)
+
+---
 
 **Scope Clarification**:
 - **IN SCOPE**: Full lifecycle management for users and participants by company admins

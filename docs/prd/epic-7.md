@@ -1,5 +1,7 @@
 # Epic 7: Rapid Company Onboarding (System Admin Perspective)
 
+> **Quick Navigation:** [7.1](#story-71-company-creation--onboarding-workflow) · [7.2](#story-72-initial-user-setup-system-admin) · [7.3](#story-73-site-management-system-admin) · [7.4](#story-74-initial-participant-setup-system-admin) · [7.5](#story-75-system-wide-company-management--editing) · [7.6](#story-76-incident-capture-site-selection)
+
 ## Epic Overview
 
 **Goal**: Enable SupportSignal system administrators to rapidly onboard new service provider companies with minimal initial setup - creating the company, setting up sites, adding users, and adding participants to get the organization operational within 24 hours.
@@ -93,6 +95,18 @@ graph TD
 ```
 
 **Key Insight**: This is a **one-time setup flow** performed by SupportSignal staff. After handoff, the company admin uses Epic 9 features for ongoing management (but NOT site management - sites remain system admin only).
+
+---
+
+## Quick Navigation
+
+**Stories in this Epic:**
+- [Story 7.1: Company Creation & Onboarding Workflow](#story-71-company-creation--onboarding-workflow) - ✅ **Complete** (Critical)
+- [Story 7.2: Initial User Setup (System Admin)](#story-72-initial-user-setup-system-admin) - ✅ **Complete** (Critical)
+- [Story 7.3: Site Management (System Admin)](#story-73-site-management-system-admin) - ✅ **Complete** (Critical)
+- [Story 7.4: Initial Participant Setup (System Admin)](#story-74-initial-participant-setup-system-admin) - 📋 **Planned** (High)
+- [Story 7.5: System-Wide Company Management & Editing](#story-75-system-wide-company-management--editing) - 📋 **Planned** (Medium)
+- [Story 7.6: Incident Capture Site Selection](#story-76-incident-capture-site-selection) - 📋 **Planned** (High)
 
 ---
 

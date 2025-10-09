@@ -1,5 +1,7 @@
 # Epic 2: Entity & Relationship Management
 
+> **Quick Navigation:** [2.0](#story-20-ui-design-system-foundation) · [2.1](#story-21-wizard-framework--navigation) · [2.2](#story-22-main-application-navigation--layout-foundation) · [2.3](#story-23-ndis-participants-management) · [2.4](#story-24-company-management) · [2.5](#story-25-system-administrator-impersonation-system)
+
 ## Epic Overview
 
 **Status**: **READY FOR DEVELOPMENT** ✅  
@@ -29,6 +31,18 @@ Epic 2 establishes the foundational entity management required for effective inc
 - **Data Quality**: 100% participant-to-company association accuracy
 - **Role Compliance**: Only authorized roles can access participant management
 - **User Adoption**: >90% of incidents reference existing participants (vs manual entry)
+
+---
+
+## Quick Navigation
+
+**Stories in this Epic:**
+- [Story 2.0: UI Design System Foundation](#story-20-ui-design-system-foundation) - ✅ **Complete** (Critical)
+- [Story 2.1: Wizard Framework & Navigation](#story-21-wizard-framework--navigation) - ✅ **Complete** (Critical)
+- [Story 2.2: Main Application Navigation & Layout Foundation](#story-22-main-application-navigation--layout-foundation) - ✅ **Complete** (Critical)
+- [Story 2.3: NDIS Participants Management](#story-23-ndis-participants-management) - 📋 **Planned** (Critical)
+- [Story 2.4: Company Management](#story-24-company-management) - 📋 **Planned** (High)
+- [Story 2.5: System Administrator Impersonation System](#story-25-system-administrator-impersonation-system) - 📋 **Planned** (Medium)
 
 ---
 

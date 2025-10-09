@@ -1,5 +1,7 @@
 # Epic 1: Data Foundation & Backend Setup
 
+> **Quick Navigation:** [1.1](#story-11-convex-database-implementation) · [1.2](#story-12-ai-service-integration) · [1.3](#story-13-user-authentication--permissions) · [1.4](#story-14-core-api-layer) · [1.5](#story-15-ui-design-system-foundation) · [1.6](#story-16-remove-betterauth-dependencies)
+
 ## Epic Overview
 
 **Goal**: Establish the complete data infrastructure, AI integration services, and authentication system that powers both incident capture and analysis workflows in SupportSignal.
@@ -20,6 +22,18 @@ Epic 1 creates the invisible but critical foundation that enables SupportSignal'
 - **AI-First Architecture**: Scalable AI integration supporting multiple workflows
 - **Multi-Tenant Security**: Role-based access supporting different organizational structures
 - **Real-Time Collaboration**: Live workflow handoffs between frontline workers and team leaders
+
+---
+
+## Quick Navigation
+
+**Stories in this Epic:**
+- [Story 1.1: Convex Database Implementation](#story-11-convex-database-implementation) - 📋 **Planned** (Critical)
+- [Story 1.2: AI Service Integration](#story-12-ai-service-integration) - 📋 **Planned** (Critical)
+- [Story 1.3: User Authentication & Permissions](#story-13-user-authentication--permissions) - 📋 **Planned** (Critical)
+- [Story 1.4: Core API Layer](#story-14-core-api-layer) - 📋 **Planned** (Critical)
+- [Story 1.5: UI Design System Foundation](#story-15-ui-design-system-foundation) - 📋 **Planned** (Critical)
+- [Story 1.6: Remove BetterAuth Dependencies](#story-16-remove-betterauth-dependencies) - 📋 **Planned** (High)
 
 ---
 

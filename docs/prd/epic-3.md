@@ -1,5 +1,7 @@
 # Epic 3: Incident Capture Workflow
 
+> **Quick Navigation:** [3.1](#story-31-metadata--narrative-collection) · [3.2](#story-32-ai-powered-clarification-system) · [3.3](#story-33-narrative-enhancement--completion) · [3.4](#story-34-workflow-auto-completion) · [3.5](#story-35-mobile-first-responsive-incident-capture)
+
 ## Epic Overview
 
 **Status**: **WAITING FOR EPIC 2** 🟡  
@@ -29,6 +31,17 @@ Epic 3 delivers the core value proposition of SupportSignal for frontline worker
 - **Time to Complete**: <15 minutes average for complete incident capture
 - **Data Quality**: >95% of incidents have all narrative phases completed
 - **User Satisfaction**: >4.5/5 rating from frontline workers
+
+---
+
+## Quick Navigation
+
+**Stories in this Epic:**
+- [Story 3.1: Metadata & Narrative Collection](#story-31-metadata--narrative-collection) - ✅ **Complete** (Critical)
+- [Story 3.2: AI-Powered Clarification System](#story-32-ai-powered-clarification-system) - ✅ **Complete** (Critical)
+- [Story 3.3: Narrative Enhancement & Completion](#story-33-narrative-enhancement--completion) - ✅ **Complete** (Critical)
+- [Story 3.4: Workflow Auto-Completion](#story-34-workflow-auto-completion) - 📋 **Planned** (High)
+- [Story 3.5: Mobile-First Responsive Incident Capture](#story-35-mobile-first-responsive-incident-capture) - 📋 **Planned** (Medium)
 
 ---
 

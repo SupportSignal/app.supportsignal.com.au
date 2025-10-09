@@ -1,5 +1,7 @@
 # Epic 8: Environment Architecture & Deployment Separation
 
+> **Quick Navigation:** [8.1](#story-81-convex-environment-separation--production-connection) · [8.2](#story-82-environment-aware-url-configuration-system) · [8.3](#story-83-oauth-production-application-setup) · [8.4](#story-84-deployment-pipeline--configuration-management)
+
 ## Epic Overview
 
 **Goal**: Establish proper development and production environment separation with correct deployment architecture, eliminating shared database issues and hardcoded localhost URLs in production systems.
@@ -85,6 +87,16 @@ graph TD
 - **Server-side**: Use Convex deployment context for environment detection
 - **Client-side**: Use `NEXT_PUBLIC_*` variables properly
 - **Hybrid config**: Centralized configuration module with multiple detection strategies
+
+---
+
+## Quick Navigation
+
+**Stories in this Epic:**
+- [Story 8.1: Convex Environment Separation & Production Connection](#81-convex-environment-separation--production-connection) - ✅ **Complete** (Critical)
+- [Story 8.2: Environment-Aware URL Configuration System](#82-environment-aware-url-configuration-system) - ✅ **Complete** (Critical)
+- [Story 8.3: OAuth Production Application Setup](#83-oauth-production-application-setup) - ✅ **Complete** (Critical)
+- [Story 8.4: Deployment Pipeline & Configuration Management](#84-deployment-pipeline--configuration-management) - ✅ **Complete** (High)
 
 ---
 
