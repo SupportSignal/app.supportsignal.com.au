@@ -63,25 +63,37 @@ export const NarrativeGrid = forwardRef<NarrativeGridRef, NarrativeGridProps>(fu
   const createNarrative = useMutation(api.narratives.create);
   const updateNarrative = useMutation(api.narratives.update);
 
-  // Upsert function that tries update first, then create
-  const upsertNarrative = async (data: NarrativeData & { sessionToken: string; incident_id: Id<"incidents"> }) => {
-    try {
-      // Try to update first
-      await updateNarrative(data);
-    } catch (error: any) {
-      // If narrative doesn't exist, create it first then update
-      if (error?.message?.includes('Narrative not found')) {
+  // Track if narrative has been initialized
+  const [narrativeInitialized, setNarrativeInitialized] = useState(false);
+
+  // Initialize narrative on mount
+  useEffect(() => {
+    if (!sessionToken || narrativeInitialized) return;
+
+    const initNarrative = async () => {
+      try {
         await createNarrative({
-          sessionToken: data.sessionToken,
-          incident_id: data.incident_id,
+          sessionToken,
+          incident_id: incidentId,
         });
-        
-        // Now update with the data
-        await updateNarrative(data);
-      } else {
-        throw error; // Re-throw other errors
+        setNarrativeInitialized(true);
+      } catch (error: any) {
+        // If already exists, that's fine
+        if (error?.message?.includes('already exists')) {
+          setNarrativeInitialized(true);
+        }
       }
-    }
+    };
+
+    initNarrative();
+  }, [sessionToken, incidentId, narrativeInitialized, createNarrative]);
+
+  // Simple update function (narrative guaranteed to exist)
+  const upsertNarrative = async (data: NarrativeData & { sessionToken: string; incident_id: Id<"incidents"> }) => {
+    // Wait for initialization before allowing updates
+    if (!narrativeInitialized) return;
+
+    await updateNarrative(data);
   };
 
   // Auto-save hook
