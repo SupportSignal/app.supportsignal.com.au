@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { ContinueWorkflowModal } from '../ContinueWorkflowModal';
-import type { IncidentPreview } from '../IncidentPreviewCard';
+import { ContinueWorkflowModal } from '@/components/incidents/ContinueWorkflowModal';
+import type { IncidentPreview } from '@/components/incidents/IncidentPreviewCard';
 
 // Mock date-fns
 jest.mock('date-fns', () => ({

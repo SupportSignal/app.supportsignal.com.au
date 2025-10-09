@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 
-import { ConsoleLogger } from '../console-override';
+import { ConsoleLogger } from '@/lib/console-override';
 
 // Mock fetch
 global.fetch = jest.fn();

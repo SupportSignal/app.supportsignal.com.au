@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@/lib/test-utils';
-import { ThemeProvider } from '../theme-provider';
-import { ThemeToggle } from '../theme-toggle';
+import { ThemeProvider } from '@/components/theme/theme-provider';
+import { ThemeToggle } from '@/components/theme/theme-toggle';
 
 // Mock localStorage
 const localStorageMock = {

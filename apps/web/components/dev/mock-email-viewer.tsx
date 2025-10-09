@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { mockEmailService, MockEmail } from '../../lib/email/email-service';
+import { mockEmailService, MockEmail } from '@/lib/email/email-service';
 
 export function MockEmailViewer() {
   const [emails, setEmails] = useState<MockEmail[]>([]);

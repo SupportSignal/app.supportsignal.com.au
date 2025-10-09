@@ -3,13 +3,13 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@starter/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@starter/ui/tabs';
-import TraceSearchForm from './components/TraceSearchForm';
-import TimelineViewer from './components/TimelineViewer';
-import LogTableViewer from './components/LogTableViewer';
-import CorrelationPanel from './components/CorrelationPanel';
-import ExportControls from './components/ExportControls';
-import RecentTraces from './components/RecentTraces';
-import TestLogGenerator from './components/TestLogGenerator';
+import TraceSearchForm from './components/trace-search-form';
+import TimelineViewer from './components/timeline-viewer';
+import LogTableViewer from './components/log-table-viewer';
+import CorrelationPanel from './components/correlation-panel';
+import ExportControls from './components/export-controls';
+import RecentTraces from './components/recent-traces';
+import TestLogGenerator from './components/test-log-generator';
 import { fetchLogsForTrace, exportDebugSession } from './lib/debug-api';
 import type { DebugSession } from './lib/debug-api';
 

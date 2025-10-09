@@ -1,4 +1,4 @@
-import { MockEmailService } from '../email-service';
+import { MockEmailService } from '@/lib/email/email-service';
 
 test('MockEmailService singleton works correctly', () => {
   const instance1 = MockEmailService.getInstance();

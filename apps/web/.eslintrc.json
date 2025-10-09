@@ -26,6 +26,11 @@
     "react/function-component-definition": ["warn", {
       "namedComponents": "function-declaration",
       "unnamedComponents": "arrow-function"
+    }],
+    // Warn on relative imports that traverse up directories
+    // Prefer @/ path aliases for better maintainability
+    "no-restricted-imports": ["warn", {
+      "patterns": ["../*", "../../*", "../../../*", "../../../../*"]
     }]
   },
   "overrides": [

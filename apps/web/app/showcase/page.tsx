@@ -22,7 +22,7 @@ import {
   DropdownMenuLabel,
 } from '@starter/ui/dropdown-menu';
 import { TestTube, ChevronDown } from 'lucide-react';
-import { ThemeToggle } from '../../components/theme/theme-toggle';
+import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
 import { IncidentCard, MetadataDisplay } from '@/components/incident';
 import { StatusBadge } from '@/components/shared';

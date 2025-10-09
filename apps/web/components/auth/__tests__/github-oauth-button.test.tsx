@@ -1,8 +1,8 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { GitHubOAuthButton } from '../github-oauth-button';
-import { AuthProvider } from '../auth-provider';
+import { GitHubOAuthButton } from '@/components/auth/github-oauth-button';
+import { AuthProvider } from '@/components/auth/auth-provider';
 
 // Mock the auth service
 jest.mock('../../../lib/auth', () => ({
@@ -13,7 +13,7 @@ jest.mock('../../../lib/auth', () => ({
   },
 }));
 
-import { authService } from '../../../lib/auth';
+import { authService } from '@/lib/auth';
 const mockAuthService = authService as jest.Mocked<typeof authService>;
 
 beforeEach(() => {

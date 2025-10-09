@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ConsoleLogger } from '../../lib/console-override';
+import { ConsoleLogger } from '@/lib/console-override';
 
 export function LoggingStatus() {
   const [status, setStatus] = useState<{

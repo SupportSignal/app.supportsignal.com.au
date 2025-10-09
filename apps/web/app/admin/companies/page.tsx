@@ -14,7 +14,7 @@ import {
 } from '@starter/ui/dropdown-menu';
 import { Alert, AlertDescription } from '@starter/ui/alert';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
-import { Building2, Plus, AlertCircle, ChevronDown } from 'lucide-react';
+import { Building2, Plus, AlertCircle, ChevronDown, Users } from 'lucide-react';
 import Link from 'next/link';
 
 export default function CompaniesPage() {
@@ -22,11 +22,9 @@ export default function CompaniesPage() {
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
 
   // Use real API query for ALL companies (not just active)
-  // @ts-expect-error - Convex type inference limitation with complex API types
   const companies = useQuery(api.companies.listAllCompanies) || [];
 
   // Mutation to update company status
-  // @ts-expect-error - Convex type inference limitation with complex API types
   const updateCompanyStatus = useMutation(api.companies.updateCompanyStatus);
 
   // Change company status
@@ -124,7 +122,13 @@ export default function CompaniesPage() {
                             Slug: {company.slug}
                           </p>
                         </div>
-                        <div className="flex items-center">
+                        <div className="flex items-center gap-3">
+                          <Link href={`/admin/companies/${company._id}/users`}>
+                            <Button variant="outline" size="sm" className="flex items-center gap-2">
+                              <Users className="h-4 w-4" />
+                              Manage Users
+                            </Button>
+                          </Link>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <button className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer hover:opacity-80 transition-opacity ${

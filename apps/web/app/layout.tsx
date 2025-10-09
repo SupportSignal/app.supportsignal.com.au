@@ -2,11 +2,11 @@ import './globals.css';
 import { Inter } from 'next/font/google';
 import React from 'react';
 import { ConvexClientProvider } from './providers';
-import { AuthProvider } from '../components/auth/auth-provider';
-import { ThemeProvider } from '../components/theme/theme-provider';
-import { LoggingProvider } from '../components/logging/logging-provider';
-import { VersionProvider } from '../components/dev/version-provider';
-import { MainLayout } from '../components/layout/main-layout';
+import { AuthProvider } from '@/components/auth/auth-provider';
+import { ThemeProvider } from '@/components/theme/theme-provider';
+import { LoggingProvider } from '@/components/logging/logging-provider';
+import { VersionProvider } from '@/components/dev/version-provider';
+import { MainLayout } from '@/components/layout/main-layout';
 
 const inter = Inter({ subsets: ['latin'] });
 

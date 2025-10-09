@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@/lib/test-utils';
-import ShowcasePage from '../page';
+import ShowcasePage from '@/app/showcase/page';
 
 describe('ShowcasePage', () => {
   describe('Component Rendering', () => {

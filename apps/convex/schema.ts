@@ -24,7 +24,7 @@ export default defineSchema({
     role: v.union(
       v.literal("system_admin"),
       v.literal("demo_admin"),
-      v.literal("company_admin"), 
+      v.literal("company_admin"),
       v.literal("team_lead"),
       v.literal("frontline_worker")
     ),
@@ -35,6 +35,35 @@ export default defineSchema({
   })
     .index('by_email', ['email'])
     .index('by_company', ['company_id']),
+
+  // User invitations table for email-based onboarding (Story 7.2)
+  user_invitations: defineTable({
+    email: v.string(),
+    company_id: v.id("companies"),
+    role: v.union(
+      v.literal("company_admin"),
+      v.literal("team_lead"),
+      v.literal("frontline_worker")
+    ),
+    invited_by: v.id("users"),
+    invitation_token: v.string(),
+    expires_at: v.number(),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("accepted"),
+      v.literal("expired"),
+      v.literal("revoked")
+    ),
+    created_at: v.number(),
+    accepted_at: v.optional(v.number())
+  })
+    .index("by_email", ["email"])
+    .index("by_company", ["company_id"])
+    .index("by_token", ["invitation_token"])
+    .index("by_status", ["status"])
+    .index("by_company_status", ["company_id", "status"])
+    .index("by_email_company", ["email", "company_id"])
+    .index("by_email_status", ["email", "status"]),
 
   // Sessions table for user authentication
   sessions: defineTable({

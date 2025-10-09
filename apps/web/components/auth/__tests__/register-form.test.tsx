@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
-import { RegisterForm } from '../register-form';
-import { AuthProvider } from '../auth-provider';
+import { RegisterForm } from '@/components/auth/register-form';
+import { AuthProvider } from '@/components/auth/auth-provider';
 import userEvent from '@testing-library/user-event';
 
 // Mock the OAuth components
@@ -22,7 +22,7 @@ jest.mock('../../../lib/auth', () => ({
   },
 }));
 
-import { authService } from '../../../lib/auth';
+import { authService } from '@/lib/auth';
 const mockAuthService = authService as jest.Mocked<typeof authService>;
 
 describe('RegisterForm', () => {

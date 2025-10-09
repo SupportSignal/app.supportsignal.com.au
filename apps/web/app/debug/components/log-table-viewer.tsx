@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@starter/ui/card';
 import { Badge } from '@starter/ui/badge';
 import { Button } from '@starter/ui/button';
 import { ChevronDown, ChevronRight, Copy, Eye, EyeOff } from 'lucide-react';
-import type { RedisLogEntry } from '../lib/debug-api';
+import type { RedisLogEntry } from '@/app/debug/lib/debug-api';
 
 interface LogTableViewerProps {
   logs: RedisLogEntry[];

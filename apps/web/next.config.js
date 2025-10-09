@@ -28,7 +28,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  output: 'export',
+  // output: 'export', // Removed - prevents dynamic routes. @cloudflare/next-on-pages supports SSR
   env: {
     // Computed variables that need to be evaluated at build time
     CLAUDE_LOGGING_ENABLED: String(

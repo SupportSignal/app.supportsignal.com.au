@@ -17,9 +17,9 @@ import {
   Globe,
   Terminal,
 } from 'lucide-react';
-import { VersionDebug } from '../../components/dev/version-debug';
-import { config } from '../../lib/config';
-import { useAuth } from '../../components/auth/auth-provider';
+import { VersionDebug } from '@/components/dev/version-debug';
+import { config } from '@/lib/config';
+import { useAuth } from '@/components/auth/auth-provider';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 

@@ -1,8 +1,8 @@
 import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
-import { MockEmailViewer } from '../mock-email-viewer';
+import { MockEmailViewer } from '@/components/dev/mock-email-viewer';
 import userEvent from '@testing-library/user-event';
-import { mockEmailService } from '../../../lib/email/email-service';
+import { mockEmailService } from '@/lib/email/email-service';
 
 // Mock the email service
 jest.mock('../../../lib/email/email-service', () => ({

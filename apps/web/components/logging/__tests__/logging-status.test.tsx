@@ -3,8 +3,8 @@
  */
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { LoggingStatus } from '../logging-status';
-import { ConsoleLogger } from '../../../lib/console-override';
+import { LoggingStatus } from '@/components/logging/logging-status';
+import { ConsoleLogger } from '@/lib/console-override';
 
 // Mock the console override module
 jest.mock('../../../lib/console-override', () => ({

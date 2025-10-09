@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { useQuery } from 'convex/react';
 import { api } from '@/lib/convex-api';
-import { useAuth } from '../components/auth/auth-provider';
-import { EmbeddedAuth } from '../components/auth/embedded-auth';
+import { useAuth } from '@/components/auth/auth-provider';
+import { EmbeddedAuth } from '@/components/auth/embedded-auth';
 import { NAVIGATION_CONFIG } from '@/lib/navigation/navigation-config';
 import { Button } from '@starter/ui/button';
 import { 

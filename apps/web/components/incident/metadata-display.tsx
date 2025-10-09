@@ -17,7 +17,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import type { Incident } from '@/types/api';
-import { StatusBadge } from '../shared';
+import { StatusBadge } from '@/components/shared';
 
 export interface MetadataDisplayProps {
   incident: Incident;

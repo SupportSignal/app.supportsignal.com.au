@@ -1,7 +1,7 @@
 'use client';
 
-import { useAuth } from '../../components/auth/auth-provider';
-import { ChangePasswordForm } from '../../components/auth/change-password-form';
+import { useAuth } from '@/components/auth/auth-provider';
+import { ChangePasswordForm } from '@/components/auth/change-password-form';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 

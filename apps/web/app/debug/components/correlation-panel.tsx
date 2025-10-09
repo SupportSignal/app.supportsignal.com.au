@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@starter/ui/card';
 import { Badge } from '@starter/ui/badge';
 import { Button } from '@starter/ui/button';
 import { AlertTriangle, TrendingUp, Workflow, Copy, HelpCircle } from 'lucide-react';
-import type { CorrelationAnalysis } from '../lib/debug-api';
+import type { CorrelationAnalysis } from '@/app/debug/lib/debug-api';
 
 interface CorrelationPanelProps {
   correlationAnalysis: CorrelationAnalysis;

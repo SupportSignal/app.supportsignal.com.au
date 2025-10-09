@@ -3,7 +3,7 @@
  */
 
 import { render, screen, act } from '@testing-library/react';
-import { LoggingProvider } from '../logging-provider';
+import { LoggingProvider } from '@/components/logging/logging-provider';
 
 // Mock the console override module
 jest.mock('../../../lib/console-override', () => ({

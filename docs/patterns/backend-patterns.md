@@ -6,6 +6,270 @@ This document outlines established patterns for Convex backend development, API 
 
 ## Convex Function Patterns
 
+### Convex API Path Patterns (CRITICAL)
+
+**Context**: Resolving public and internal Convex function paths correctly across subdirectories
+**Discovery**: Story 7.2 - User Invitation System implementation
+**Implementation**:
+
+**Public API (from client/frontend)**:
+```typescript
+// ✅ CORRECT: Bracket notation with slash separator for subdirectories
+api["directory/file"].default
+api["users/invite/sendUserInvitation"].default
+
+// ❌ INCORRECT: Dot notation for subdirectories
+api.users.invite.sendUserInvitation  // Results in "Could not find public function"
+api.companies.getCompanyDetails       // Confuses Convex path resolver
+```
+
+**Internal API (within Convex backend)**:
+```typescript
+// ✅ CORRECT: Dot notation for internal functions
+internal.directory.file.functionName
+internal.users.invite.sendUserInvitation.createInvitationRecord
+
+// ❌ INCORRECT: Bracket/slash notation for internal
+internal["users/invite/sendUserInvitation"]  // TypeScript error
+```
+
+**Real-World Examples**:
+
+```typescript
+// apps/web/app/admin/companies/[id]/users/page.tsx
+'use client';
+
+const company = useQuery(api["companies/getCompanyDetails"].default, {
+  companyId: params.id,
+  sessionToken: sessionToken || '',
+});
+
+const sendInvitation = useAction(api["users/invite/sendUserInvitation"].default);
+
+// apps/convex/users/invite/sendUserInvitation.ts
+import { internal } from '../../_generated/api';
+
+export default action({
+  handler: async (ctx, args) => {
+    // Call internal query
+    const session = await ctx.runQuery(internal.users.invite.sendUserInvitation.getSessionAndValidate, {
+      sessionToken: args.sessionToken,
+    });
+
+    // Call internal mutation
+    await ctx.runMutation(internal.users.invite.sendUserInvitation.createInvitationRecord, {
+      email: args.email,
+    });
+  },
+});
+```
+
+**Rationale**:
+- Convex uses `/` separator for file system paths in public API resolution
+- Generated TypeScript types use dot notation for internal API structure
+- Bracket notation prevents TypeScript property access errors for paths with special characters
+- `.default` export pattern required for subdirectory functions
+
+**Related**: See "Actions vs Mutations Pattern" for when to use each function type
+
+### Actions vs Mutations Pattern (CRITICAL)
+
+**Context**: Choosing between actions and mutations for external integrations
+**Discovery**: Story 7.2 - Converting sendUserInvitation from mutation to action due to fetch() requirement
+**Implementation**:
+
+**Rule**: `fetch()` can ONLY be used in actions, NOT in queries or mutations
+
+```typescript
+// ✅ CORRECT: Action with fetch() for email
+export default action({
+  args: { email: v.string(), sessionToken: v.string() },
+  handler: async (ctx, args) => {
+    // 1. Use internal query for validation (no direct DB access)
+    const session = await ctx.runQuery(internal.users.invite.sendUserInvitation.getSessionAndValidate, {
+      sessionToken: args.sessionToken,
+    });
+
+    // 2. Use internal mutation for database operations
+    const invitationId = await ctx.runMutation(internal.users.invite.sendUserInvitation.createInvitationRecord, {
+      email: args.email,
+    });
+
+    // 3. fetch() ONLY allowed in actions
+    const response = await fetch(emailWorkerUrl, {
+      method: 'POST',
+      body: JSON.stringify({ to: args.email }),
+    });
+
+    return { success: true, invitationId };
+  },
+});
+
+// ❌ INCORRECT: Mutation with fetch()
+export default mutation({
+  handler: async (ctx, args) => {
+    const response = await fetch(emailWorkerUrl); // ERROR: Can't use fetch() in mutations
+  },
+});
+```
+
+**Internal Helper Pattern**:
+
+```typescript
+// Internal mutation for database operations
+export const createInvitationRecord = internalMutation({
+  args: { email: v.string(), invitationToken: v.string() },
+  handler: async (ctx, args) => {
+    // Direct database access allowed in mutations
+    return await ctx.db.insert('user_invitations', {
+      email: args.email,
+      invitation_token: args.invitationToken,
+      status: 'pending',
+    });
+  },
+});
+
+// Internal query for validation
+export const getSessionAndValidate = query({
+  args: { sessionToken: v.string() },
+  handler: async (ctx, args) => {
+    // Direct database access allowed in queries
+    const session = await ctx.db
+      .query('sessions')
+      .withIndex('by_session_token', q => q.eq('sessionToken', args.sessionToken))
+      .first();
+
+    if (!session) throw new ConvexError('Invalid session');
+    return session;
+  },
+});
+```
+
+**Pattern Summary**:
+1. **Actions**: Use for external integrations (email, SMS, webhooks, third-party APIs)
+   - Can use `fetch()` for HTTP requests
+   - Must use `ctx.runQuery()` and `ctx.runMutation()` for database operations
+   - No direct `ctx.db` access
+
+2. **Mutations**: Use for database write operations
+   - Direct `ctx.db` access allowed
+   - Cannot use `fetch()` or external HTTP requests
+   - Ideal for `internalMutation` helpers called from actions
+
+3. **Queries**: Use for database read operations
+   - Direct `ctx.db` access allowed
+   - Cannot use `fetch()` or external HTTP requests
+   - Ideal for validation and data retrieval helpers
+
+**Error Pattern**:
+```
+[CONVEX M(users/invite/sendUserInvitation)] Server Error:
+Can't use fetch() in queries and mutations. Please consider using an action.
+```
+
+**Solution**: Convert function from `mutation` to `action` and delegate database operations to internal helpers.
+
+**Rationale**:
+- Actions provide isolation for external dependencies (network, third-party APIs)
+- Mutations ensure transactional database operations without external dependencies
+- Internal helpers maintain code organization and reusability
+- Pattern prevents database transaction issues from external API failures
+
+**Related**: See "Convex API Path Patterns" for how to call internal helpers from actions
+
+### ConvexClientProvider Auto-Injection Pattern (CRITICAL)
+
+**Context**: Handling automatic sessionToken injection for public functions callable by both logged-in and logged-out users
+**Discovery**: Story 7.2 - acceptInvitation error when ConvexClientProvider auto-injected sessionToken into public function
+**Implementation**:
+
+**Problem**: `ConvexClientProvider` (apps/web/app/providers.tsx:19-44) automatically injects `sessionToken` into ALL Convex calls when user is logged in, causing validation errors for public functions.
+
+```typescript
+// apps/web/app/providers.tsx - Auto-injection code
+export function ConvexClientProvider({ children }: { children: React.ReactNode }) {
+  const { sessionToken } = useAuth();
+
+  const authenticatedClient = useMemo(() => {
+    const client = new ConvexReactClient(config.convexUrl!);
+
+    if (sessionToken) {
+      // Override action method to inject sessionToken into ALL calls
+      (client as any).action = (action: any, ...args: any[]) => {
+        const [actionArgs] = args.length > 0 ? args : [{}];
+        return originalAction(action, { ...actionArgs, sessionToken }); // Auto-injection
+      };
+    }
+    return client;
+  }, [sessionToken]);
+
+  return <ConvexProvider client={authenticatedClient}>{children}</ConvexProvider>;
+}
+```
+
+**Solution Pattern**:
+
+```typescript
+// ✅ CORRECT: Public function with optional sessionToken
+export default action({
+  args: {
+    token: v.string(),
+    name: v.string(),
+    password: v.string(),
+    sessionToken: v.optional(v.string()), // CRITICAL: Must be optional for public functions
+  },
+  handler: async (ctx, args) => {
+    // Function logic doesn't need sessionToken (user not logged in yet)
+    // But ConvexClientProvider will inject it if another user is logged in on same browser
+  },
+});
+
+// ❌ INCORRECT: Public function without optional sessionToken
+export default action({
+  args: {
+    token: v.string(),
+    name: v.string(),
+    password: v.string(),
+    // Missing: sessionToken: v.optional(v.string())
+  },
+  handler: async (ctx, args) => {
+    // Will fail with: "Object contains extra field sessionToken that is not in the validator"
+  },
+});
+```
+
+**Error Pattern**:
+```
+ArgumentValidationError: Object contains extra field sessionToken that is not in the validator.
+Object: {
+  name: "David the Frontliner",
+  password: "David@123",
+  sessionToken: "e44eb706a7e288036ca6f78696f4f22c12da4bcbcd9b3ff42ad997b3cd1e5a87", // Auto-injected!
+  token: "dec6f5749ecf0ec00c7bf5ce0feb216fb3f46374fc8005823f998899762d8f6f"
+}
+```
+
+**When to Use Optional SessionToken**:
+1. **Public invitation acceptance**: Users not logged in yet
+2. **Password reset**: Users accessing reset link without active session
+3. **Public registration**: New users creating accounts
+4. **OAuth callbacks**: Authentication flows where session doesn't exist yet
+
+**When NOT to Use Optional SessionToken**:
+1. **Protected mutations**: Functions requiring authentication
+2. **User-specific queries**: Functions fetching user data
+3. **Admin operations**: Functions requiring role verification
+
+**Reference Implementation**: `apps/convex/workers/workerSync.ts` uses same pattern per `docs/features/debug-logs-system.md`
+
+**Rationale**:
+- Prevents validation errors for public functions accessed by logged-in users
+- Maintains backward compatibility with ConvexClientProvider auto-injection
+- Follows established pattern from debug-logs-system implementation
+- Allows public functions to work regardless of user authentication state
+
+**Related**: See "Role-Based Permission System Pattern" for handling sessionToken in protected functions
+
 ### Query Function Structure
 
 **Context**: Reactive data fetching from client
@@ -44,7 +308,7 @@ This document outlines established patterns for Convex backend development, API 
 - Call mutations for database operations
 - Handle external API errors
 
-**Example**: _(Will be populated from actual implementations)_
+**Example**: See "Actions vs Mutations Pattern" above for complete implementation
 
 **Rationale**: Separates concerns and maintains transaction integrity
 

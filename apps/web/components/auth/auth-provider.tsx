@@ -1,8 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { authService, AuthState } from '../../lib/auth';
-import { convex } from '../../lib/convex';
+import { authService, AuthState } from '@/lib/auth';
+import { convex } from '@/lib/convex';
 import { api } from '@/lib/convex-api';
 
 interface AuthContextType extends AuthState {

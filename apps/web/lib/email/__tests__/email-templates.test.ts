@@ -2,7 +2,7 @@ import {
   getPasswordResetTemplate,
   getEmailVerificationTemplate,
   EmailTemplate,
-} from '../email-templates';
+} from '@/lib/email/email-templates';
 
 describe('Email Templates', () => {
   describe('getPasswordResetTemplate', () => {

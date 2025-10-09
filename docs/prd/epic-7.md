@@ -1,63 +1,98 @@
-# Epic 7: Multi-Tenant Administration & Onboarding System
+# Epic 7: Rapid Company Onboarding (System Admin Perspective)
 
 ## Epic Overview
 
-**Goal**: Establish comprehensive multi-tenant administration capabilities that enable system administrators to onboard new companies, manage user invitations, and provide company administrators with self-service user management tools.
+**Goal**: Enable SupportSignal system administrators to rapidly onboard new service provider companies with minimal initial setup - creating the company, setting up sites, adding users, and adding participants to get the organization operational within 24 hours.
 
 **Duration**: 2-3 weeks
-**Team Size**: 2-3 developers (backend, frontend, integration focus)
-**Dependencies**: Epic 1 (Authentication), Epic 6 (AI Prompt Management)
-**Primary Users**: System administrators, company administrators
+**Team Size**: 1-2 developers (backend, frontend focus)
+**Dependencies**: Epic 1 (Authentication)
+**Primary Users**: System administrators (SupportSignal employees)
 **Requirements Source**: [Multi-Tenant Administration Requirements Analysis](../multi-tenant-administration-requirements.md)
+
+**Note**: This epic focuses on **lightweight rapid onboarding** from the SupportSignal perspective. Full self-service user and participant management by company administrators will be addressed in Epic 9.
+
+**Important**: Site creation and deletion is **system admin only** (Epic 7). Company admins can **rename sites** in Epic 9 but cannot create or delete them.
 
 ---
 
 ## Business Context
 
-Epic 7 addresses critical gaps in SupportSignal's multi-tenant administration system, enabling operational scalability and reducing administrative burden. This epic transforms SupportSignal from a single-tenant system requiring manual intervention into a self-service multi-tenant platform.
+Epic 7 enables SupportSignal system administrators to quickly onboard new service provider organizations. This is the **initial setup phase** where SupportSignal staff prepare a new company for operation by creating the company record, setting up sites (locations), setting up initial users (admin + frontline workers), and adding sample participants.
 
 **Key Business Drivers**:
-- **Operational Scalability**: Enable onboarding of 100+ companies with minimal system admin intervention
-- **Self-Service Administration**: Company admins manage their own users, reducing support burden by 75%
-- **User Experience**: New companies operational within 24 hours, new users active within 1 hour
-- **Revenue Enablement**: Remove operational barriers to customer acquisition and expansion
+- **Rapid Onboarding**: Get new service providers operational within 24 hours
+- **Minimal Setup**: System admin adds just enough data to make the company functional
+- **Site-Based Organization**: Participants belong to sites (physical locations) for better organization
+- **Handoff to Company**: After initial setup, company admins take over ongoing management
+- **Revenue Enablement**: Fast time-to-value for new customers
 
 **Success Metrics**:
-- **Onboarding Efficiency**: 90% of company onboarding completed without system admin intervention
-- **User Management**: 90% of user management handled by company admins
-- **Time to Value**: New companies operational in <24 hours
-- **Admin Workload**: 75% reduction in routine administrative tasks
+- **Onboarding Speed**: New companies operational in <24 hours
+- **Setup Efficiency**: System admin can onboard a company in <30 minutes
+- **Initial Data**: Company has 1+ sites, 1 admin + 2-5 users, 5-10 participants assigned to sites
+- **Handoff Success**: Company admin can immediately access their dashboard and data
+
+**Scope Clarification**:
+- **IN SCOPE**: System admin lightweight setup (company + sites + initial users + sample participants)
+- **IN SCOPE**: Site creation and deletion by system admins
+- **OUT OF SCOPE**: Company admin self-service management (see Epic 9)
+- **OUT OF SCOPE**: Bulk imports, advanced NDIS compliance features (see Epic 9)
+- **NOTE**: Company admins can rename sites in Epic 9 (but not create/delete)
+
+---
+
+## Multi-Tenant Site Architecture
+
+**Key Concept: Sites represent physical locations where frontline workers look after participants.**
+
+```
+Company (NDIS Service Provider)
+  └── Sites (1 or more locations)
+        ├── Site 1 (e.g., "North Sydney Office")
+        │     ├── Participant 1
+        │     ├── Participant 2
+        │     └── Participant 3
+        └── Site 2 (e.g., "Parramatta Branch")
+              ├── Participant 4
+              └── Participant 5
+
+Incidents
+  └── Linked to Site (dropdown selection during incident capture)
+```
+
+**Relationships**:
+- Company → Sites (one-to-many)
+- Site → Participants (one-to-many)
+- Incident → Site (many-to-one)
+- Participants MUST have a site before creation
+- Incidents capture which site the incident occurred at
 
 ---
 
 ## User Journey Overview
 
+**System Admin Rapid Onboarding Workflow:**
+
 ```mermaid
 graph TD
-    A[System Admin] --> B[Create New Company]
-    B --> C[Set Initial Admin]
-    C --> D[Send Welcome Email]
-    D --> E[Company Admin Onboarding]
+    A[System Admin Login] --> B[Create New Company]
+    B --> C[Add Initial Admin User]
+    C --> D[Send Welcome Email to Admin]
+    D --> E[Add 2-5 Initial Users]
+    E --> F[Create Company Sites]
+    F --> G[Add 5-10 Participants to Sites]
+    G --> H[Configure Incident Capture for Sites]
+    H --> I[Edit Company Details if Needed]
+    I --> J[Verify Company Setup]
+    J --> K[Handoff to Company Admin]
 
-    E --> F[Company Dashboard]
-    F --> G[Invite Team Members]
-    G --> H[Manage User Roles]
-    H --> I[Monitor Company Health]
-
-    subgraph "User Invitation Flow"
-        J[Send Email Invitation]
-        K[User Receives Email]
-        L[Account Creation]
-        M[Role Assignment]
-        N[Access Granted]
-    end
-
-    G -.-> J
-    J --> K
-    K --> L
-    L --> M
-    M --> N
+    K --> L[Company Admin Receives Welcome Email]
+    L --> M[Company Admin Logs In]
+    M --> N[Company Admin Takes Over Management]
 ```
+
+**Key Insight**: This is a **one-time setup flow** performed by SupportSignal staff. After handoff, the company admin uses Epic 9 features for ongoing management (but NOT site management - sites remain system admin only).
 
 ---
 
@@ -65,9 +100,9 @@ graph TD
 
 ### Story 7.1: Company Creation & Onboarding Workflow
 
-**Status**: **PLANNED** 📋
+**Status**: **COMPLETED** ✅
 **Priority**: CRITICAL
-**Estimated Effort**: 4-5 days
+**Estimated Effort**: 4-5 days (Actual: Completed)
 
 #### Requirements
 
@@ -83,146 +118,319 @@ graph TD
 - **Welcome Email Integration**: Use existing Cloudflare Worker email service for onboarding
 
 #### Acceptance Criteria
-- [ ] **Company Creation Form**: System admin interface at `/admin/companies/create`
-- [ ] **Authenticated Backend**: Upgrade `createCompany` function with system admin authentication
-- [ ] **Automatic Slug Generation**: URL-friendly company identifiers with conflict resolution
-- [ ] **Initial Admin Setup**: Assign first company administrator during creation
-- [ ] **Welcome Email**: Automated welcome email using existing Resend service
-- [ ] **Input Validation**: Comprehensive validation for company name, email, and admin details
-- [ ] **Error Handling**: Graceful handling of duplicate names, invalid emails, auth failures
-- [ ] **Success Confirmation**: Clear feedback on successful company creation
+- [x] **Company Creation Form**: System admin interface at `/admin/companies/create` ✅
+- [x] **Authenticated Backend**: Upgrade `createCompany` function with system admin authentication ✅
+- [x] **Automatic Slug Generation**: URL-friendly company identifiers with conflict resolution ✅
+- [x] **Initial Admin Setup**: Assign first company administrator during creation ✅
+- [x] **Welcome Email**: Automated welcome email using existing Resend service ✅
+- [x] **Input Validation**: Comprehensive validation for company name, email, and admin details ✅
+- [x] **Error Handling**: Graceful handling of duplicate names, invalid emails, auth failures ✅
+- [x] **Success Confirmation**: Clear feedback on successful company creation ✅
+
+**Implementation Status**: Story 7.1 is complete. See `docs/stories/7.1.story.md` for full details.
 
 ---
 
-### Story 7.2: User Invitation System with Email Integration
+### Story 7.2: Initial User Setup (System Admin)
 
-**Status**: **PLANNED** 📋
+**Status**: **BACKEND COMPLETE** ⚙️ (Frontend pending)
 **Priority**: CRITICAL
-**Estimated Effort**: 5-6 days
+**Estimated Effort**: 5-6 days (Backend complete, frontend pending)
 **Dependencies**: Story 7.1 (Company creation foundation)
 
 #### Requirements
 
-**Problem**: Users can only be promoted/demoted, not invited. All user management requires system admin intervention, limiting operational efficiency.
+**Problem**: After creating a company, the system admin needs a quick way to add 2-5 initial users (frontline workers, team leads) to make the company operational.
 
-**Solution**: Implement comprehensive user invitation system integrating BetterAuth authentication with existing Cloudflare Worker email service.
+**Solution**: System admin interface to quickly invite initial users with email invitations, role assignment, and automatic account creation.
 
 **Technical Implementation**:
-- **Invitation Database Schema**: Track invitation tokens, expiration, and status
-- **Email Integration**: Use existing Resend service for invitation delivery
-- **BetterAuth Integration**: Seamless account creation during invitation acceptance
-- **Token Security**: Secure invitation link generation with expiration
-- **Role Assignment**: Assign appropriate roles during invitation process
+- **Invitation Database Schema**: Track invitation tokens, expiration, and status ✅
+- **Email Integration**: Use existing Resend service for invitation delivery ✅
+- **bcrypt-based auth Integration**: Seamless account creation during invitation acceptance ✅
+- **Token Security**: Secure invitation link generation with expiration ✅
+- **Role Assignment**: Assign appropriate roles during invitation process ✅
+
+**Scope**: Lightweight user addition (2-5 users) for initial setup. Full user lifecycle management is in Epic 9.
 
 #### Acceptance Criteria
-- [ ] **User Invitation Schema**: `user_invitations` table with token management
-- [ ] **Invitation Form**: Interface for sending user invitations with role selection
-- [ ] **Email Integration**: Automated invitation emails using existing Cloudflare Worker
-- [ ] **Secure Tokens**: Cryptographically secure invitation tokens with expiration
-- [ ] **BetterAuth Integration**: Seamless account creation during invitation acceptance
-- [ ] **Role Assignment**: Proper role assignment during invitation process
-- [ ] **Status Tracking**: Track invitation status (pending, accepted, expired, revoked)
-- [ ] **Invitation Management**: View and manage pending invitations
+- [x] **User Invitation Schema**: `user_invitations` table with token management ✅
+- [x] **Backend Functions**: All invitation mutations and queries implemented ✅
+- [x] **Email Integration**: Automated invitation emails using existing Cloudflare Worker ✅
+- [x] **Secure Tokens**: Cryptographically secure invitation tokens with expiration ✅
+- [x] **bcrypt-based auth Integration**: Seamless account creation during invitation acceptance ✅
+- [x] **Role Assignment**: Proper role assignment during invitation process ✅
+- [x] **Status Tracking**: Track invitation status (pending, accepted, expired, revoked) ✅
+- [ ] **Invitation Form UI**: System admin interface for sending invitations (Frontend pending)
+- [ ] **Invitation Management UI**: View and manage pending invitations (Frontend pending)
+
+**Implementation Status**: Backend complete (see `docs/stories/7.2.story.md`). Frontend UI pending.
 
 ---
 
-### Story 7.3: Company-Scoped User Management Interface
+### Story 7.3: Site Management (System Admin)
 
 **Status**: **PLANNED** 📋
-**Priority**: HIGH
-**Estimated Effort**: 4-5 days
-**Dependencies**: Story 7.2 (User invitation system)
+**Priority**: CRITICAL
+**Estimated Effort**: 3-4 days
+**Dependencies**: Story 7.2 (User setup)
+
+#### CRITICAL PREREQUISITES - Schema Changes Required
+
+**⚠️ IMPORTANT**: Before implementing Story 7.3, the following schema changes MUST be made to `apps/convex/schema.ts`:
+
+**1. Add Sites Table:**
+```typescript
+sites: defineTable({
+  _id: v.id("sites"),
+  company_id: v.id("companies"),
+  name: v.string(),
+  created_at: v.number(),
+  created_by: v.id("users"),
+  updated_at: v.optional(v.number())
+})
+  .index("by_company", ["company_id"])
+  .index("by_name", ["company_id", "name"])
+```
+
+**2. Update Participants Table** (for Story 7.4):
+```typescript
+participants: defineTable({
+  // ... existing fields ...
+  site_id: v.id("sites"),  // NEW FIELD - REQUIRED
+  // ... existing fields ...
+})
+  .index("by_site", ["site_id"])  // NEW INDEX
+  .index("by_company_and_site", ["company_id", "site_id"])  // NEW INDEX
+```
+
+**3. Update Incidents Table** (for Story 7.6):
+```typescript
+incidents: defineTable({
+  // ... existing fields ...
+  site_id: v.id("sites"),  // NEW FIELD - REQUIRED
+  // ... existing fields ...
+})
+  .index("by_site", ["site_id"])  // NEW INDEX
+  .index("by_company_and_site", ["company_id", "site_id"])  // NEW INDEX
+```
+
+**Schema Deployment**: These changes must be deployed to Convex before proceeding with frontend implementation.
 
 #### Requirements
 
-**Problem**: Company administrators cannot manage their own users. All user management requires system admin intervention, creating operational bottlenecks.
+**Problem**: Service provider companies have multiple physical locations (sites) where frontline workers look after participants. Currently, there's no way to organize participants by location. The system needs site management to properly organize participants by their physical care location.
 
-**Solution**: Implement company-scoped user management interface enabling company admins to invite, manage, and deactivate users within their organization.
+**Solution**: Implement site management system where system admins create and manage sites for companies. Participants will be assigned to sites. This provides better organization and will enable future features like site-specific reporting and rostering.
 
 **Technical Implementation**:
-- **Company Admin Dashboard**: Dedicated interface for company user management
-- **Scoped User Listing**: Show only users within company boundary
-- **Role Management**: Company admins can assign roles within their scope
-- **User Deactivation**: Ability to deactivate users while preserving data integrity
+- **Sites Database Schema**: New `sites` table with company relationship
+- **Site CRUD Operations**: Create, read, update, delete sites for a company
+- **Primary Site Convention**: Each company must have at least one site (default: "Primary")
+- **Site Validation**: Prevent deletion of sites that have participants assigned
+- **Data Migration**: Create "Primary" site for all existing companies and link existing participants
+
+**Scope**: System admin creates and deletes sites. Company admins can **rename sites** in Epic 9 (but not create/delete).
 
 #### Acceptance Criteria
-- [ ] **Company Admin Interface**: Dedicated user management at `/company-admin/users`
-- [ ] **Scoped User Listing**: Display only company users with filtering and search
-- [ ] **User Invitation**: Company admins can invite new users to their company
-- [ ] **Role Management**: Assign and modify user roles within company scope
-- [ ] **User Deactivation**: Deactivate users while maintaining data integrity
-- [ ] **Permission Boundaries**: Strict enforcement of company data isolation
-- [ ] **User Profile Management**: View and edit user profiles within company
-- [ ] **Bulk Operations**: Support for bulk user management actions
+- [ ] **Sites Database Schema**: New `sites` table with `company_id`, `name`, `created_at` fields
+- [ ] **Site Management Interface**: System admin interface at `/admin/companies/{id}/sites`
+- [ ] **Create Site**: Form to add new site to a company
+- [ ] **List Sites**: View all sites for a company with participant counts
+- [ ] **Edit Site**: Update site name and details
+- [ ] **Delete Site**: Remove site (validation: cannot delete if has participants)
+- [ ] **Default Site Creation**: Auto-create "Primary" site when company is created
+- [ ] **Site Validation**: Enforce at least one site per company
+- [ ] **Migration Script**: Create "Primary" site for all existing companies
+- [ ] **Participant Migration**: Link all existing participants to their company's Primary site
+- [ ] **Backend Functions**: `sites.admin.*` functions for CRUD operations
+- [ ] **Company Scoping**: Sites are company-scoped, system admin can manage all sites
+
+#### Migration Strategy
+
+**The migration must follow this exact order to maintain referential integrity:**
+
+**Phase 1: Schema Setup** (Story 7.3 start)
+1. Add `sites` table to `apps/convex/schema.ts`
+2. Deploy schema changes to Convex (`bunx convex deploy`)
+3. Verify table creation using Convex dashboard or `bunx convex data sites`
+4. Confirm `sites` table is ready before proceeding
+
+**Phase 2: Create Primary Sites** (Story 7.3 implementation)
+1. Develop migration script: `sites.migration.createPrimarySitesForExistingCompanies()`
+2. For each company without sites:
+   - Create site with name "Primary"
+   - Set `company_id` to link to company
+   - Set `created_by` to system admin user
+   - Set `created_at` to current timestamp
+3. Verify all companies have at least one site
+4. Log all site creation operations for audit trail
+
+**Phase 3: Update Participants Schema** (Story 7.4 prerequisite)
+1. Add `site_id: v.id("sites")` field to `participants` table in schema.ts
+2. Add indexes: `by_site` and `by_company_and_site`
+3. Deploy schema changes to Convex
+4. Develop migration script: `participants.migration.linkToPrimarySites()`
+5. For each participant without `site_id`:
+   - Find participant's `company_id`
+   - Find company's Primary site
+   - Set `participant.site_id = primary_site._id`
+6. Verify all participants have `site_id` populated
+7. Log all participant updates for audit trail
+
+**Phase 4: Update Incidents Schema** (Story 7.6 prerequisite)
+1. Add `site_id: v.id("sites")` field to `incidents` table in schema.ts
+2. Add indexes: `by_site` and `by_company_and_site`
+3. Deploy schema changes to Convex
+4. Develop migration script: `incidents.migration.linkToPrimarySites()`
+5. For each incident without `site_id`:
+   - Find incident's company via `participant.company_id`
+   - Find company's Primary site
+   - Set `incident.site_id = primary_site._id`
+6. Verify all incidents have `site_id` populated
+7. Log all incident updates for audit trail
+
+**Story 7.3 Completion Criteria:**
+
+Story 7.3 is ONLY complete when:
+- ✅ Sites table exists in `schema.ts` and deployed to Convex
+- ✅ Primary sites created for all existing companies
+- ✅ Migration scripts tested and documented
+- ✅ Site CRUD backend functions implemented and tested
+- ✅ Site management UI functional (`/admin/companies/{id}/sites`)
+- ✅ All acceptance criteria met
+
+**Migration Script Locations:**
+```
+apps/convex/sites/migration.ts       // createPrimarySitesForExistingCompanies
+apps/convex/participants/migration.ts // linkToPrimarySites
+apps/convex/incidents/migration.ts    // linkToPrimarySites
+```
 
 ---
 
-### Story 7.4: Enhanced Company Dashboard with Analytics
+### Story 7.4: Initial Participant Setup (System Admin)
 
 **Status**: **PLANNED** 📋
 **Priority**: HIGH
 **Estimated Effort**: 3-4 days
-**Dependencies**: Story 7.3 (Company user management)
+**Dependencies**: Story 7.3 (Sites must exist before participants)
 
 #### Requirements
 
-**Problem**: Company administrators lack visibility into their organization's health and activity. Current company management interfaces provide only basic information updates.
+**Problem**: After creating a company, setting up users, and creating sites, the system admin needs a quick way to add 5-10 sample participants so the company can start using the incident capture workflow immediately. **Participants must be assigned to a site.**
 
-**Solution**: Create comprehensive company dashboard providing key metrics, user activity overview, and health indicators for company administrators.
+**Solution**: System admin interface to quickly add initial participants with basic NDIS information and site assignment - just enough to make the system functional.
 
 **Technical Implementation**:
-- **Company Health Metrics**: User count, participant count, recent activity tracking
-- **Activity Overview**: Recent user logins, incident creation, system usage
-- **Basic Analytics**: Simple charts and metrics relevant to company operations
-- **Quick Actions**: Direct access to common administrative tasks
+- **Participant Creation Form**: Simple form for adding participants one at a time
+- **Site Selection**: Dropdown to select site (required field)
+- **Company Scoping**: Participants automatically associated with the company
+- **Basic NDIS Data**: First name, last name, NDIS number, support level
+- **No Bulk Import**: Lightweight individual participant creation (bulk operations in Epic 9)
+
+**Scope**: Quick setup of 5-10 participants for initial operation. Full participant lifecycle management is in Epic 9.
 
 #### Acceptance Criteria
-- [ ] **Company Dashboard**: Comprehensive overview at `/company-admin/dashboard`
-- [ ] **Health Metrics**: Display user count, participant count, recent activity
-- [ ] **Activity Tracking**: Show recent user activity and system usage
-- [ ] **Quick Actions**: Direct links to user management, participant management
-- [ ] **Performance Metrics**: Basic analytics on company usage patterns
-- [ ] **Mobile Responsive**: Full functionality on mobile devices
-- [ ] **Real-time Updates**: Live data refresh using Convex real-time capabilities
-- [ ] **Export Capabilities**: Export company data and reports
+- [ ] **Participant Form**: System admin interface at `/admin/companies/{id}/participants/create`
+- [ ] **Basic Fields**: First name, last name, NDIS number, DOB, support level
+- [ ] **Site Selection**: Dropdown showing company's sites (required field)
+- [ ] **Site Validation**: Cannot create participant without selecting a site
+- [ ] **Company Association**: Participants automatically linked to correct company
+- [ ] **NDIS Number Validation**: Basic format validation for NDIS numbers
+- [ ] **Success Feedback**: Confirmation after participant creation
+- [ ] **Participant List**: View created participants with site information
+- [ ] **Site Filter**: Filter participants by site in listing
 
 ---
 
-### Story 7.5: System-Wide Company Management Tools
+### Story 7.5: System-Wide Company Management & Editing
 
 **Status**: **PLANNED** 📋
 **Priority**: MEDIUM
 **Estimated Effort**: 3-4 days
-**Dependencies**: Story 7.4 (Company dashboard)
+**Dependencies**: Story 7.4 (Participant setup)
 
 #### Requirements
 
-**Problem**: System administrators need simple overview of all companies in the system for monitoring and lifecycle management. Additionally, test companies created during development and testing need to be safely removed along with all their related data.
+**Problem**: System administrators need to:
+1. Edit company details after creation (contact info, status, settings)
+2. View simple overview of all companies for monitoring
+3. Manage company lifecycle (activate, suspend, reactivate)
+4. Safely remove test companies with all related data (including sites and participants)
 
-**Solution**: Implement system-wide company management interface providing company listing, basic metrics, lifecycle management tools, and comprehensive cleanup capabilities for test companies.
+**Solution**: Implement system-wide company management interface providing company editing, listing, basic metrics, lifecycle management tools, and comprehensive cleanup capabilities for test companies.
 
 **Technical Implementation**:
+- **Company Edit Interface**: Form to update company details, contact info, status
 - **Company Listing Interface**: Simple table view of all companies with key metrics
 - **Company Lifecycle Management**: Activate, suspend, and reactivate companies
 - **System Overview**: Total counts and system-wide health indicators
 - **Company Status Management**: Easy status updates and monitoring
 - **Test Company Cleanup System**: Safe removal of test companies with comprehensive data preview
-- **Cascade Deletion Engine**: Remove all related data across tables (users, participants, incidents, sessions, etc.)
+- **Cascade Deletion Engine**: Remove all related data across tables (sites, users, participants, incidents, sessions, etc.)
 - **Cleanup Audit Trail**: Complete logging of all cleanup operations for compliance
 
 #### Acceptance Criteria
+- [ ] **Company Edit Form**: System admin interface at `/admin/companies/{id}/edit`
+- [ ] **Edit Company Details**: Update name, contact email, phone, address, settings
+- [ ] **Company Status Management**: Update company status (active, trial, suspended, test)
 - [ ] **Company Listing**: System admin interface at `/admin/companies/list`
-- [ ] **Company Overview**: List all companies with user/participant counts
-- [ ] **Status Management**: Activate, suspend, reactivate companies
+- [ ] **Company Overview**: List all companies with user/participant/site counts
 - [ ] **System Metrics**: Total system statistics and health indicators
 - [ ] **Company Health**: Quick view of company activity and status
 - [ ] **Search and Filter**: Find companies by name, status, activity level
 - [ ] **Bulk Operations**: Perform actions on multiple companies
 - [ ] **Lifecycle Tracking**: Monitor company creation and activity patterns
 - [ ] **Test Company Cleanup**: Remove companies with status "test" and all related data
-- [ ] **Cleanup Preview**: Show detailed list of data to be deleted before confirmation
-- [ ] **Cascade Deletion**: Remove all related users, participants, incidents, and dependent data
+- [ ] **Cleanup Preview**: Show detailed list of data to be deleted (including sites, participants, incidents)
+- [ ] **Cascade Deletion**: Remove all related sites, users, participants, incidents, and dependent data
 - [ ] **Cleanup Logging**: Comprehensive audit trail of cleanup operations
+
+---
+
+### Story 7.6: Incident Capture Site Selection
+
+**Status**: **PLANNED** 📋
+**Priority**: MEDIUM
+**Estimated Effort**: 2-3 days
+**Dependencies**: Story 7.3 (Sites must exist)
+
+#### Requirements
+
+**Problem**: When frontline workers capture incidents, the system needs to know which site (location) the incident occurred at. This enables site-specific reporting and helps track which locations have the most incidents.
+
+**Solution**: Add site selection dropdown to the incident capture wizard on the first page, positioned just above the location text field. All incidents must be associated with a site.
+
+**Technical Implementation**:
+- **Incident Schema Update**: Add `site_id` field to incidents table (required)
+- **Site Dropdown**: Dropdown showing company's sites on incident wizard page 1
+- **Site Selection**: Required field - cannot proceed without selecting site
+- **Default Behavior**: If company has only one site, auto-select it
+- **Data Migration**: Populate all existing incidents with their company's Primary site
+
+**Scope**: Add site selection to incident capture. Site-based incident reporting comes in future epic.
+
+#### Acceptance Criteria
+- [ ] **Incident Schema Update**: Add `site_id` field to incidents table (required, references sites)
+- [ ] **Site Dropdown**: Add site selection dropdown on incident wizard page 1
+- [ ] **Dropdown Position**: Place dropdown just above location text field
+- [ ] **Site Data**: Dropdown shows all sites for the user's company
+- [ ] **Required Field**: Site selection is required to proceed in wizard
+- [ ] **Auto-Select**: If company has only one site, automatically select it
+- [ ] **Validation**: Cannot create incident without site selection
+- [ ] **Migration Script**: Populate all existing incidents with Primary site
+- [ ] **Incident List**: Show site information in incident listings
+- [ ] **Site Filter**: Add site filter to incident search/filter interface
+
+**Migration Requirements**:
+```typescript
+// Migration: Link existing incidents to Primary site
+// For each incident without site_id:
+//   - Find the incident's company (via participant → company)
+//   - Find the company's Primary site
+//   - Set incident.site_id = primary_site._id
+```
 
 ---
 
@@ -233,45 +441,113 @@ graph TD
 #### Company Management Functions
 ```typescript
 // Company Creation & Onboarding
-companies.create.createCompanyWithAuth       // Authenticated company creation
-companies.onboarding.createCompanyWithAdmin  // Create company + initial admin
-companies.onboarding.sendWelcomeEmail       // Welcome email workflow
-companies.admin.getCompanyDashboard         // Company-specific analytics
+companies.create.createCompanyWithAuth       // Authenticated company creation ✅
+companies.onboarding.createCompanyWithAdmin  // Create company + initial admin ✅
+companies.onboarding.sendWelcomeEmail       // Welcome email workflow ✅
+
+// Company Editing & Management (Story 7.5)
+companies.admin.getCompanyDetails           // Get company for editing
+companies.admin.updateCompanyDetails        // Update company information
 companies.admin.listAllCompanies           // System admin company listing
-companies.lifecycle.suspendCompany         // Company deactivation
-companies.lifecycle.reactivateCompany      // Company reactivation
+companies.lifecycle.updateCompanyStatus    // Company status management
 companies.cleanup.previewTestCompanyCleanup // Preview data to be deleted for test companies
 companies.cleanup.executeTestCompanyCleanup // Execute cleanup of test companies with full cascade deletion
 ```
 
-#### User Management Functions (BetterAuth Integration)
+#### Site Management Functions (System Admin Perspective)
 ```typescript
-// User Invitation System
-users.invite.sendUserInvitation           // Email invitation using Resend service
-users.invite.acceptInvitation             // BetterAuth account creation
-users.invite.listPendingInvitations       // Track invitation status
-users.invite.revokeInvitation             // Cancel pending invitations
-
-// Company-Scoped User Management
-users.company.listCompanyUsers            // Company admin user listing
-users.company.createCompanyUser           // Direct user creation
-users.company.updateUserRole              // Company admin role management
-users.company.deactivateUser              // User deactivation
+// Site Management (Story 7.3)
+sites.admin.createSite                     // Create new site for company
+sites.admin.listCompanySites              // List all sites for a company
+sites.admin.getSiteDetails                // Get site details with participant count
+sites.admin.updateSite                    // Update site name and details
+sites.admin.deleteSite                    // Delete site (validation: no participants)
+sites.admin.getPrimarySite                // Get or create Primary site for company
+sites.validation.validateSiteDeletion     // Check if site can be deleted
+sites.migration.createPrimarySites        // Migration: create Primary for all companies
+sites.migration.linkParticipantsToPrimary // Migration: link existing participants
 ```
 
-#### Analytics Functions
+#### User Management Functions (System Admin Perspective)
 ```typescript
-// Basic Company Metrics
-analytics.company.getUserCount            // Simple user count
-analytics.company.getParticipantCount     // Simple participant count
-analytics.company.getBasicStats           // Combined basic metrics
-analytics.system.getCompanyList           // Company listing with counts
+// Initial User Setup (System Admin)
+users.invite.sendUserInvitation           // Email invitation using Resend service ✅
+users.invite.acceptInvitation             // bcrypt-based auth account creation ✅
+users.invite.listPendingInvitations       // Track invitation status ✅
+users.invite.revokeInvitation             // Cancel pending invitations ✅
 ```
 
-### Database Schema Additions
+#### Participant Management Functions (System Admin Perspective)
+```typescript
+// Initial Participant Setup (System Admin - Story 7.4)
+participants.admin.createParticipant      // Create individual participant for company (requires site_id)
+participants.admin.listCompanyParticipants // View participants for a specific company
+participants.admin.filterParticipantsBySite // Filter participants by site
+participants.validation.validateNdisNumber // Basic NDIS number format validation
+```
 
-#### User Invitations Table
-```sql
+#### Incident Management Functions
+```typescript
+// Incident Capture Site Selection (Story 7.6)
+incidents.capture.listCompanySites        // Get sites for incident capture dropdown
+incidents.capture.createIncidentWithSite  // Create incident with site selection
+incidents.migration.linkIncidentsToPrimary // Migration: link existing incidents to Primary site
+```
+
+**Note**: Advanced user and participant management (bulk operations, lifecycle management, etc.) will be in Epic 9 backend functions. **Site creation and deletion stays in Epic 7. Company admins can rename sites in Epic 9.**
+
+---
+
+## Database Schema Additions
+
+### Sites Table (NEW - Story 7.3)
+```typescript
+sites: defineTable({
+  _id: v.id("sites"),
+  company_id: v.id("companies"),
+  name: v.string(),  // e.g., "Primary", "North Sydney Office", "Parramatta Branch"
+  created_at: v.number(),
+  created_by: v.id("users"),
+  updated_at: v.optional(v.number())
+})
+  .index("by_company", ["company_id"])
+  .index("by_name", ["company_id", "name"])
+```
+
+**Relationships**:
+- `sites.company_id` → `companies._id` (many-to-one)
+- `participants.site_id` → `sites._id` (many-to-one)
+- `incidents.site_id` → `sites._id` (many-to-one)
+
+**Constraints**:
+- Each company must have at least one site
+- Site names must be unique within a company
+- Sites cannot be deleted if they have participants assigned
+
+### Participants Table Updates (Story 7.4)
+```typescript
+participants: defineTable({
+  // ... existing fields ...
+  site_id: v.id("sites"),  // NEW FIELD - REQUIRED
+  // ... existing fields ...
+})
+  .index("by_site", ["site_id"])  // NEW INDEX
+  .index("by_company_and_site", ["company_id", "site_id"])  // NEW INDEX
+```
+
+### Incidents Table Updates (Story 7.6)
+```typescript
+incidents: defineTable({
+  // ... existing fields ...
+  site_id: v.id("sites"),  // NEW FIELD - REQUIRED
+  // ... existing fields ...
+})
+  .index("by_site", ["site_id"])  // NEW INDEX
+  .index("by_company_and_site", ["company_id", "site_id"])  // NEW INDEX
+```
+
+### User Invitations Table (Implemented ✅)
+```typescript
 user_invitations: {
   _id: id,
   email: string,
@@ -286,105 +562,204 @@ user_invitations: {
 }
 ```
 
-### Integration Requirements
+**Implementation Status**: Schema added in Story 7.2. See schema.ts for details.
 
-#### Email Service Integration
+---
+
+## Data Migration Plan
+
+### Migration 1: Create Primary Sites (Story 7.3)
+```typescript
+// For all existing companies without sites:
+// 1. Create a site named "Primary"
+// 2. Associate with company
+// 3. Mark as default site
+
+migration.sites.createPrimarySitesForExistingCompanies();
+```
+
+### Migration 2: Link Participants to Primary Site (Story 7.3)
+```typescript
+// For all existing participants without site_id:
+// 1. Find the participant's company
+// 2. Get the company's Primary site
+// 3. Set participant.site_id = primary_site._id
+
+migration.participants.linkToPrimarySites();
+```
+
+### Migration 3: Link Incidents to Primary Site (Story 7.6)
+```typescript
+// For all existing incidents without site_id:
+// 1. Find the incident's company (via participant)
+// 2. Get the company's Primary site
+// 3. Set incident.site_id = primary_site._id
+
+migration.incidents.linkToPrimarySites();
+```
+
+**Migration Execution Order**:
+1. Create `sites` table schema
+2. Run Migration 1 (create Primary sites)
+3. Update `participants` schema (add `site_id` field)
+4. Run Migration 2 (link participants to Primary sites)
+5. Update `incidents` schema (add `site_id` field)
+6. Run Migration 3 (link incidents to Primary sites)
+
+---
+
+## Integration Requirements
+
+### Email Service Integration (Implemented ✅)
 - **Service**: Existing Cloudflare Worker with Resend API
 - **Endpoint**: `https://supportsignal-email-with-resend.your-account.workers.dev`
 - **Integration**: Company creation welcome emails, user invitation emails
-- **Reference**: `/Users/davidcruwys/dev/clients/supportsignal/supportsignal-email-with-resend/INTEGRATION.md`
+- **Status**: Fully integrated in Stories 7.1 and 7.2
 
-#### BetterAuth Integration
-- **Authentication**: Integrate with existing BetterAuth system
-- **Session Management**: Use existing `sessions` table
-- **Password Management**: Leverage existing `password_reset_tokens` table
+### bcrypt-based auth Integration (Implemented ✅)
+- **Authentication**: Integrated with existing bcrypt-based auth system
+- **Session Management**: Uses existing `sessions` table
+- **Password Management**: Leverages existing `password_reset_tokens` table
 - **Account Creation**: Seamless user account creation during invitation acceptance
+- **Status**: Fully integrated in Story 7.2
 
 ---
 
 ## Epic Completion Status
 
-### Current State: **PLANNED - READY FOR IMPLEMENTATION** 📋
+### Current State: **50% COMPLETE - IN PROGRESS** 🚧
 
-**Story 7.1**: 📋 Planned - Company creation & onboarding workflow
-**Story 7.2**: 📋 Planned - User invitation system with email integration
-**Story 7.3**: 📋 Planned - Company-scoped user management interface
-**Story 7.4**: 📋 Planned - Enhanced company dashboard with analytics
-**Story 7.5**: 📋 Planned - System-wide company management tools
+**Story 7.1**: ✅ **COMPLETE** - Company creation & onboarding workflow
+**Story 7.2**: ⚙️ **BACKEND COMPLETE** - Initial user setup (frontend pending)
+**Story 7.3**: 📋 **PLANNED** - Site management (system admin)
+**Story 7.4**: 📋 **PLANNED** - Initial participant setup (requires sites)
+**Story 7.5**: 📋 **PLANNED** - System-wide company management & editing
+**Story 7.6**: 📋 **PLANNED** - Incident capture site selection
 
 **Epic 7 Target Deliverables**:
-- 🎯 **Complete Company Onboarding**: New companies operational within 24 hours
-- 🎯 **Self-Service User Management**: 90% of user operations handled by company admins
-- 🎯 **Scalable Administration**: Support 100+ companies with minimal system admin load
-- 🎯 **Integrated Email Workflows**: Automated notifications using existing infrastructure
-- 🎯 **Comprehensive Analytics**: Company health monitoring and system overview
+- ✅ **Rapid Company Creation**: System admin can create companies with initial admin
+- ⚙️ **User Onboarding**: Backend ready for system admin to invite initial users (UI pending)
+- 📋 **Site Management**: System admin creates and manages sites for companies
+- 📋 **Participant Setup**: System admin can add sample participants to sites
+- 📋 **Company Management**: Edit companies and system-wide oversight with test cleanup
+- 📋 **Incident Site Tracking**: Incidents capture which site they occurred at
+
+**Success Criteria**:
+- System admin can onboard a new company in <30 minutes
+- New companies have 1+ sites, 1 admin + 2-5 users, 5-10 participants assigned to sites
+- Company admins receive welcome emails and can log in immediately
+- System admin can edit company details after creation
+- Participants are organized by site (physical location)
+- Incidents track which site they occurred at
+- Test companies can be cleaned up with full data cascade deletion (including sites)
 
 ---
 
 ## Integration Points
 
 ### Dependencies Satisfied:
-- ✅ **Epic 1**: Authentication system (BetterAuth) ready for integration
-- ✅ **Email Infrastructure**: Cloudflare Worker with Resend service operational
-- ✅ **Company Management**: Basic company management interfaces exist
-- ✅ **User Management**: Role-based access system established
+- ✅ **Epic 1**: Authentication system (bcrypt-based auth) integrated
+- ✅ **Email Infrastructure**: Cloudflare Worker with Resend service operational and integrated
+- ✅ **Multi-tenant Database**: Company, user, and participant tables ready
+- ✅ **User Invitations**: Complete backend infrastructure for user onboarding
 
 ### Enables Future Development:
-- **Enhanced Analytics**: Foundation for advanced reporting and insights
-- **API Management**: Company-specific API access controls
-- **Compliance Reporting**: Company-segregated compliance data
-- **Advanced Workflows**: Complex multi-company business processes
+- **Epic 9 (Service Provider Operations)**: Foundation for company admin self-service
+  - Full user lifecycle management by company admins
+  - Full participant lifecycle management with NDIS compliance
+  - Bulk operations and data imports
+  - Advanced analytics and reporting
+  - **Site renaming**: Company admins can rename their sites (but not create/delete)
+- **Epic 10+**: Site-based reporting and analytics
+- **Epic 11+**: Site-specific rostering and scheduling
 
 ---
 
 ## Risk Considerations
 
-### Technical Risks
-- **Email Delivery**: Invitation emails may be blocked by spam filters
-- **Token Security**: Invitation tokens require secure generation and expiration
-- **Data Isolation**: Must maintain strict company data separation
-- **Performance**: Company-scoped queries must remain performant at scale
+### Technical Risks (Updated for Sites)
+- ✅ **Email Delivery**: Mitigated - tested and working in Stories 7.1 and 7.2
+- ✅ **Token Security**: Mitigated - cryptographically secure implementation in Story 7.2
+- **Site Migration**: Risk of data inconsistency when linking existing participants and incidents to Primary sites
+- **Site Deletion**: Risk of orphaned participants if site deletion validation fails
+- **Participant Data Quality**: Risk of incorrect NDIS numbers during rapid setup
+- **Test Data Cleanup**: Risk of accidentally deleting production companies
+- **Company Editing Conflicts**: Risk of concurrent edits by multiple system admins
 
 ### Mitigation Strategies
-- **Email Testing**: Comprehensive testing across email providers
-- **Security Audit**: Thorough review of invitation token generation
-- **Data Access Patterns**: Careful design of company-scoped database queries
-- **Performance Testing**: Load testing with realistic multi-company scenarios
+- ✅ **Email Integration**: Proven working with Cloudflare Worker + Resend
+- ✅ **Token Security**: Cryptographic token generation with expiration implemented
+- **Migration Safety**: Comprehensive migration scripts with validation and rollback capability
+- **Site Validation**: Strict validation preventing deletion of sites with participants
+- **NDIS Validation**: Basic format validation to prevent obvious errors
+- **Cleanup Safety**: Multi-step confirmation with preview before deletion
+- **Status Filtering**: Only companies with `status: "test"` can be cleaned up
+- **Edit Locking**: Optimistic concurrency control for company editing
 
 ---
 
 ## Knowledge Capture
 
 ### Key Architectural Patterns Established:
-- **Multi-tenant administration** patterns with company isolation
-- **User invitation workflows** with email integration
-- **Company lifecycle management** with status tracking
-- **Delegated administration** with proper permission boundaries
+- ✅ **Company creation workflow** with automatic admin assignment (Story 7.1)
+- ✅ **Email integration patterns** using Cloudflare Worker + Resend (Stories 7.1, 7.2)
+- ✅ **User invitation system** with secure tokens and bcrypt-based auth integration (Story 7.2)
+- **Site-based organization** for multi-location service providers
+- **Data migration patterns** for adding new required relationships
+- **Lightweight onboarding** focused on rapid setup vs comprehensive management
+- **Clear separation** between system admin setup (Epic 7) and company admin operations (Epic 9)
 
 ### Requirements Documentation:
 - **Detailed Requirements Analysis**: [Multi-Tenant Administration Requirements](../multi-tenant-administration-requirements.md)
-  - Current system capabilities analysis
-  - Critical gaps identification (5 major gaps)
-  - Technical architecture requirements
-  - Database schema specifications
-  - User journey definitions
+- **Story Documentation**:
+  - `docs/stories/7.1.story.md` - Complete implementation details
+  - `docs/stories/7.2.story.md` - Backend implementation and pending frontend work
+  - `docs/stories/7.3.story.md` - Site management (to be created)
+  - `docs/stories/7.4.story.md` - Participant setup with sites (to be created)
+  - `docs/stories/7.5.story.md` - Company editing (to be created)
+  - `docs/stories/7.6.story.md` - Incident site selection (to be created)
 
 ### Integration Documentation:
-- **Email Service Integration**: Complete API documentation and examples
-- **BetterAuth Integration**: Account creation and authentication patterns
-- **Company Management**: Administrative interface and workflow patterns
+- ✅ **Email Service**: Fully documented and working
+- ✅ **bcrypt-based auth**: Account creation patterns implemented
+- **Site Management**: To be documented in Story 7.3
+- **Participant-Site Relationship**: To be documented in Story 7.4
+- **Incident-Site Relationship**: To be documented in Story 7.6
+- **Migration Patterns**: To be documented across Stories 7.3, 7.4, 7.6
+
+---
+
+## Epic Scope Clarification (Important)
+
+**Epic 7 Focus**: **Rapid onboarding by SupportSignal system administrators**
+- Create company + initial admin (✅ Done)
+- Edit company details (📋 Planned)
+- Add 2-5 initial users (⚙️ Backend done)
+- **Create and manage sites** (📋 Planned - NEW)
+- Add 5-10 sample participants **to sites** (📋 Planned - UPDATED)
+- Configure incident capture **with site selection** (📋 Planned - NEW)
+- System oversight and test cleanup (📋 Planned)
+
+**Epic 9 Focus**: **Self-service operations by service provider company administrators**
+- Full user lifecycle management
+- Full participant lifecycle with NDIS compliance
+- Bulk operations and data imports
+- Advanced analytics and reporting
+- **Site renaming**: Company admins can rename sites (but not create/delete)
+
+This separation ensures Epic 7 stays focused on initial setup with the new site organization model, while Epic 9 provides ongoing operational management. Company admins have limited site management (rename only) to customize their location names without requiring system admin intervention.
 
 ---
 
 ## Contact & Support
 
-**Epic Owner**: System Administrator
+**Epic Owner**: SupportSignal System Administrators
 **Technical Lead**: Development Team
-**Business Stakeholder**: Company Administrators
-**Documentation**: Multi-tenant administration requirements analysis available
+**Next Epic**: Epic 9 (Service Provider Operations)
+**Documentation**: Full story documentation in `docs/stories/7.*.story.md`
 
 ---
 
-*Epic 7 Status: Ready for Implementation - Foundation for Scalable Multi-Tenant Operations*
-*Last Updated: 2025-01-19*
-*Version: 1.0*
+*Epic 7 Status: 50% Complete - Rapid Onboarding Foundation with Site Organization*
+*Last Updated: 2025-01-20*
+*Version: 2.1 (Added Sites concept and management)*

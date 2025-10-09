@@ -5,9 +5,9 @@ import React, { useEffect } from 'react';
 import {
   initializeConsoleOverride,
   ConsoleLogger,
-} from '../../lib/console-override';
+} from '@/lib/console-override';
 import { LoggingStatus } from './logging-status';
-import { useAuth } from '../auth/auth-provider';
+import { useAuth } from '@/components/auth/auth-provider';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 

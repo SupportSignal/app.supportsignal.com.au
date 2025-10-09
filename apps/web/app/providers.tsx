@@ -2,8 +2,8 @@
 
 import React, { useMemo } from 'react';
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
-import { useAuth } from '../components/auth/auth-provider';
-import { config } from '../lib/config';
+import { useAuth } from '@/components/auth/auth-provider';
+import { config } from '@/lib/config';
 
 export function ConvexClientProvider({
   children,

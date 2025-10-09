@@ -14,4 +14,4 @@ export type {
   ValidationResult,
 } from './wizard-types';
 export { WizardPersistence, DebouncedAutoSave } from './wizard-persistence';
-export * from '../../lib/wizard/wizard-utils';
+export * from '@/lib/wizard/wizard-utils';

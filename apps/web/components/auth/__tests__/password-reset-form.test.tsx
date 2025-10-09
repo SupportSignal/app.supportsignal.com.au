@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
-import { PasswordResetForm } from '../password-reset-form';
-import { AuthProvider } from '../auth-provider';
+import { PasswordResetForm } from '@/components/auth/password-reset-form';
+import { AuthProvider } from '@/components/auth/auth-provider';
 import userEvent from '@testing-library/user-event';
 
 // Mock the auth service
@@ -13,7 +13,7 @@ jest.mock('../../../lib/auth', () => ({
   },
 }));
 
-import { authService } from '../../../lib/auth';
+import { authService } from '@/lib/auth';
 const mockAuthService = authService as jest.Mocked<typeof authService>;
 
 describe('PasswordResetForm', () => {

@@ -1,7 +1,7 @@
 'use client';
 
-import { useAuth } from '../../components/auth/auth-provider';
-import { LoginForm } from '../../components/auth/login-form';
+import { useAuth } from '@/components/auth/auth-provider';
+import { LoginForm } from '@/components/auth/login-form';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, Suspense } from 'react';
 import Link from 'next/link';

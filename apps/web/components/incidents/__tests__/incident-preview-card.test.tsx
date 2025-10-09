@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { IncidentPreviewCard, type IncidentPreview } from '../IncidentPreviewCard';
+import { IncidentPreviewCard, type IncidentPreview } from '@/components/incidents/IncidentPreviewCard';
 
 // Mock date-fns
 jest.mock('date-fns', () => ({

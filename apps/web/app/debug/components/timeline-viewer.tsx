@@ -4,8 +4,8 @@ import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@starter/ui/card';
 import { Badge } from '@starter/ui/badge';
 import { Button } from '@starter/ui/button';
-import LogEntryCard from './LogEntryCard';
-import type { RedisLogEntry } from '../lib/debug-api';
+import LogEntryCard from './log-entry-card';
+import type { RedisLogEntry } from '@/app/debug/lib/debug-api';
 
 interface TimelineViewerProps {
   logs: RedisLogEntry[];

@@ -1,7 +1,7 @@
 'use client';
 
-import { PasswordResetForm } from '../../components/auth/password-reset-form';
-import { useAuth } from '../../components/auth/auth-provider';
+import { PasswordResetForm } from '@/components/auth/password-reset-form';
+import { useAuth } from '@/components/auth/auth-provider';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';

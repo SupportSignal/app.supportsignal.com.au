@@ -1,7 +1,7 @@
 'use client';
 
-import { useAuth } from '../../components/auth/auth-provider';
-import { LogoutButton } from '../../components/auth/logout-button';
+import { useAuth } from '@/components/auth/auth-provider';
+import { LogoutButton } from '@/components/auth/logout-button';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';

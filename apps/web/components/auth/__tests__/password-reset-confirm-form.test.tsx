@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
-import { PasswordResetConfirmForm } from '../password-reset-confirm-form';
-import { AuthProvider } from '../auth-provider';
+import { PasswordResetConfirmForm } from '@/components/auth/password-reset-confirm-form';
+import { AuthProvider } from '@/components/auth/auth-provider';
 import userEvent from '@testing-library/user-event';
 
 // Mock next/navigation
@@ -21,7 +21,7 @@ jest.mock('../../../lib/auth', () => ({
   },
 }));
 
-import { authService } from '../../../lib/auth';
+import { authService } from '@/lib/auth';
 const mockAuthService = authService as jest.Mocked<typeof authService>;
 
 describe('PasswordResetConfirmForm', () => {

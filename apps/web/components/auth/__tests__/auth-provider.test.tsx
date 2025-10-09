@@ -25,11 +25,11 @@ jest.mock('../../../lib/auth', () => ({
   },
 }));
 
-import { authService } from '../../../lib/auth';
+import { authService } from '@/lib/auth';
 const mockAuthService = authService as jest.Mocked<typeof authService>;
 
 // Import the actual components
-import { AuthProvider, useAuth } from '../auth-provider';
+import { AuthProvider, useAuth } from '@/components/auth/auth-provider';
 
 // Test component to access the real auth context
 function TestComponent() {

@@ -6,8 +6,8 @@ import {
   act,
   render,
 } from '@testing-library/react';
-import { ChangePasswordForm } from '../change-password-form';
-import { AuthProvider } from '../auth-provider';
+import { ChangePasswordForm } from '@/components/auth/change-password-form';
+import { AuthProvider } from '@/components/auth/auth-provider';
 
 // Mock the auth service
 jest.mock('../../../lib/auth', () => ({
@@ -18,7 +18,7 @@ jest.mock('../../../lib/auth', () => ({
   },
 }));
 
-import { authService } from '../../../lib/auth';
+import { authService } from '@/lib/auth';
 const mockAuthService = authService as jest.Mocked<typeof authService>;
 
 describe('ChangePasswordForm', () => {

@@ -1,9 +1,9 @@
 // @ts-nocheck
 'use client';
 
-import { useAuth } from '../../components/auth/auth-provider';
-import { LogoutButton } from '../../components/auth/logout-button';
-import { PermissionTester } from '../../components/auth/permission-tester';
+import { useAuth } from '@/components/auth/auth-provider';
+import { LogoutButton } from '@/components/auth/logout-button';
+import { PermissionTester } from '@/components/auth/permission-tester';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';

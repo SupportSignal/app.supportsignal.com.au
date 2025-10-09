@@ -5,7 +5,7 @@
  * Generated for Story 1.5 - API Documentation & Frontend Handoff
  * 
  * Import these types in your React components for full type safety:
- * import { UserProfile, Incident, IncidentNarrative } from '../types/api';
+ * import { UserProfile, Incident, IncidentNarrative } from '@/types/api';
  */
 
 import { Id } from '../../convex/_generated/dataModel';
