@@ -46,40 +46,36 @@ export default function CreateCompanyPage() {
   const sendPasswordResetEmail = useAction(api.email.sendPasswordResetEmail);
 
   const createCompany = async (args: any) => {
-    try {
-      const result = await createCompanyMutation(args);
+    const result = await createCompanyMutation(args);
 
-      console.log('🔍 FRONTEND - COMPANY CREATED SUCCESSFULLY', {
-        companyName: formData.name,
-        status: formData.status,
-        result: result,
-        timestamp: new Date().toISOString()
-      });
+    console.log('🔍 FRONTEND - COMPANY CREATED SUCCESSFULLY', {
+      companyName: formData.name,
+      status: formData.status,
+      result: result,
+      timestamp: new Date().toISOString()
+    });
 
-      // Send real password reset email via Cloudflare Worker
-      if (result.resetToken && result.adminEmail) {
-        try {
-          console.log('🔍 FRONTEND - SENDING REAL PASSWORD RESET EMAIL', {
-            email: result.adminEmail,
-            token: result.resetToken
-          });
+    // Send real password reset email via Cloudflare Worker
+    if (result.resetToken && result.adminEmail) {
+      try {
+        console.log('🔍 FRONTEND - SENDING REAL PASSWORD RESET EMAIL', {
+          email: result.adminEmail,
+          token: result.resetToken
+        });
 
-          await sendPasswordResetEmail({
-            email: result.adminEmail,
-            token: result.resetToken,
-          });
+        await sendPasswordResetEmail({
+          email: result.adminEmail,
+          token: result.resetToken,
+        });
 
-          console.log('🔍 FRONTEND - REAL EMAIL SENT SUCCESSFULLY');
-        } catch (emailError) {
-          console.error('🔍 FRONTEND - REAL EMAIL FAILED:', emailError);
-          // Don't block company creation if email fails
-        }
+        console.log('🔍 FRONTEND - REAL EMAIL SENT SUCCESSFULLY');
+      } catch (emailError) {
+        console.error('🔍 FRONTEND - REAL EMAIL FAILED:', emailError);
+        // Don't block company creation if email fails
       }
-
-      return result;
-    } catch (error: any) {
-      throw new Error(error.message || 'Failed to create company');
     }
+
+    return result;
   };
 
   const [formData, setFormData] = useState<FormData>({
@@ -151,7 +147,7 @@ export default function CreateCompanyPage() {
     setSuccess(null);
 
     try {
-      const result = await createCompany({
+      await createCompany({
         name: formData.name,
         contactEmail: formData.contactEmail,
         adminName: formData.adminName,
@@ -178,23 +174,12 @@ export default function CreateCompanyPage() {
 
     } catch (error: any) {
       console.error('Company creation failed:', error);
-      const errorMessage = error.message || 'Failed to create company. Please try again.';
 
-      // Handle specific error cases with helpful guidance
-      if (errorMessage.includes('already exists in the system')) {
-        setError(
-          'The admin email address is already registered in the system. ' +
-          'Please use a different email address for the company administrator. ' +
-          'If you need to transfer an existing user to this company, please contact support.'
-        );
-      } else if (errorMessage.includes('Company with contact email') && errorMessage.includes('already exists')) {
-        setError(
-          'A company with this contact email address already exists in the system. ' +
-          'Each company must have a unique contact email address. ' +
-          'Please use a different contact email address.'
-        );
+      // ConvexError with structured data
+      if (error.data && typeof error.data === 'object') {
+        setError(error.data.message || 'Failed to create company. Please try again.');
       } else {
-        setError(errorMessage);
+        setError('Failed to create company. Please try again.');
       }
     } finally {
       setIsSubmitting(false);

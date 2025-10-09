@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client';
 
 import React, { useState } from 'react';
@@ -10,28 +9,23 @@ import { UserSearchFilter } from '@/components/users/user-search-filter';
 import { Card, CardContent, CardHeader, CardTitle } from '@starter/ui/card';
 import { Alert, AlertDescription } from '@starter/ui/alert';
 import { Button } from '@starter/ui/button';
-import { Badge } from '@starter/ui/badge';
-import { 
-  AlertDialog, 
-  AlertDialogContent, 
-  AlertDialogHeader, 
-  AlertDialogTitle,
-  AlertDialogTrigger,
-  AlertDialogCancel,
-  AlertDialogAction
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle
 } from '@starter/ui/alert-dialog';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
-import { 
-  Users, 
-  Globe, 
-  Crown,
+import {
+  Users,
+  Globe,
   Shield,
-  AlertCircle, 
-  CheckCircle, 
+  AlertCircle,
+  CheckCircle,
   XCircle,
-  TrendingUp,
   Building2,
-  UserCheck
+  UserCheck,
+  Crown
 } from 'lucide-react';
 
 interface User {
@@ -49,12 +43,6 @@ interface User {
     disableActions: string[];
   };
   _creationTime: number;
-}
-
-interface Company {
-  _id: string;
-  name: string;
-  status: string;
 }
 
 interface SearchFilters {
@@ -75,7 +63,6 @@ export default function GlobalUserManagementPage() {
     roleFilter: 'all',
     companyFilter: 'all'
   });
-  const [promoteConfirm, setPromoteConfirm] = useState<User | null>(null);
   const [demoteConfirm, setDemoteConfirm] = useState<User | null>(null);
   const [notification, setNotification] = useState<{
     type: 'success' | 'error';
@@ -111,7 +98,7 @@ export default function GlobalUserManagementPage() {
   );
 
   // Admin mutations
-  const promoteUserMutation = useMutation(api.adminUsers.promoteToSystemAdmin);
+  // Note: promoteToSystemAdmin is deprecated - use invitation system (Story 7.2)
   const demoteUserMutation = useMutation(api.adminUsers.demoteSystemAdmin);
 
   const [loading, setLoading] = useState(false);
@@ -119,26 +106,6 @@ export default function GlobalUserManagementPage() {
   const showNotification = (type: 'success' | 'error', message: string) => {
     setNotification({ type, message });
     setTimeout(() => setNotification(null), 5000);
-  };
-
-  const handlePromoteUser = async (user: User) => {
-    if (!sessionToken) return;
-    
-    setLoading(true);
-    try {
-      await promoteUserMutation({
-        sessionToken,
-        userId: user._id as any,
-        reason: `Promoted by ${currentUser?.name || 'system admin'}`
-      });
-      
-      setPromoteConfirm(null);
-      showNotification('success', `${user.name} promoted to System Administrator`);
-    } catch (error: any) {
-      showNotification('error', error.message || 'Failed to promote user');
-    } finally {
-      setLoading(false);
-    }
   };
 
   const handleDemoteUser = async (user: User, newRole: string) => {
@@ -271,10 +238,9 @@ export default function GlobalUserManagementPage() {
         onSearchChange={(search) => setFilters(prev => ({ ...prev, searchTerm: search }))}
         onRoleFilterChange={(role) => setFilters(prev => ({ ...prev, roleFilter: role }))}
         onEditUser={(user) => {
+          // Only allow demoting system admins - promotion is now via invitation system
           if (user.role === 'system_admin') {
             setDemoteConfirm(user);
-          } else {
-            setPromoteConfirm(user);
           }
         }}
         showCreateButton={false}
@@ -282,51 +248,6 @@ export default function GlobalUserManagementPage() {
         showSearchControls={false}
         title={`Global Users (${users?.total || 0})`}
       />
-
-      {/* Promote to System Admin Dialog */}
-      <AlertDialog open={!!promoteConfirm} onOpenChange={(open: boolean) => !open && setPromoteConfirm(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <Crown className="h-5 w-5 text-red-600" />
-              Promote to System Administrator
-            </AlertDialogTitle>
-          </AlertDialogHeader>
-          
-          {promoteConfirm && (
-            <div className="space-y-4">
-              <p>
-                Are you sure you want to promote <strong>{promoteConfirm.name}</strong> ({promoteConfirm.email}) to System Administrator?
-              </p>
-              
-              <Alert>
-                <Crown className="h-4 w-4" />
-                <AlertDescription>
-                  <strong>Warning:</strong> System Administrators have unrestricted access to all 
-                  system functions and can manage users across all companies. Only promote trusted users.
-                </AlertDescription>
-              </Alert>
-              
-              <div className="flex justify-end gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setPromoteConfirm(null)}
-                  disabled={loading}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={() => handlePromoteUser(promoteConfirm)}
-                  disabled={loading}
-                  className="bg-red-600 hover:bg-red-700"
-                >
-                  {loading ? 'Promoting...' : 'Promote to System Admin'}
-                </Button>
-              </div>
-            </div>
-          )}
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Demote System Admin Dialog */}
       <AlertDialog open={!!demoteConfirm} onOpenChange={(open: boolean) => !open && setDemoteConfirm(null)}>

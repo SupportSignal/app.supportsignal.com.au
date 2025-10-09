@@ -135,7 +135,7 @@ export function withAuthMutation<Args extends Record<string, any>, Return>(
     args: Args & { sessionToken?: string }
   ): Promise<Return> => {
     const authResult = await validateSession(ctx, args.sessionToken);
-    
+
     if (!authResult) {
       throw new Error('Authentication required');
     }

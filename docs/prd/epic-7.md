@@ -133,9 +133,9 @@ graph TD
 
 ### Story 7.2: Initial User Setup (System Admin)
 
-**Status**: **BACKEND COMPLETE** ⚙️ (Frontend pending)
+**Status**: **COMPLETED** ✅
 **Priority**: CRITICAL
-**Estimated Effort**: 5-6 days (Backend complete, frontend pending)
+**Estimated Effort**: 5-6 days (Actual: Completed October 9, 2025)
 **Dependencies**: Story 7.1 (Company creation foundation)
 
 #### Requirements
@@ -161,10 +161,10 @@ graph TD
 - [x] **bcrypt-based auth Integration**: Seamless account creation during invitation acceptance ✅
 - [x] **Role Assignment**: Proper role assignment during invitation process ✅
 - [x] **Status Tracking**: Track invitation status (pending, accepted, expired, revoked) ✅
-- [ ] **Invitation Form UI**: System admin interface for sending invitations (Frontend pending)
-- [ ] **Invitation Management UI**: View and manage pending invitations (Frontend pending)
+- [x] **Invitation Form UI**: System admin interface for sending invitations ✅
+- [x] **Invitation Management UI**: View and manage pending invitations ✅
 
-**Implementation Status**: Backend complete (see `docs/stories/7.2.story.md`). Frontend UI pending.
+**Implementation Status**: Complete (see `docs/stories/7.2.story.md`). All backend and frontend components implemented and tested.
 
 ---
 
@@ -627,10 +627,10 @@ migration.incidents.linkToPrimarySites();
 
 ## Epic Completion Status
 
-### Current State: **50% COMPLETE - IN PROGRESS** 🚧
+### Current State: **33% COMPLETE - IN PROGRESS** 🚧
 
 **Story 7.1**: ✅ **COMPLETE** - Company creation & onboarding workflow
-**Story 7.2**: ⚙️ **BACKEND COMPLETE** - Initial user setup (frontend pending)
+**Story 7.2**: ✅ **COMPLETE** - Initial user setup (system admin)
 **Story 7.3**: 📋 **PLANNED** - Site management (system admin)
 **Story 7.4**: 📋 **PLANNED** - Initial participant setup (requires sites)
 **Story 7.5**: 📋 **PLANNED** - System-wide company management & editing
@@ -638,7 +638,7 @@ migration.incidents.linkToPrimarySites();
 
 **Epic 7 Target Deliverables**:
 - ✅ **Rapid Company Creation**: System admin can create companies with initial admin
-- ⚙️ **User Onboarding**: Backend ready for system admin to invite initial users (UI pending)
+- ✅ **User Onboarding**: System admin can invite initial users with full workflow
 - 📋 **Site Management**: System admin creates and manages sites for companies
 - 📋 **Participant Setup**: System admin can add sample participants to sites
 - 📋 **Company Management**: Edit companies and system-wide oversight with test cleanup

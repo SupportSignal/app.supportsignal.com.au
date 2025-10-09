@@ -399,12 +399,11 @@ async function createInitialAdmin(ctx: any, args: {
     .first();
 
   if (existingUser) {
-    // Update existing user to be admin of this company
-    await ctx.db.patch(existingUser._id, {
-      role: "company_admin",
-      company_id: args.companyId,
+    // ERROR: User already exists - cannot steal them from another company!
+    throw new ConvexError({
+      message: "This email address is already in use. Please use a different email for the admin user.",
+      code: "DUPLICATE_EMAIL"
     });
-    return existingUser._id;
   }
 
   // Create new admin user

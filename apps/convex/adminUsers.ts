@@ -174,8 +174,9 @@ export const searchAllUsers = query({
 });
 
 /**
- * Promote user to system administrator (system admin only, root company only)
- * Story 2.6 AC 2.6.2: Global System Admin User Management
+ * @deprecated Use user invitation system (Story 7.2) to create new system admins.
+ * System administrators should be created during company setup or via invitation flow.
+ * This function is deprecated and will be removed in a future release.
  */
 export const promoteToSystemAdmin = mutation({
   args: {
@@ -184,55 +185,10 @@ export const promoteToSystemAdmin = mutation({
     reason: v.optional(v.string()),
   },
   handler: async (ctx: MutationCtx, args) => {
-    // Check system admin permissions
-    const { user: currentUser, correlationId } = await requirePermission(
-      ctx,
-      args.sessionToken,
-      PERMISSIONS.SYSTEM_CONFIGURATION
+    throw new ConvexError(
+      'This function is deprecated. Use the user invitation system to create system administrators. ' +
+      'See Story 7.2 for the new invitation-based user creation flow.'
     );
-
-    if (currentUser.role !== ROLES.SYSTEM_ADMIN) {
-      throw new ConvexError('System administrator access required');
-    }
-
-    // Validate owner protection
-    await validateSystemAdminOperation(ctx, args.userId, 'promote', correlationId);
-
-    const targetUser = await ctx.db.get(args.userId);
-    if (!targetUser) {
-      throw new ConvexError('User not found');
-    }
-
-    // System admins can only be promoted from root company
-    // For now, we'll check if they have a company_id (root company users might not have one)
-    // In production, you'd define which company is the "root" company
-    const rootCompanyId = await getRootCompanyId(ctx);
-    if (targetUser.company_id !== rootCompanyId) {
-      throw new ConvexError('System administrators can only be promoted from the root company');
-    }
-
-    const oldRole = targetUser.role;
-
-    // Promote to system admin
-    await ctx.db.patch(args.userId, {
-      role: ROLES.SYSTEM_ADMIN,
-    });
-
-    console.log('🔑 USER PROMOTED TO SYSTEM ADMIN', {
-      userId: args.userId,
-      oldRole,
-      newRole: ROLES.SYSTEM_ADMIN,
-      promotedBy: currentUser._id,
-      reason: args.reason || 'System admin promotion',
-      correlationId,
-      timestamp: new Date().toISOString(),
-      auditLevel: 'HIGH',
-    });
-
-    return {
-      success: true,
-      correlationId,
-    };
   },
 });
 
