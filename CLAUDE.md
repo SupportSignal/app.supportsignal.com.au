@@ -80,8 +80,6 @@ bun typecheck        # Run TypeScript compiler checks
 bun run ci:status    # Check CI status for current branch
 bun run ci:watch     # Monitor CI runs with real-time updates
 bun run ci:logs      # View detailed CI logs
-bun run push         # Smart push with pre-validation and CI monitoring
-bun run push:no-ci   # Smart push without CI monitoring
 
 # Systematic CI Verification (MANDATORY)
 # These commands MUST be run after story completion and before marking complete
@@ -855,19 +853,6 @@ bun run ci:watch [branch-name] [timeout-seconds]
 - Automatic link to detailed logs on failure
 ```
 
-#### 3. **Smart Push with CI Integration** (`scripts/smart-push.sh`)
-
-```bash
-# Usage: Intelligent push with pre-validation
-bun run push
-
-# Workflow:
-1. Pre-push validation (lint, typecheck, test)
-2. Git operations (add, commit, push)
-3. Automated CI monitoring
-4. Success/failure reporting with actionable feedback
-```
-
 ### CI Integration Best Practices
 
 #### Systematic Use Pattern
@@ -879,22 +864,23 @@ bun run ci:status
 # 2. During development - local validation
 bun run typecheck && bun run lint && bun test
 
-# 3. After implementation - comprehensive check
-bun run build  # Verify production build
-bun run push   # Smart push with CI monitoring
+# 3. After implementation - push and monitor
+git push origin main
+bun run ci:watch      # Monitor CI execution
 
 # 4. Story completion - final verification
-bun run ci:status  # Confirm CI success before marking complete
+bun run ci:status     # Confirm CI success before marking complete
 ```
 
 #### Error Handling Workflow
 
 ```bash
 # If CI fails after push:
-bun run ci:logs        # View detailed failure logs
-bun run ci:status      # Check current status
-# Fix issues locally, then:
-bun run push           # Re-push with monitoring
+bun run ci:logs       # View detailed failure logs
+bun run ci:status     # Check current status
+# Fix issues locally, commit, and push again
+git add . && git commit -m "fix: address CI failures" && git push origin main
+bun run ci:watch      # Monitor the fix
 ```
 
 ### Integration with Development Tools

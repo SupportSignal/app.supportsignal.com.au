@@ -64,8 +64,6 @@
     "ci:status": "./scripts/ci-status.sh",
     "ci:watch": "./scripts/ci-monitor.sh",
     "ci:logs": "gh run list --branch $(git branch --show-current) --limit 1 --json databaseId --jq '.[0].databaseId' | xargs gh run view --log-failed",
-    "push": "./scripts/smart-push.sh",
-    "push:no-ci": "./scripts/smart-push.sh false",
     "deploy:worker": "./scripts/deploy-worker.sh",
     "pages:build": "cd apps/web && bun run build:pages",
     "build:pages": "cd apps/web && bun run build:pages",
