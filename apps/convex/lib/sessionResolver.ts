@@ -21,7 +21,7 @@ export async function getUserFromSession(ctx: QueryCtx, sessionToken: string) {
   // First check if this is an impersonation session token
   const impersonationSession = await ctx.db
     .query('impersonation_sessions')
-    .withIndex('by_session_token', q => q.eq('session_token', sessionToken))
+    .withIndex('by_session_token', (q) => q.eq('session_token', sessionToken))
     .filter(q => q.and(
       q.eq(q.field('is_active'), true),
       q.gt(q.field('expires'), Date.now())
@@ -54,7 +54,7 @@ export async function getUserFromSession(ctx: QueryCtx, sessionToken: string) {
   // Fall back to normal session resolution
   const session = await ctx.db
     .query('sessions')
-    .withIndex('by_session_token', q => q.eq('sessionToken', sessionToken))
+    .withIndex('by_session_token', (q) => q.eq('sessionToken', sessionToken))
     .first();
   
   console.log('🔍 NORMAL SESSION CHECK', {

@@ -18,7 +18,7 @@ export default query({
     // 1. Authenticate user
     const session = await ctx.db
       .query('sessions')
-      .withIndex('by_session_token', q => q.eq('sessionToken', args.sessionToken))
+      .withIndex('by_session_token', (q) => q.eq('sessionToken', args.sessionToken))
       .first();
 
     if (!session) {
@@ -38,7 +38,7 @@ export default query({
     // 3. Fetch users for the company
     const users = await ctx.db
       .query('users')
-      .withIndex('by_company', q => q.eq('company_id', args.companyId))
+      .withIndex('by_company', (q) => q.eq('company_id', args.companyId))
       .collect();
 
     // 4. Return user information (excluding sensitive fields)

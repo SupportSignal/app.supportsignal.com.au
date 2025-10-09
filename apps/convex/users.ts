@@ -18,7 +18,7 @@ export const getCurrent = query({
       // Direct session validation without permission checks (used for auth itself)
       const session = await ctx.db
         .query('sessions')
-        .withIndex('by_session_token', q => q.eq('sessionToken', args.sessionToken))
+        .withIndex('by_session_token', (q) => q.eq('sessionToken', args.sessionToken))
         .first();
 
       if (!session || session.expires < Date.now()) {
@@ -69,7 +69,7 @@ export const updateUserProfile = mutation({
     // Find session and verify user
     const session = await ctx.db
       .query('sessions')
-      .withIndex('by_session_token', q =>
+      .withIndex('by_session_token', (q) =>
         q.eq('sessionToken', args.sessionToken)
       )
       .first();
@@ -108,7 +108,7 @@ export const updateUserTheme = mutation({
     // Find session and verify user
     const session = await ctx.db
       .query('sessions')
-      .withIndex('by_session_token', q =>
+      .withIndex('by_session_token', (q) =>
         q.eq('sessionToken', args.sessionToken)
       )
       .first();
@@ -157,7 +157,7 @@ export const createUser = mutation({
     // Check if user with this email already exists
     const existingUser = await ctx.db
       .query('users')
-      .withIndex('by_email', q => q.eq('email', args.email))
+      .withIndex('by_email', (q) => q.eq('email', args.email))
       .first();
 
     if (existingUser) {
@@ -250,7 +250,7 @@ export const updateUser = mutation({
       if (args.email) {
         const existingUser = await ctx.db
           .query('users')
-          .withIndex('by_email', q => q.eq('email', args.email!))
+          .withIndex('by_email', (q) => q.eq('email', args.email!))
           .first();
         
         if (existingUser && existingUser._id !== args.userId) {
@@ -372,7 +372,7 @@ export const listCompanyUsers = query({
     // Get all users in the company
     let users = await ctx.db
       .query('users')
-      .withIndex('by_company', q => q.eq('company_id', companyId))
+      .withIndex('by_company', (q) => q.eq('company_id', companyId))
       .collect();
 
     // Apply search filter
@@ -439,7 +439,7 @@ export const searchCompanyUsers = query({
     // Get all users in the company and filter
     const allUsers = await ctx.db
       .query('users')
-      .withIndex('by_company', q => q.eq('company_id', companyId))
+      .withIndex('by_company', (q) => q.eq('company_id', companyId))
       .collect();
 
     const searchLower = args.query.toLowerCase();

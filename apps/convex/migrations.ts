@@ -19,7 +19,7 @@ export const resetUserPassword = mutation({
   ) => {
     const user = await ctx.db
       .query('users')
-      .withIndex('by_email', q => q.eq('email', args.email))
+      .withIndex('by_email', (q) => q.eq('email', args.email))
       .first();
 
     if (!user) {

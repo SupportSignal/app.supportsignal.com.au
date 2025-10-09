@@ -542,7 +542,7 @@ export const createUserInvitation = mutation({
       // Check if user already exists
       const existingUser = await ctx.db
         .query('users')
-        .withIndex('by_email', q => q.eq('email', args.email))
+        .withIndex('by_email', (q) => q.eq('email', args.email))
         .first();
 
       if (existingUser) {

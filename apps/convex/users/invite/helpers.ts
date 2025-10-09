@@ -16,7 +16,7 @@ export const findInvitationByToken = query({
   handler: async (ctx, args) => {
     const invitation = await ctx.db
       .query('user_invitations')
-      .withIndex('by_token', q => q.eq('invitation_token', args.token))
+      .withIndex('by_token', (q) => q.eq('invitation_token', args.token))
       .first();
 
     return invitation;
@@ -33,7 +33,7 @@ export const findUserByEmail = query({
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query('users')
-      .withIndex('by_email', q => q.eq('email', args.email))
+      .withIndex('by_email', (q) => q.eq('email', args.email))
       .first();
 
     return user;

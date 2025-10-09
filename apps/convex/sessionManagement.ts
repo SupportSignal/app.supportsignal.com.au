@@ -110,7 +110,7 @@ export const refreshSession = mutation({
     try {
       const session = await ctx.db
         .query('sessions')
-        .withIndex('by_session_token', q => q.eq('sessionToken', args.sessionToken))
+        .withIndex('by_session_token', (q) => q.eq('sessionToken', args.sessionToken))
         .first();
 
       if (!session) {
@@ -173,7 +173,7 @@ export const validateSession = query({
     try {
       const session = await ctx.db
         .query('sessions')
-        .withIndex('by_session_token', q => q.eq('sessionToken', args.sessionToken))
+        .withIndex('by_session_token', (q) => q.eq('sessionToken', args.sessionToken))
         .first();
 
       if (!session) {
@@ -259,7 +259,7 @@ export const invalidateSession = mutation({
     try {
       const session = await ctx.db
         .query('sessions')
-        .withIndex('by_session_token', q => q.eq('sessionToken', args.sessionToken))
+        .withIndex('by_session_token', (q) => q.eq('sessionToken', args.sessionToken))
         .first();
 
       if (!session) {
@@ -451,7 +451,7 @@ export const getUserActiveSessions = query({
       // Get active sessions
       const sessions = await ctx.db
         .query('sessions')
-        .withIndex('by_user_id', q => q.eq('userId', targetUserId))
+        .withIndex('by_user_id', (q) => q.eq('userId', targetUserId))
         .filter(q => q.gt(q.field('expires'), Date.now()))
         .collect();
 
@@ -490,7 +490,7 @@ export const invalidateAllOtherSessions = mutation({
       // Get all other sessions for this user
       const otherSessions = await ctx.db
         .query('sessions')
-        .withIndex('by_user_id', q => q.eq('userId', currentSession.userId))
+        .withIndex('by_user_id', (q) => q.eq('userId', currentSession.userId))
         .filter(q => q.neq(q.field('_id'), currentSession._id))
         .collect();
 
@@ -595,7 +595,7 @@ function shouldAutoRefresh(expires: number): boolean {
 async function getValidSession(ctx: QueryCtx | MutationCtx, sessionToken: string) {
   const session = await ctx.db
     .query('sessions')
-    .withIndex('by_session_token', q => q.eq('sessionToken', sessionToken))
+    .withIndex('by_session_token', (q) => q.eq('sessionToken', sessionToken))
     .first();
 
   if (!session) {
@@ -615,7 +615,7 @@ async function getValidSession(ctx: QueryCtx | MutationCtx, sessionToken: string
 async function enforceSessionLimits(ctx: MutationCtx, userId: Id<'users'>) {
   const activeSessions = await ctx.db
     .query('sessions')
-    .withIndex('by_user_id', q => q.eq('userId', userId))
+    .withIndex('by_user_id', (q) => q.eq('userId', userId))
     .filter(q => q.gt(q.field('expires'), Date.now()))
     .collect();
 

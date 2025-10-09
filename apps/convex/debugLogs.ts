@@ -51,17 +51,17 @@ export const listLogs = query({
     
     if (trace_id) {
       logs = await ctx.db.query('debug_logs')
-        .withIndex('by_trace_id', q => q.eq('trace_id', trace_id))
+        .withIndex('by_trace_id', (q) => q.eq('trace_id', trace_id))
         .order(sortOrder)
         .take(limit);
     } else if (user_id) {
       logs = await ctx.db.query('debug_logs')
-        .withIndex('by_user_id', q => q.eq('user_id', user_id))
+        .withIndex('by_user_id', (q) => q.eq('user_id', user_id))
         .order(sortOrder)
         .take(limit);
     } else if (system) {
       logs = await ctx.db.query('debug_logs')
-        .withIndex('by_system', q => q.eq('system', system))
+        .withIndex('by_system', (q) => q.eq('system', system))
         .order(sortOrder)
         .take(limit);
     } else {
@@ -141,12 +141,12 @@ export const exportLogs = query({
     
     if (trace_id) {
       logs = await ctx.db.query('debug_logs')
-        .withIndex('by_trace_id', q => q.eq('trace_id', trace_id))
+        .withIndex('by_trace_id', (q) => q.eq('trace_id', trace_id))
         .order(sortOrder)
         .take(limit);
     } else if (user_id) {
       logs = await ctx.db.query('debug_logs')
-        .withIndex('by_user_id', q => q.eq('user_id', user_id))
+        .withIndex('by_user_id', (q) => q.eq('user_id', user_id))
         .order(sortOrder)
         .take(limit);
     } else {
@@ -237,7 +237,7 @@ export const clearByTrace = mutation({
   args: { trace_id: v.string() },
   handler: async (ctx, { trace_id }) => {
     const logs = await ctx.db.query('debug_logs')
-      .withIndex('by_trace_id', q => q.eq('trace_id', trace_id))
+      .withIndex('by_trace_id', (q) => q.eq('trace_id', trace_id))
       .collect();
     
     let deletedCount = 0;
@@ -255,7 +255,7 @@ export const clearByUser = mutation({
   args: { user_id: v.string() },
   handler: async (ctx, { user_id }) => {
     const logs = await ctx.db.query('debug_logs')
-      .withIndex('by_user_id', q => q.eq('user_id', user_id))
+      .withIndex('by_user_id', (q) => q.eq('user_id', user_id))
       .collect();
     
     let deletedCount = 0;

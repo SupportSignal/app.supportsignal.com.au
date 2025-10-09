@@ -219,7 +219,7 @@ export const registerUser = mutation({
       // Check if user already exists
       const existingUser = await ctx.db
         .query('users')
-        .withIndex('by_email', q => q.eq('email', args.email.toLowerCase()))
+        .withIndex('by_email', (q) => q.eq('email', args.email.toLowerCase()))
         .first();
 
       if (existingUser) {
@@ -319,7 +319,7 @@ export const loginUser = mutation({
       // Find user by email
       const user = await ctx.db
         .query('users')
-        .withIndex('by_email', q => q.eq('email', email))
+        .withIndex('by_email', (q) => q.eq('email', email))
         .first();
 
       if (!user) {
@@ -427,7 +427,7 @@ export const verifySession = query({
   handler: async (ctx: QueryCtx, args: { sessionToken: string }) => {
     const session = await ctx.db
       .query('sessions')
-      .withIndex('by_session_token', q =>
+      .withIndex('by_session_token', (q) =>
         q.eq('sessionToken', args.sessionToken)
       )
       .first();
@@ -460,7 +460,7 @@ export const logoutUser = mutation({
   handler: async (ctx: MutationCtx, args: { sessionToken: string }) => {
     const session = await ctx.db
       .query('sessions')
-      .withIndex('by_session_token', q =>
+      .withIndex('by_session_token', (q) =>
         q.eq('sessionToken', args.sessionToken)
       )
       .first();
@@ -486,7 +486,7 @@ export const getCurrentUser = query({
     // Verify session directly
     const session = await ctx.db
       .query('sessions')
-      .withIndex('by_session_token', q =>
+      .withIndex('by_session_token', (q) =>
         q.eq('sessionToken', args.sessionToken!)
       )
       .first();
@@ -523,7 +523,7 @@ export const changePassword = mutation({
     // Verify session
     const session = await ctx.db
       .query('sessions')
-      .withIndex('by_session_token', q =>
+      .withIndex('by_session_token', (q) =>
         q.eq('sessionToken', args.sessionToken)
       )
       .first();
@@ -573,7 +573,7 @@ export const requestPasswordReset = mutation({
     // Find user by email
     const user = await ctx.db
       .query('users')
-      .withIndex('by_email', q => q.eq('email', args.email))
+      .withIndex('by_email', (q) => q.eq('email', args.email))
       .first();
 
     if (!user) {
@@ -589,7 +589,7 @@ export const requestPasswordReset = mutation({
     // Clean up any existing tokens for this user
     const existingTokens = await ctx.db
       .query('password_reset_tokens')
-      .withIndex('by_user_id', q => q.eq('userId', user._id))
+      .withIndex('by_user_id', (q) => q.eq('userId', user._id))
       .collect();
 
     for (const existingToken of existingTokens) {
@@ -631,7 +631,7 @@ export const resetPassword = mutation({
     // Find the reset token
     const resetToken = await ctx.db
       .query('password_reset_tokens')
-      .withIndex('by_token', q => q.eq('token', args.token))
+      .withIndex('by_token', (q) => q.eq('token', args.token))
       .first();
 
     if (!resetToken) {
@@ -666,7 +666,7 @@ export const resetPassword = mutation({
     // Invalidate all existing sessions for this user for security
     const userSessions = await ctx.db
       .query('sessions')
-      .withIndex('by_user_id', q => q.eq('userId', user._id))
+      .withIndex('by_user_id', (q) => q.eq('userId', user._id))
       .collect();
 
     for (const session of userSessions) {
@@ -719,7 +719,7 @@ export const createOrUpdateGitHubUser = mutation({
     // Check if account already exists
     const existingAccount = await ctx.db
       .query('accounts')
-      .withIndex('by_provider_account', q =>
+      .withIndex('by_provider_account', (q) =>
         q
           .eq('provider', 'github')
           .eq('providerAccountId', githubUser.id.toString())
@@ -746,7 +746,7 @@ export const createOrUpdateGitHubUser = mutation({
       // Check if user exists by email
       const existingUser = await ctx.db
         .query('users')
-        .withIndex('by_email', q => q.eq('email', githubUser.email))
+        .withIndex('by_email', (q) => q.eq('email', githubUser.email))
         .first();
 
       if (existingUser) {
@@ -1013,7 +1013,7 @@ export const createOrUpdateGoogleUser = mutation({
     // Check if account already exists
     const existingAccount = await ctx.db
       .query('accounts')
-      .withIndex('by_provider_account', q =>
+      .withIndex('by_provider_account', (q) =>
         q.eq('provider', 'google').eq('providerAccountId', googleUser.id)
       )
       .first();
@@ -1038,7 +1038,7 @@ export const createOrUpdateGoogleUser = mutation({
       // Check if user exists by email
       const existingUser = await ctx.db
         .query('users')
-        .withIndex('by_email', q => q.eq('email', googleUser.email))
+        .withIndex('by_email', (q) => q.eq('email', googleUser.email))
         .first();
 
       if (existingUser) {
@@ -1325,7 +1325,7 @@ export const findSessionByToken = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query('sessions')
-      .withIndex('by_session_token', q => q.eq('sessionToken', args.sessionToken))
+      .withIndex('by_session_token', (q) => q.eq('sessionToken', args.sessionToken))
       .first();
   },
 });
@@ -1363,7 +1363,7 @@ export const verifyOwnerAccess = query({
       // Get current user from session
       const session = await ctx.db
         .query('sessions')
-        .withIndex('by_session_token', q =>
+        .withIndex('by_session_token', (q) =>
           q.eq('sessionToken', args.sessionToken!)
         )
         .first();

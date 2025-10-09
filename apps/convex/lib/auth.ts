@@ -49,7 +49,7 @@ export async function validateSession(
 
   const session = await ctx.db
     .query('sessions')
-    .withIndex('by_session_token', q => q.eq('sessionToken', sessionToken))
+    .withIndex('by_session_token', (q) => q.eq('sessionToken', sessionToken))
     .first();
 
   if (!session) {

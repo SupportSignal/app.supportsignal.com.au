@@ -54,7 +54,7 @@ export const startImpersonation = mutation({
       // Check concurrent session limit
       const activeSessions = await ctx.db
         .query('impersonation_sessions')
-        .withIndex('by_admin_user', q => q.eq('admin_user_id', admin._id))
+        .withIndex('by_admin_user', (q) => q.eq('admin_user_id', admin._id))
         .filter(q => q.and(
           q.eq(q.field('is_active'), true),
           q.gt(q.field('expires'), Date.now())
@@ -68,7 +68,7 @@ export const startImpersonation = mutation({
       // Find target user
       const targetUser = await ctx.db
         .query('users')
-        .withIndex('by_email', q => q.eq('email', args.target_user_email))
+        .withIndex('by_email', (q) => q.eq('email', args.target_user_email))
         .first();
 
       if (!targetUser) {
@@ -166,7 +166,7 @@ export const endImpersonation = mutation({
     // Find the impersonation session
     const session = await ctx.db
       .query('impersonation_sessions')
-      .withIndex('by_session_token', q => q.eq('session_token', args.impersonation_token))
+      .withIndex('by_session_token', (q) => q.eq('session_token', args.impersonation_token))
       .first();
 
     if (!session) {
@@ -223,7 +223,7 @@ export const getImpersonationStatus = query({
     // Check if this is an impersonation session
     const impersonationSession = await ctx.db
       .query('impersonation_sessions')
-      .withIndex('by_session_token', q => q.eq('session_token', args.session_token))
+      .withIndex('by_session_token', (q) => q.eq('session_token', args.session_token))
       .filter(q => q.and(
         q.eq(q.field('is_active'), true),
         q.gt(q.field('expires'), Date.now())

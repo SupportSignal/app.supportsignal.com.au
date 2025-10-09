@@ -18,7 +18,7 @@ export default query({
     // 1. Authenticate user
     const session = await ctx.db
       .query('sessions')
-      .withIndex('by_session_token', q => q.eq('sessionToken', args.sessionToken))
+      .withIndex('by_session_token', (q) => q.eq('sessionToken', args.sessionToken))
       .first();
 
     if (!session) {
@@ -42,7 +42,7 @@ export default query({
     // 3. Fetch invitations for the company
     const invitations = await ctx.db
       .query('user_invitations')
-      .withIndex('by_company', q => q.eq('company_id', args.companyId))
+      .withIndex('by_company', (q) => q.eq('company_id', args.companyId))
       .collect();
 
     // 4. Enrich with inviter information and filter for pending/expired

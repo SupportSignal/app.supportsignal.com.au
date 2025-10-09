@@ -213,7 +213,7 @@ export const getSessionAndValidate = query({
     // 1. Authenticate user
     const session = await ctx.db
       .query('sessions')
-      .withIndex('by_session_token', q => q.eq('sessionToken', args.sessionToken))
+      .withIndex('by_session_token', (q) => q.eq('sessionToken', args.sessionToken))
       .first();
 
     if (!session) {
@@ -243,7 +243,7 @@ export const getSessionAndValidate = query({
     // 4. Duplicate user check (strict single-company model)
     const existingUserAnyCompany = await ctx.db
       .query('users')
-      .withIndex('by_email', q => q.eq('email', args.email))
+      .withIndex('by_email', (q) => q.eq('email', args.email))
       .first();
 
     if (existingUserAnyCompany) {
@@ -253,7 +253,7 @@ export const getSessionAndValidate = query({
     // Check if pending invitation already exists for this email/company
     const existingInvitation = await ctx.db
       .query('user_invitations')
-      .withIndex('by_email_company', q =>
+      .withIndex('by_email_company', (q) =>
         q.eq('email', args.email).eq('company_id', args.companyId))
       .filter(q => q.eq(q.field('status'), 'pending'))
       .first();

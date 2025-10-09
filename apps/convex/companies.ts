@@ -320,7 +320,7 @@ export const createCompany = mutation({
     // Clean up any existing tokens for this user
     const existingTokens = await ctx.db
       .query('password_reset_tokens')
-      .withIndex('by_user_id', q => q.eq('userId', adminUserId))
+      .withIndex('by_user_id', (q) => q.eq('userId', adminUserId))
       .collect();
 
     for (const existingToken of existingTokens) {

@@ -109,84 +109,117 @@ export const update = mutation({
     post_event: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    // Validate that at least one field is being updated
-    if (!args.before_event && !args.during_event && !args.end_event && !args.post_event) {
-      throw new ConvexError("At least one narrative phase must be provided");
-    }
+    try {
+      console.log('🔍 NARRATIVE UPDATE START', {
+        incident_id: args.incident_id,
+        hasSessionToken: !!args.sessionToken,
+        fieldsToUpdate: {
+          before_event: !!args.before_event,
+          during_event: !!args.during_event,
+          end_event: !!args.end_event,
+          post_event: !!args.post_event,
+        },
+        timestamp: new Date().toISOString(),
+      });
 
-    // Get the incident to validate access
-    const incident = await ctx.db.get(args.incident_id);
-    if (!incident) {
-      throw new ConvexError("Incident not found");
-    }
-
-    // Check permissions - users can update narratives for incidents they have access to
-    const { user, correlationId } = await requirePermission(
-      ctx,
-      args.sessionToken,
-      PERMISSIONS.EDIT_OWN_INCIDENT_CAPTURE,
-      {
-        resourceOwnerId: incident.created_by || undefined,
-        companyId: incident.company_id,
+      // Validate that at least one field is being updated
+      if (!args.before_event && !args.during_event && !args.end_event && !args.post_event) {
+        throw new ConvexError("At least one narrative phase must be provided");
       }
-    );
 
-    // Validate user is in same company
-    if (user.company_id !== incident.company_id) {
-      throw new ConvexError("Access denied: incident belongs to different company");
+      console.log('🔍 STEP 1: Fetching incident');
+      // Get the incident to validate access
+      const incident = await ctx.db.get(args.incident_id);
+      if (!incident) {
+        throw new ConvexError("Incident not found");
+      }
+      console.log('🔍 STEP 1 COMPLETE: Incident found', { company_id: incident.company_id, created_by: incident.created_by });
+
+      console.log('🔍 STEP 2: Checking permissions');
+      // Check permissions - users can update narratives for incidents they have access to
+      const { user, correlationId } = await requirePermission(
+        ctx,
+        args.sessionToken,
+        PERMISSIONS.EDIT_OWN_INCIDENT_CAPTURE,
+        {
+          resourceOwnerId: incident.created_by || undefined,
+          companyId: incident.company_id,
+        }
+      );
+      console.log('🔍 STEP 2 COMPLETE: Permission granted', { userId: user._id, userCompany: user.company_id });
+
+      console.log('🔍 STEP 3: Validating company');
+      // Validate user is in same company
+      if (user.company_id !== incident.company_id) {
+        throw new ConvexError("Access denied: incident belongs to different company");
+      }
+      console.log('🔍 STEP 3 COMPLETE: Company validated');
+
+      console.log('🔍 STEP 4: Checking workflow status');
+      // Check if narrative editing is allowed
+      if (incident.capture_status === "completed" && incident.overall_status === "ready_for_analysis") {
+        throw new ConvexError("Cannot edit narrative: workflow has been completed and submitted for analysis");
+      }
+      console.log('🔍 STEP 4 COMPLETE: Workflow allows editing');
+
+      console.log('🔍 STEP 5: Fetching existing narrative');
+      // Get existing narrative
+      const existingNarrative = await ctx.db
+        .query("incident_narratives")
+        .withIndex("by_incident", (q) => q.eq("incident_id", args.incident_id))
+        .first();
+
+      if (!existingNarrative) {
+        throw new ConvexError("Narrative not found. Create narrative first.");
+      }
+      console.log('🔍 STEP 5 COMPLETE: Narrative found', { narrativeId: existingNarrative._id, version: existingNarrative.version });
+
+      console.log('🔍 STEP 6: Building updates');
+      // Build update object with only provided fields
+      const updates: any = {
+        updated_at: Date.now(),
+        version: existingNarrative.version + 1,
+      };
+
+      if (args.before_event !== undefined) {
+        updates.before_event = args.before_event;
+      }
+      if (args.during_event !== undefined) {
+        updates.during_event = args.during_event;
+      }
+      if (args.end_event !== undefined) {
+        updates.end_event = args.end_event;
+      }
+      if (args.post_event !== undefined) {
+        updates.post_event = args.post_event;
+      }
+      console.log('🔍 STEP 6 COMPLETE: Updates built', { updateKeys: Object.keys(updates) });
+
+      console.log('🔍 STEP 7: Applying patch');
+      await ctx.db.patch(existingNarrative._id, updates);
+      console.log('🔍 STEP 7 COMPLETE: Patch applied');
+
+      console.log('✏️ NARRATIVE UPDATED', {
+        narrativeId: existingNarrative._id,
+        incidentId: args.incident_id,
+        userId: user._id,
+        version: updates.version,
+        fieldsUpdated: Object.keys(updates).filter(k => k !== 'updated_at' && k !== 'version'),
+        correlationId,
+        timestamp: new Date().toISOString(),
+      });
+
+      return { success: true, version: updates.version };
+    } catch (error) {
+      console.error('❌ NARRATIVE UPDATE FAILED', {
+        incident_id: args.incident_id,
+        error: error instanceof Error ? error.message : String(error),
+        errorType: error?.constructor?.name,
+        stack: error instanceof Error ? error.stack : undefined,
+        timestamp: new Date().toISOString(),
+      });
+      throw error;
     }
-
-    // Check if narrative editing is allowed
-    // Allow editing if:
-    // 1. Capture phase is not completed yet, OR
-    // 2. Capture is completed but workflow hasn't been auto-completed yet (overall_status !== "ready_for_analysis")
-    // 3. AND user is the incident owner (validated by permission check above)
-    if (incident.capture_status === "completed" && incident.overall_status === "ready_for_analysis") {
-      throw new ConvexError("Cannot edit narrative: workflow has been completed and submitted for analysis");
-    }
-
-    // Get existing narrative
-    const existingNarrative = await ctx.db
-      .query("incident_narratives")
-      .withIndex("by_incident", (q) => q.eq("incident_id", args.incident_id))
-      .first();
-
-    if (!existingNarrative) {
-      throw new ConvexError("Narrative not found. Create narrative first.");
-    }
-
-    // Build update object with only provided fields
-    const updates: any = {
-      updated_at: Date.now(),
-      version: existingNarrative.version + 1,
-    };
-
-    if (args.before_event !== undefined) {
-      updates.before_event = args.before_event;
-    }
-    if (args.during_event !== undefined) {
-      updates.during_event = args.during_event;
-    }
-    if (args.end_event !== undefined) {
-      updates.end_event = args.end_event;
-    }
-    if (args.post_event !== undefined) {
-      updates.post_event = args.post_event;
-    }
-
-    await ctx.db.patch(existingNarrative._id, updates);
-
-    console.log('✏️ NARRATIVE UPDATED', {
-      narrativeId: existingNarrative._id,
-      incidentId: args.incident_id,
-      userId: user._id,
-      version: updates.version,
-      fieldsUpdated: Object.keys(updates).filter(k => k !== 'updated_at' && k !== 'version'),
-      correlationId,
-      timestamp: new Date().toISOString(),
-    });
-
-    return { success: true, version: updates.version };
   },
 });
 
