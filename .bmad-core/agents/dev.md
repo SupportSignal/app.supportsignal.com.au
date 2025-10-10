@@ -59,6 +59,7 @@ commands:
   - explain: teach me what and why you did whatever you just did in detail so I can learn. Explain to me as if you were training a junior engineer.
   - exit: Say goodbye as the Developer, and then abandon inhabiting this persona
 develop-story:
+  worktree-check: 'FIRST: Check story "Use Worktree" field. If true, run: bun run worktree:start {epic}.{story} and inform user to cd into the worktree directory before proceeding. Branch will be: story/{epic}.{story}'
   order-of-execution: 'Read (first or next) task→Validate against patterns (docs/patterns/)→Implement Task and its subtasks→Write tests→Execute validations→Only if ALL pass, then update the task checkbox with [x]→Update story section File List to ensure it lists and new or modified or deleted source file→repeat order-of-execution until complete'
   story-file-updates-ONLY:
     - CRITICAL: ONLY UPDATE THE STORY FILE WITH UPDATES TO SECTIONS INDICATED BELOW. DO NOT MODIFY ANY OTHER SECTIONS.

@@ -1,6 +1,6 @@
 # Epic 0: Technical Debt & Continuous Improvement
 
-> **Quick Navigation:** [0.1](#story-01-technical-debt---environment-variable-deduplication-audit) · [0.2](#story-02-technical-debt---database-schema-audit--cleanup) · [0.3](#story-03-technical-debt---dead-code-discovery--cleanup-functions-routes-components-workers) · [0.4](#story-04-technical-debt---apply-coding-standards-from-inconsistencies-audit)
+> **Quick Navigation:** [0.1](#story-01-technical-debt---environment-variable-deduplication-audit) · [0.2](#story-02-technical-debt---database-schema-audit--cleanup) · [0.3](#story-03-technical-debt---dead-code-discovery--cleanup-functions-routes-components-workers) · [0.4](#story-04-technical-debt---apply-coding-standards-from-inconsistencies-audit) · [0.5](#story-05-technical-debt---file-naming-migration-to-kebab-case) · [0.6](#story-06-developer-experience---database-export--analysis-system)
 
 ## Epic Overview
 
@@ -38,6 +38,8 @@ Epic 0 represents the critical but often invisible work that keeps the SupportSi
 - [Story 0.2: Database Schema Audit & Cleanup](#story-02-technical-debt---database-schema-audit--cleanup) - ✅ **Complete** (P2 - Medium)
 - [Story 0.3: Dead Code Discovery & Cleanup](#story-03-technical-debt---dead-code-discovery--cleanup-functions-routes-components-workers) - 🔄 **In Progress** (P2 - Medium)
 - [Story 0.4: Apply Coding Standards from Inconsistencies Audit](#story-04-technical-debt---apply-coding-standards-from-inconsistencies-audit) - 📋 **Planned** (P1 - High)
+- [Story 0.5: File Naming Migration to Kebab-Case](#story-05-technical-debt---file-naming-migration-to-kebab-case) - ✅ **Approved** (P2 - Medium)
+- [Story 0.6: Database Export & Analysis System](#story-06-developer-experience---database-export--analysis-system) - 📋 **Planned** (P2 - Medium)
 
 ---
 
@@ -428,6 +430,114 @@ export const ROUTES = {
 - Time to perform code analysis: 4-8 iterations → 1-2 iterations
 - Developer confidence in static analysis results: Low → High
 - ESLint violations for new code: Zero
+
+---
+
+### Story 0.5: Technical Debt - File Naming Migration to Kebab-Case
+
+**Priority**: P2 (Medium)
+**Estimated Effort**: Large (6-10 hours)
+**Category**: Technical Debt / Code Quality
+**Status**: ✅ **Approved** (Documented in `docs/stories/0.5.story.md`)
+
+#### Problem Statement
+
+The codebase currently uses mixed file naming conventions (PascalCase for components, camelCase for utilities) which creates inconsistency, case-sensitivity issues across platforms, and makes grep/search operations less reliable. Migrating to kebab-case establishes a single, consistent naming standard that works reliably across all platforms.
+
+#### Scope
+
+**Automated Migration with AST-Based Tooling**:
+- Use jscodeshift for automated file renaming and import updates
+- Preserve git history using `git mv` commands
+- Phased migration: Components directory → App directory
+- Update all imports to path aliases (`@/`) instead of relative paths
+- Add ESLint rule to prevent relative import regressions
+
+#### Acceptance Criteria
+
+- [ ] **Migration Script**: jscodeshift tool with dry-run mode
+- [ ] **File Renaming**: All PascalCase files converted to kebab-case
+- [ ] **Import Updates**: All imports automatically updated across codebase
+- [ ] **Git History**: File history preserved with `git mv`
+- [ ] **Validation**: No naming conflicts before execution
+- [ ] **Path Aliases**: All imports use `@/` instead of relative paths
+- [ ] **ESLint Rule**: Warning on relative imports added
+- [ ] **Test Suite**: All tests pass (`bun test`, `bun test:e2e`)
+- [ ] **Build Success**: `bun run typecheck` and `bun run build` pass
+- [ ] **Documentation**: Kebab-case standard and migration script usage documented
+- [ ] **Rollback Points**: Recovery procedures documented for each phase
+
+#### Implementation Notes
+
+**Risk Mitigation**:
+- Phase 1: Components directory (isolated scope)
+- Phase 2: App directory (after validation)
+- Rollback points between phases
+- Comprehensive testing after each phase
+
+**Tool Selection**: jscodeshift chosen for AST-based transformation ensuring accurate import updates
+
+---
+
+### Story 0.6: Developer Experience - Database Export & Analysis System
+
+**Priority**: P2 (Medium)
+**Estimated Effort**: Medium (4-6 hours)
+**Category**: Developer Experience / Infrastructure
+**Discovered**: October 2025 - Need for external data analysis workflows
+
+#### Problem Statement
+
+Developers need the ability to export database snapshots for external analysis using Claude Code and other AI-powered tools. Currently, there's no systematic way to extract structured database data for prompt engineering, pattern analysis, or debugging workflows. This creates friction in development workflows and limits the ability to leverage AI tools for data-driven insights.
+
+#### Scope
+
+**System Admin Developer Tool** (`/admin/developer-tools/`):
+- Full database JSON export capability
+- Segmented export filters (by company/site/worker/participant/provider)
+- Daily snapshot workflow support
+- Claude Code integration for external analysis
+- Downloadable JSON format
+
+**Use Cases**:
+- Analyze incident patterns across companies/providers
+- Extract datasets for prompt engineering experiments
+- Debug data relationships and patterns
+- Generate test datasets from production-like data
+- Train and validate AI models on real incident data
+
+#### Acceptance Criteria
+
+- [ ] **Admin Interface**: Developer tools page at `/admin/developer-tools/export`
+- [ ] **Full Export**: Download complete database snapshot as JSON
+- [ ] **Segmented Exports**: Filter by company, site, worker, participant, or provider
+- [ ] **Export Options**: Select specific tables or include all
+- [ ] **Data Privacy**: System admin only access (role-based)
+- [ ] **File Format**: Well-structured JSON with metadata
+- [ ] **Download Handling**: Browser download or copy to clipboard
+- [ ] **Performance**: Handle large exports (500+ incidents, 100+ participants)
+- [ ] **Documentation**: Usage guide for Claude Code analysis workflows
+- [ ] **Security**: No sensitive data exposure in logs/errors
+
+#### Implementation Notes
+
+**Architecture**:
+- Convex function: `exports.generateDatabaseExport`
+- Admin UI: React component with filter options
+- Security: System admin role validation
+- Performance: Consider streaming for large datasets
+
+**Technical Considerations**:
+- JSON serialization of Convex data structures
+- Date/timestamp handling for JSON compatibility
+- Relationship preservation (IDs maintained)
+- Privacy considerations (anonymization options)
+
+**Future Enhancements** (out of scope):
+- Scheduled automated exports
+- Export history/versioning
+- Direct upload to analysis tools
+- Data anonymization/masking options
 
 ---
 

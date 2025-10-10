@@ -65,6 +65,17 @@ export default defineSchema({
     .index("by_email_company", ["email", "company_id"])
     .index("by_email_status", ["email", "status"]),
 
+  // Sites (physical locations) for service provider companies (Story 7.3)
+  sites: defineTable({
+    company_id: v.id("companies"), // Which company owns this site
+    name: v.string(), // "Primary", "North Sydney Office", etc.
+    created_at: v.number(), // Unix timestamp
+    created_by: v.id("users"), // System admin who created the site
+    updated_at: v.optional(v.number()), // Last update timestamp
+  })
+    .index("by_company", ["company_id"])
+    .index("by_name", ["company_id", "name"]), // Composite for uniqueness within company
+
   // Sessions table for user authentication
   sessions: defineTable({
     userId: v.id('users'),

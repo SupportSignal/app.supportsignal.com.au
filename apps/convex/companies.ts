@@ -311,6 +311,23 @@ export const createCompany = mutation({
       companyId,
     });
 
+    // Create Primary site for the new company (Story 7.3)
+    const timestamp = Date.now();
+    const primarySiteId = await ctx.db.insert('sites', {
+      company_id: companyId,
+      name: 'Primary',
+      created_at: timestamp,
+      created_by: ctx.session.userId,
+    });
+
+    console.log('🏢 PRIMARY SITE CREATED', {
+      companyId,
+      siteId: primarySiteId,
+      siteName: 'Primary',
+      createdBy: ctx.session.userId,
+      timestamp: new Date(timestamp).toISOString(),
+    });
+
     // Generate real password reset token and store in database
     const resetToken = Array.from(crypto.getRandomValues(new Uint8Array(32)))
       .map(b => b.toString(16).padStart(2, '0'))

@@ -30,6 +30,17 @@ sections:
     owner: scrum-master
     editors: [scrum-master, dev-agent]
 
+  - id: worktree
+    title: Use Worktree
+    type: boolean
+    default: false
+    instruction: |
+      Set to true to work on this story in an isolated git worktree.
+      When true, dev agent will automatically run worktree:start before beginning work.
+      Branch will be: story/{{epic_num}}.{{story_num}}
+    owner: scrum-master
+    editors: [scrum-master, dev-agent]
+
   - id: story
     title: Story
     type: template-text

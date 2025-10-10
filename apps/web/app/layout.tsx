@@ -7,6 +7,7 @@ import { ThemeProvider } from '@/components/theme/theme-provider';
 import { LoggingProvider } from '@/components/logging/logging-provider';
 import { VersionProvider } from '@/components/dev/version-provider';
 import { MainLayout } from '@/components/layout/main-layout';
+import { Toaster } from 'sonner';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -110,6 +111,7 @@ export default function RootLayout({
               </ConvexClientProvider>
             </LoggingProvider>
           </AuthProvider>
+          <Toaster richColors position="top-right" />
         </ThemeProvider>
       </body>
     </html>

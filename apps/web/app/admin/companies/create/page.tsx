@@ -176,11 +176,8 @@ export default function CreateCompanyPage() {
       console.error('Company creation failed:', error);
 
       // ConvexError with structured data
-      if (error.data && typeof error.data === 'object') {
-        setError(error.data.message || 'Failed to create company. Please try again.');
-      } else {
-        setError('Failed to create company. Please try again.');
-      }
+      const errorMessage = error.data?.message || 'Failed to create company. Please try again.';
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

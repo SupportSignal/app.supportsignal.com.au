@@ -87,6 +87,9 @@
     "sync-env:local": "node ./scripts/sync-env.js --mode=local",
     "sync-env:deploy-dev": "node ./scripts/sync-env.js --mode=deploy-dev",
     "sync-env:deploy-prod": "node ./scripts/sync-env.js --mode=deploy-prod",
+    "// === GIT WORKTREE ===": "",
+    "worktree:start": "bash scripts/worktree-start.sh",
+    "worktree:end": "bash scripts/worktree-end.sh",
     "// === SYSTEM ===": "",
     "prepare": "echo 'Skipping husky in CI' && exit 0"
   },
