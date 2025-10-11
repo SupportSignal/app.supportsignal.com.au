@@ -31,10 +31,11 @@ export const listParticipants = query({
     let participants;
     if (args.siteId) {
       // Filter by company and site
+      const siteId = args.siteId; // Type narrowing
       participants = await ctx.db
         .query('participants')
         .withIndex('by_company_and_site', (q) =>
-          q.eq('company_id', args.companyId).eq('site_id', args.siteId)
+          q.eq('company_id', args.companyId).eq('site_id', siteId)
         )
         .collect();
     } else {
@@ -55,7 +56,10 @@ export const listParticipants = query({
     // Enrich with site information
     const enrichedParticipants = await Promise.all(
       participants.map(async (participant) => {
-        const site = await ctx.db.get(participant.site_id);
+        const site = await ctx.db
+          .query("sites")
+          .filter((q) => q.eq(q.field("_id"), participant.site_id))
+          .first();
         return {
           ...participant,
           site: site
@@ -98,7 +102,13 @@ export const getParticipantById = query({
     }
 
     // Get site information
-    const site = await ctx.db.get(participant.site_id);
+    let site = null;
+    if (participant.site_id) {
+      site = await ctx.db
+        .query("sites")
+        .filter((q) => q.eq(q.field("_id"), participant.site_id))
+        .first();
+    }
 
     return {
       ...participant,
@@ -300,8 +310,9 @@ export const updateParticipant = mutation({
     }
 
     if (args.ndisNumber !== undefined) {
+      const ndisNumber = args.ndisNumber; // Type narrowing
       const ndisPattern = /^\d{9}$/;
-      if (!ndisPattern.test(args.ndisNumber.trim())) {
+      if (!ndisPattern.test(ndisNumber.trim())) {
         throw new ConvexError({
           message: 'NDIS number must be 9 digits',
           code: 'INVALID_NDIS_NUMBER',
@@ -313,18 +324,18 @@ export const updateParticipant = mutation({
       const existingParticipant = await ctx.db
         .query('participants')
         .withIndex('by_company', (q) => q.eq('company_id', participant.company_id))
-        .filter((q) => q.eq(q.field('ndis_number'), args.ndisNumber.trim()))
+        .filter((q) => q.eq(q.field('ndis_number'), ndisNumber.trim()))
         .first();
 
       if (existingParticipant && existingParticipant._id !== args.participantId) {
         throw new ConvexError({
-          message: `NDIS number ${args.ndisNumber} is already registered to another participant in this company`,
+          message: `NDIS number ${ndisNumber} is already registered to another participant in this company`,
           code: 'DUPLICATE_NDIS_NUMBER',
           field: 'ndis_number',
         });
       }
 
-      updates.ndis_number = args.ndisNumber.trim();
+      updates.ndis_number = ndisNumber.trim();
     }
 
     if (args.siteId !== undefined) {

@@ -15,6 +15,7 @@ export const createParticipant = mutation({
     last_name: v.string(),
     date_of_birth: v.string(),
     ndis_number: v.string(),
+    site_id: v.optional(v.id("sites")),
     contact_phone: v.optional(v.string()),
     emergency_contact: v.optional(v.string()),
     support_level: v.union(v.literal("high"), v.literal("medium"), v.literal("low")),
@@ -79,6 +80,7 @@ export const createParticipant = mutation({
       // Create participant record
       const participantId = await ctx.db.insert("participants", {
         company_id: user.company_id,
+        site_id: args.site_id,
         first_name: args.first_name.trim(),
         last_name: args.last_name.trim(),
         date_of_birth: args.date_of_birth,

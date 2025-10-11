@@ -163,7 +163,7 @@ export default defineSchema({
   // NDIS participants table with multi-tenant support
   participants: defineTable({
     company_id: v.id("companies"), // Multi-tenant isolation
-    site_id: v.id("sites"), // Required - which site this participant belongs to (Story 7.4)
+    site_id: v.optional(v.id("sites")), // Which site this participant belongs to (Story 7.4)
     first_name: v.string(),
     last_name: v.string(),
     date_of_birth: v.string(),

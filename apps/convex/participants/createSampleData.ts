@@ -24,6 +24,16 @@ export const createSampleParticipants = mutation({
         throw new ConvexError('User must be associated with a company to create sample participants');
       }
 
+      // Get a site from the user's company to associate participants with
+      const site = await ctx.db
+        .query("sites")
+        .withIndex("by_company", (q) => q.eq("company_id", user.company_id))
+        .first();
+
+      if (!site) {
+        throw new ConvexError('No sites found in company. Please create a site first before adding sample participants.');
+      }
+
       const now = Date.now();
 
       // Sample participant data
@@ -121,13 +131,14 @@ export const createSampleParticipants = mutation({
       for (const participantData of sampleParticipants) {
         const participantId = await ctx.db.insert("participants", {
           company_id: user.company_id,
+          site_id: site._id,
           ...participantData,
           created_at: now,
           created_by: user._id,
           updated_at: now,
           updated_by: user._id,
         });
-        
+
         createdParticipants.push(participantId);
       }
 
