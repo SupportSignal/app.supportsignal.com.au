@@ -87,6 +87,12 @@ export default function CreateParticipantPage() {
   useEffect(() => {
     if (sites && sites.length === 1 && !formData.siteId) {
       setFormData(prev => ({ ...prev, siteId: sites[0]._id }));
+      // Clear any existing site validation error when auto-selecting
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.siteId;
+        return newErrors;
+      });
     }
   }, [sites, formData.siteId]);
 
