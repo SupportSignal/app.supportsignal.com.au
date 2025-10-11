@@ -1,5 +1,5 @@
-'use client';
 // @ts-nocheck - Known TypeScript limitation with deep Convex type inference (TS2589)
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation } from 'convex/react';
@@ -124,7 +124,6 @@ export default function EditParticipantPage() {
         id: user._id,
         email: user.email,
         role: user.role,
-        companyId: user.company_id,
       } : null,
       hasSessionToken: !!sessionToken,
       sessionTokenPrefix: sessionToken?.substring(0, 8) + '...',

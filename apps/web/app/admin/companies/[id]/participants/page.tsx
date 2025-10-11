@@ -106,7 +106,6 @@ export default function ParticipantsListPage() {
         id: user._id,
         email: user.email,
         role: user.role,
-        companyId: user.company_id,
       } : null,
       hasSessionToken: !!sessionToken,
       sessionTokenPrefix: sessionToken?.substring(0, 8) + '...',
