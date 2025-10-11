@@ -101,6 +101,7 @@
     "@babel/parser": "^7.28.4",
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
+    "@eslint/js": "^9.37.0",
     "@types/bun": "latest",
     "@types/jscodeshift": "^17.3.0",
     "@typescript-eslint/eslint-plugin": "^8.37.0",
