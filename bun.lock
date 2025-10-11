@@ -50,6 +50,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@cloudflare/next-on-pages": "^1.13.12",
+        "@radix-ui/react-progress": "^1.1.7",
         "@starter/ui": "workspace:*",
         "clsx": "^2.1.1",
         "convex": "^1.25.4",
