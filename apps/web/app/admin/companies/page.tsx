@@ -14,7 +14,7 @@ import {
 } from '@starter/ui/dropdown-menu';
 import { Alert, AlertDescription } from '@starter/ui/alert';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
-import { Building2, Plus, AlertCircle, ChevronDown, Users, MapPin } from 'lucide-react';
+import { Building2, Plus, AlertCircle, ChevronDown, Users, MapPin, UserCheck } from 'lucide-react';
 import Link from 'next/link';
 
 export default function CompaniesPage() {
@@ -126,13 +126,19 @@ export default function CompaniesPage() {
                           <Link href={`/admin/companies/${company._id}/sites`}>
                             <Button variant="outline" size="sm" className="flex items-center gap-2">
                               <MapPin className="h-4 w-4" />
-                              Manage Sites
+                              Sites
                             </Button>
                           </Link>
                           <Link href={`/admin/companies/${company._id}/users`}>
                             <Button variant="outline" size="sm" className="flex items-center gap-2">
                               <Users className="h-4 w-4" />
-                              Manage Users
+                              Users
+                            </Button>
+                          </Link>
+                          <Link href={`/admin/companies/${company._id}/participants`}>
+                            <Button variant="outline" size="sm" className="flex items-center gap-2">
+                              <UserCheck className="h-4 w-4" />
+                              Participants
                             </Button>
                           </Link>
                           <DropdownMenu>

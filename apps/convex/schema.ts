@@ -163,6 +163,7 @@ export default defineSchema({
   // NDIS participants table with multi-tenant support
   participants: defineTable({
     company_id: v.id("companies"), // Multi-tenant isolation
+    site_id: v.id("sites"), // Required - which site this participant belongs to (Story 7.4)
     first_name: v.string(),
     last_name: v.string(),
     date_of_birth: v.string(),
@@ -178,6 +179,8 @@ export default defineSchema({
     updated_by: v.id("users"),
   })
     .index("by_company", ["company_id"])
+    .index("by_site", ["site_id"]) // Story 7.4: Query participants by site
+    .index("by_company_and_site", ["company_id", "site_id"]) // Story 7.4: Multi-tenant site filtering
     .index("by_ndis_number", ["ndis_number"])
     .index("by_status", ["status"])
     .index("by_name", ["last_name", "first_name"]),
