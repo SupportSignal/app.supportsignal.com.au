@@ -117,7 +117,7 @@ export default function EditParticipantPage() {
     if (sites) {
       console.log('🔍 EDIT PAGE - Sites loaded:', {
         count: sites.length,
-        sites: sites.map(s => ({ id: s._id, name: s.name }))
+        sites: sites.map((s: any) => ({ id: s._id, name: s.name }))
       });
     }
   }, [sites]);

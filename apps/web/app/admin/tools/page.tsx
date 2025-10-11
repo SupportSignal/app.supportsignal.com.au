@@ -2,8 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@starter/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@starter/ui/card';
 import { Download, Wrench } from 'lucide-react';
 
 export default function AdminToolsPage() {

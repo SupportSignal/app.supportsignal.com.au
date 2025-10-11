@@ -1,5 +1,5 @@
-'use client';
 // @ts-nocheck - Known TypeScript limitation with deep Convex type inference (TS2589)
+'use client';
 
 import React, { useState } from 'react';
 import { useQuery, useMutation } from 'convex/react';
@@ -89,16 +89,7 @@ export default function ParticipantsListPage() {
   // LOGGING: Participant list data
   React.useEffect(() => {
     if (participants) {
-      console.log('🔍 PARTICIPANT LIST - Loaded participants:', {
-        count: participants.length,
-        participants: participants.map(p => ({
-          id: p._id,
-          name: `${p.first_name} ${p.last_name}`,
-          site_id: p.site_id,
-          site_name: p.site?.name,
-          ndis: p.ndis_number,
-        }))
-      });
+      console.log('🔍 PARTICIPANT LIST - Loaded participants:', participants.length);
     }
   }, [participants]);
 

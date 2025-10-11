@@ -2,17 +2,16 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/components/auth/auth-provider';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@starter/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@starter/ui/card';
 import { useQuery } from 'convex/react';
 import { api } from '@/lib/convex-api';
 import { Download, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 export default function DatabaseExportPage() {
   const { user, sessionToken } = useAuth();
-  const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
 
   // Redirect if not system admin
@@ -38,11 +37,7 @@ export default function DatabaseExportPage() {
 
   const handleExport = async () => {
     if (!sessionToken) {
-      toast({
-        title: 'Authentication Error',
-        description: 'Please log in to export database.',
-        variant: 'destructive',
-      });
+      toast.error('Please log in to export database.');
       return;
     }
 
@@ -85,17 +80,10 @@ export default function DatabaseExportPage() {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      toast({
-        title: 'Export Successful',
-        description: `Database exported to ${filename}`,
-      });
+      toast.success(`Database exported to ${filename}`);
     } catch (error) {
       console.error('Export error:', error);
-      toast({
-        title: 'Export Failed',
-        description: error instanceof Error ? error.message : 'An error occurred during export',
-        variant: 'destructive',
-      });
+      toast.error(error instanceof Error ? error.message : 'An error occurred during export');
     } finally {
       setIsExporting(false);
     }
