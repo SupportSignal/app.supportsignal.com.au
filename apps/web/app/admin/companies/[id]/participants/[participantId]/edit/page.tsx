@@ -103,24 +103,85 @@ export default function EditParticipantPage() {
       : 'skip'
   );
 
-  // LOGGING: Raw participant data from query
+  // LOGGING: Component initialization
   useEffect(() => {
-    console.log('🔍 EDIT PAGE - Raw participant query result:', {
-      participant,
+    console.log('🔍 PARTICIPANT EDIT PAGE - INITIALIZED', {
+      timestamp: new Date().toISOString(),
+      companyId,
       participantId,
-      isLoaded,
+      hasUser: !!user,
+      userRole: user?.role,
+      hasSessionToken: !!sessionToken,
+      sessionTokenLength: sessionToken?.length,
     });
-  }, [participant, participantId, isLoaded]);
+  }, []);
+
+  // LOGGING: Auth state changes
+  useEffect(() => {
+    console.log('🔍 PARTICIPANT EDIT - AUTH STATE', {
+      timestamp: new Date().toISOString(),
+      user: user ? {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+        companyId: user.company_id,
+      } : null,
+      hasSessionToken: !!sessionToken,
+      sessionTokenPrefix: sessionToken?.substring(0, 8) + '...',
+    });
+  }, [user, sessionToken]);
+
+  // LOGGING: Query parameters
+  useEffect(() => {
+    console.log('🔍 PARTICIPANT EDIT - QUERY PARAMS', {
+      timestamp: new Date().toISOString(),
+      companyId,
+      participantId,
+    });
+  }, [companyId, participantId]);
+
+  // LOGGING: Company data
+  useEffect(() => {
+    console.log('🔍 PARTICIPANT EDIT - COMPANY DATA', {
+      timestamp: new Date().toISOString(),
+      companyLoaded: !!company,
+      companyName: company?.name,
+      companyId: company?._id,
+    });
+  }, [company]);
 
   // LOGGING: Sites data
   useEffect(() => {
-    if (sites) {
-      console.log('🔍 EDIT PAGE - Sites loaded:', {
-        count: sites.length,
-        sites: sites.map((s: any) => ({ id: s._id, name: s.name }))
-      });
-    }
+    console.log('🔍 PARTICIPANT EDIT - SITES DATA', {
+      timestamp: new Date().toISOString(),
+      sitesLoaded: !!sites,
+      sitesCount: sites?.length || 0,
+      sites: sites?.map((s: any) => ({
+        id: s._id,
+        name: s.name,
+      })) || [],
+    });
   }, [sites]);
+
+  // LOGGING: Raw participant data from query
+  useEffect(() => {
+    console.log('🔍 PARTICIPANT EDIT - PARTICIPANT QUERY RESULT', {
+      timestamp: new Date().toISOString(),
+      participantLoaded: !!participant,
+      participantId,
+      participant: participant ? {
+        id: participant._id,
+        name: `${participant.first_name} ${participant.last_name}`,
+        ndis: participant.ndis_number,
+        siteId: participant.site_id,
+        siteName: participant.site?.name,
+        status: participant.status,
+        supportLevel: participant.support_level,
+        dateOfBirth: participant.date_of_birth,
+      } : null,
+      isLoaded,
+    });
+  }, [participant, participantId, isLoaded]);
 
   // Load participant data into form
   useEffect(() => {
@@ -316,12 +377,40 @@ export default function EditParticipantPage() {
     e.preventDefault();
     setFormError(''); // Clear previous form-level errors
 
+    console.log('🔍 PARTICIPANT EDIT - FORM SUBMISSION INITIATED', {
+      timestamp: new Date().toISOString(),
+      hasSessionToken: !!sessionToken,
+      participantId,
+      formData: {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        ndisNumber: formData.ndisNumber,
+        dateOfBirth: formData.dateOfBirth,
+        siteId: formData.siteId,
+        supportLevel: formData.supportLevel,
+        status: formData.status,
+        hasContactPhone: !!formData.contactPhone,
+        hasEmergencyContact: !!formData.emergencyContact,
+        hasCareNotes: !!formData.careNotes,
+      },
+    });
+
     if (!sessionToken) return;
 
     // Run form validation
     if (!validateForm()) {
+      console.log('🔍 PARTICIPANT EDIT - VALIDATION FAILED', {
+        timestamp: new Date().toISOString(),
+        errors,
+        errorCount: Object.keys(errors).length,
+      });
       return; // Stop if validation fails
     }
+
+    console.log('🔍 PARTICIPANT EDIT - VALIDATION PASSED, SUBMITTING', {
+      timestamp: new Date().toISOString(),
+      participantId,
+    });
 
     try {
       await updateParticipant({
@@ -339,10 +428,25 @@ export default function EditParticipantPage() {
         status: formData.status,
       });
 
+      console.log('🔍 PARTICIPANT EDIT - UPDATE SUCCESS', {
+        timestamp: new Date().toISOString(),
+        participantId,
+      });
+
       toast.success('Participant updated successfully');
       router.push(`/admin/companies/${companyId}/participants`);
     } catch (err: any) {
       const errorMessage = err.data?.message || 'Failed to update participant';
+
+      console.error('🔍 PARTICIPANT EDIT - UPDATE ERROR', {
+        timestamp: new Date().toISOString(),
+        participantId,
+        error: errorMessage,
+        errorData: err.data,
+        errorStack: err.stack,
+        hasFieldError: !!err.data?.field,
+      });
+
       setFormError(errorMessage); // Show in alert banner
 
       // If backend specifies a field error (e.g., duplicate NDIS)
