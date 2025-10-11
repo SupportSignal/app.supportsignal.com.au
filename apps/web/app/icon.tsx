@@ -4,20 +4,30 @@ import { ImageResponse } from 'next/og';
 export const runtime = 'edge';
 
 export const size = {
-  width: 16,
-  height: 16,
+  width: 32,
+  height: 32,
 };
-export const contentType = 'image/svg+xml';
+export const contentType = 'image/png';
 
+// Simple icon without text elements (text not supported by @vercel/og)
 export default function Icon() {
   return new ImageResponse(
     (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
-        <circle cx="8" cy="8" r="8" fill="#3b82f6"/>
-        <text x="8" y="12" textAnchor="middle" fill="white" fontSize="10" fontFamily="sans-serif">
-          S
-        </text>
-      </svg>
+      <div
+        style={{
+          fontSize: 24,
+          background: '#3b82f6',
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'white',
+          fontWeight: 'bold',
+        }}
+      >
+        S
+      </div>
     ),
     {
       ...size,
