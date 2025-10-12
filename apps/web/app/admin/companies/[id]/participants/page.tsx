@@ -86,83 +86,6 @@ export default function ParticipantsListPage() {
       : 'skip'
   );
 
-  // LOGGING: Component initialization
-  React.useEffect(() => {
-    console.log('🔍 PARTICIPANT LIST PAGE - INITIALIZED', {
-      timestamp: new Date().toISOString(),
-      companyId,
-      hasUser: !!user,
-      userRole: user?.role,
-      hasSessionToken: !!sessionToken,
-      sessionTokenLength: sessionToken?.length,
-    });
-  }, []);
-
-  // LOGGING: Auth state changes
-  React.useEffect(() => {
-    console.log('🔍 PARTICIPANT LIST - AUTH STATE', {
-      timestamp: new Date().toISOString(),
-      user: user ? {
-        id: user._id,
-        email: user.email,
-        role: user.role,
-      } : null,
-      hasSessionToken: !!sessionToken,
-      sessionTokenPrefix: sessionToken?.substring(0, 8) + '...',
-    });
-  }, [user, sessionToken]);
-
-  // LOGGING: Query parameters
-  React.useEffect(() => {
-    console.log('🔍 PARTICIPANT LIST - QUERY PARAMS', {
-      timestamp: new Date().toISOString(),
-      companyId,
-      selectedSiteId,
-      siteFilterActive: selectedSiteId !== 'all',
-    });
-  }, [companyId, selectedSiteId]);
-
-  // LOGGING: Company data
-  React.useEffect(() => {
-    console.log('🔍 PARTICIPANT LIST - COMPANY DATA', {
-      timestamp: new Date().toISOString(),
-      companyLoaded: !!company,
-      companyName: company?.name,
-      companyId: company?._id,
-    });
-  }, [company]);
-
-  // LOGGING: Sites data
-  React.useEffect(() => {
-    console.log('🔍 PARTICIPANT LIST - SITES DATA', {
-      timestamp: new Date().toISOString(),
-      sitesLoaded: !!sites,
-      sitesCount: sites?.length || 0,
-      sites: sites?.map((s: any) => ({
-        id: s._id,
-        name: s.name,
-      })) || [],
-    });
-  }, [sites]);
-
-  // LOGGING: Participants data
-  React.useEffect(() => {
-    console.log('🔍 PARTICIPANT LIST - PARTICIPANTS DATA', {
-      timestamp: new Date().toISOString(),
-      participantsLoaded: !!participants,
-      participantsCount: participants?.length || 0,
-      selectedSiteFilter: selectedSiteId,
-      participants: participants?.map((p: any) => ({
-        id: p._id,
-        name: `${p.first_name} ${p.last_name}`,
-        ndis: p.ndis_number,
-        siteId: p.site_id,
-        siteName: p.site?.name,
-        status: p.status,
-      })) || [],
-    });
-  }, [participants, selectedSiteId]);
-
   // Mutations
   const deleteParticipant = useMutation(api['participants/admin'].deleteParticipant);
 
@@ -184,14 +107,6 @@ export default function ParticipantsListPage() {
 
   // Handle delete participant
   const handleDelete = async () => {
-    console.log('🔍 PARTICIPANT LIST - DELETE INITIATED', {
-      timestamp: new Date().toISOString(),
-      hasSessionToken: !!sessionToken,
-      hasSelectedParticipant: !!selectedParticipant,
-      participantId: selectedParticipant?._id,
-      participantName: selectedParticipant ? `${selectedParticipant.first_name} ${selectedParticipant.last_name}` : null,
-    });
-
     if (!sessionToken || !selectedParticipant) return;
 
     try {
@@ -200,25 +115,11 @@ export default function ParticipantsListPage() {
         participantId: selectedParticipant._id,
       });
 
-      console.log('🔍 PARTICIPANT LIST - DELETE SUCCESS', {
-        timestamp: new Date().toISOString(),
-        participantId: selectedParticipant._id,
-      });
-
       toast.success('Participant deleted successfully');
       setSelectedParticipant(null);
       setIsDeleteOpen(false);
     } catch (err: any) {
       const errorMessage = err.data?.message || 'Failed to delete participant';
-
-      console.error('🔍 PARTICIPANT LIST - DELETE ERROR', {
-        timestamp: new Date().toISOString(),
-        participantId: selectedParticipant._id,
-        error: errorMessage,
-        errorData: err.data,
-        errorStack: err.stack,
-      });
-
       toast.error(errorMessage);
       setIsDeleteOpen(false);
     }
@@ -226,12 +127,6 @@ export default function ParticipantsListPage() {
 
   // Open delete dialog
   const openDeleteDialog = (participant: any) => {
-    console.log('🔍 PARTICIPANT LIST - DELETE DIALOG OPENED', {
-      timestamp: new Date().toISOString(),
-      participantId: participant._id,
-      participantName: `${participant.first_name} ${participant.last_name}`,
-    });
-
     setSelectedParticipant(participant);
     setIsDeleteOpen(true);
   };
