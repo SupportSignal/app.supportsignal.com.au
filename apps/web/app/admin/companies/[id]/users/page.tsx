@@ -25,20 +25,30 @@ export default function UserManagementPage({ params }: UserManagementPageProps) 
   const { user, sessionToken } = useAuth();
   const router = useRouter();
 
-  const company = useQuery(api["companies/getCompanyDetails"].default, {
-    companyId: params.id,
-    sessionToken: sessionToken || '',
-  });
+  // Check permission before executing queries
+  const hasPermission = user && ['system_admin', 'company_admin'].includes(user.role);
 
-  const users = useQuery(api["users/listUsersForCompany"].default, {
-    companyId: params.id,
-    sessionToken: sessionToken || '',
-  });
+  // Queries - only execute if user has permission
+  const company = useQuery(
+    api["companies/getCompanyDetails"].default,
+    sessionToken && hasPermission
+      ? { companyId: params.id, sessionToken }
+      : 'skip'
+  );
 
-  const pendingInvitations = useQuery(api["users/invite/listPendingInvitations"].default, {
-    companyId: params.id,
-    sessionToken: sessionToken || '',
-  });
+  const users = useQuery(
+    api["users/listUsersForCompany"].default,
+    sessionToken && hasPermission
+      ? { companyId: params.id, sessionToken }
+      : 'skip'
+  );
+
+  const pendingInvitations = useQuery(
+    api["users/invite/listPendingInvitations"].default,
+    sessionToken && hasPermission
+      ? { companyId: params.id, sessionToken }
+      : 'skip'
+  );
 
   const revokeInvitation = useMutation(api["users/invite/revokeInvitation"].default);
 

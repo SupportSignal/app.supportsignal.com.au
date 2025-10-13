@@ -54,16 +54,19 @@ export default function SitesManagementPage() {
   const [selectedSite, setSelectedSite] = useState<any>(null);
   const [siteName, setSiteName] = useState('');
 
-  // Queries
+  // Check permission before executing queries
+  const hasPermission = user && user.role === 'system_admin';
+
+  // Queries - only execute if user has permission
   const company = useQuery(
     api['companies/getCompanyDetails'].default,
-    sessionToken && companyId
+    sessionToken && companyId && hasPermission
       ? { sessionToken, companyId }
       : 'skip'
   );
   const sites = useQuery(
     api['sites/admin'].listSites,
-    sessionToken && companyId
+    sessionToken && companyId && hasPermission
       ? { sessionToken, companyId }
       : 'skip'
   );

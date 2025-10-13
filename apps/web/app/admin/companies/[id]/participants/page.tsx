@@ -59,24 +59,27 @@ export default function ParticipantsListPage() {
   const [selectedParticipant, setSelectedParticipant] = useState<any>(null);
   const [selectedSiteId, setSelectedSiteId] = useState<Id<'sites'> | 'all'>('all');
 
-  // Queries
+  // Check permission before executing queries
+  const hasPermission = user && user.role === 'system_admin';
+
+  // Queries - only execute if user has permission
   const company = useQuery(
     api['companies/getCompanyDetails'].default,
-    sessionToken && companyId
+    sessionToken && companyId && hasPermission
       ? { sessionToken, companyId }
       : 'skip'
   );
 
   const sites = useQuery(
     api['sites/admin'].listSites,
-    sessionToken && companyId
+    sessionToken && companyId && hasPermission
       ? { sessionToken, companyId }
       : 'skip'
   );
 
   const participants = useQuery(
     api['participants/admin'].listParticipants,
-    sessionToken && companyId
+    sessionToken && companyId && hasPermission
       ? {
           sessionToken,
           companyId,

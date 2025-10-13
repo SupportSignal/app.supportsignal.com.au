@@ -32,10 +32,13 @@ export default function CompanyEditPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch company data
+  // Check permission before executing queries
+  const hasPermission = user && (user.role === 'system_admin' || user.role === 'demo_admin');
+
+  // Fetch company data - only if user has permission
   const company = useQuery(
     api.companies.admin.getCompanyForEdit,
-    sessionToken ? { sessionToken, companyId } : 'skip'
+    sessionToken && hasPermission ? { sessionToken, companyId } : 'skip'
   );
 
   const updateCompany = useMutation(api.companies.admin.updateCompany);
