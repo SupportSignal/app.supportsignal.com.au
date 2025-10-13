@@ -25,10 +25,8 @@ export default function UserManagementPage({ params }: UserManagementPageProps) 
   const { user, sessionToken } = useAuth();
   const router = useRouter();
 
-  // Check permission: system_admin can view any company, company_admin only their own
-  const isSystemAdmin = user && user.role === 'system_admin';
-  const isCompanyAdmin = user && user.role === 'company_admin' && user.company_id === params.id;
-  const hasPermission = isSystemAdmin || isCompanyAdmin;
+  // System admin only - this is the admin interface for managing all companies
+  const hasPermission = user && user.role === 'system_admin';
 
   // Queries - only execute if user has permission
   const company = useQuery(
@@ -62,11 +60,7 @@ export default function UserManagementPage({ params }: UserManagementPageProps) 
   if (!hasPermission) {
     return (
       <UnauthorizedAccessCard
-        message={
-          user?.role === 'company_admin'
-            ? "You can only manage users in your own company."
-            : "System administrator or company administrator access required to manage users."
-        }
+        message="System administrator access required to manage users."
       />
     );
   }
