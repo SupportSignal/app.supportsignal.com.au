@@ -43,6 +43,14 @@ export default function CompanyEditPage() {
   // Populate form when company loads
   useEffect(() => {
     if (company) {
+      console.log('[CompanyEdit] Loading company data:', {
+        companyId: company._id,
+        name: company.name,
+        status: company.status,
+        currentFormStatus: formData.status,
+        currentErrors: errors
+      });
+
       setFormData({
         name: company.name,
         contact_email: company.contact_email,
@@ -51,6 +59,11 @@ export default function CompanyEditPage() {
 
       // Clear any validation errors when loading existing data (Story 7.4 pattern)
       setErrors({});
+
+      console.log('[CompanyEdit] Form data updated:', {
+        newStatus: company.status,
+        errorsCleared: true
+      });
     }
   }, [company]);
 
@@ -232,6 +245,7 @@ export default function CompanyEditPage() {
               <Select
                 value={formData.status}
                 onValueChange={(value) => {
+                  console.log('[CompanyEdit] Status changed by user:', value);
                   setFormData({ ...formData, status: value as 'active' | 'trial' | 'suspended' | 'test' });
                   if (errors.status) {
                     setErrors({ ...errors, status: '' });
@@ -251,6 +265,10 @@ export default function CompanyEditPage() {
               {errors.status && (
                 <p className="text-sm text-red-500">{errors.status}</p>
               )}
+              {/* Debug info */}
+              <p className="text-xs text-gray-400">
+                Debug: formData.status = "{formData.status}", errors.status = "{errors.status || 'none'}"
+              </p>
             </div>
 
             {/* Read-only fields */}
