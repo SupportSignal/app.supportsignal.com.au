@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@starter/ui/badge';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
 import { CompanyCleanupDialog } from '@/components/admin/company-cleanup-dialog';
+import { UnauthorizedAccessCard } from '@/components/admin/unauthorized-access-card';
 import { Building2, Plus, Search, Filter, Edit, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -37,18 +38,9 @@ export default function CompaniesPage() {
   // Check if user is system admin
   if (!user || (user.role !== 'system_admin' && user.role !== 'demo_admin')) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="container mx-auto px-6 py-12">
-          <Card>
-            <CardHeader>
-              <CardTitle>Unauthorized Access</CardTitle>
-              <CardDescription>
-                System administrator access required to manage companies.
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        </div>
-      </div>
+      <UnauthorizedAccessCard
+        message="System administrator access required to manage companies."
+      />
     );
   }
 

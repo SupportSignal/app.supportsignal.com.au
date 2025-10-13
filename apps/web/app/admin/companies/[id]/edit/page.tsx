@@ -48,6 +48,9 @@ export default function CompanyEditPage() {
         contact_email: company.contact_email,
         status: company.status,
       });
+
+      // Clear any validation errors when loading existing data (Story 7.4 pattern)
+      setErrors({});
     }
   }, [company]);
 
@@ -133,10 +136,31 @@ export default function CompanyEditPage() {
     router.push('/admin/companies');
   };
 
-  if (!company) {
+  // Handle loading and deleted company states
+  if (company === undefined) {
     return (
       <div className="container mx-auto py-8 px-4 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (company === null) {
+    return (
+      <div className="container mx-auto py-8 px-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Company Not Found</CardTitle>
+            <CardDescription>
+              This company may have been deleted or you may not have access to it.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/admin/companies">
+              <Button>Return to Company Listing</Button>
+            </Link>
+          </CardContent>
+        </Card>
       </div>
     );
   }

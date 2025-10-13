@@ -17,7 +17,6 @@ import {
   Trash2,
   ArrowLeft,
 } from 'lucide-react';
-import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { Id } from '@/convex/_generated/dataModel';
 import {
@@ -86,6 +85,27 @@ export default function SitesManagementPage() {
             </AlertDescription>
           </Alert>
         </div>
+      </div>
+    );
+  }
+
+  // Handle deleted company
+  if (company === null) {
+    return (
+      <div className="p-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Company Not Found</CardTitle>
+            <div className="text-sm text-muted-foreground">
+              This company may have been deleted or you may not have access to it.
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => router.push('/admin/companies')}>
+              Return to Company Listing
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }

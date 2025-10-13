@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@starter/ui/card';
 import { Button } from '@starter/ui/button';
 import { Alert, AlertDescription } from '@starter/ui/alert';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
+import { UnauthorizedAccessCard } from '@/components/admin/unauthorized-access-card';
 import {
   Users,
   Plus,
@@ -16,9 +17,7 @@ import {
   Edit2,
   Trash2,
   ArrowLeft,
-  Filter,
 } from 'lucide-react';
-import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { Id } from '@/convex/_generated/dataModel';
 import {
@@ -92,15 +91,29 @@ export default function ParticipantsListPage() {
   // Check if user is system admin
   if (!user || user.role !== 'system_admin') {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="container mx-auto px-6 py-12">
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              System administrator access required to manage participants.
-            </AlertDescription>
-          </Alert>
-        </div>
+      <UnauthorizedAccessCard
+        message="System administrator access required to manage participants."
+      />
+    );
+  }
+
+  // Handle deleted company
+  if (company === null) {
+    return (
+      <div className="p-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Company Not Found</CardTitle>
+            <div className="text-sm text-muted-foreground">
+              This company may have been deleted or you may not have access to it.
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => router.push('/admin/companies')}>
+              Return to Company Listing
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }

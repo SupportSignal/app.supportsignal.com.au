@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@starter/ui/card';
 import { Button } from '@starter/ui/button';
 import { Alert, AlertDescription } from '@starter/ui/alert';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
+import { UnauthorizedAccessCard } from '@/components/admin/unauthorized-access-card';
 import { Users, Mail, AlertCircle, Check, XCircle, Clock, UserPlus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Id } from '@/convex/_generated/dataModel';
@@ -48,13 +49,29 @@ export default function UserManagementPage({ params }: UserManagementPageProps) 
   // Permission check
   if (!user || !['system_admin', 'company_admin'].includes(user.role)) {
     return (
+      <UnauthorizedAccessCard
+        message="System administrator or company administrator access required to manage users."
+      />
+    );
+  }
+
+  // Handle deleted company
+  if (company === null) {
+    return (
       <div className="p-6">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            You do not have permission to manage users.
-          </AlertDescription>
-        </Alert>
+        <Card>
+          <CardHeader>
+            <CardTitle>Company Not Found</CardTitle>
+            <div className="text-sm text-muted-foreground">
+              This company may have been deleted or you may not have access to it.
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => router.push('/admin/companies')}>
+              Return to Company Listing
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
