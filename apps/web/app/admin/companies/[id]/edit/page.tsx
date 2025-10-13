@@ -1,6 +1,8 @@
 // @ts-nocheck - Known TypeScript limitation with deep Convex type inference (TS2589)
 'use client';
 
+export const runtime = 'edge';
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/auth-provider';
