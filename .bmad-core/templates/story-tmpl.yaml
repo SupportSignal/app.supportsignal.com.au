@@ -30,16 +30,21 @@ sections:
     owner: scrum-master
     editors: [scrum-master, dev-agent]
 
-  - id: worktree
-    title: Use Worktree
-    type: boolean
-    default: false
+  - id: worktree_notes
+    title: Worktree Notes
+    type: freeform-text
+    optional: true
     instruction: |
-      Set to true to work on this story in an isolated git worktree.
-      When true, dev agent will automatically run worktree:start before beginning work.
-      Branch will be: story/{{epic_num}}.{{story_num}}
-    owner: scrum-master
-    editors: [scrum-master, dev-agent]
+      If this story is being developed in a worktree, document:
+      - Why worktree was chosen (suitability assessment)
+      - What can/cannot be tested in worktree
+      - Handoff requirements for main branch
+      - Testing plan for main branch after merge
+
+      Note: Worktree Manager agent (Willow) helps assess suitability and guides workflow.
+      Use `*worktree-manager` to invoke the agent for worktree start/end operations.
+    owner: worktree-manager
+    editors: [worktree-manager, dev-agent, scrum-master]
 
   - id: story
     title: Story
@@ -202,6 +207,37 @@ sections:
         instruction: List all files created, modified, or affected during story implementation
         owner: dev-agent
         editors: [dev-agent]
+
+  - id: worktree_handoff
+    title: Worktree Handoff
+    type: structured-checklist
+    optional: true
+    instruction: |
+      Complete this checklist before running worktree-end.sh (if story developed in worktree).
+      Worktree Manager agent (Willow) enforces completion of handoff documentation.
+
+      **Required before merge to main**:
+      - Complete File List with all changes
+      - Testing approach for main branch
+      - Schema changes documentation
+      - Dependencies changes documentation
+      - Known issues or warnings
+      - Status set to "Ready for Main Branch Testing" (NOT "Completed")
+    owner: worktree-manager
+    editors: [worktree-manager, dev-agent]
+    items:
+      - label: "All files documented in File List"
+        required: true
+      - label: "Testing approach documented for main branch"
+        required: true
+      - label: "Schema changes noted (if any) or marked as 'None'"
+        required: true
+      - label: "Dependencies changes noted (if any) or marked as 'None'"
+        required: true
+      - label: "Known issues or warnings documented"
+        required: true
+      - label: "Status set to 'Ready for Main Branch Testing'"
+        required: true
 
   - id: qa-results
     title: QA Results

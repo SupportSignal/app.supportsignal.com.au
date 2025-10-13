@@ -122,6 +122,61 @@ This document outlines established patterns for development processes, tooling, 
 
 **Rationale**: Improves code history readability and enables automation
 
+## Worktree Workflow Patterns
+
+### Worktree Development Pattern
+
+**Context**: Using git worktrees for isolated development on multiple branches simultaneously
+
+**Implementation**:
+
+See comprehensive documentation: [Worktree Development Pattern](worktree-development-pattern.md)
+
+**Quick Decision Guide**:
+
+✅ **Use Worktrees For**:
+- Simple UI component changes (styling, layout, no logic)
+- Documentation updates (markdown files, guides, READMEs)
+- Isolated refactoring (no dependencies, no testing required)
+- Exploratory code (might be discarded, safe to isolate)
+- Code that doesn't require testing in worktree (can test in main after merge)
+
+❌ **Avoid Worktrees For**:
+- Schema changes (Convex, database, migrations)
+- Features requiring full testing (need real data, complex scenarios)
+- Work involving multiple services (web + workers + backend)
+- Changes needing data seeding (test data setup)
+- Complex dependency changes (new packages, environment changes)
+- Features with deployment complexity (separate Convex deployments cause conflicts)
+
+**Workflow**:
+
+1. **Suitability Assessment**: Invoke Worktree Manager agent (`*worktree-manager` → `*start-worktree`)
+2. **Worktree Creation**: Human runs `./scripts/worktree-start.sh X.Y` (AI provides instructions only)
+3. **Development**: Work in isolated worktree directory (`../story-X-Y/`)
+4. **Handoff Documentation**: Complete handoff checklist before merge (`*end-worktree`)
+5. **Merge to Main**: Human runs `./scripts/worktree-end.sh X.Y` after review
+6. **Testing in Main**: Verify all features work in main branch environment
+7. **Story Completion**: Mark complete ONLY after main branch testing passes
+
+**Safety Guardrails**:
+
+- **Human-Only Script Execution**: AI agents provide instructions, humans execute scripts
+- **Directory Verification**: Always run `pwd` before operations
+- **Handoff Documentation Enforcement**: Cannot merge without complete documentation
+- **Testing in Main Branch**: Features NOT complete until tested in main
+- **Worktree Manager Agent**: Willow (`*worktree-manager`) guides workflow and enforces safety
+
+**Example**: See Story 0.6 implementation with complete worktree handoff documentation
+
+**Rationale**: Enables parallel development on multiple features while protecting main branch from accidents and ensuring proper knowledge transfer across branch boundaries
+
+**Related Documentation**:
+- [Worktree Development Pattern](worktree-development-pattern.md) - Complete pattern documentation
+- [Worktree Manager Agent](.bmad-core/agents/worktree-manager.md) - Willow agent specification
+- [Worktree Handoff Checklist](.bmad-core/checklists/worktree-handoff-checklist.md) - Handoff requirements
+- [Worktree Workflow KDD](../lessons-learned/worktree-workflow-kdd.md) - Lessons learned from Story 0.6
+
 ## Code Review Patterns
 
 ### Review Checklist

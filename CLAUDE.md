@@ -276,6 +276,70 @@ Each agent can execute specialized commands with `*` prefix:
 └── data/             # Knowledge base and reference materials
 ```
 
+### Worktree Development Workflow
+
+**CRITICAL**: Worktree workflow is **human-driven** using the Worktree Manager agent (Willow) who provides instructions rather than executing commands.
+
+#### When to Use Worktrees
+
+**✅ Good Fit**:
+- Simple UI component changes (styling, layout, no logic)
+- Documentation updates (markdown files, guides)
+- Isolated refactoring (no dependencies, no testing required)
+- Code that doesn't require testing in worktree (can test in main after merge)
+
+**❌ Avoid Worktrees**:
+- Schema changes (Convex, database, migrations)
+- Features requiring full testing (need real data, complex scenarios)
+- Work involving multiple services (web + workers + backend)
+- Complex dependency changes (new packages, environment changes)
+
+#### Worktree Workflow Phases
+
+1. **Suitability Assessment**: Invoke Worktree Manager agent
+   ```
+   *worktree-manager
+   *start-worktree
+   ```
+   Agent analyzes story and recommends worktree vs main branch development.
+
+2. **Worktree Creation** (if suitable): Human executes (AI provides instructions only)
+   ```bash
+   cd /path/to/app.supportsignal.com.au
+   pwd  # Verify correct location
+   ./scripts/worktree-start.sh X.Y
+   cd ../story-X-Y
+   ```
+
+3. **Development in Worktree**: Work normally, but do NOT mark story "Completed"
+
+4. **Handoff Documentation**: Before merging, invoke Worktree Manager
+   ```
+   *worktree-manager
+   *end-worktree
+   ```
+   Agent guides handoff documentation (file list, testing plan, known issues).
+
+5. **Merge to Main**: Human executes after review
+   ```bash
+   cd /path/to/app.supportsignal.com.au
+   ./scripts/worktree-end.sh X.Y
+   ```
+
+6. **Testing in Main**: Verify features work in main branch environment
+
+7. **Story Completion**: Mark complete ONLY after main branch testing passes
+
+#### Safety Guardrails
+
+- **Human-Only Script Execution**: AI never executes worktree scripts (prevents directory confusion)
+- **Directory Verification**: Always `pwd` before operations
+- **Handoff Documentation Enforcement**: Cannot merge without complete documentation
+- **Testing in Main Branch**: Story not complete until tested in main
+- **Worktree Manager Agent (Willow)**: `*worktree-manager` guides workflow and enforces safety
+
+**Full Documentation**: [Worktree Development Pattern](docs/patterns/worktree-development-pattern.md)
+
 ### BMAD Documentation Structure
 
 The project uses sharded documentation for AI agent consumption:
