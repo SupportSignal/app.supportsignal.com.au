@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@starter/ui/card';
 import { Button } from '@starter/ui/button';
 import { Alert, AlertDescription } from '@starter/ui/alert';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
+import { UnauthorizedAccessCard } from '@/components/admin/unauthorized-access-card';
 import {
   MapPin,
   Plus,
@@ -79,16 +80,9 @@ export default function SitesManagementPage() {
   // Check if user is system admin
   if (!user || user.role !== 'system_admin') {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="container mx-auto px-6 py-12">
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              System administrator access required to manage sites.
-            </AlertDescription>
-          </Alert>
-        </div>
-      </div>
+      <UnauthorizedAccessCard
+        message="System administrator access required to manage sites."
+      />
     );
   }
 

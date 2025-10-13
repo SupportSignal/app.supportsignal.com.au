@@ -16,6 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@star
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { UnauthorizedAccessCard } from '@/components/admin/unauthorized-access-card';
 
 export default function CompanyEditPage() {
   const params = useParams();
@@ -73,21 +74,9 @@ export default function CompanyEditPage() {
   // Redirect if not system admin
   if (user && user.role !== 'system_admin' && user.role !== 'demo_admin') {
     return (
-      <div className="container mx-auto py-8 px-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Unauthorized Access</CardTitle>
-            <CardDescription>
-              System administrator access required for company editing.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/admin">
-              <Button variant="outline">Back to Admin</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
+      <UnauthorizedAccessCard
+        message="System administrator access required to edit companies."
+      />
     );
   }
 
