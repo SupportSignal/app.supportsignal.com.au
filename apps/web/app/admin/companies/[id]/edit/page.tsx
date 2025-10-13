@@ -246,9 +246,12 @@ export default function CompanyEditPage() {
                 value={formData.status}
                 onValueChange={(value) => {
                   console.log('[CompanyEdit] Status changed by user:', value);
-                  setFormData({ ...formData, status: value as 'active' | 'trial' | 'suspended' | 'test' });
-                  if (errors.status) {
-                    setErrors({ ...errors, status: '' });
+                  // Only update if value is valid (not empty)
+                  if (value) {
+                    setFormData({ ...formData, status: value as 'active' | 'trial' | 'suspended' | 'test' });
+                    if (errors.status) {
+                      setErrors({ ...errors, status: '' });
+                    }
                   }
                 }}
               >
