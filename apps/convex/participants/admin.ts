@@ -24,7 +24,7 @@ export const listParticipants = query({
     const { user } = await requirePermission(
       ctx,
       args.sessionToken,
-      PERMISSIONS.MANAGE_COMPANY
+      PERMISSIONS.MANAGE_ALL_COMPANIES
     );
 
     // Build query based on whether site filter is provided
@@ -90,7 +90,7 @@ export const getParticipantById = query({
     const { user } = await requirePermission(
       ctx,
       args.sessionToken,
-      PERMISSIONS.MANAGE_COMPANY
+      PERMISSIONS.MANAGE_ALL_COMPANIES
     );
 
     const participant = await ctx.db.get(args.participantId);
@@ -149,7 +149,7 @@ export const createParticipant = mutation({
     const { user } = await requirePermission(
       ctx,
       args.sessionToken,
-      PERMISSIONS.MANAGE_COMPANY
+      PERMISSIONS.MANAGE_ALL_COMPANIES
     );
 
     // Validate required fields
@@ -270,7 +270,7 @@ export const updateParticipant = mutation({
     const { user } = await requirePermission(
       ctx,
       args.sessionToken,
-      PERMISSIONS.MANAGE_COMPANY
+      PERMISSIONS.MANAGE_ALL_COMPANIES
     );
 
     // Get existing participant
@@ -401,7 +401,7 @@ export const deleteParticipant = mutation({
     const { user } = await requirePermission(
       ctx,
       args.sessionToken,
-      PERMISSIONS.MANAGE_COMPANY
+      PERMISSIONS.MANAGE_ALL_COMPANIES
     );
 
     // Get participant

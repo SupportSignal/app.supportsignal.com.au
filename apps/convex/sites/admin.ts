@@ -2,7 +2,7 @@ import { mutation, query } from '../_generated/server';
 import { v, ConvexError } from 'convex/values';
 import { requirePermission, PERMISSIONS } from '../permissions';
 
-// Note: Using MANAGE_COMPANY (singular) - system admins can manage companies and their sites
+// Story 7.5 Fix: Using MANAGE_ALL_COMPANIES for system-wide operations (system admin only)
 
 /**
  * Site Management - System Admin CRUD Operations
@@ -25,7 +25,7 @@ export const listSites = query({
     const { user } = await requirePermission(
       ctx,
       args.sessionToken,
-      PERMISSIONS.MANAGE_COMPANY
+      PERMISSIONS.MANAGE_ALL_COMPANIES
     );
 
     // Get all sites for the company
@@ -63,7 +63,7 @@ export const createSite = mutation({
     const { user } = await requirePermission(
       ctx,
       args.sessionToken,
-      PERMISSIONS.MANAGE_COMPANY
+      PERMISSIONS.MANAGE_ALL_COMPANIES
     );
 
     // Validate company exists
@@ -131,7 +131,7 @@ export const updateSite = mutation({
     const { user } = await requirePermission(
       ctx,
       args.sessionToken,
-      PERMISSIONS.MANAGE_COMPANY
+      PERMISSIONS.MANAGE_ALL_COMPANIES
     );
 
     // Get the site
@@ -196,7 +196,7 @@ export const deleteSite = mutation({
     const { user } = await requirePermission(
       ctx,
       args.sessionToken,
-      PERMISSIONS.MANAGE_COMPANY
+      PERMISSIONS.MANAGE_ALL_COMPANIES
     );
 
     // Get the site
@@ -258,7 +258,7 @@ export const getSiteById = query({
     await requirePermission(
       ctx,
       args.sessionToken,
-      PERMISSIONS.MANAGE_COMPANY
+      PERMISSIONS.MANAGE_ALL_COMPANIES
     );
 
     // Get the site

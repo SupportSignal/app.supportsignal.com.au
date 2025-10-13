@@ -103,9 +103,9 @@ graph TD
 **Stories in this Epic:**
 - [Story 7.1: Company Creation & Onboarding Workflow](#story-71-company-creation--onboarding-workflow) - ✅ **Complete** (Critical)
 - [Story 7.2: Initial User Setup (System Admin)](#story-72-initial-user-setup-system-admin) - ✅ **Complete** (Critical)
-- [Story 7.3: Site Management (System Admin)](#story-73-site-management-system-admin) - ✅ **Complete** (Critical)
-- [Story 7.4: Initial Participant Setup (System Admin)](#story-74-initial-participant-setup-system-admin) - 📋 **Planned** (High)
-- [Story 7.5: System-Wide Company Management & Editing](#story-75-system-wide-company-management--editing) - 📋 **Planned** (Medium)
+- [Story 7.3: Site Management (System Admin)](#story-73-site-management-system-admin) - ✅ **Complete** (Critical) 🚨 *Security fix in 7.5*
+- [Story 7.4: Initial Participant Setup (System Admin)](#story-74-initial-participant-setup-system-admin) - ✅ **Complete** (High) 🚨 *Security fix in 7.5*
+- [Story 7.5: System-Wide Company Management & Editing](#story-75-system-wide-company-management--editing) - ✅ **Approved** (Medium) 🚨 *Includes Phase 0 security fix*
 - [Story 7.6: Incident Capture Site Selection](#story-76-incident-capture-site-selection) - 📋 **Planned** (High)
 
 ---

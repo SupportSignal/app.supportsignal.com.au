@@ -184,23 +184,38 @@ Set up a local Claude Code analysis server using Anthropic's Agent SDK with MCP 
 
 ### Story 10.2: Database Export Slicer CLI
 
-**Estimated Effort**: Large (2-3 days)
+**Estimated Effort**: Large (3-4 days)
 **Category**: Developer Tooling
 **Priority**: High (required for efficient LLM analysis)
+**Integrates**: Story 0.7 (CLI Database Export Tool) - merged for cohesive CLI tooling
 
 #### Objective
 
-Build a command-line tool that segments large database exports into focused, LLM-friendly data slices with comprehensive context documentation for efficient Claude analysis.
+Build a comprehensive command-line tool that handles both database export generation and intelligent slicing for LLM analysis. Combines export automation with AI-optimized data segmentation for efficient Claude Code workflows.
 
 #### Key Requirements
 
-1. **Core Slicer Implementation**
+**1. Export Generation (from Story 0.7)**
+   - Server-side Convex client for direct database queries
+   - System admin authentication (API key or session token)
+   - Segmentation filters:
+     - `--company=<id>` - Filter by company
+     - `--site=<id>` - Filter by site
+     - `--from=<date> --to=<date>` - Date range filtering
+     - `--tables=incidents,participants` - Specific table selection
+     - `--status=completed` - Incident status filtering
+   - Output formats: JSON, JSONL (line-delimited), CSV (per table)
+   - Output targets: stdout or file path
+   - Progress indicators for large exports (>5 seconds)
+   - Audit logging (track all export operations with user ID and filters)
+
+**2. Data Slicing & Segmentation**
    - Read full database export JSON (2.7MB+, 18 tables)
    - Implement multiple slice strategies
    - Generate output files (data.json, context.md, schema.json)
    - Data sanitization (remove sensitive fields)
 
-2. **Slice Strategies**
+**3. Slice Strategies**
    - **Incident Context Bundle**: Single incident + all relationships + AI prompts
    - **Participant Timeline**: All incidents for a participant + context
    - **Worker History**: All incidents reported by a frontline worker
@@ -208,33 +223,52 @@ Build a command-line tool that segments large database exports into focused, LLM
    - **Prompt Testing Bundle**: AI prompt + sample incidents + input/output
    - **Workflow Analysis**: Workflow handoffs + status transitions
 
-3. **LLM-Friendly Output**
+**4. LLM-Friendly Output**
    - **context.md**: Overview, use cases, statistics, schema summary, relationships
    - **data.json**: Focused data slice with all relationships resolved
    - **schema.json**: Field definitions, types, relationships, indexes
 
-4. **CLI Interface**
+**5. CLI Interface**
+   - Dual modes: Direct export OR export + slice
    - Multiple output strategies (single slice, batch mode, all slices)
    - Configurable output directory
-   - Format options (JSON, YAML)
+   - Format options (JSON, JSONL, CSV, YAML)
+   - Pretty print (`--pretty`) and compression (`--compress`)
    - Sanitization controls
-   - Compression options
+   - Streaming to other tools (jq, etc.)
 
-5. **Documentation**
-   - CLI usage guide
+**6. Documentation**
+   - CLI usage guide with examples
    - Slice strategy reference
    - Context document format
    - Integration with Claude Analysis Server
+   - Authentication and security best practices
 
 #### Success Criteria
 
+**Export Generation** (Story 0.7 integration):
+- [ ] CLI authenticates via environment variable or config file
+- [ ] Direct database export works (equivalent to web UI Story 0.6)
+- [ ] All segmentation filters functional (company, site, date, tables, status)
+- [ ] Multiple output formats supported (JSON, JSONL, CSV)
+- [ ] Compression and pretty-print options working
+- [ ] Progress indicators for large exports
+- [ ] Audit logging captures all export operations
+
+**Data Slicing**:
 - [ ] CLI tool generates all slice types from full export
 - [ ] Context documents include comprehensive overview and statistics
 - [ ] Schema documents accurately describe data structure
 - [ ] Data slices preserve all relationships correctly
 - [ ] Sanitization removes sensitive fields (tokens, passwords)
 - [ ] Batch mode generates all slices efficiently
+
+**Security & Documentation**:
+- [ ] System admin authentication required
+- [ ] API key/token stored securely (not in CLI args)
+- [ ] No sensitive data in error logs
 - [ ] Documentation complete with usage examples
+- [ ] Automation workflow examples provided
 
 #### Technical Design
 
@@ -262,8 +296,31 @@ scripts/slice-export/
 ```
 
 **Example CLI Usage**:
+
 ```bash
-# Basic usage - single incident slice
+# ===== EXPORT GENERATION (Story 0.7 capabilities) =====
+
+# Basic full export
+bun run export-db --output export.json
+
+# Segmented exports by filters
+bun run export-db --company=j9abc123 --output company-export.json
+bun run export-db --from=2025-01-01 --to=2025-03-31 --output q1-export.json
+bun run export-db --tables=incidents,participants --output incidents-only.json
+bun run export-db --status=completed --output completed-incidents.json
+
+# Output formats
+bun run export-db --format=jsonl --output export.jsonl  # Line-delimited JSON
+bun run export-db --format=csv --output export.csv      # CSV per table
+bun run export-db --format=json --pretty --output readable-export.json
+
+# Compression and streaming
+bun run export-db --compress --output export.json.gz
+bun run export-db | jq '.data.incidents[] | select(.status == "completed")'
+
+# ===== DATA SLICING (Original 10.2 capabilities) =====
+
+# Single slice - incident context bundle
 bun run slice-export input.json --type incident --id j574abc123
 
 # Generate all incident slices
@@ -278,12 +335,22 @@ bun run slice-export input.json --type prompt --name generate_clarification_ques
 # Batch mode - generate all slice types
 bun run slice-export input.json --batch-all --output-dir exports/
 
-# Options
+# ===== COMBINED WORKFLOW (Export + Slice) =====
+
+# Export filtered data and immediately slice it
+bun run export-db --company=j9abc123 | bun run slice-export --type incident --all
+
+# Full automation pipeline
+bun run export-db --output export.json && \
+  bun run slice-export export.json --batch-all --output-dir analysis/
+
+# Options (available across both tools)
 --sanitize           # Remove sensitive fields (tokens, session data)
 --include-schema     # Generate schema.json files
 --include-context    # Generate context.md files (default: true)
 --format json|yaml   # Output format
 --compress           # Gzip output files
+--pretty             # Pretty-print JSON output
 ```
 
 **Context Document Template**:

@@ -1,76 +1,86 @@
+// @ts-nocheck - Known TypeScript limitation with deep Convex type inference (TS2589)
 'use client';
 
 import React, { useState } from 'react';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '@/convex/_generated/api';
+import { useQuery } from 'convex/react';
+import { api } from '@/lib/convex-api';
 import { useAuth } from '@/components/auth/auth-provider';
-import { Card, CardContent, CardHeader, CardTitle } from '@starter/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@starter/ui/card';
 import { Button } from '@starter/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@starter/ui/dropdown-menu';
-import { Alert, AlertDescription } from '@starter/ui/alert';
+import { Input } from '@starter/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@starter/ui/select';
+import { Badge } from '@starter/ui/badge';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
-import { Building2, Plus, AlertCircle, ChevronDown, Users, MapPin, UserCheck } from 'lucide-react';
+import { CompanyCleanupDialog } from '@/components/admin/company-cleanup-dialog';
+import { Building2, Plus, Search, Filter, Edit, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function CompaniesPage() {
   const { user, sessionToken } = useAuth();
-  const [isUpdating, setIsUpdating] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [cleanupDialogOpen, setCleanupDialogOpen] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState<{ id: string; name: string } | null>(null);
 
-  // Use real API query for ALL companies (not just active)
-  const companies = useQuery(api.companies.listAllCompanies) || [];
+  // Fetch companies with counts
+  const companies = useQuery(
+    api.companies.admin.listAllCompanies,
+    sessionToken ? { sessionToken, statusFilter: statusFilter || undefined, searchQuery: searchQuery || undefined } : 'skip'
+  );
 
-  // Mutation to update company status
-  const updateCompanyStatus = useMutation(api.companies.updateCompanyStatus);
-
-  // Change company status
-  const handleChangeStatus = async (companyId: string, newStatus: string) => {
-    if (!sessionToken) return;
-
-    setIsUpdating(companyId);
-    try {
-
-      console.log('🔍 FRONTEND - CHANGING COMPANY STATUS', {
-        companyId,
-        newStatus,
-        timestamp: new Date().toISOString()
-      });
-
-      const result = await updateCompanyStatus({
-        companyId,
-        status: newStatus,
-        sessionToken,
-      });
-
-      if (result.success) {
-        console.log('🔍 FRONTEND - STATUS TOGGLE SUCCESS:', result.message);
-      }
-    } catch (error) {
-      console.error('🔍 FRONTEND - STATUS TOGGLE ERROR:', error);
-    } finally {
-      setIsUpdating(null);
-    }
-  };
+  // Fetch system metrics
+  const metrics = useQuery(
+    api.companies.admin.getSystemMetrics,
+    sessionToken ? { sessionToken } : 'skip'
+  );
 
   // Check if user is system admin
-  if (!user || user.role !== 'system_admin') {
+  if (!user || (user.role !== 'system_admin' && user.role !== 'demo_admin')) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="container mx-auto px-6 py-12">
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              System administrator access required to view companies.
-            </AlertDescription>
-          </Alert>
+          <Card>
+            <CardHeader>
+              <CardTitle>Unauthorized Access</CardTitle>
+              <CardDescription>
+                System administrator access required to manage companies.
+              </CardDescription>
+            </CardHeader>
+          </Card>
         </div>
       </div>
     );
   }
+
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'default'; // green
+      case 'trial':
+        return 'secondary'; // blue
+      case 'suspended':
+        return 'destructive'; // red
+      case 'test':
+        return 'outline'; // gray
+      default:
+        return 'outline';
+    }
+  };
+
+  const handleClearFilters = () => {
+    setStatusFilter('');
+    setSearchQuery('');
+  };
+
+  const handleDeleteClick = (companyId: string, companyName: string) => {
+    setSelectedCompany({ id: companyId, name: companyName });
+    setCleanupDialogOpen(true);
+  };
+
+  const handleCloseCleanupDialog = () => {
+    setCleanupDialogOpen(false);
+    setSelectedCompany(null);
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -80,139 +90,203 @@ export default function CompaniesPage() {
         icon={<Building2 className="h-6 w-6" />}
       />
 
-      <div className="flex justify-end">
-          <Link href="/admin/companies/create">
-            <Button className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Create Company
-            </Button>
-          </Link>
-        </div>
-
-      <div>
+      {/* System Metrics */}
+      {metrics && (
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <Card>
-            <CardHeader>
-              <CardTitle>All Companies</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">Companies</CardTitle>
             </CardHeader>
             <CardContent>
-              {!companies ? (
-                <div className="text-center py-8 text-gray-500">
-                  Loading companies...
-                </div>
-              ) : companies.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  No companies found. Create your first company to get started.
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {companies.map((company: any) => (
-                    <div
-                      key={company._id}
-                      className="border rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <h3 className="font-medium">
-                            {company.name}
-                          </h3>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {company.contact_email}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-500">
-                            Slug: {company.slug}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <Link href={`/admin/companies/${company._id}/sites`}>
-                            <Button variant="outline" size="sm" className="flex items-center gap-2">
-                              <MapPin className="h-4 w-4" />
-                              Sites
-                            </Button>
-                          </Link>
-                          <Link href={`/admin/companies/${company._id}/users`}>
-                            <Button variant="outline" size="sm" className="flex items-center gap-2">
-                              <Users className="h-4 w-4" />
-                              Users
-                            </Button>
-                          </Link>
-                          <Link href={`/admin/companies/${company._id}/participants`}>
-                            <Button variant="outline" size="sm" className="flex items-center gap-2">
-                              <UserCheck className="h-4 w-4" />
-                              Participants
-                            </Button>
-                          </Link>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer hover:opacity-80 transition-opacity ${
-                                company.status === 'active'
-                                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                  : company.status === 'trial'
-                                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                                  : company.status === 'test'
-                                  ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                                  : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-                              }`}>
-                                {isUpdating === company._id ? (
-                                  <>
-                                    <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
-                                    Updating...
-                                  </>
-                                ) : (
-                                  <>
-                                    {company.status}
-                                    <ChevronDown className="h-3 w-3" />
-                                  </>
-                                )}
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              {company.status !== 'active' && (
-                                <DropdownMenuItem
-                                  onClick={() => handleChangeStatus(company._id, 'active')}
-                                  disabled={isUpdating === company._id}
-                                  className="text-green-700"
-                                >
-                                  Set to Active
-                                </DropdownMenuItem>
-                              )}
-                              {company.status !== 'trial' && (
-                                <DropdownMenuItem
-                                  onClick={() => handleChangeStatus(company._id, 'trial')}
-                                  disabled={isUpdating === company._id}
-                                  className="text-blue-700"
-                                >
-                                  Set to Trial
-                                </DropdownMenuItem>
-                              )}
-                              {company.status !== 'suspended' && (
-                                <DropdownMenuItem
-                                  onClick={() => handleChangeStatus(company._id, 'suspended')}
-                                  disabled={isUpdating === company._id}
-                                  className="text-gray-700"
-                                >
-                                  Set to Suspended
-                                </DropdownMenuItem>
-                              )}
-                              {company.status !== 'test' && (
-                                <DropdownMenuItem
-                                  onClick={() => handleChangeStatus(company._id, 'test')}
-                                  disabled={isUpdating === company._id}
-                                  className="text-yellow-700"
-                                >
-                                  Set to Test
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div className="text-2xl font-bold">{metrics.totalCompanies}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">Users</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{metrics.totalUsers}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">Participants</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{metrics.totalParticipants}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">Sites</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{metrics.totalSites}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">Incidents</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{metrics.totalIncidents}</div>
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* Filters and Actions */}
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className="flex flex-col sm:flex-row gap-4 flex-1">
+          {/* Search */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search by company name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
+          {/* Status Filter */}
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px]">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="All statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All statuses</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="trial">Trial</SelectItem>
+              <SelectItem value="suspended">Suspended</SelectItem>
+              <SelectItem value="test">Test</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Clear Filters */}
+          {(statusFilter || searchQuery) && (
+            <Button variant="outline" onClick={handleClearFilters}>
+              Clear Filters
+            </Button>
+          )}
+        </div>
+
+        {/* Create Company */}
+        <Link href="/admin/companies/create">
+          <Button className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Create Company
+          </Button>
+        </Link>
+      </div>
+
+      {/* Companies Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Companies</CardTitle>
+          <CardDescription>
+            {companies ? `${companies.length} ${companies.length === 1 ? 'company' : 'companies'} found` : 'Loading...'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!companies ? (
+            <div className="text-center py-8 text-gray-500">
+              Loading companies...
+            </div>
+          ) : companies.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              No companies found. {(statusFilter || searchQuery) ? 'Try adjusting your filters.' : 'Create your first company to get started.'}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="border-b">
+                  <tr className="text-left">
+                    <th className="pb-3 font-medium text-gray-600">Company</th>
+                    <th className="pb-3 font-medium text-gray-600">Status</th>
+                    <th className="pb-3 font-medium text-gray-600 text-center">Users</th>
+                    <th className="pb-3 font-medium text-gray-600 text-center">Participants</th>
+                    <th className="pb-3 font-medium text-gray-600 text-center">Sites</th>
+                    <th className="pb-3 font-medium text-gray-600 text-center">Active Incidents</th>
+                    <th className="pb-3 font-medium text-gray-600">Created</th>
+                    <th className="pb-3 font-medium text-gray-600 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {companies.map((company: any) => (
+                    <tr key={company._id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
+                      <td className="py-4">
+                        <div>
+                          <div className="font-medium">{company.name}</div>
+                          <div className="text-sm text-gray-500">{company.contact_email}</div>
+                          <div className="text-xs text-gray-400">Slug: {company.slug}</div>
+                        </div>
+                      </td>
+                      <td className="py-4">
+                        <Badge variant={getStatusBadgeVariant(company.status)}>
+                          {company.status}
+                        </Badge>
+                      </td>
+                      <td className="py-4 text-center">
+                        <Link href={`/admin/companies/${company._id}/users`} className="text-blue-600 hover:underline">
+                          {company.userCount}
+                        </Link>
+                      </td>
+                      <td className="py-4 text-center">
+                        <Link href={`/admin/companies/${company._id}/participants`} className="text-blue-600 hover:underline">
+                          {company.participantCount}
+                        </Link>
+                      </td>
+                      <td className="py-4 text-center">
+                        <Link href={`/admin/companies/${company._id}/sites`} className="text-blue-600 hover:underline">
+                          {company.siteCount}
+                        </Link>
+                      </td>
+                      <td className="py-4 text-center">
+                        {company.activeIncidentCount}
+                      </td>
+                      <td className="py-4 text-sm text-gray-500">
+                        {new Date(company.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="py-4">
+                        <div className="flex justify-end gap-2">
+                          <Link href={`/admin/companies/${company._id}/edit`}>
+                            <Button variant="outline" size="sm">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                          {company.status === 'test' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-red-600 hover:text-red-700"
+                              onClick={() => handleDeleteClick(company._id, company.name)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Cleanup Dialog */}
+      {selectedCompany && (
+        <CompanyCleanupDialog
+          companyId={selectedCompany.id}
+          companyName={selectedCompany.name}
+          isOpen={cleanupDialogOpen}
+          onClose={handleCloseCleanupDialog}
+        />
+      )}
     </div>
   );
 }

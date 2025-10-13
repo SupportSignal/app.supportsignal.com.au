@@ -40,16 +40,14 @@ Epic 0 represents the critical but often invisible work that keeps the SupportSi
 - [0.4](#story-04-technical-debt---apply-coding-standards-from-inconsistencies-audit)
 - [0.5](#story-05-technical-debt---file-naming-migration-to-kebab-case)
 - [0.6](#story-06-developer-experience---database-export--analysis-system)
-- [0.7](#story-07-developer-experience---cli-database-export-tool)
 
 **Stories in this Epic:**
-- [Story 0.1: Environment Variable Deduplication Audit](#story-01-technical-debt---environment-variable-deduplication-audit) - 📋 **Planned** (P1 - High)
+- [Story 0.1: Environment Variable Deduplication Audit](#story-01-technical-debt---environment-variable-deduplication-audit) - ✅ **Complete** (P1 - High)
 - [Story 0.2: Database Schema Audit & Cleanup](#story-02-technical-debt---database-schema-audit--cleanup) - ✅ **Complete** (P2 - Medium)
 - [Story 0.3: Dead Code Discovery & Cleanup](#story-03-technical-debt---dead-code-discovery--cleanup-functions-routes-components-workers) - 🔄 **In Progress** (P2 - Medium)
-- [Story 0.4: Apply Coding Standards from Inconsistencies Audit](#story-04-technical-debt---apply-coding-standards-from-inconsistencies-audit) - 📋 **Planned** (P1 - High)
-- [Story 0.5: File Naming Migration to Kebab-Case](#story-05-technical-debt---file-naming-migration-to-kebab-case) - ✅ **Approved** (P2 - Medium)
+- [Story 0.4: Apply Coding Standards from Inconsistencies Audit](#story-04-technical-debt---apply-coding-standards-from-inconsistencies-audit) - ✅ **Complete** (P1 - High)
+- [Story 0.5: File Naming Migration to Kebab-Case](#story-05-technical-debt---file-naming-migration-to-kebab-case) - ✅ **Complete** (P2 - Medium)
 - [Story 0.6: Database Export & Analysis System](#story-06-developer-experience---database-export--analysis-system) - ✅ **Complete** (P2 - Medium)
-- [Story 0.7: CLI Database Export Tool](#story-07-developer-experience---cli-database-export-tool) - 📋 **Planned** (P3 - Low)
 
 ---
 
@@ -549,154 +547,7 @@ Developers need the ability to export database snapshots for external analysis u
 - Direct upload to analysis tools
 - Data anonymization/masking options
 
----
-
-### Story 0.7: Developer Experience - CLI Database Export Tool
-
-**Priority**: P3 (Low)
-**Estimated Effort**: Medium (4-6 hours)
-**Category**: Developer Experience / Infrastructure
-**Discovered**: October 2025 - Story 0.6 segmentation decision
-
-#### Problem Statement
-
-While Story 0.6 delivered web-based full database export, developers need CLI-based export capabilities for:
-- Automated export workflows (scripts, CI/CD)
-- Segmented exports (filter by company, site, date range)
-- Large dataset handling (better performance than browser)
-- Integration with external tools (jq, data pipelines)
-- Scheduled/recurring exports
-
-The web UI is ideal for one-off exports, but CLI tools enable automation and advanced filtering workflows.
-
-#### Scope
-
-**CLI Export Tool Development**:
-
-**Phase 1: Core CLI Tool**
-- Create Node.js/Bun CLI script in `scripts/export-database.ts`
-- Use Convex client library for server-side queries
-- Support authentication via API key or session token
-- Output to stdout or file
-
-**Phase 2: Segmentation Filters**
-- Filter by company ID (`--company=<id>`)
-- Filter by site ID (`--site=<id>`)
-- Filter by date range (`--from=<date> --to=<date>`)
-- Filter by entity types (`--tables=incidents,participants`)
-- Filter by incident status (`--status=completed`)
-
-**Phase 3: Output Options**
-- JSON format (default)
-- JSONL format (line-delimited JSON for streaming)
-- CSV format (per table)
-- Pretty print or minified
-- Compression (gzip)
-
-**Phase 4: Usage & Documentation**
-- Command-line help (`--help`)
-- Usage examples in documentation
-- Integration guide for automation workflows
-- Security best practices for API key storage
-
-#### Acceptance Criteria
-
-**Core Functionality**:
-- [ ] CLI script executable via `bun run export-db`
-- [ ] Authentication via environment variable or config file
-- [ ] Full database export (equivalent to Story 0.6 web UI)
-- [ ] Output to stdout or file path
-
-**Segmentation**:
-- [ ] Filter by company ID
-- [ ] Filter by site ID
-- [ ] Filter by date range
-- [ ] Filter by specific tables
-- [ ] Filter by incident status
-
-**Output Formats**:
-- [ ] JSON (default)
-- [ ] JSONL (line-delimited)
-- [ ] Pretty print option (`--pretty`)
-- [ ] Gzip compression option (`--compress`)
-
-**Developer Experience**:
-- [ ] Help documentation (`--help`)
-- [ ] Examples in command help
-- [ ] Clear error messages
-- [ ] Progress indicators for large exports
-
-**Security**:
-- [ ] System admin authentication required
-- [ ] API key/token stored securely (not in CLI args)
-- [ ] No sensitive data in error logs
-- [ ] Audit trail (log export operations)
-
-**Documentation**:
-- [ ] Usage guide with examples
-- [ ] Automation workflow examples
-- [ ] Security best practices
-- [ ] Integration with jq and other tools
-
-#### Implementation Notes
-
-**CLI Tool Structure**:
-```bash
-# Basic usage
-bun run export-db --output export.json
-
-# Segmented exports
-bun run export-db --company=j9abc123 --output company-export.json
-bun run export-db --from=2025-01-01 --to=2025-03-31 --output q1-export.json
-bun run export-db --tables=incidents,participants --output incidents-only.json
-
-# Output formats
-bun run export-db --format=jsonl --output export.jsonl
-bun run export-db --format=json --pretty --output readable-export.json
-bun run export-db --compress --output export.json.gz
-
-# Streaming to other tools
-bun run export-db | jq '.data.incidents[] | select(.status == "completed")'
-```
-
-**Technology Stack**:
-- **Runtime**: Bun (consistent with project)
-- **Convex Client**: Official Node.js SDK
-- **CLI Framework**: Commander.js or yargs
-- **Compression**: zlib (Node.js native)
-- **Progress**: ora or cli-progress
-
-**Authentication Pattern**:
-```typescript
-// Environment variable
-CONVEX_EXPORT_TOKEN=<system-admin-session-token>
-
-// Or config file
-~/.supportsignal/export-config.json
-{
-  "sessionToken": "...",
-  "convexUrl": "https://..."
-}
-```
-
-**Performance Considerations**:
-- Stream results for large datasets (don't load all in memory)
-- Batch queries for segmented exports
-- Progress indicators for operations >5 seconds
-- Timeout handling for large exports
-
-**Security Considerations**:
-- Never accept token as CLI argument (shows in process list)
-- Use environment variables or secure config file
-- Validate system admin role server-side
-- Audit log all export operations with user ID and filters
-
-**Future Enhancements** (out of scope):
-- Export scheduling (cron integration)
-- Incremental exports (only changed records)
-- Multi-format export in single command
-- Remote export (push to S3/cloud storage)
-- Export templates (saved filter configurations)
+**Note**: Story 0.7 (CLI Database Export Tool) has been merged into Epic 10 Story 10.2 for cohesive CLI tooling development.
 
 ---
 
@@ -746,8 +597,8 @@ Technical approach or constraints
 ## Epic Status
 
 **Current Status**: Active (Ongoing)
-**Stories Completed**: 3 (0.2, 0.5, 0.6)
+**Stories Completed**: 6 (0.1, 0.2, 0.4, 0.5, 0.6)
 **Stories In Progress**: 1 (0.3)
-**Stories Planned**: 3 (0.1, 0.4, 0.7)
+**Stories Moved**: 1 (0.7 merged into Epic 10 Story 10.2)
 
-**Last Updated**: October 10, 2025
+**Last Updated**: October 13, 2025

@@ -60,22 +60,23 @@ export const PERMISSIONS = {
   VIEW_MY_INCIDENTS: 'view_my_incidents',
   VIEW_ALL_COMPANY_INCIDENTS: 'view_all_company_incidents',
   PERFORM_ANALYSIS: 'perform_analysis',
-  
+
   // User Management
   MANAGE_USERS: 'manage_users',
   INVITE_USERS: 'invite_users',
   VIEW_USER_PROFILES: 'view_user_profiles',
-  
+
   // System Configuration
   SYSTEM_CONFIGURATION: 'system_configuration',
   COMPANY_CONFIGURATION: 'company_configuration',
   MANAGE_COMPANY: 'manage_company',
-  
+  MANAGE_ALL_COMPANIES: 'manage_all_companies', // Story 7.5: System-wide company management (system admin only)
+
   // Audit and Security
   VIEW_AUDIT_LOGS: 'view_audit_logs',
   VIEW_SECURITY_LOGS: 'view_security_logs',
   IMPERSONATE_USERS: 'impersonate_users',
-  
+
   // Testing and Development
   SAMPLE_DATA: 'sample_data',
 } as const;
@@ -167,6 +168,13 @@ export const PERMISSION_REGISTRY: Record<string, PermissionDefinition> = {
     category: 'Configuration',
     testable: true,
   },
+  [PERMISSIONS.MANAGE_ALL_COMPANIES]: {
+    key: PERMISSIONS.MANAGE_ALL_COMPANIES,
+    label: 'Manage All Companies',
+    description: 'System-wide company management (system admin only)',
+    category: 'Configuration',
+    testable: true,
+  },
   [PERMISSIONS.VIEW_AUDIT_LOGS]: {
     key: PERMISSIONS.VIEW_AUDIT_LOGS,
     label: 'View Audit Logs',
@@ -214,6 +222,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     PERMISSIONS.SYSTEM_CONFIGURATION,
     PERMISSIONS.COMPANY_CONFIGURATION,
     PERMISSIONS.MANAGE_COMPANY,
+    PERMISSIONS.MANAGE_ALL_COMPANIES, // Story 7.5: System-wide company operations
     PERMISSIONS.VIEW_AUDIT_LOGS,
     PERMISSIONS.VIEW_SECURITY_LOGS,
     PERMISSIONS.IMPERSONATE_USERS,
@@ -230,6 +239,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     PERMISSIONS.VIEW_USER_PROFILES,
     PERMISSIONS.COMPANY_CONFIGURATION,
     PERMISSIONS.MANAGE_COMPANY,
+    PERMISSIONS.MANAGE_ALL_COMPANIES, // Story 7.5: System-wide company operations
     PERMISSIONS.VIEW_AUDIT_LOGS,
     PERMISSIONS.SAMPLE_DATA,
   ],
