@@ -48,6 +48,18 @@ Detailed specifications for each development phase:
 - **Dependencies**: Epic 1 (AI services, authentication)
 - **Deliverables**: Complete AI prompt management system
 
+#### **[Epic 7: Participant Management System](./epic-7.md)**
+- **Scope**: CRUD operations, sites management, validation, impersonation
+- **Duration**: 2-3 weeks
+- **Dependencies**: Epic 1 (database, authentication)
+- **Deliverables**: Complete participant and site management
+
+#### **[Epic 10: Claude Analysis Server](./epic-10.md)**
+- **Scope**: Agent SDK server, database export slicer CLI, LLM-powered analysis
+- **Duration**: 2-3 weeks
+- **Dependencies**: Story 0.6 (Database Export)
+- **Deliverables**: Local Claude Code analysis server and data slicing tools
+
 ---
 
 ## Epic Development Approach
