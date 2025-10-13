@@ -1,5 +1,5 @@
-'use client';
 // @ts-nocheck - Known TypeScript limitation with deep Convex type inference (TS2589)
+'use client';
 
 import React, { useState } from 'react';
 import { useQuery, useMutation } from 'convex/react';
@@ -65,11 +65,12 @@ export default function SitesManagementPage() {
       ? { sessionToken, companyId }
       : 'skip'
   );
+
+  // Only fetch sites if company exists (backend returns null for deleted companies)
+  const canFetchSites = sessionToken && companyId && hasPermission && company !== null;
   const sites = useQuery(
     api['sites/admin'].listSites,
-    sessionToken && companyId && hasPermission
-      ? { sessionToken, companyId }
-      : 'skip'
+    canFetchSites ? { sessionToken, companyId } : 'skip'
   );
 
   // Mutations

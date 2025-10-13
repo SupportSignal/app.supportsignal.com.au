@@ -30,8 +30,9 @@ export const getCompanyForEdit = query({
     // Get company details
     const company = await ctx.db.get(args.companyId);
 
+    // Return null for deleted companies (don't throw - let frontend handle gracefully)
     if (!company) {
-      throw new ConvexError('Company not found');
+      return null;
     }
 
     return company;

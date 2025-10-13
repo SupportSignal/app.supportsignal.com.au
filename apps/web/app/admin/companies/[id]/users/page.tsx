@@ -36,16 +36,17 @@ export default function UserManagementPage({ params }: UserManagementPageProps) 
       : 'skip'
   );
 
+  // Only fetch users/invitations if company exists (backend returns null for deleted companies)
   const users = useQuery(
     api["users/listUsersForCompany"].default,
-    sessionToken && hasPermission
+    sessionToken && hasPermission && company !== null
       ? { companyId: params.id, sessionToken }
       : 'skip'
   );
 
   const pendingInvitations = useQuery(
     api["users/invite/listPendingInvitations"].default,
-    sessionToken && hasPermission
+    sessionToken && hasPermission && company !== null
       ? { companyId: params.id, sessionToken }
       : 'skip'
   );

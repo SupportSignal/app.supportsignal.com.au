@@ -70,16 +70,17 @@ export default function ParticipantsListPage() {
       : 'skip'
   );
 
+  // Only fetch sites/participants if company exists (backend returns null for deleted companies)
   const sites = useQuery(
     api['sites/admin'].listSites,
-    sessionToken && companyId && hasPermission
+    sessionToken && companyId && hasPermission && company !== null
       ? { sessionToken, companyId }
       : 'skip'
   );
 
   const participants = useQuery(
     api['participants/admin'].listParticipants,
-    sessionToken && companyId && hasPermission
+    sessionToken && companyId && hasPermission && company !== null
       ? {
           sessionToken,
           companyId,

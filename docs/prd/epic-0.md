@@ -1,6 +1,6 @@
 # Epic 0: Technical Debt & Continuous Improvement
 
-> **Quick Navigation:** [0.1](#story-01-technical-debt---environment-variable-deduplication-audit) · [0.2](#story-02-technical-debt---database-schema-audit--cleanup) · [0.3](#story-03-technical-debt---dead-code-discovery--cleanup-functions-routes-components-workers) · [0.4](#story-04-technical-debt---apply-coding-standards-from-inconsistencies-audit) · [0.5](#story-05-technical-debt---file-naming-migration-to-kebab-case) · [0.6](#story-06-developer-experience---database-export--analysis-system)
+> **Quick Navigation:** [0.1](#story-01-technical-debt---environment-variable-deduplication-audit) · [0.2](#story-02-technical-debt---database-schema-audit--cleanup) · [0.3](#story-03-technical-debt---dead-code-discovery--cleanup-functions-routes-components-workers) · [0.4](#story-04-technical-debt---apply-coding-standards-from-inconsistencies-audit) · [0.5](#story-05-technical-debt---file-naming-migration-to-kebab-case) · [0.6](#story-06-developer-experience---database-export--analysis-system) · [0.7](#story-07-user-experience---authorization-ui-consistency)
 
 ## Epic Overview
 
@@ -40,6 +40,7 @@ Epic 0 represents the critical but often invisible work that keeps the SupportSi
 - [0.4](#story-04-technical-debt---apply-coding-standards-from-inconsistencies-audit)
 - [0.5](#story-05-technical-debt---file-naming-migration-to-kebab-case)
 - [0.6](#story-06-developer-experience---database-export--analysis-system)
+- [0.7](#story-07-user-experience---authorization-ui-consistency)
 
 **Stories in this Epic:**
 - [Story 0.1: Environment Variable Deduplication Audit](#story-01-technical-debt---environment-variable-deduplication-audit) - ✅ **Complete** (P1 - High)
@@ -48,6 +49,7 @@ Epic 0 represents the critical but often invisible work that keeps the SupportSi
 - [Story 0.4: Apply Coding Standards from Inconsistencies Audit](#story-04-technical-debt---apply-coding-standards-from-inconsistencies-audit) - ✅ **Complete** (P1 - High)
 - [Story 0.5: File Naming Migration to Kebab-Case](#story-05-technical-debt---file-naming-migration-to-kebab-case) - ✅ **Complete** (P2 - Medium)
 - [Story 0.6: Database Export & Analysis System](#story-06-developer-experience---database-export--analysis-system) - ✅ **Complete** (P2 - Medium)
+- [Story 0.7: Authorization UI Consistency](#story-07-user-experience---authorization-ui-consistency) - 📋 **Planned** (P1 - High)
 
 ---
 
@@ -547,7 +549,122 @@ Developers need the ability to export database snapshots for external analysis u
 - Direct upload to analysis tools
 - Data anonymization/masking options
 
-**Note**: Story 0.7 (CLI Database Export Tool) has been merged into Epic 10 Story 10.2 for cohesive CLI tooling development.
+---
+
+### Story 0.7: User Experience - Authorization UI Consistency
+
+**Priority**: P1 (High)
+**Estimated Effort**: Medium (4-6 hours)
+**Category**: User Experience / Technical Debt
+**Discovered**: October 13, 2025 - Story 7.5 SAT revealed inconsistent authorization UI patterns
+
+#### Problem Statement
+
+The application has inconsistent UI patterns for displaying unauthorized access messages across different pages. During Story 7.5 acceptance testing, three distinct patterns were discovered:
+
+1. **UnauthorizedAccessCard component** - Consistent, well-designed pattern (5 pages ✅)
+2. **Alert component** - Inconsistent, minimal messaging (3 pages ❌)
+3. **Custom UI** - Unknown patterns (11+ pages need audit ❓)
+
+This inconsistency creates poor user experience, maintenance burden, developer confusion, and testing complexity. Additionally, the current `UnauthorizedAccessCard` component is hardcoded for `system_admin` roles only, limiting its usefulness for other permission scenarios.
+
+#### Scope
+
+**Phased Implementation**:
+
+**Phase 1: Complete Authorization UI Audit**
+- Systematically test all admin and restricted pages with 3 user roles:
+  - System Administrator (full access)
+  - Company Administrator (company-scoped access)
+  - Frontline Worker (participant-scoped access)
+- Document actual vs expected behavior for each URL
+- Categorize UI patterns and identify permission bugs
+
+**Phase 2: Component Enhancement**
+- Enhance `UnauthorizedAccessCard` to support multiple authorization scenarios
+- Support different role requirements (not just system_admin)
+- Add flexible messaging, icons, and variants
+- Maintain backward compatibility
+
+**Phase 3: Pattern Migration**
+- Migrate 3 Alert pages to enhanced UnauthorizedAccessCard
+- Fix any custom UI patterns discovered in audit
+- Apply consistent pattern to all restricted pages
+
+**Phase 4: Documentation & Testing**
+- Document authorization UI pattern in coding standards
+- Create comprehensive Story Acceptance Test with all URLs
+- Execute role-based testing across all restricted pages
+
+**URLs Requiring Audit** (16+ pages):
+- Admin pages: companies, users, developer-tools, participants
+- Application pages: dashboard, participants, showcase
+- Test with system_admin, company_admin, and frontline_worker roles
+
+#### Acceptance Criteria
+
+**Phase 1**:
+- [ ] Comprehensive URL list with expected permissions documented
+- [ ] Role-based testing matrix completed for all pages
+- [ ] Pattern categorization and bug identification complete
+
+**Phase 2**:
+- [ ] Enhanced UnauthorizedAccessCard with flexible props
+- [ ] Backward compatibility maintained (5 existing pages work unchanged)
+- [ ] Component documentation updated
+
+**Phase 3**:
+- [ ] 3 Alert pages migrated to UnauthorizedAccessCard
+- [ ] Custom UI patterns standardized
+- [ ] All permission bugs fixed
+- [ ] Visual consistency achieved across all pages
+
+**Phase 4**:
+- [ ] Coding standards updated with authorization UI pattern
+- [ ] Story Acceptance Test executed with all URLs and roles
+- [ ] Developer guidelines documented
+
+**Validation**:
+- [ ] TypeScript, lint, tests, build, CI all pass
+- [ ] Manual testing: SAT executed with all roles
+
+#### Implementation Notes
+
+**Current Audit Summary**:
+- 5 pages using UnauthorizedAccessCard (consistent) ✅
+- 3 pages using Alert component (needs migration) ❌
+- 11+ pages with unknown patterns (needs audit) ❓
+
+**Authorization Check Pattern** (from Story 7.5):
+```typescript
+// 1. Check permission BEFORE query definitions
+const hasPermission = user && user.role === 'system_admin';
+
+// 2. Include permission in skip condition
+const data = useQuery(api.query, sessionToken && hasPermission ? args : 'skip');
+
+// 3. Early return with UnauthorizedAccessCard
+if (!hasPermission) {
+  return <UnauthorizedAccessCard message="..." />;
+}
+```
+
+**Component Enhancement Example**:
+```typescript
+interface UnauthorizedAccessCardProps {
+  message: string;
+  requiredRoles?: Array<'system_admin' | 'company_admin' | 'frontline_worker'>;
+  icon?: 'shield' | 'lock' | 'warning';
+  variant?: 'warning' | 'error';
+  showHomeButton?: boolean;
+  customActions?: React.ReactNode;
+}
+```
+
+**Testing Strategy**:
+- Manual SAT with role-based URL testing matrix
+- Document findings before implementing fixes
+- Verify no ConvexErrors for unauthorized access (Story 7.5 bug pattern)
 
 ---
 
@@ -599,6 +716,6 @@ Technical approach or constraints
 **Current Status**: Active (Ongoing)
 **Stories Completed**: 6 (0.1, 0.2, 0.4, 0.5, 0.6)
 **Stories In Progress**: 1 (0.3)
-**Stories Moved**: 1 (0.7 merged into Epic 10 Story 10.2)
+**Stories Planned**: 1 (0.7)
 
 **Last Updated**: October 13, 2025
