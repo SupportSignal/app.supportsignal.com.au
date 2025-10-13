@@ -73,19 +73,30 @@ export const generateDatabaseExport = query({
       ctx.db.query('workflow_handoffs').collect(),
     ]);
 
-    // 3. Remove password field from users for security
+    // 3. Sanitize sensitive data for security
+    // Users: Remove passwords (already handled)
     const sanitizedUsers = users.map(({ password, ...user }) => user);
 
-    // 4. Calculate record counts
+    // Accounts: Remove OAuth tokens (SECURITY: prevents token hijacking)
+    const sanitizedAccounts = accounts.map(({ access_token, refresh_token, ...account }) => account);
+
+    // User Invitations: Remove invitation tokens (SECURITY: prevents unauthorized invites)
+    const sanitizedInvitations = userInvitations.map(({ invitation_token, ...invitation }) => invitation);
+
+    // Impersonation Sessions: Remove session tokens but keep audit metadata
+    const sanitizedImpersonation = impersonationSessions.map(
+      ({ session_token, original_session_token, ...session }) => session
+    );
+
+    // 4. Calculate record counts (excluding sensitive tables)
     const recordCounts = {
       companies: companies.length,
       users: sanitizedUsers.length,
-      user_invitations: userInvitations.length,
+      user_invitations: sanitizedInvitations.length,
       sites: sites.length,
-      sessions: sessions.length,
-      accounts: accounts.length,
-      password_reset_tokens: passwordResetTokens.length,
-      impersonation_sessions: impersonationSessions.length,
+      // Note: sessions and password_reset_tokens excluded from export (ephemeral data)
+      accounts: sanitizedAccounts.length,
+      impersonation_sessions: sanitizedImpersonation.length,
       participants: participants.length,
       incidents: incidents.length,
       incident_narratives: incidentNarratives.length,
@@ -100,25 +111,37 @@ export const generateDatabaseExport = query({
 
     const totalRecords = Object.values(recordCounts).reduce((sum, count) => sum + count, 0);
 
-    // 5. Return structured export
+    // 5. Return structured export (with sanitized data)
     return {
       metadata: {
         exportedAt: new Date().toISOString(),
         exportType: 'full' as const,
-        version: '1.0',
+        version: '1.1', // Updated for sanitization
         recordCounts,
         totalRecords,
         exportedBy: user._id,
+        sanitization: {
+          enabled: true,
+          removedFields: [
+            'users.password',
+            'accounts.access_token',
+            'accounts.refresh_token',
+            'user_invitations.invitation_token',
+            'impersonation_sessions.session_token',
+            'impersonation_sessions.original_session_token',
+          ],
+          excludedTables: ['sessions', 'password_reset_tokens'],
+        },
       },
       data: {
         companies,
         users: sanitizedUsers,
-        user_invitations: userInvitations,
+        user_invitations: sanitizedInvitations,
         sites,
-        sessions,
-        accounts,
-        password_reset_tokens: passwordResetTokens,
-        impersonation_sessions: impersonationSessions,
+        // Excluded: sessions (ephemeral, not useful for analysis)
+        accounts: sanitizedAccounts,
+        // Excluded: password_reset_tokens (security risk, time-limited)
+        impersonation_sessions: sanitizedImpersonation,
         participants,
         incidents,
         incident_narratives: incidentNarratives,

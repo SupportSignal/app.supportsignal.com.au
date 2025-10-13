@@ -63,9 +63,8 @@ export default function DatabaseExportPage() {
 
       const exportData = await response.json();
 
-      // Create filename with timestamp
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('.')[0];
-      const filename = `supportsignal-db-export-${timestamp}.json`;
+      // Create simple filename (will overwrite previous export)
+      const filename = `db-export.json`;
 
       // Create download
       const blob = new Blob([JSON.stringify(exportData, null, 2)], {
@@ -117,7 +116,8 @@ export default function DatabaseExportPage() {
             <ul className="text-sm text-muted-foreground space-y-1">
               <li>• Full database export in JSON format</li>
               <li>• Includes all tables except debug logs</li>
-              <li>• Password fields excluded for security</li>
+              <li>• Sensitive data sanitized (passwords, tokens removed)</li>
+              <li>• Ephemeral data excluded (sessions, reset tokens)</li>
               <li>• Preserves all relationships and IDs</li>
               <li>• Flat structure for easy analysis</li>
             </ul>
