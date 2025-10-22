@@ -188,6 +188,7 @@ export default defineSchema({
   // Core incidents table with multi-tenant support
   incidents: defineTable({
     company_id: v.id("companies"), // Multi-tenant isolation
+    site_id: v.id("sites"), // Story 7.6: Site where incident occurred (required)
     reporter_name: v.string(),
     participant_id: v.optional(v.id("participants")), // Reference to participant record
     participant_name: v.string(), // Keep for backwards compatibility and non-participant incidents
@@ -242,7 +243,10 @@ export default defineSchema({
     .index("by_company_status", ["company_id", "overall_status"])
     .index("by_company_created", ["company_id", "created_at"])
     .index("by_company_user", ["company_id", "created_by"])
-    .index("by_company_updated", ["company_id", "updated_at"]),
+    .index("by_company_updated", ["company_id", "updated_at"])
+    // Story 7.6: Site-based filtering
+    .index("by_site", ["site_id"])
+    .index("by_company_and_site", ["company_id", "site_id"]),
 
   // Multi-phase incident narratives
   incident_narratives: defineTable({
