@@ -236,7 +236,7 @@ export const enhanceNarrativeContent = action({
   args: {
     phase: v.union(
       v.literal("before_event"),
-      v.literal("during_event"), 
+      v.literal("during_event"),
       v.literal("end_of_event"),
       v.literal("post_event_support")
     ),
@@ -247,6 +247,13 @@ export const enhanceNarrativeContent = action({
     })),
     incident_id: v.optional(v.id("incidents")),
     user_id: v.optional(v.id("users")),
+    // Story 6.4: Pass all narratives for phase-specific template variables
+    narratives: v.optional(v.object({
+      before_event: v.optional(v.string()),
+      during_event: v.optional(v.string()),
+      end_event: v.optional(v.string()),
+      post_event: v.optional(v.string()),
+    })),
   },
   handler: async (ctx, args): Promise<any> => {
     const correlationId = generateCorrelationId();
@@ -313,36 +320,60 @@ export const enhanceNarrativeContent = action({
         }
       }
 
-      // Prepare template variables with detailed logging
+      // Prepare template variables - Story 6.4: Phase-specific variables
       const templateVariables = {
-        // Template expects these exact variable names:
+        // Basic incident context
         participantName: incidentData?.participant_name || 'Unknown Participant',
         location: incidentData?.location || 'Unknown Location',
         eventDateTime: incidentData?.event_date_time || 'Unknown Date/Time',
         reporterName: incidentData?.reporter_name || 'Unknown Reporter',
-        phase: args.phase,
-        originalNarrative: args.instruction,
-        investigationQA: narrativeFacts,
+
+        // All phase narratives (prompts use only what they need)
+        beforeEvent: args.narratives?.before_event || '',
+        duringEvent: args.narratives?.during_event || '',
+        endEvent: args.narratives?.end_event || '',
+        postEvent: args.narratives?.post_event || '',
+
+        // Phase-specific Q&A (only populate for current phase)
+        beforeEventQA: args.phase === 'before_event' ? narrativeFacts : '',
+        duringEventQA: args.phase === 'during_event' ? narrativeFacts : '',
+        endEventQA: args.phase === 'end_of_event' ? narrativeFacts : '',
+        postEventQA: args.phase === 'post_event_support' ? narrativeFacts : '',
       };
 
-      console.log('📝 Template variables prepared:', {
+      console.log('📝 Template variables prepared (Story 6.4 - Phase-specific):', {
         participantName: templateVariables.participantName,
         location: templateVariables.location,
         eventDateTime: templateVariables.eventDateTime,
-        eventDateTime_raw: incidentData?.event_date_time,
-        eventDateTime_fallback: templateVariables.eventDateTime === 'Unknown Date/Time' ? 'USING FALLBACK' : 'USING INCIDENT DATA',
         reporterName: templateVariables.reporterName,
-        phase: templateVariables.phase,
-        originalNarrativeLength: templateVariables.originalNarrative?.length || 0,
-        investigationQALength: templateVariables.investigationQA?.length || 0,
+        phase: args.phase,
+        beforeEventLength: templateVariables.beforeEvent?.length || 0,
+        duringEventLength: templateVariables.duringEvent?.length || 0,
+        endEventLength: templateVariables.endEvent?.length || 0,
+        postEventLength: templateVariables.postEvent?.length || 0,
+        beforeEventQALength: templateVariables.beforeEventQA?.length || 0,
+        duringEventQALength: templateVariables.duringEventQA?.length || 0,
+        endEventQALength: templateVariables.endEventQA?.length || 0,
+        postEventQALength: templateVariables.postEventQA?.length || 0,
       });
 
-      // Get processed prompt template
-      console.log('🔍 Requesting prompt template:', { prompt_name: "enhance_narrative", phase: args.phase });
-      
+      // Get processed prompt template - Story 6.4: Use phase-specific prompts
+      // Map phase to database naming convention (end_of_event → end_event, post_event_support → post_event)
+      const phaseToPromptName: Record<string, string> = {
+        "before_event": "before_event",
+        "during_event": "during_event",
+        "end_of_event": "end_event",
+        "post_event_support": "post_event"
+      };
+      const promptPhase = phaseToPromptName[args.phase] || args.phase;
+      const promptName = `enhance_narrative_${promptPhase}`;
+
+      console.log('🔍 Requesting prompt template:', { prompt_name: promptName, phase: args.phase });
+
       const processedPrompt = await ctx.runQuery(api.promptManager.getProcessedPrompt, {
-        prompt_name: "enhance_narrative",
+        prompt_name: promptName,
         variables: templateVariables,
+        subsystem: "incidents",  // Story 6.4: Required to find phase-specific prompts
       });
 
       console.log('✅ Prompt template processed:', {

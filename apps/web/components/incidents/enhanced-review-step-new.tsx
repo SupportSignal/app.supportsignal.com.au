@@ -159,6 +159,41 @@ export function EnhancedReviewStepNew({
     }
   }, [narratives]);
 
+  // Story 6.4: Auto-trigger enhancement when narratives are loaded and not already enhanced
+  useEffect(() => {
+    if (!user?.sessionToken) return;
+
+    // Check each phase and auto-trigger enhancement if needed
+    const phasesToEnhance: ClarificationPhase[] = [];
+
+    // Check phaseEnhancements state (not narratives) to ensure state is populated
+    const phases: ClarificationPhase[] = ['before_event', 'during_event', 'end_event', 'post_event'];
+
+    for (const phase of phases) {
+      const enhancement = phaseEnhancements[phase];
+      // Only enhance if: has original content AND no enhanced content yet AND not already loading
+      if (enhancement.original_content?.trim() && !enhancement.enhanced_content && !enhancement.isLoading && !enhancement.isComplete) {
+        phasesToEnhance.push(phase);
+      }
+    }
+
+    // Auto-enhance phases that have content but no enhancement
+    if (phasesToEnhance.length > 0) {
+      console.log('🤖 Auto-triggering enhancement for phases:', phasesToEnhance);
+
+      // Enhance phases sequentially with small delays
+      const enhanceSequentially = async () => {
+        for (const phase of phasesToEnhance) {
+          await handleEnhancePhase(phase);
+          // Small delay between phases to avoid overwhelming the system
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      };
+
+      enhanceSequentially();
+    }
+  }, [phaseEnhancements, user?.sessionToken]); // Depend on phaseEnhancements, not narratives
+
   const togglePanel = (phase: ClarificationPhase) => {
     const newOpenPanels = new Set(openPanels);
     if (newOpenPanels.has(phase)) {
@@ -257,9 +292,15 @@ export function EnhancedReviewStepNew({
     return { color: "secondary", icon: AlertCircle, text: "No Content" };
   };
 
-  const allPhasesComplete = Object.values(phaseEnhancements).every(p => 
+  const allPhasesComplete = Object.values(phaseEnhancements).every(p =>
     p.isComplete || !p.original_content?.trim()
   );
+
+  // Story 6.4: Check if any phases are currently loading (for disabling Enhance All button)
+  const anyPhaseLoading = Object.values(phaseEnhancements).some(p => p.isLoading);
+
+  // Story 6.4: Check if there's any content to enhance (for enabling Enhance All button)
+  const hasContentToEnhance = Object.values(phaseEnhancements).some(p => p.original_content?.trim());
 
   const hasAnyEnhancements = Object.values(phaseEnhancements).some(p => p.isComplete);
 
@@ -303,19 +344,23 @@ export function EnhancedReviewStepNew({
           <Badge variant={allPhasesComplete ? "default" : "secondary"}>
             {allPhasesComplete ? "Complete" : "In Progress"}
           </Badge>
-          <Button
-            variant="outline" 
-            size={viewport.isMobile ? "default" : "sm"}
-            onClick={handleEnhanceAll}
-            disabled={allPhasesComplete}
-            className={cn(
-              "flex items-center gap-2",
-              viewport.isMobile ? "h-12 px-4" : ""
-            )}
-          >
-            <Wand2 className="h-4 w-4" />
-            Enhance All
-          </Button>
+          {/* Story 6.4: Manual enhancement buttons removed - auto-trigger handles enhancement */}
+          {/* Developer "Enhance All" button - only visible to developers for testing */}
+          {hasDeveloperAccess(user) && (
+            <Button
+              variant="outline"
+              size={viewport.isMobile ? "default" : "sm"}
+              onClick={handleEnhanceAll}
+              disabled={anyPhaseLoading || !hasContentToEnhance}
+              className={cn(
+                "flex items-center gap-2",
+                viewport.isMobile ? "h-12 px-4" : ""
+              )}
+            >
+              <Wand2 className="h-4 w-4" />
+              Enhance All (Dev)
+            </Button>
+          )}
         </div>
       </div>
 
@@ -383,7 +428,8 @@ export function EnhancedReviewStepNew({
                             {status.text}
                           </Badge>
                         )}
-                        {!phase.isComplete && phase.original_content?.trim() && (
+                        {/* Story 6.4: Individual enhance buttons only for developers - auto-trigger handles normal users */}
+                        {hasDeveloperAccess(user) && !phase.isComplete && phase.original_content?.trim() && (
                           <Button
                             variant="outline"
                             size={viewport.isMobile ? "default" : "sm"}
@@ -402,7 +448,7 @@ export function EnhancedReviewStepNew({
                             ) : (
                               <Wand2 className="h-3 w-3" />
                             )}
-                            {phase.isLoading ? "Enhancing..." : "Enhance"}
+                            {phase.isLoading ? "Enhancing..." : "Enhance (Dev)"}
                           </Button>
                         )}
                       </div>

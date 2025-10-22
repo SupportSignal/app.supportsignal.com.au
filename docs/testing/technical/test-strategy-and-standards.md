@@ -47,21 +47,27 @@ A comprehensive testing strategy implementing the test pyramid pattern with stra
 
 ### Test Runner Configuration
 
-**Primary Test Runner**: Jest (via `npx jest`)
+**Primary Test Runner**: Jest via Bun scripts (environment-specific)
 
-- **Rationale**: Accurate coverage reporting, mature mocking support
-- **Critical**: Do NOT use `bun test` for coverage analysis
+**Daily Testing Workflow - The Way You Always Do It:**
 
 ```bash
-# Correct test execution patterns
-npx jest --coverage                    # Accurate coverage reports
-npx jest --coverage --watch           # Development mode
-npx jest --coverage lib/__tests__/*   # Targeted testing
+# Convex Backend Tests
+bun test:convex:coverage:watch:all
 
-# Avoid these patterns
-bun test              # Incomplete mocking support
-bun run test         # Environment variable conflicts
+# Cloudflare Workers Tests
+bun test:worker:coverage:watch:all
+
+# Web (React/Next.js) Tests
+bun test:web:coverage:watch:all
 ```
+
+**Why These Specific Commands:**
+- Consistent pattern across all three environments
+- Built-in coverage reporting
+- Watch mode for continuous feedback during development
+- Runs all tests for the specified environment
+- Configured via package.json scripts with proper environment setup
 
 **Jest Configuration Standards:**
 

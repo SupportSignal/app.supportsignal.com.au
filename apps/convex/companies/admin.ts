@@ -96,67 +96,128 @@ export const listAllCompanies = query({
     searchQuery: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    // Authentication: System admin only (system-wide operation)
-    await requirePermission(
-      ctx,
-      args.sessionToken,
-      PERMISSIONS.MANAGE_ALL_COMPANIES
-    );
+    try {
+      console.log('🏢 LIST ALL COMPANIES - START', {
+        statusFilter: args.statusFilter,
+        searchQuery: args.searchQuery,
+        timestamp: new Date().toISOString(),
+      });
 
-    // Get all companies
-    let companies = await ctx.db.query('companies').collect();
-
-    // Apply status filter
-    if (args.statusFilter) {
-      companies = companies.filter(c => c.status === args.statusFilter);
-    }
-
-    // Apply search filter
-    if (args.searchQuery) {
-      const query = args.searchQuery.toLowerCase();
-      companies = companies.filter(c =>
-        c.name.toLowerCase().includes(query)
+      // Authentication: System admin only (system-wide operation)
+      const { user, correlationId } = await requirePermission(
+        ctx,
+        args.sessionToken,
+        PERMISSIONS.MANAGE_ALL_COMPANIES
       );
+
+      console.log('🔐 PERMISSION CHECK PASSED', {
+        userId: user._id,
+        userRole: user.role,
+        correlationId,
+      });
+
+      // Get all companies
+      let companies = await ctx.db.query('companies').collect();
+
+      console.log('📊 COMPANIES FETCHED', {
+        totalCompanies: companies.length,
+        correlationId,
+      });
+
+      // Apply status filter
+      if (args.statusFilter) {
+        companies = companies.filter(c => c.status === args.statusFilter);
+        console.log('🔍 STATUS FILTER APPLIED', {
+          statusFilter: args.statusFilter,
+          filteredCount: companies.length,
+          correlationId,
+        });
+      }
+
+      // Apply search filter
+      if (args.searchQuery) {
+        const query = args.searchQuery.toLowerCase();
+        companies = companies.filter(c =>
+          c.name.toLowerCase().includes(query)
+        );
+        console.log('🔍 SEARCH FILTER APPLIED', {
+          searchQuery: args.searchQuery,
+          filteredCount: companies.length,
+          correlationId,
+        });
+      }
+
+      // Get counts for each company
+      console.log('📈 FETCHING COMPANY COUNTS', {
+        companiesToProcess: companies.length,
+        correlationId,
+      });
+
+      const companiesWithCounts = await Promise.all(
+        companies.map(async (company, index) => {
+          try {
+            const [users, participants, sites, incidents] = await Promise.all([
+              ctx.db
+                .query('users')
+                .withIndex('by_company', q => q.eq('company_id', company._id))
+                .collect(),
+              ctx.db
+                .query('participants')
+                .withIndex('by_company', q => q.eq('company_id', company._id))
+                .collect(),
+              ctx.db
+                .query('sites')
+                .withIndex('by_company', q => q.eq('company_id', company._id))
+                .collect(),
+              ctx.db
+                .query('incidents')
+                .withIndex('by_company', q => q.eq('company_id', company._id))
+                .collect(),
+            ]);
+
+            const activeIncidents = incidents.filter(i => i.overall_status !== 'completed');
+
+            return {
+              ...company,
+              userCount: users.length,
+              participantCount: participants.length,
+              siteCount: sites.length,
+              activeIncidentCount: activeIncidents.length,
+            };
+          } catch (companyError: any) {
+            console.error('❌ ERROR FETCHING COUNTS FOR COMPANY', {
+              companyId: company._id,
+              companyName: company.name,
+              index,
+              error: companyError.message,
+              stack: companyError.stack,
+              correlationId,
+            });
+            throw companyError;
+          }
+        })
+      );
+
+      // Sort by created_at descending (newest first)
+      companiesWithCounts.sort((a, b) => b.created_at - a.created_at);
+
+      console.log('✅ LIST ALL COMPANIES - SUCCESS', {
+        totalCompanies: companiesWithCounts.length,
+        correlationId,
+        timestamp: new Date().toISOString(),
+      });
+
+      return companiesWithCounts;
+    } catch (error: any) {
+      console.error('❌ LIST ALL COMPANIES - ERROR', {
+        error: error.message,
+        stack: error.stack,
+        statusFilter: args.statusFilter,
+        searchQuery: args.searchQuery,
+        timestamp: new Date().toISOString(),
+      });
+      throw error;
     }
-
-    // Get counts for each company
-    const companiesWithCounts = await Promise.all(
-      companies.map(async (company) => {
-        const [users, participants, sites, incidents] = await Promise.all([
-          ctx.db
-            .query('users')
-            .withIndex('by_company', q => q.eq('company_id', company._id))
-            .collect(),
-          ctx.db
-            .query('participants')
-            .withIndex('by_company', q => q.eq('company_id', company._id))
-            .collect(),
-          ctx.db
-            .query('sites')
-            .withIndex('by_company', q => q.eq('company_id', company._id))
-            .collect(),
-          ctx.db
-            .query('incidents')
-            .withIndex('by_company', q => q.eq('company_id', company._id))
-            .collect(),
-        ]);
-
-        const activeIncidents = incidents.filter(i => i.overall_status !== 'completed');
-
-        return {
-          ...company,
-          userCount: users.length,
-          participantCount: participants.length,
-          siteCount: sites.length,
-          activeIncidentCount: activeIncidents.length,
-        };
-      })
-    );
-
-    // Sort by created_at descending (newest first)
-    companiesWithCounts.sort((a, b) => b.created_at - a.created_at);
-
-    return companiesWithCounts;
   },
 });
 

@@ -58,18 +58,19 @@ import { Component } from '../../../components/ui/Component'; // Confusing navig
 ## Development Commands
 
 ```bash
-# Development
-bun dev              # Start development server
-bun dev:claude       # Development with Claude logging integration
+# Development (The Way You Always Do It)
+bun web:dev          # Start web development server
+bun convex:dev       # Start Convex backend development
+bun worker:dev       # Start Cloudflare Workers development
 
 # Build & Production
 bun build            # Build for production
 bun start            # Start production server
 
-# Testing
-bun test             # Run Jest unit tests
-bun test:e2e         # Run Playwright E2E tests
-bun test:e2e:ui      # Run Playwright with UI mode
+# Testing (The Way You Always Do It)
+bun test:convex:coverage:watch:all    # Convex backend tests with coverage + watch
+bun test:worker:coverage:watch:all    # Cloudflare Workers tests with coverage + watch
+bun test:web:coverage:watch:all       # Web (React/Next.js) tests with coverage + watch
 
 # Linting & Formatting
 bun lint             # Run ESLint
@@ -85,7 +86,6 @@ bun run ci:logs      # View detailed CI logs
 # These commands MUST be run after story completion and before marking complete
 bun run typecheck    # TypeScript compilation verification
 bun run lint         # ESLint validation
-bun test             # Unit test execution (use npm test for component tests)
 bun run ci:status    # Verify CI pipeline status
 bun run ci:watch     # Monitor CI completion (when CI is running)
 
@@ -984,10 +984,18 @@ For comprehensive CI setup and troubleshooting:
 
 ### Essential Development Commands
 ```bash
-# Core Development
-bun dev              # Start development server
+# Core Development (The Way You Always Do It)
+bun web:dev          # Start web development server
+bun convex:dev       # Start Convex backend development
+bun worker:dev       # Start Cloudflare Workers development
 bun build            # Build for production
-bun test             # Run all tests
+
+# Testing (The Way You Always Do It)
+bun test:convex:coverage:watch:all    # Convex backend tests
+bun test:worker:coverage:watch:all    # Workers tests
+bun test:web:coverage:watch:all       # Web tests
+
+# Code Quality
 bun run typecheck    # TypeScript validation
 bun run lint         # ESLint validation
 
@@ -997,7 +1005,7 @@ bun run ci:watch     # Monitor CI runs
 bun run push         # Smart push with CI monitoring
 
 # Convex Backend
-bunx convex dev      # Start Convex dev server
+bunx convex dev      # Alternative: Start Convex dev server
 bunx convex deploy   # Deploy functions
 bunx convex data [table] --limit [n]  # Query development data
 bunx convex data --prod [table] --limit [n]  # Query production data
@@ -1019,20 +1027,12 @@ bunx convex run monitoring:usage    # Database usage stats
 bunx convex run cleanup:safe        # Clean expired logs
 ```
 
-### Testing Commands
+### Testing Commands (The Way You Always Do It)
 ```bash
-# Unit Tests
-bun test              # All tests
-bun test:web          # Web app tests
-bun test:convex       # Convex tests
-bun test:worker       # Worker tests
-
-# E2E Tests
-bun test:e2e          # Playwright E2E
-bun test:e2e:ui       # E2E with UI
-
-# Coverage
-bun test:coverage     # Coverage reports
+# Unit Tests with Coverage and Watch Mode
+bun test:convex:coverage:watch:all    # Convex backend tests
+bun test:worker:coverage:watch:all    # Cloudflare Workers tests
+bun test:web:coverage:watch:all       # Web (React/Next.js) tests
 ```
 
 ### Project Structure Quick Guide

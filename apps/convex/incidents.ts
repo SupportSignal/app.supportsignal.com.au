@@ -49,20 +49,32 @@ export const getById = query({
       throw new ConvexError("Incident not found or you don't have access to it");
     }
 
-    // Check permissions - users can view incidents they have access to based on role
-    const { user, correlationId } = await requirePermission(
-      ctx,
-      args.sessionToken,
-      PERMISSIONS.VIEW_ALL_COMPANY_INCIDENTS, // Try company-wide permission first
-      {
-        companyId: incident.company_id,
-        resourceOwnerId: incident.created_by || undefined,
-      }
-    );
+    // Permission as predicate: Try company-wide permission first (company_admin, system_admin, team_lead)
+    try {
+      const { user, correlationId } = await requirePermission(
+        ctx,
+        args.sessionToken,
+        PERMISSIONS.VIEW_ALL_COMPANY_INCIDENTS,
+        { companyId: incident.company_id }
+      );
 
-    // If user doesn't have company-wide access, check if they can view their own incidents
-    if (!user && incident.created_by) {
-      const { user: userFromOwnership } = await requirePermission(
+      // Multi-tenant isolation check
+      if (user.company_id !== incident.company_id) {
+        throw new ConvexError("Access denied: incident belongs to different company");
+      }
+
+      console.log('📄 INCIDENT ACCESSED (company-wide)', {
+        incidentId: args.id,
+        userId: user._id,
+        role: user.role,
+        correlationId,
+        timestamp: new Date().toISOString(),
+      });
+
+      return incident;
+    } catch {
+      // Fallback: Frontline workers can only view their own incidents
+      const { user, correlationId } = await requirePermission(
         ctx,
         args.sessionToken,
         PERMISSIONS.EDIT_OWN_INCIDENT_CAPTURE,
@@ -71,22 +83,22 @@ export const getById = query({
           companyId: incident.company_id,
         }
       );
-      // If they can edit their own incidents, they can view them too
+
+      // Ownership check: User must be the creator
+      if (user._id !== incident.created_by) {
+        throw new ConvexError("Access denied: you can only view your own incidents");
+      }
+
+      console.log('📄 INCIDENT ACCESSED (own incident)', {
+        incidentId: args.id,
+        userId: user._id,
+        role: user.role,
+        correlationId,
+        timestamp: new Date().toISOString(),
+      });
+
+      return incident;
     }
-
-    // Additional check: Ensure user is in same company (multi-tenant isolation)
-    if (user.company_id !== incident.company_id) {
-      throw new ConvexError("Access denied: incident belongs to different company");
-    }
-
-    console.log('📄 INCIDENT ACCESSED', {
-      incidentId: args.id,
-      userId: user._id,
-      correlationId,
-      timestamp: new Date().toISOString(),
-    });
-
-    return incident;
   },
 });
 

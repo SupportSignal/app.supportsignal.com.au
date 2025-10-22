@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
 import { requirePermission, PERMISSIONS } from "./permissions";
 import { ConvexError } from "convex/values";
 import { getConfig } from "./lib/config";
@@ -218,6 +218,54 @@ export const seedPromptTemplates = mutation({
   },
 });
 
+// Internal version for automated seeding (no auth required)
+export const seedPromptTemplatesInternal = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const promptIds: string[] = [];
+    const now = Date.now();
+
+    // Check each default template and create if it doesn't exist
+    for (const defaultPrompt of DEFAULT_PROMPTS) {
+      const existingPrompt = await ctx.db
+        .query("ai_prompts")
+        .withIndex("by_name", (q) =>
+          q.eq("prompt_name", defaultPrompt.prompt_name)
+        )
+        .filter((q) => q.eq(q.field("is_active"), true))
+        .first();
+
+      if (!existingPrompt) {
+        // Create new prompt from default template with sensible defaults
+        const promptId = await ctx.db.insert("ai_prompts", {
+          ...defaultPrompt,
+          prompt_version: (defaultPrompt as any).prompt_version || "v1.0.0",
+          ai_model: (defaultPrompt as any).ai_model || undefined,
+          max_tokens: (defaultPrompt as any).max_tokens || 2000,
+          temperature: (defaultPrompt as any).temperature || 0.3,
+          is_active: (defaultPrompt as any).is_active !== false,
+          usage_count: 0,
+          created_at: now,
+          created_by: undefined, // System-created prompt (optional field)
+        });
+        promptIds.push(promptId);
+      }
+    }
+
+    if (promptIds.length === 0) {
+      return {
+        message: "All prompt templates already exist",
+        promptIds: []
+      };
+    }
+
+    return {
+      message: `Successfully seeded ${promptIds.length} prompt templates`,
+      promptIds
+    };
+  },
+});
+
 // Update prompt usage statistics
 export const updatePromptUsage = mutation({
   args: {
@@ -258,51 +306,229 @@ export const updatePromptUsage = mutation({
 
 // Hardcoded default templates for seeding
 const DEFAULT_PROMPTS = [
+  // Story 6.4: Removed generic enhance_narrative - replaced by 4 phase-specific prompts
   {
-    prompt_name: "enhance_narrative",
-    prompt_template: `You are a professional incident documentation specialist. Your task is to create a polished, consolidated narrative for the {{phase}} phase by enhancing human-authored content while preserving all factual details and authentic insights.
+    prompt_name: "enhance_narrative_before_event",
+    prompt_template: `You are an expert NDIS incident documentation specialist. Your task is to create an enhanced before-event narrative by naturally integrating original observations with clarification responses.
 
-**Incident Context:**
+**Incident Overview:**
 - **Participant**: {{participantName}}
-- **Location**: {{location}}
 - **Date/Time**: {{eventDateTime}}
+- **Location**: {{location}}
 - **Reporter**: {{reporterName}}
 
-**Phase**: {{phase}} phase of the incident
+**Before Event Narrative (Original):**
+{{beforeEvent}}
 
-**Original Narrative (baseline content):**
-{{originalNarrative}}
-
-**Human-Authored Investigation Details:**
-{{investigationQA}}
+**Clarification Responses (Before Event):**
+{{beforeEventQA}}
 
 **Your Task:**
-Create an enhanced narrative for the {{phase}} phase that:
+Create an enhanced narrative for the before-event phase that:
 
-1. **Preserves all factual content** from both the original narrative and human answers
-2. **Improves grammar, flow, and readability** without changing meaning
-3. **Integrates investigation details** seamlessly into a coherent narrative
-4. **Maintains the authentic voice** of the human reporter's observations
-5. **Uses professional language** suitable for incident documentation
-6. **Organizes information logically** within the phase timeline
+1. **Preserves Original Meaning**: Keep the reporter's original observations and tone intact
+2. **Light Grammar Improvements**: Fix only basic grammar, spelling, and sentence structure issues
+3. **Natural Integration**: Weave clarification responses seamlessly into the narrative flow
+4. **Maintains Authenticity**: Should read as if the reporter wrote it correctly the first time
+5. **No Hallucinations**: Use only information provided - do not add assumptions or interpretations
+
+**Before-Event Specific Focus:**
+When integrating clarification details, emphasize:
+- Environmental setup (noise, lighting, number of people, activity context)
+- Participant's mood, energy level, and body language in the lead-up
+- Changes to normal routine (meals, transport, schedule, medication, staff changes)
+- Interactions with staff or peers before the incident
+- Early warning signs, stressors, or triggers noticed beforehand
 
 **Enhancement Guidelines:**
-- Fix grammar, spelling, and sentence structure issues
-- Improve paragraph flow and transitions
-- Integrate Q&A insights naturally (don't just append them)
-- Remove redundancy while keeping all unique details
-- Use consistent terminology and professional tone
-- Maintain chronological or logical organization
-- Preserve specific names, times, quotes, and technical details exactly
-- **Quote Formatting**: Keep direct quotes on the same line as the surrounding text - never break quotes across lines or place quote marks alone on separate lines
+- **Grammar Only**: Focus on fixing grammar, not rewriting content
+- **Voice Preservation**: Maintain the reporter's original tone and perspective
+- **Natural Flow**: Integrate Q&A responses as natural narrative elements
+- **Factual Accuracy**: Only use provided information, no inferences
+- **Professional Language**: Ensure appropriate language for NDIS reporting
+- **Participant Dignity**: Keep participant respect and privacy central
+
+**Integration Approach:**
+- Start with the original narrative as the foundation
+- Add clarification details where they naturally fit chronologically
+- Fix grammar and sentence structure while preserving meaning
+- Ensure the result flows as a unified, well-written narrative
+- Focus on context that helps understand what led to the incident
 
 **Output Format:**
-Provide the enhanced narrative as well-organized prose with natural paragraph breaks:
-- Present the content in 2-3 focused paragraphs, each covering a distinct aspect or time period
-- Use clear topic flow: context/setup → main events → responses/outcomes  
-- Ensure smooth transitions between paragraphs
-- Do not use bullet points, headers, or JSON formatting - just well-structured narrative paragraphs that tell the complete story of the {{phase}} phase`,
-    description: "Consolidate and enhance incident narrative by integrating original content with human-authored Q&A investigation details",
+Provide only the enhanced before-event narrative text. Do not include headers, bullets, or explanations - just the improved narrative that combines original content with clarifications naturally.`,
+    description: "Enhance before-event narrative - focus on environmental setup and participant state",
+    workflow_step: "narrative_consolidation",
+    subsystem: "incidents",
+    max_tokens: 4000,
+  },
+  {
+    prompt_name: "enhance_narrative_during_event",
+    prompt_template: `You are an expert NDIS incident documentation specialist. Your task is to create an enhanced during-event narrative by naturally integrating original observations with clarification responses.
+
+**Incident Overview:**
+- **Participant**: {{participantName}}
+- **Date/Time**: {{eventDateTime}}
+- **Location**: {{location}}
+- **Reporter**: {{reporterName}}
+
+**During Event Narrative (Original):**
+{{duringEvent}}
+
+**Clarification Responses (During Event):**
+{{duringEventQA}}
+
+**Your Task:**
+Create an enhanced narrative for the during-event phase that:
+
+1. **Preserves Original Meaning**: Keep the reporter's original observations and tone intact
+2. **Light Grammar Improvements**: Fix only basic grammar, spelling, and sentence structure issues
+3. **Natural Integration**: Weave clarification responses seamlessly into the narrative flow
+4. **Maintains Authenticity**: Should read as if the reporter wrote it correctly the first time
+5. **No Hallucinations**: Use only information provided - do not add assumptions or interpretations
+
+**During-Event Specific Focus:**
+When integrating clarification details, emphasize:
+- What actions staff took to keep people safe
+- How the participant responded to interventions (what helped, what didn't)
+- Physical interventions or tools used
+- Changes made to the space (moving people, blocking exits, removing objects)
+- How staff communicated with the participant and each other
+- Timing and sequence - what happened first, next, last
+- Observable actions and responses during the incident
+
+**Enhancement Guidelines:**
+- **Grammar Only**: Focus on fixing grammar, not rewriting content
+- **Voice Preservation**: Maintain the reporter's original tone and perspective
+- **Natural Flow**: Integrate Q&A responses as natural narrative elements
+- **Factual Accuracy**: Only use provided information, no inferences
+- **Professional Language**: Ensure appropriate language for NDIS reporting
+- **Participant Dignity**: Keep participant respect and privacy central
+
+**Integration Approach:**
+- Start with the original narrative as the foundation
+- Add clarification details where they naturally fit chronologically
+- Fix grammar and sentence structure while preserving meaning
+- Ensure the result flows as a unified, well-written narrative
+- Maintain clear focus on what was seen, heard, or done during the incident
+
+**Output Format:**
+Provide only the enhanced during-event narrative text. Do not include headers, bullets, or explanations - just the improved narrative that combines original content with clarifications naturally.`,
+    description: "Enhance during-event narrative - focus on actions, interventions, and safety measures",
+    workflow_step: "narrative_consolidation",
+    subsystem: "incidents",
+    max_tokens: 4000,
+  },
+  {
+    prompt_name: "enhance_narrative_end_event",
+    prompt_template: `You are an expert NDIS incident documentation specialist. Your task is to create an enhanced end-event narrative by naturally integrating original observations with clarification responses.
+
+**Incident Overview:**
+- **Participant**: {{participantName}}
+- **Date/Time**: {{eventDateTime}}
+- **Location**: {{location}}
+- **Reporter**: {{reporterName}}
+
+**End Event Narrative (Original):**
+{{endEvent}}
+
+**Clarification Responses (End Event):**
+{{endEventQA}}
+
+**Your Task:**
+Create an enhanced narrative for the end-event phase that:
+
+1. **Preserves Original Meaning**: Keep the reporter's original observations and tone intact
+2. **Light Grammar Improvements**: Fix only basic grammar, spelling, and sentence structure issues
+3. **Natural Integration**: Weave clarification responses seamlessly into the narrative flow
+4. **Maintains Authenticity**: Should read as if the reporter wrote it correctly the first time
+5. **No Hallucinations**: Use only information provided - do not add assumptions or interpretations
+
+**End-Event Specific Focus:**
+When integrating clarification details, emphasize:
+- What helped calm things down or bring the incident to a close
+- How the participant's behavior or mood changed as things settled
+- Any immediate safety concerns that were still present
+- Emergency services involvement (ambulance, police) and what happened next
+- How staff worked together during the resolution
+- Steps taken to return things to normal or support the participant after the event
+- De-escalation techniques that were effective
+
+**Enhancement Guidelines:**
+- **Grammar Only**: Focus on fixing grammar, not rewriting content
+- **Voice Preservation**: Maintain the reporter's original tone and perspective
+- **Natural Flow**: Integrate Q&A responses as natural narrative elements
+- **Factual Accuracy**: Only use provided information, no inferences
+- **Professional Language**: Ensure appropriate language for NDIS reporting
+- **Participant Dignity**: Keep participant respect and privacy central
+
+**Integration Approach:**
+- Start with the original narrative as the foundation
+- Add clarification details where they naturally fit chronologically
+- Fix grammar and sentence structure while preserving meaning
+- Ensure the result flows as a unified, well-written narrative
+- Focus on what helped resolve the incident and immediate aftermath
+
+**Output Format:**
+Provide only the enhanced end-event narrative text. Do not include headers, bullets, or explanations - just the improved narrative that combines original content with clarifications naturally.`,
+    description: "Enhance end-event narrative - focus on resolution, de-escalation, and immediate outcomes",
+    workflow_step: "narrative_consolidation",
+    subsystem: "incidents",
+    max_tokens: 4000,
+  },
+  {
+    prompt_name: "enhance_narrative_post_event",
+    prompt_template: `You are an expert NDIS incident documentation specialist. Your task is to create an enhanced post-event narrative by naturally integrating original observations with clarification responses.
+
+**Incident Overview:**
+- **Participant**: {{participantName}}
+- **Date/Time**: {{eventDateTime}}
+- **Location**: {{location}}
+- **Reporter**: {{reporterName}}
+
+**Post Event Narrative (Original):**
+{{postEvent}}
+
+**Clarification Responses (Post Event):**
+{{postEventQA}}
+
+**Your Task:**
+Create an enhanced narrative for the post-event phase that:
+
+1. **Preserves Original Meaning**: Keep the reporter's original observations and tone intact
+2. **Light Grammar Improvements**: Fix only basic grammar, spelling, and sentence structure issues
+3. **Natural Integration**: Weave clarification responses seamlessly into the narrative flow
+4. **Maintains Authenticity**: Should read as if the reporter wrote it correctly the first time
+5. **No Hallucinations**: Use only information provided - do not add assumptions or interpretations
+
+**Post-Event Specific Focus:**
+When integrating clarification details, emphasize:
+- Whether the participant was safe, calm, and supervised in the hours following
+- Medical or emotional support that was offered
+- Family, guardians, or team members who were notified
+- Incident forms, handovers, or internal alerts that were completed
+- Return to normal or safe activities
+- Support provided to others (peers or staff) afterward
+- Lessons learned and follow-up actions planned
+
+**Enhancement Guidelines:**
+- **Grammar Only**: Focus on fixing grammar, not rewriting content
+- **Voice Preservation**: Maintain the reporter's original tone and perspective
+- **Natural Flow**: Integrate Q&A responses as natural narrative elements
+- **Factual Accuracy**: Only use provided information, no inferences
+- **Professional Language**: Ensure appropriate language for NDIS reporting
+- **Participant Dignity**: Keep participant respect and privacy central
+
+**Integration Approach:**
+- Start with the original narrative as the foundation
+- Add clarification details where they naturally fit chronologically
+- Fix grammar and sentence structure while preserving meaning
+- Ensure the result flows as a unified, well-written narrative
+- Focus on post-incident care, notifications, and follow-up
+
+**Output Format:**
+Provide only the enhanced post-event narrative text. Do not include headers, bullets, or explanations - just the improved narrative that combines original content with clarifications naturally.`,
+    description: "Enhance post-event narrative - focus on follow-up care, support modifications, and lessons learned",
     workflow_step: "narrative_consolidation",
     subsystem: "incidents",
     max_tokens: 4000,

@@ -352,9 +352,10 @@ export const enhanceNarrativePhase = action({
         .map(answer => `Q: ${answer.question_text}\nA: ${answer.answer_text}`)
         .join('\n\n');
       
-      // Get active prompt template
+      // Get phase-specific active prompt template
+      const promptName = `enhance_narrative_${args.phase}`;
       const prompt = await ctx.runQuery(internal.promptManager.getActivePrompt, {
-        prompt_name: "enhance_narrative",
+        prompt_name: promptName,
         subsystem: "incidents",
       });
       
@@ -384,6 +385,13 @@ export const enhanceNarrativePhase = action({
           answers: formattedAnswers,
           incident_id: args.incident_id,
           user_id: user._id,
+          // Story 6.4: Pass all narratives for phase-specific template variables
+          narratives: {
+            before_event: narratives.before_event,
+            during_event: narratives.during_event,
+            end_event: narratives.end_event,
+            post_event: narratives.post_event,
+          },
         });
 
         if (aiResult && (aiResult.output || aiResult.narrative)) {

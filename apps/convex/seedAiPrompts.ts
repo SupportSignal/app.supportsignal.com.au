@@ -9,10 +9,10 @@ import { internal } from "./_generated/api";
 export const seedAiPrompts = mutation({
   args: {},
   handler: async (ctx) => {
-    const result = await ctx.runMutation(internal.lib.ai["prompt-manager"].seedPromptTemplates, {});
-    
+    const result = await ctx.runMutation(internal.promptManager.seedPromptTemplatesInternal, {});
+
     console.log("AI Prompt Templates Seeded:", result);
-    
+
     return result;
   },
 });

@@ -137,8 +137,11 @@ export function PromptTestingPanel({
       'generate_clarification_questions_during_event',
       'generate_clarification_questions_end_event',
       'generate_clarification_questions_post_event',
-      // Enhancement prompt
-      'enhance_narrative',
+      // Phase-specific enhancement prompts (Story 6.4)
+      'enhance_narrative_before_event',
+      'enhance_narrative_during_event',
+      'enhance_narrative_end_event',
+      'enhance_narrative_post_event',
     ];
   }, []);
 
@@ -163,15 +166,30 @@ export function PromptTestingPanel({
         reporterName: incident.reporter_name,
         location: incident.location,
         eventDateTime: incident.event_date_time,
-        phase: currentStep >= 3 && currentStep <= 6 ? 
+        phase: currentStep >= 3 && currentStep <= 6 ?
           ['before_event', 'during_event', 'end_event', 'post_event'][currentStep - 3] : 'before_event',
-        
+
         // Phase-specific narrative variables
         beforeEvent: narrative?.before_event || 'No before event narrative yet',
         duringEvent: narrative?.during_event || 'No during event narrative yet',
-        endEvent: narrative?.end_event || 'No end event narrative yet', 
+        endEvent: narrative?.end_event || 'No end event narrative yet',
         postEvent: narrative?.post_event || 'No post event narrative yet',
-        
+
+        // Story 6.4: Enhancement prompt variables
+        // originalNarrative = current phase's narrative content
+        originalNarrative: currentStep >= 3 && currentStep <= 6 ?
+          [narrative?.before_event, narrative?.during_event, narrative?.end_event, narrative?.post_event][currentStep - 3] || 'No narrative content yet' :
+          'No narrative content yet',
+
+        // investigationQA = placeholder for clarification Q&A (actual value comes from backend at runtime)
+        investigationQA: 'Q: Sample clarification question?\nA: Sample clarification answer.\n\n(Actual Q&A responses will be loaded from the database when enhancement runs)',
+
+        // Phase-specific Q&A variables (Story 6.4)
+        beforeEventQA: 'Q: Sample before event clarification question?\nA: Sample before event answer.\n\n(Actual Q&A responses will be loaded from the database when enhancement runs)',
+        duringEventQA: 'Q: Sample during event clarification question?\nA: Sample during event answer.\n\n(Actual Q&A responses will be loaded from the database when enhancement runs)',
+        endEventQA: 'Q: Sample end event clarification question?\nA: Sample end event answer.\n\n(Actual Q&A responses will be loaded from the database when enhancement runs)',
+        postEventQA: 'Q: Sample post event clarification question?\nA: Sample post event answer.\n\n(Actual Q&A responses will be loaded from the database when enhancement runs)',
+
         // Custom developer variables
         ...customVariables,
       },
@@ -181,20 +199,32 @@ export function PromptTestingPanel({
   // Base variables from incident - MOVED BEFORE EARLY RETURN
   const baseVariables = useMemo(() => {
     if (!incident) return {};
-    
+
     return {
       participantName: incident.participant_name || '',
       reporterName: incident.reporter_name || '',
       location: incident.location || '',
       eventDateTime: incident.event_date_time || '',
-      phase: currentStep >= 3 && currentStep <= 6 ? 
+      phase: currentStep >= 3 && currentStep <= 6 ?
         ['before_event', 'during_event', 'end_event', 'post_event'][currentStep - 3] : 'before_event',
-      
-      // Phase-specific narrative variables  
+
+      // Phase-specific narrative variables
       beforeEvent: narrative?.before_event || 'No before event narrative yet',
       duringEvent: narrative?.during_event || 'No during event narrative yet',
-      endEvent: narrative?.end_event || 'No end event narrative yet', 
+      endEvent: narrative?.end_event || 'No end event narrative yet',
       postEvent: narrative?.post_event || 'No post event narrative yet',
+
+      // Story 6.4: Enhancement prompt variables
+      originalNarrative: currentStep >= 3 && currentStep <= 6 ?
+        [narrative?.before_event, narrative?.during_event, narrative?.end_event, narrative?.post_event][currentStep - 3] || 'No narrative content yet' :
+        'No narrative content yet',
+      investigationQA: 'Q: Sample clarification question?\nA: Sample clarification answer.\n\n(Actual Q&A responses will be loaded from the database when enhancement runs)',
+
+      // Phase-specific Q&A variables (Story 6.4)
+      beforeEventQA: 'Q: Sample before event clarification question?\nA: Sample before event answer.\n\n(Actual Q&A responses will be loaded from the database when enhancement runs)',
+      duringEventQA: 'Q: Sample during event clarification question?\nA: Sample during event answer.\n\n(Actual Q&A responses will be loaded from the database when enhancement runs)',
+      endEventQA: 'Q: Sample end event clarification question?\nA: Sample end event answer.\n\n(Actual Q&A responses will be loaded from the database when enhancement runs)',
+      postEventQA: 'Q: Sample post event clarification question?\nA: Sample post event answer.\n\n(Actual Q&A responses will be loaded from the database when enhancement runs)',
     };
   }, [incident, currentStep, narrative]);
 
@@ -459,8 +489,17 @@ export function PromptTestingPanel({
                     </option>
                   </optgroup>
                   <optgroup label="Enhancement">
-                    <option value="enhance_narrative">
-                      Enhance Narrative
+                    <option value="enhance_narrative_before_event">
+                      Before Event Enhancement
+                    </option>
+                    <option value="enhance_narrative_during_event">
+                      During Event Enhancement
+                    </option>
+                    <option value="enhance_narrative_end_event">
+                      End Event Enhancement
+                    </option>
+                    <option value="enhance_narrative_post_event">
+                      Post Event Enhancement
                     </option>
                   </optgroup>
                 </select>

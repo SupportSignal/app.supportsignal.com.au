@@ -18,7 +18,7 @@ export function LoggingProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Only enable logging in development environment
     if (typeof window !== 'undefined' && isDevelopment) {
-      window.CLAUDE_LOGGING_ENABLED = 'true'; // Enable for development debugging
+      window.CLAUDE_LOGGING_ENABLED = 'false'; // Disabled - was causing rate limit issues
       // Make ConsoleLogger globally available for debugging
       (window as any).ConsoleLogger = ConsoleLogger;
 

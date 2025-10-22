@@ -1,6 +1,6 @@
 # Epic 6: AI Prompt Management System
 
-> **Quick Navigation:** [6.1](#story-61-core-ai-prompt-management-foundation-) · [6.2](#story-62-phase-specific-question-generation-prompts) · [6.3](#story-63-developer-prompt-testing--interpolation-interface) · [6.4](#story-64-advanced-prompt-management--analytics-future) · [6.5](#story-65-multi-tenant-prompt-management-future) · [6.6](#story-66-prompt-version-management-future)
+> **Quick Navigation:** [6.1](#story-61-core-ai-prompt-management-foundation-) · [6.2](#story-62-phase-specific-question-generation-prompts) · [6.3](#story-63-developer-prompt-testing--interpolation-interface) · [6.4](#story-64-phase-specific-narrative-enhancement-with-auto-trigger) · [6.5](#story-65-advanced-prompt-management--analytics-future) · [6.6](#story-66-multi-tenant-prompt-management-future) · [6.7](#story-67-prompt-version-management-future)
 
 ## Epic Overview
 
@@ -35,11 +35,12 @@ Epic 6 establishes the foundational infrastructure for AI prompt management that
 
 **Stories in this Epic:**
 - [Story 6.1: Core AI Prompt Management Foundation](#story-61-core-ai-prompt-management-foundation-) - ✅ **Complete** (Critical)
-- [Story 6.2: Phase-Specific Question Generation Prompts](#story-62-phase-specific-question-generation-prompts) - 📋 **Planned** (High)
-- [Story 6.3: Developer Prompt Testing & Interpolation Interface](#story-63-developer-prompt-testing--interpolation-interface) - 📋 **Planned** (Medium)
-- [Story 6.4: Advanced Prompt Management & Analytics](#story-64-advanced-prompt-management--analytics-future) - 🔮 **Future** (Low)
-- [Story 6.5: Multi-Tenant Prompt Management](#story-65-multi-tenant-prompt-management-future) - 🔮 **Future** (Low)
-- [Story 6.6: Prompt Version Management](#story-66-prompt-version-management-future) - 🔮 **Future** (Low)
+- [Story 6.2: Phase-Specific Question Generation Prompts](#story-62-phase-specific-question-generation-prompts) - ✅ **Complete** (High)
+- [Story 6.3: Developer Prompt Testing & Interpolation Interface](#story-63-developer-prompt-testing--interpolation-interface) - ✅ **Complete** (Medium)
+- [Story 6.4: Phase-Specific Narrative Enhancement with Auto-Trigger](#story-64-phase-specific-narrative-enhancement-with-auto-trigger) - 📋 **Planned** (High)
+- [Story 6.5: Advanced Prompt Management & Analytics](#story-65-advanced-prompt-management--analytics-future) - 🔮 **Future** (Low)
+- [Story 6.6: Multi-Tenant Prompt Management](#story-66-multi-tenant-prompt-management-future) - 🔮 **Future** (Low)
+- [Story 6.7: Prompt Version Management](#story-67-prompt-version-management-future) - 🔮 **Future** (Low)
 
 ---
 
@@ -102,9 +103,9 @@ Comprehensive AI prompt template management system including creation, editing, 
 
 ### Story 6.2: Phase-Specific Question Generation Prompts
 
-**Status**: **IN PROGRESS** 🚧  
-**Priority**: HIGH  
-**Estimated Effort**: 2-3 days  
+**Status**: **COMPLETE** ✅
+**Priority**: HIGH
+**Estimated Effort**: 2-3 days
 **Dependencies**: Story 6.1 (Core prompt management foundation)
 
 #### Requirements
@@ -128,22 +129,27 @@ Comprehensive AI prompt template management system including creation, editing, 
 - **End Event**: Focus on resolution strategies, de-escalation techniques, immediate outcomes
 - **Post Event**: Focus on follow-up care, support plan modifications, lesson learned
 
-#### Acceptance Criteria
-- [ ] **Four Phase-Specific Prompts**: Create specialized prompts for each incident phase
-- [ ] **Dynamic Prompt Selection**: Update questionGenerator.ts to select prompt based on `args.phase`
-- [ ] **Hardcoded Phase Context**: Remove generic `{{phase}}` variable, embed phase context in each prompt
-- [ ] **Maintain Existing API**: No breaking changes to existing question generation interface
-- [ ] **Database Migration**: Add new prompts to DEFAULT_PROMPTS and seed in database
-- [ ] **Testing**: Verify each phase generates appropriate, phase-specific questions
-- [ ] **Documentation**: Update prompt management documentation with new phase-specific approach
+#### Acceptance Criteria (Completed)
+- [x] **Four Phase-Specific Prompts**: Created specialized prompts for each incident phase
+- [x] **Dynamic Prompt Selection**: Updated questionGenerator.ts to select prompt based on `args.phase`
+- [x] **Hardcoded Phase Context**: Removed generic `{{phase}}` variable, embedded phase context in each prompt
+- [x] **Maintain Existing API**: No breaking changes to existing question generation interface
+- [x] **Database Migration**: Added new prompts to DEFAULT_PROMPTS and seeded in database
+- [x] **Testing**: Verified each phase generates appropriate, phase-specific questions
+- [x] **Documentation**: Updated prompt management documentation with new phase-specific approach
+
+**Implementation Evidence**:
+- 4 phase-specific prompts implemented in `apps/convex/promptManager.ts` (line 345+)
+- Dynamic selection implemented in `apps/convex/lib/ai/questionGenerator.ts` (lines 195-240)
+- All prompts successfully seeded and operational
 
 ---
 
 ### Story 6.3: Developer Prompt Testing & Interpolation Interface
 
-**Status**: **PLANNED** 📋  
-**Priority**: MEDIUM  
-**Estimated Effort**: 3-4 days  
+**Status**: **COMPLETE** ✅
+**Priority**: MEDIUM
+**Estimated Effort**: 3-4 days
 **Dependencies**: Story 6.2 (Phase-specific prompts)
 
 #### Requirements
@@ -166,26 +172,99 @@ Comprehensive AI prompt template management system including creation, editing, 
 - **Debugging**: See exactly what prompt was sent when investigating AI issues
 - **Optimization**: Experiment with special instructions or additional context variables
 
-#### Acceptance Criteria
-- [ ] **Developer Controls Extension**: Extend existing developer toolbar with prompt testing capabilities
-- [ ] **Prompt Template Display**: Show current active prompt template being used
-- [ ] **Variable Visualization**: Display all template variables and their current values in a property grid
-- [ ] **Extensible Variables**: Allow adding/modifying variables without database changes
-- [ ] **Real-time Interpolation**: Show live preview of fully interpolated prompt
-- [ ] **Template Override**: Allow temporary prompt template modifications for testing
-- [ ] **Test Execution**: Execute prompt with current variables and display AI response
-- [ ] **Developer-Only Access**: Ensure interface only appears for users with developer permissions
-- [ ] **No Database Changes**: All modifications are temporary and not persisted
-- [ ] **Context Awareness**: Show relevant prompt testing for current workflow step/page
+#### Acceptance Criteria (Completed)
+- [x] **Developer Controls Extension**: Extended existing developer toolbar with prompt testing capabilities
+- [x] **Prompt Template Display**: Shows current active prompt template being used
+- [x] **Variable Visualization**: Displays all template variables and their current values in a property grid
+- [x] **Extensible Variables**: Allows adding/modifying variables without database changes
+- [x] **Real-time Interpolation**: Shows live preview of fully interpolated prompt
+- [x] **Template Override**: Allows temporary prompt template modifications for testing
+- [x] **Test Execution**: Executes prompt with current variables and displays AI response
+- [x] **Developer-Only Access**: Interface only appears for users with developer permissions
+- [x] **No Database Changes**: All modifications are temporary and not persisted
+- [x] **Context Awareness**: Shows relevant prompt testing for current workflow step/page
+
+**Implementation Evidence**:
+- Developer toolbar component: `apps/web/components/developer/DeveloperToolsBar.tsx`
+- Prompt testing panel: `apps/web/components/developer/PromptTestingPanel.tsx`
+- Variable grid: `apps/web/components/developer/VariablePropertyGrid.tsx`
+- Full developer prompt testing interface operational
 
 ---
 
-### Story 6.4: Advanced Prompt Management & Analytics (Future)
+### Story 6.4: Phase-Specific Narrative Enhancement with Auto-Trigger
 
-**Status**: **FUTURE** 📋  
-**Priority**: LOW  
-**Estimated Effort**: 4-5 days  
-**Dependencies**: Stories 6.2-6.3 (Phase-specific prompts and developer tools)
+**Status**: **PLANNED** 📋
+**Priority**: HIGH
+**Estimated Effort**: 3-4 days
+**Dependencies**: Stories 6.1-6.3 (Core prompt management, phase-specific prompts, developer tools)
+
+#### Requirements
+**Problem**: The current system uses one generic `"enhance_narrative"` prompt that attempts to handle all four incident phases by passing phase as a variable. Additionally, narrative enhancement is manually triggered via button clicks, requiring user intervention. This creates two issues:
+1. Generic prompt produces suboptimal results (each phase needs different enhancement focus)
+2. Manual triggering adds friction to the incident workflow
+
+**Solution**:
+1. Split the single generic prompt into four specialized, phase-specific enhancement prompts
+2. Automatically trigger narrative enhancement when the page loads (after clarifications complete)
+3. Add developer refresh controls for prompt testing and iteration
+
+**Three-Part Implementation**:
+
+**Part 1: Phase-Specific Enhancement Prompts**
+- Replace `"enhance_narrative"` with four distinct prompts:
+  - `"enhance_narrative_before_event"` - Focus on setup, environment, participant state
+  - `"enhance_narrative_during_event"` - Focus on actions, interventions, safety measures
+  - `"enhance_narrative_end_event"` - Focus on resolution, de-escalation, outcomes
+  - `"enhance_narrative_post_event"` - Focus on follow-up care, support modifications, lessons learned
+- Update `aiEnhancement.ts` to dynamically select prompt based on phase
+- Remove `{{narrative_phase}}` variable, embed phase-specific guidance in each prompt
+
+**Part 2: Automatic Enhancement Workflow**
+- Auto-trigger enhancement on page load when conditions met:
+  - Original narrative exists for the phase
+  - Clarification questions have been answered
+  - Enhanced narrative doesn't exist yet (smart caching)
+- Display loading indicator during auto-enhancement
+- Remove existing manual enhancement buttons from UI
+- Add error handling for AI service failures
+
+**Part 3: Developer Refresh Controls**
+- Extend `DeveloperToolsBar` with narrative enhancement section
+- Add 4 phase-specific refresh buttons (one per incident phase)
+- Each button: Clear cached enhanced narrative + re-trigger enhancement
+- Follow Story 6.3's developer access control pattern (`hasDeveloperAccess`)
+- Enable prompt testing workflow: Edit prompt → Refresh → See new result
+
+**User Benefits**:
+- **Automatic Enhancement**: No manual button clicks needed, seamless workflow
+- **Better Quality**: Phase-specific prompts produce more contextually appropriate narratives
+- **Developer Workflow**: Easy prompt testing and iteration during development
+- **Smart Caching**: Prevents duplicate AI calls, improves performance
+- **Future-Proof**: Refresh buttons can become permanent user feature if needed
+
+#### Acceptance Criteria
+- [ ] **Four Phase-Specific Enhancement Prompts**: Create specialized prompts for each incident phase
+- [ ] **Dynamic Prompt Selection**: Update aiEnhancement.ts to select prompt based on phase
+- [ ] **Hardcoded Phase Context**: Remove generic `{{narrative_phase}}` variable
+- [ ] **Automatic Enhancement Trigger**: Auto-trigger when page loads (with conditions)
+- [ ] **Loading Indicators**: Display spinner/progress during auto-enhancement
+- [ ] **Smart Caching**: Check if already enhanced before auto-triggering
+- [ ] **Developer Refresh Controls**: Add 4 phase-specific refresh buttons in developer toolbar
+- [ ] **Manual Re-Enhancement**: Each refresh button clears cache and re-triggers enhancement
+- [ ] **Maintain Existing API**: No breaking changes to existing narrative enhancement interface
+- [ ] **Database Migration**: Add new prompts to DEFAULT_PROMPTS and seed in database
+- [ ] **Testing**: Verify each phase generates appropriate, phase-specific enhanced narratives
+- [ ] **Documentation**: Update prompt management docs with auto-trigger pattern
+
+---
+
+### Story 6.5: Advanced Prompt Management & Analytics (Future)
+
+**Status**: **FUTURE** 📋
+**Priority**: LOW
+**Estimated Effort**: 4-5 days
+**Dependencies**: Stories 6.2-6.4 (Phase-specific prompts, developer tools, auto-trigger)
 
 #### Requirements
 Enhance the prompt management system with advanced capabilities including A/B testing, performance analytics, testing sandbox, and workflow management for production optimization.
@@ -211,12 +290,12 @@ Enhance the prompt management system with advanced capabilities including A/B te
 
 Additional enhancements could include:
 
-### Story 6.5: Multi-Tenant Prompt Management (Future)
+### Story 6.6: Multi-Tenant Prompt Management (Future)
 - Company-specific prompt customizations
 - Template inheritance and override systems
 - Bulk template operations
 
-### Story 6.6: Prompt Version Management (Future)  
+### Story 6.7: Prompt Version Management (Future)
 - Advanced versioning with rollback capabilities
 - Change approval workflows
 - Template change impact analysis
@@ -225,12 +304,15 @@ Additional enhancements could include:
 
 ## Epic Completion Status
 
-### Current State: **FOUNDATION COMPLETE, PHASE-SPECIFIC IN PROGRESS** 🚧
+### Current State: **CORE STORIES COMPLETE, ENHANCEMENT IN PROGRESS** 🚧
 
-**Story 6.1**: ✅ Complete - All core functionality implemented and deployed  
-**Story 6.2**: 🚧 In Progress - Phase-specific question generation prompts  
-**Story 6.3**: 📋 Planned - Developer prompt testing and interpolation interface  
-**Story 6.4**: 📋 Future - Advanced analytics and management capabilities
+**Story 6.1**: ✅ Complete - Core AI prompt management foundation
+**Story 6.2**: ✅ Complete - Phase-specific question generation prompts
+**Story 6.3**: ✅ Complete - Developer prompt testing & interpolation interface
+**Story 6.4**: 📋 Planned - Phase-specific narrative enhancement with auto-trigger
+**Story 6.5**: 📋 Future - Advanced analytics and management capabilities
+**Story 6.6**: 📋 Future - Multi-tenant prompt management
+**Story 6.7**: 📋 Future - Prompt version management
 
 **Epic 6 Achievement Summary**:
 - ✅ **System Administrator Control**: Full prompt template management
