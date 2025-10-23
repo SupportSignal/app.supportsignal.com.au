@@ -188,7 +188,7 @@ export default defineSchema({
   // Core incidents table with multi-tenant support
   incidents: defineTable({
     company_id: v.id("companies"), // Multi-tenant isolation
-    site_id: v.id("sites"), // Story 7.6: Site where incident occurred (required)
+    site_id: v.optional(v.id("sites")), // Story 7.6: Site where incident occurred (will be required after backfill)
     reporter_name: v.string(),
     participant_id: v.optional(v.id("participants")), // Reference to participant record
     participant_name: v.string(), // Keep for backwards compatibility and non-participant incidents
