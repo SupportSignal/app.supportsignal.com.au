@@ -179,7 +179,6 @@ export default defineSchema({
     updated_by: v.id("users"),
   })
     .index("by_company", ["company_id"])
-    .index("by_site", ["site_id"]) // Story 7.4: Query participants by site
     .index("by_company_and_site", ["company_id", "site_id"]) // Story 7.4: Multi-tenant site filtering
     .index("by_ndis_number", ["ndis_number"])
     .index("by_status", ["status"])
@@ -245,7 +244,6 @@ export default defineSchema({
     .index("by_company_user", ["company_id", "created_by"])
     .index("by_company_updated", ["company_id", "updated_at"])
     // Story 7.6: Site-based filtering
-    .index("by_site", ["site_id"])
     .index("by_company_and_site", ["company_id", "site_id"]),
 
   // Multi-phase incident narratives
