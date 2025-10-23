@@ -187,6 +187,7 @@ export const listByUser = query({
 export const create = mutation({
   args: {
     sessionToken: v.string(),
+    site_id: v.id("sites"), // Story 7.6: Site where incident occurred
     reporter_name: v.string(),
     participant_id: v.optional(v.id("participants")),
     participant_name: v.string(),
@@ -206,6 +207,16 @@ export const create = mutation({
       );
       user = authResult.user;
       correlationId = authResult.correlationId;
+
+      // Story 7.6: Validate site belongs to company
+      const site = await ctx.db.get(args.site_id);
+      if (!site || site.company_id !== user.company_id) {
+        throw new ValidationError(
+          'Invalid site: Site does not belong to your company',
+          ErrorTypes.BUSINESS_LOGIC_ERROR,
+          { correlationId, context: { siteId: args.site_id, companyId: user.company_id } }
+        );
+      }
 
       // Comprehensive input validation using Zod schemas
       const sanitizedInput = Sanitization.sanitizeObject({
@@ -245,25 +256,26 @@ export const create = mutation({
       }
 
       const currentTime = Date.now();
-      
+
       const incidentId = await ctx.db.insert("incidents", {
         company_id: user.company_id!, // User's company from authenticated session
+        site_id: args.site_id, // Story 7.6: Site where incident occurred
         reporter_name: validatedData.reporter_name,
         participant_id: validatedData.participant_id,
         participant_name: validatedData.participant_name,
         event_date_time: validatedData.event_date_time,
         location: validatedData.location,
-        
+
         // Initial workflow status
         capture_status: "draft",
         analysis_status: "not_started",
         overall_status: "capture_pending",
-        
+
         // Audit fields
         created_at: currentTime,
         created_by: user._id,
         updated_at: currentTime,
-        
+
         // Data quality tracking
         narrative_hash: undefined,
         questions_generated: false,
@@ -325,6 +337,7 @@ export const updateMetadata = mutation({
   args: {
     sessionToken: v.string(),
     incidentId: v.id("incidents"),
+    site_id: v.id("sites"), // Story 7.6: Site where incident occurred
     reporter_name: v.string(),
     participant_id: v.optional(v.id("participants")),
     participant_name: v.string(),
@@ -361,6 +374,16 @@ export const updateMetadata = mutation({
           "Access denied to incident",
           ErrorTypes.BUSINESS_LOGIC_ERROR,
           { correlationId, context: { incidentId: args.incidentId } }
+        );
+      }
+
+      // Story 7.6: Validate site belongs to company
+      const site = await ctx.db.get(args.site_id);
+      if (!site || site.company_id !== user.company_id) {
+        throw new ValidationError(
+          'Invalid site: Site does not belong to your company',
+          ErrorTypes.BUSINESS_LOGIC_ERROR,
+          { correlationId, context: { siteId: args.site_id, companyId: user.company_id } }
         );
       }
 
@@ -402,9 +425,10 @@ export const updateMetadata = mutation({
       }
 
       const currentTime = Date.now();
-      
+
       // Update the incident metadata
       await ctx.db.patch(args.incidentId, {
+        site_id: args.site_id, // Story 7.6: Site where incident occurred
         reporter_name: validatedData.reporter_name,
         participant_id: validatedData.participant_id,
         participant_name: validatedData.participant_name,
