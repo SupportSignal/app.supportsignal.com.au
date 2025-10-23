@@ -23,6 +23,7 @@ interface IncidentFilter {
   dateRange?: { start: number; end: number };
   participantId?: string;
   userId?: string;
+  siteId?: string; // Story 7.6: Filter by site
   searchText?: string;
 }
 
@@ -278,7 +279,7 @@ export function IncidentListPage() {
             <div className="flex-1 relative">
               <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search incidents by participant, reporter, or location..."
+                placeholder="Search incidents by participant, reporter, site, or location..."
                 className="pl-10"
                 value={filters.searchText || ''}
                 onChange={(e) => handleSearch(e.target.value)}

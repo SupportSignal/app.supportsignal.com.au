@@ -14,6 +14,7 @@ interface IncidentFilter {
   dateRange?: { start: number; end: number };
   participantId?: Id<"participants">;
   userId?: Id<"users">;
+  siteId?: Id<"sites">; // Story 7.6: Filter by site
   searchText?: string;
 }
 
@@ -32,6 +33,7 @@ export const getAllCompanyIncidents = query({
       })),
       participantId: v.optional(v.id("participants")),
       userId: v.optional(v.id("users")), // Filter by worker (if user has permission)
+      siteId: v.optional(v.id("sites")), // Story 7.6: Filter by site
       searchText: v.optional(v.string())
     })),
     pagination: v.optional(v.object({
@@ -95,8 +97,26 @@ export const getAllCompanyIncidents = query({
       });
       
       const incidents = await query.collect();
-      let filteredIncidents = incidents;
-      
+
+      // Story 7.6: Fetch site information for each incident
+      const incidentsWithSites = await Promise.all(
+        incidents.map(async (incident) => {
+          let site_name = 'Unknown Site';
+          if (incident.site_id) {
+            const site = await ctx.db.get(incident.site_id);
+            if (site) {
+              site_name = site.name;
+            }
+          }
+          return {
+            ...incident,
+            site_name, // Story 7.6: Include site name for display
+          };
+        })
+      );
+
+      let filteredIncidents = incidentsWithSites;
+
       console.log('🔍 CONVEX - getAllCompanyIncidents INITIAL QUERY RESULT', {
         correlationId,
         rawIncidentCount: incidents.length,
@@ -105,22 +125,24 @@ export const getAllCompanyIncidents = query({
           id: incidents[0]._id,
           company_id: incidents[0].company_id,
           participant_name: incidents[0].participant_name,
-          overall_status: incidents[0].overall_status
+          overall_status: incidents[0].overall_status,
+          site_id: incidents[0].site_id,
+          site_name: incidentsWithSites[0].site_name, // Story 7.6
         } : null,
         timestamp: new Date().toISOString()
       });
     
     // Apply filters
     if (args.filters) {
-      const { status, dateRange, participantId, userId, searchText } = args.filters;
-      
+      const { status, dateRange, participantId, userId, siteId, searchText } = args.filters;
+
       // Status filter
       if (status) {
-        filteredIncidents = filteredIncidents.filter(incident => 
+        filteredIncidents = filteredIncidents.filter(incident =>
           incident.overall_status === status
         );
       }
-      
+
       // Date range filter
       if (dateRange) {
         filteredIncidents = filteredIncidents.filter(incident => {
@@ -128,28 +150,36 @@ export const getAllCompanyIncidents = query({
           return incidentTime >= dateRange.start && incidentTime <= dateRange.end;
         });
       }
-      
+
       // Participant filter
       if (participantId) {
-        filteredIncidents = filteredIncidents.filter(incident => 
+        filteredIncidents = filteredIncidents.filter(incident =>
           incident.participant_id === participantId
         );
       }
-      
+
       // User/Reporter filter
       if (userId) {
-        filteredIncidents = filteredIncidents.filter(incident => 
+        filteredIncidents = filteredIncidents.filter(incident =>
           incident.created_by === userId
         );
       }
+
+      // Story 7.6: Site filter
+      if (siteId) {
+        filteredIncidents = filteredIncidents.filter(incident =>
+          incident.site_id === siteId
+        );
+      }
       
-      // Text search filter
+      // Text search filter (Story 7.6: includes site name)
       if (searchText) {
         const searchLower = searchText.toLowerCase();
-        filteredIncidents = filteredIncidents.filter(incident => 
+        filteredIncidents = filteredIncidents.filter(incident =>
           incident.participant_name.toLowerCase().includes(searchLower) ||
           incident.reporter_name.toLowerCase().includes(searchLower) ||
-          incident.location.toLowerCase().includes(searchLower)
+          incident.location.toLowerCase().includes(searchLower) ||
+          (incident.site_name && incident.site_name.toLowerCase().includes(searchLower))
         );
       }
     }
@@ -257,6 +287,7 @@ export const getMyIncidents = query({
         start: v.number(),
         end: v.number()
       })),
+      siteId: v.optional(v.id("sites")), // Story 7.6: Filter by site
       searchText: v.optional(v.string())
     })),
     pagination: v.optional(v.object({
@@ -323,8 +354,26 @@ export const getMyIncidents = query({
       });
       
       const incidents = await query.collect();
-      let filteredIncidents = incidents;
-      
+
+      // Story 7.6: Fetch site information for each incident
+      const incidentsWithSites = await Promise.all(
+        incidents.map(async (incident) => {
+          let site_name = 'Unknown Site';
+          if (incident.site_id) {
+            const site = await ctx.db.get(incident.site_id);
+            if (site) {
+              site_name = site.name;
+            }
+          }
+          return {
+            ...incident,
+            site_name, // Story 7.6: Include site name for display
+          };
+        })
+      );
+
+      let filteredIncidents = incidentsWithSites;
+
       console.log('🔍 CONVEX - getMyIncidents INITIAL QUERY RESULT', {
         correlationId,
         rawIncidentCount: incidents.length,
@@ -335,22 +384,24 @@ export const getMyIncidents = query({
           company_id: incidents[0].company_id,
           created_by: incidents[0].created_by,
           participant_name: incidents[0].participant_name,
-          overall_status: incidents[0].overall_status
+          overall_status: incidents[0].overall_status,
+          site_id: incidents[0].site_id,
+          site_name: incidentsWithSites[0].site_name, // Story 7.6
         } : null,
         timestamp: new Date().toISOString()
       });
     
     // Apply filters
     if (args.filters) {
-      const { status, dateRange, searchText } = args.filters;
-      
+      const { status, dateRange, siteId, searchText } = args.filters;
+
       // Status filter
       if (status) {
-        filteredIncidents = filteredIncidents.filter(incident => 
+        filteredIncidents = filteredIncidents.filter(incident =>
           incident.overall_status === status
         );
       }
-      
+
       // Date range filter
       if (dateRange) {
         filteredIncidents = filteredIncidents.filter(incident => {
@@ -358,14 +409,22 @@ export const getMyIncidents = query({
           return incidentTime >= dateRange.start && incidentTime <= dateRange.end;
         });
       }
+
+      // Story 7.6: Site filter
+      if (siteId) {
+        filteredIncidents = filteredIncidents.filter(incident =>
+          incident.site_id === siteId
+        );
+      }
       
-      // Text search filter
+      // Text search filter (Story 7.6: includes site name)
       if (searchText) {
         const searchLower = searchText.toLowerCase();
-        filteredIncidents = filteredIncidents.filter(incident => 
+        filteredIncidents = filteredIncidents.filter(incident =>
           incident.participant_name.toLowerCase().includes(searchLower) ||
           incident.reporter_name.toLowerCase().includes(searchLower) ||
-          incident.location.toLowerCase().includes(searchLower)
+          incident.location.toLowerCase().includes(searchLower) ||
+          (incident.site_name && incident.site_name.toLowerCase().includes(searchLower))
         );
       }
     }

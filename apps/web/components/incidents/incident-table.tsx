@@ -28,6 +28,8 @@ import { IncidentStatusBadge } from './incident-status-badge';
 interface Incident {
   _id: string;
   company_id: string;
+  site_id?: string; // Story 7.6: Site where incident occurred
+  site_name?: string; // Story 7.6: Site name for display
   participant_name: string;
   reporter_name: string;
   event_date_time: string;
@@ -301,8 +303,16 @@ export function IncidentTable({
                             </Badge>
                           )}
                         </div>
-                        <div className="text-sm text-muted-foreground">
-                          {incident.location}
+                        {/* Story 7.6: Display site and location */}
+                        <div className="text-sm text-muted-foreground space-y-0.5">
+                          {incident.site_name && (
+                            <div className="flex items-center gap-1">
+                              <span className="font-medium text-foreground/80">📍 {incident.site_name}</span>
+                            </div>
+                          )}
+                          {incident.location && (
+                            <div className="text-muted-foreground/90">{incident.location}</div>
+                          )}
                         </div>
                       </div>
                     </div>

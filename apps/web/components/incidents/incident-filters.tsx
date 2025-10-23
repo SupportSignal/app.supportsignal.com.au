@@ -20,6 +20,7 @@ interface IncidentFilter {
   dateRange?: { start: number; end: number };
   participantId?: string;
   userId?: string;
+  siteId?: string; // Story 7.6: Filter by site
   searchText?: string;
 }
 
@@ -43,10 +44,16 @@ export function IncidentFilters({
     hasCompanyAccess && sessionToken ? { sessionToken } : "skip"
   );
 
-  // Load users for filter (if user has company access)  
+  // Load users for filter (if user has company access)
   const usersData = useQuery(
     api.users.listCompanyUsers,
     hasCompanyAccess && sessionToken ? { sessionToken } : "skip"
+  );
+
+  // Story 7.6: Load sites for filter
+  const sitesData = useQuery(
+    api.sites.list.listCompanySites,
+    sessionToken ? { sessionToken } : "skip"
   );
 
   // Update local date range when filters change
@@ -74,8 +81,15 @@ export function IncidentFilters({
   };
 
   const handleUserChange = (value: string) => {
-    onFilterChange({ 
-      userId: value === "all" ? undefined : value 
+    onFilterChange({
+      userId: value === "all" ? undefined : value
+    });
+  };
+
+  // Story 7.6: Handle site filter change
+  const handleSiteChange = (value: string) => {
+    onFilterChange({
+      siteId: value === "all" ? undefined : value
     });
   };
 
@@ -222,6 +236,26 @@ export function IncidentFilters({
               {usersData.users.map((user) => (
                 <SelectItem key={user._id} value={user._id}>
                   {user.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {/* Story 7.6: Site Filter - Available for all users */}
+      {sitesData && sitesData.length > 0 && (
+        <div className="space-y-2">
+          <Label>Site</Label>
+          <Select value={filters.siteId || "all"} onValueChange={handleSiteChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="All sites" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Sites</SelectItem>
+              {sitesData.map((site) => (
+                <SelectItem key={site._id} value={site._id}>
+                  {site.name}
                 </SelectItem>
               ))}
             </SelectContent>
