@@ -31,6 +31,7 @@ interface IncidentMetadataFormProps {
 
 interface FormData {
   reporter_name: string;
+  site_id: Id<"sites"> | undefined; // Story 7.6: Site where incident occurred
   participant_id: Id<"participants"> | undefined;
   participant_name: string;
   event_date_time: string;
@@ -66,6 +67,7 @@ export function IncidentMetadataForm({
     
     return {
       reporter_name: user.name, // Pre-fill from authenticated user
+      site_id: undefined, // Story 7.6: Will auto-populate when participant is selected
       participant_id: undefined,
       participant_name: '',
       event_date_time: initialDateTime, // Current date/time in local format
@@ -106,6 +108,12 @@ export function IncidentMetadataForm({
   const existingIncident = useQuery(
     api.incidents.getDraftIncident,
     existingIncidentId && sessionToken ? { sessionToken, incidentId: existingIncidentId } : 'skip'
+  );
+
+  // Story 7.6: Load company sites for site selector
+  const companySites = useQuery(
+    api.sites.list.listCompanySites,
+    sessionToken ? { sessionToken } : 'skip'
   );
 
 
@@ -156,6 +164,7 @@ export function IncidentMetadataForm({
       
       const newFormData = {
         reporter_name: incident.reporter_name || user.name,
+        site_id: incident.site_id, // Story 7.6: Load existing site_id
         participant_id: incident.participant_id,
         participant_name: incident.participant_name || '',
         event_date_time: formattedDateTime,
@@ -269,6 +278,7 @@ export function IncidentMetadataForm({
   }, []);
 
   // Handle participant selection
+  // Story 7.6: Smart auto-population - auto-fill site from participant's site_id
   const handleParticipantSelect = (participant: Participant | null) => {
     setSelectedParticipant(participant);
     if (participant) {
@@ -276,15 +286,27 @@ export function IncidentMetadataForm({
         ...formData,
         participant_id: participant._id,
         participant_name: `${participant.first_name} ${participant.last_name}`,
+        // Story 7.6: Auto-populate site from participant's default site
+        site_id: participant.site_id || formData.site_id, // Keep current if participant has no site
       };
       setFormData(updatedFormData);
       // Clear participant errors when valid selection is made
       setErrors(prev => ({ ...prev, participant_name: undefined }));
+
+      // Log auto-population for debugging
+      if (participant.site_id) {
+        console.log('🏢 AUTO-POPULATED SITE', {
+          participantId: participant._id,
+          participantName: `${participant.first_name} ${participant.last_name}`,
+          siteId: participant.site_id,
+        });
+      }
     } else {
       setFormData(prev => ({
         ...prev,
         participant_id: undefined,
         participant_name: '',
+        // Don't clear site_id - allow manual selection even without participant
       }));
     }
   };
@@ -314,6 +336,11 @@ export function IncidentMetadataForm({
       newErrors.reporter_name = 'Reporter name is required';
     }
 
+    // Story 7.6: Site selection is required
+    if (!formData.site_id) {
+      newErrors.site_id = 'Please select a site' as any;
+    }
+
     if (!formData.participant_name.trim()) {
       newErrors.participant_name = 'Please select a participant';
     }
@@ -325,7 +352,7 @@ export function IncidentMetadataForm({
       const eventDate = new Date(formData.event_date_time);
       const now = new Date();
       const dayInMs = 24 * 60 * 60 * 1000;
-      
+
       if (eventDate > new Date(now.getTime() + dayInMs)) {
         newErrors.event_date_time = 'Event date cannot be more than 24 hours in the future';
       } else if (eventDate < new Date(now.getTime() - 30 * dayInMs)) {
@@ -363,6 +390,7 @@ export function IncidentMetadataForm({
       // Prepare the form data for submission
       const incidentData = {
         sessionToken,
+        site_id: formData.site_id!, // Story 7.6: Site where incident occurred (validated above)
         reporter_name: formData.reporter_name.trim(),
         participant_id: formData.participant_id,
         participant_name: formData.participant_name.trim(),
@@ -413,9 +441,10 @@ export function IncidentMetadataForm({
   };
 
   // Check if form is valid for submit button state
-  const isFormValid = formData.reporter_name.trim() && 
-                     formData.participant_name.trim() && 
-                     formData.event_date_time && 
+  const isFormValid = formData.reporter_name.trim() &&
+                     formData.site_id && // Story 7.6: Site is required
+                     formData.participant_name.trim() &&
+                     formData.event_date_time &&
                      formData.location.trim();
 
   return (
@@ -545,6 +574,51 @@ export function IncidentMetadataForm({
               <Alert>
                 <AlertDescription className="text-red-600">
                   {errors.participant_name}
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+
+          {/* Site Selection - Story 7.6 */}
+          <div className="space-y-2">
+            <Label htmlFor="site_id" className={cn(
+              "text-sm font-medium",
+              viewport.isMobile ? "text-base" : ""
+            )}>
+              Site/Location <span className="text-red-500">*</span>
+            </Label>
+            <select
+              id="site_id"
+              value={formData.site_id || ''}
+              onChange={(e) => handleFieldChange('site_id', e.target.value as any)}
+              className={cn(
+                "w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+                errors.site_id ? 'border-red-500' : '',
+                viewport.isMobile ? 'h-12 text-base' : ''
+              )}
+              disabled={!companySites || companySites.length === 0}
+            >
+              <option value="">Select a site...</option>
+              {companySites?.map((site) => (
+                <option key={site._id} value={site._id}>
+                  {site.name}
+                </option>
+              ))}
+            </select>
+            <p className={cn(
+              "text-xs text-gray-500",
+              viewport.isMobile ? "text-sm" : ""
+            )}>
+              {formData.participant_id && formData.site_id && selectedParticipant?.site_id === formData.site_id ? (
+                <span className="text-green-600">✓ Auto-filled from participant's default site. You can change this if the incident occurred at a different location.</span>
+              ) : (
+                "Select the physical site where this incident occurred."
+              )}
+            </p>
+            {errors.site_id && (
+              <Alert>
+                <AlertDescription className="text-red-600">
+                  {errors.site_id}
                 </AlertDescription>
               </Alert>
             )}
