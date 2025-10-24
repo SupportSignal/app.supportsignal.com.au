@@ -126,6 +126,15 @@ const generateQuestionsWithTemplate = async (
       correlationId,
     });
 
+    // Log template variables for debugging
+    console.log(`🔍 TEMPLATE VARIABLES FOR ${phase.toUpperCase()}`, {
+      phase,
+      templateName,
+      variables: variables,
+      variableKeys: Object.keys(variables),
+      correlationId,
+    });
+
     // Prepare AI request
     const aiRequest: AIRequest = {
       correlationId,
