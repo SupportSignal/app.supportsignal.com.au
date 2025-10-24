@@ -32,7 +32,8 @@
     "bcryptjs": "^3.0.2",
     "convex": "^1.25.4",
     "jspdf": "^3.0.2",
-    "openai": "^5.10.2"
+    "openai": "^5.10.2",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/bcryptjs": "^3.0.0",
