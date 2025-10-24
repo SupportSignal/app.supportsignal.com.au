@@ -6,7 +6,7 @@ export default mutation({
   handler: async (ctx) => {
     // Find the wrong prompt
     const wrongPrompt = await ctx.db
-      .query("ai_prompt_templates")
+      .query("ai_prompts")
       .filter((q) =>
         q.and(
           q.eq(q.field("prompt_name"), "generate_clarification_questions_post_event"),
