@@ -27,9 +27,21 @@ const validateQuestionOutput = (rawOutput: any, phase: string): QuestionGenerati
   try {
     // Parse AI response if it's a string
     const parsed = typeof rawOutput === 'string' ? JSON.parse(rawOutput) : rawOutput;
-    
+
     if (!Array.isArray(parsed)) {
+      console.error(`❌ ${phase.toUpperCase()}: AI response is not an array`, {
+        phase,
+        type: typeof parsed,
+        value: JSON.stringify(parsed).substring(0, 200),
+      });
       throw new Error("AI response must be an array of questions");
+    }
+
+    if (parsed.length === 0) {
+      console.warn(`⚠️ ${phase.toUpperCase()}: AI returned EMPTY array - no questions generated`, {
+        phase,
+        rawOutput: JSON.stringify(rawOutput).substring(0, 500),
+      });
     }
 
     const questions: GeneratedQuestion[] = parsed.map((item: any, index: number) => ({
@@ -38,12 +50,22 @@ const validateQuestionOutput = (rawOutput: any, phase: string): QuestionGenerati
       question_order: index + 1
     }));
 
+    console.log(`✅ ${phase.toUpperCase()}: Validated ${questions.length} questions`, {
+      phase,
+      questionCount: questions.length,
+      questionIds: questions.map(q => q.question_id),
+    });
+
     return {
       questions,
       success: true
     };
   } catch (error) {
-    console.error("Failed to parse question generation output:", error);
+    console.error(`❌ ${phase.toUpperCase()}: Failed to parse question generation output`, {
+      phase,
+      error: error.message,
+      rawOutput: JSON.stringify(rawOutput).substring(0, 500),
+    });
     return {
       questions: [],
       success: false

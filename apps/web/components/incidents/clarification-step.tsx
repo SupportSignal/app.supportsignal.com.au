@@ -475,8 +475,8 @@ export function ClarificationStep({
             {/* Fallback manual generation - only show after some time or on error */}
             <div className="pt-4 border-t border-gray-200">
               <p className="text-xs text-gray-500 mb-3">Taking longer than expected?</p>
-              <Button 
-                onClick={handleGenerateQuestions}
+              <Button
+                onClick={() => handleGenerateQuestions()}
                 disabled={isGenerating || !incident?.narrative}
                 variant="outline"
                 size="sm"
