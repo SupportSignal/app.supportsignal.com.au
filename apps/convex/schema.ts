@@ -1,6 +1,7 @@
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
+// CI/CD Pipeline Test: Backend auto-deployment verification (2025-10-24)
 export default defineSchema({
   // Multi-tenant companies table for SupportSignal
   companies: defineTable({
