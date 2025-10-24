@@ -18,7 +18,7 @@ import { Input } from '@starter/ui/input';
 import { Label } from '@starter/ui/label';
 import { Alert, AlertDescription } from '@starter/ui/alert';
 import { toast } from 'sonner';
-import { Loader2, AlertTriangle, Trash2 } from 'lucide-react';
+import { Loader2, AlertTriangle, Trash2, Copy } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface CompanyCleanupDialogProps {
@@ -89,7 +89,13 @@ export function CompanyCleanupDialog({
     onClose();
   };
 
+  const handleAutoFill = () => {
+    setConfirmationText(companyName);
+    toast.success('Auto-filled confirmation text');
+  };
+
   const isConfirmationValid = confirmationText === companyName;
+  const isDevelopment = process.env.NODE_ENV === 'development';
 
   return (
     <AlertDialog open={isOpen} onOpenChange={handleClose}>
@@ -180,9 +186,25 @@ export function CompanyCleanupDialog({
 
               {/* Confirmation Input */}
               <div className="space-y-2 pt-4">
-                <Label htmlFor="confirmation">
-                  Type <strong>{companyName}</strong> to confirm deletion:
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="confirmation">
+                    Type <strong>{companyName}</strong> to confirm deletion:
+                  </Label>
+                  {isDevelopment && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleAutoFill}
+                      disabled={isDeleting}
+                      className="h-7 text-xs flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
+                      title="Auto-fill confirmation (dev only)"
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                      Auto-fill
+                    </Button>
+                  )}
+                </div>
                 <Input
                   id="confirmation"
                   value={confirmationText}

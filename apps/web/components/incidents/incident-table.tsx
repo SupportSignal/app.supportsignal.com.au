@@ -307,7 +307,7 @@ export function IncidentTable({
                         <div className="text-sm text-muted-foreground space-y-0.5">
                           {incident.site_name && (
                             <div className="flex items-center gap-1">
-                              <span className="font-medium text-foreground/80">📍 {incident.site_name}</span>
+                              <span className="font-medium text-foreground/80">{incident.site_name}</span>
                             </div>
                           )}
                           {incident.location && (

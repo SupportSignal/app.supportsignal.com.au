@@ -277,19 +277,53 @@ export function IncidentMetadataForm({
     };
   }, []);
 
+  // Monitor site_id changes in formData
+  useEffect(() => {
+    console.log('📊 FORMDATA SITE_ID CHANGED', {
+      currentSiteId: formData.site_id,
+      timestamp: new Date().toISOString(),
+    });
+  }, [formData.site_id]);
+
   // Handle participant selection
   // Story 7.6: Smart auto-population - auto-fill site from participant's site_id
   const handleParticipantSelect = (participant: Participant | null) => {
+    console.log('🔍 PARTICIPANT SELECTION EVENT', {
+      hasParticipant: !!participant,
+      participant: participant ? {
+        id: participant._id,
+        name: `${participant.first_name} ${participant.last_name}`,
+        site_id: participant.site_id,
+        hasSiteId: !!participant.site_id,
+      } : null,
+      currentFormSiteId: formData.site_id,
+    });
+
     setSelectedParticipant(participant);
     if (participant) {
+      const newSiteId = participant.site_id || formData.site_id;
+
+      console.log('🔄 UPDATING FORM DATA', {
+        previousSiteId: formData.site_id,
+        participantSiteId: participant.site_id,
+        newSiteId: newSiteId,
+        willAutoPopulate: !!participant.site_id,
+      });
+
       const updatedFormData = {
         ...formData,
         participant_id: participant._id,
         participant_name: `${participant.first_name} ${participant.last_name}`,
         // Story 7.6: Auto-populate site from participant's default site
-        site_id: participant.site_id || formData.site_id, // Keep current if participant has no site
+        site_id: newSiteId, // Keep current if participant has no site
       };
       setFormData(updatedFormData);
+
+      console.log('✅ FORM DATA UPDATED', {
+        newFormData: updatedFormData,
+        siteIdSet: updatedFormData.site_id,
+      });
+
       // Clear participant errors when valid selection is made
       setErrors(prev => ({ ...prev, participant_name: undefined }));
 
@@ -300,6 +334,8 @@ export function IncidentMetadataForm({
           participantName: `${participant.first_name} ${participant.last_name}`,
           siteId: participant.site_id,
         });
+      } else {
+        console.log('⚠️ NO AUTO-POPULATION - Participant has no site_id');
       }
     } else {
       setFormData(prev => ({
@@ -320,8 +356,27 @@ export function IncidentMetadataForm({
       console.log('   Parsed as Date:', new Date(value));
       console.log('   Date toString():', new Date(value).toString());
     }
-    
-    setFormData(prev => ({ ...prev, [field]: value }));
+
+    if (field === 'site_id') {
+      console.log('🏢 SITE FIELD CHANGE EVENT', {
+        field,
+        newValue: value,
+        valueType: typeof value,
+        previousValue: formData.site_id,
+      });
+    }
+
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      if (field === 'site_id') {
+        console.log('🔄 SITE FORMDATA UPDATE', {
+          previousSiteId: prev.site_id,
+          newSiteId: value,
+          updatedFormData: updated,
+        });
+      }
+      return updated;
+    });
     // Clear errors for the field being edited
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
@@ -579,6 +634,40 @@ export function IncidentMetadataForm({
             )}
           </div>
 
+          {/* Event Date/Time */}
+          <div className="space-y-2">
+            <Label htmlFor="event_date_time" className={cn(
+              "text-sm font-medium",
+              viewport.isMobile ? "text-base" : ""
+            )}>
+              Event Date & Time <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="event_date_time"
+              type="datetime-local"
+              inputMode="none" // Prevents custom keyboard on mobile for date picker
+              value={formData.event_date_time}
+              onChange={(e) => handleFieldChange('event_date_time', e.target.value)}
+              className={cn(
+                errors.event_date_time ? 'border-red-500' : '',
+                viewport.isMobile ? 'h-12 text-base' : ''
+              )}
+            />
+            <p className={cn(
+              "text-xs text-gray-500",
+              viewport.isMobile ? "text-sm" : ""
+            )}>
+              When did the incident occur? Defaults to current date and time.
+            </p>
+            {errors.event_date_time && (
+              <Alert>
+                <AlertDescription className="text-red-600">
+                  {errors.event_date_time}
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+
           {/* Site Selection - Story 7.6 */}
           <div className="space-y-2">
             <Label htmlFor="site_id" className={cn(
@@ -619,40 +708,6 @@ export function IncidentMetadataForm({
               <Alert>
                 <AlertDescription className="text-red-600">
                   {errors.site_id}
-                </AlertDescription>
-              </Alert>
-            )}
-          </div>
-
-          {/* Event Date/Time */}
-          <div className="space-y-2">
-            <Label htmlFor="event_date_time" className={cn(
-              "text-sm font-medium",
-              viewport.isMobile ? "text-base" : ""
-            )}>
-              Event Date & Time <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="event_date_time"
-              type="datetime-local"
-              inputMode="none" // Prevents custom keyboard on mobile for date picker
-              value={formData.event_date_time}
-              onChange={(e) => handleFieldChange('event_date_time', e.target.value)}
-              className={cn(
-                errors.event_date_time ? 'border-red-500' : '',
-                viewport.isMobile ? 'h-12 text-base' : ''
-              )}
-            />
-            <p className={cn(
-              "text-xs text-gray-500",
-              viewport.isMobile ? "text-sm" : ""
-            )}>
-              When did the incident occur? Defaults to current date and time.
-            </p>
-            {errors.event_date_time && (
-              <Alert>
-                <AlertDescription className="text-red-600">
-                  {errors.event_date_time}
                 </AlertDescription>
               </Alert>
             )}

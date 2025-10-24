@@ -103,6 +103,7 @@ export const listParticipants = query({
           support_level: p.support_level,
           care_notes: p.care_notes,
           status: p.status,
+          site_id: p.site_id, // Story 7.6: Include site_id for auto-population
           created_at: p.created_at,
           updated_at: p.updated_at,
         })),

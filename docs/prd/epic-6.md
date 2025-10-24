@@ -1,6 +1,6 @@
 # Epic 6: AI Prompt Management System
 
-> **Quick Navigation:** [6.1](#story-61-core-ai-prompt-management-foundation-) · [6.2](#story-62-phase-specific-question-generation-prompts) · [6.3](#story-63-developer-prompt-testing--interpolation-interface) · [6.4](#story-64-phase-specific-narrative-enhancement-with-auto-trigger) · [6.5](#story-65-advanced-prompt-management--analytics-future) · [6.6](#story-66-multi-tenant-prompt-management-future) · [6.7](#story-67-prompt-version-management-future)
+> **Quick Navigation:** [6.1](#story-61-core-ai-prompt-management-foundation-) · [6.2](#story-62-phase-specific-question-generation-prompts) · [6.3](#story-63-developer-prompt-testing--interpolation-interface) · [6.4](#story-64-phase-specific-narrative-enhancement-with-auto-trigger) · [6.5](#story-65-llm-model-management-upgrade) · [6.6](#story-66-advanced-prompt-management--analytics-future) · [6.7](#story-67-multi-tenant-prompt-management-future) · [6.8](#story-68-prompt-version-management-future)
 
 ## Epic Overview
 
@@ -37,10 +37,11 @@ Epic 6 establishes the foundational infrastructure for AI prompt management that
 - [Story 6.1: Core AI Prompt Management Foundation](#story-61-core-ai-prompt-management-foundation-) - ✅ **Complete** (Critical)
 - [Story 6.2: Phase-Specific Question Generation Prompts](#story-62-phase-specific-question-generation-prompts) - ✅ **Complete** (High)
 - [Story 6.3: Developer Prompt Testing & Interpolation Interface](#story-63-developer-prompt-testing--interpolation-interface) - ✅ **Complete** (Medium)
-- [Story 6.4: Phase-Specific Narrative Enhancement with Auto-Trigger](#story-64-phase-specific-narrative-enhancement-with-auto-trigger) - 📋 **Planned** (High)
-- [Story 6.5: Advanced Prompt Management & Analytics](#story-65-advanced-prompt-management--analytics-future) - 🔮 **Future** (Low)
-- [Story 6.6: Multi-Tenant Prompt Management](#story-66-multi-tenant-prompt-management-future) - 🔮 **Future** (Low)
-- [Story 6.7: Prompt Version Management](#story-67-prompt-version-management-future) - 🔮 **Future** (Low)
+- [Story 6.4: Phase-Specific Narrative Enhancement with Auto-Trigger](#story-64-phase-specific-narrative-enhancement-with-auto-trigger) - ✅ **Complete** (High)
+- [Story 6.5: LLM Model Management Upgrade](#story-65-llm-model-management-upgrade) - 📋 **Approved** (Medium)
+- [Story 6.6: Advanced Prompt Management & Analytics](#story-66-advanced-prompt-management--analytics-future) - 🔮 **Future** (Low)
+- [Story 6.7: Multi-Tenant Prompt Management](#story-67-multi-tenant-prompt-management-future) - 🔮 **Future** (Low)
+- [Story 6.8: Prompt Version Management](#story-68-prompt-version-management-future) - 🔮 **Future** (Low)
 
 ---
 
@@ -194,7 +195,7 @@ Comprehensive AI prompt template management system including creation, editing, 
 
 ### Story 6.4: Phase-Specific Narrative Enhancement with Auto-Trigger
 
-**Status**: **PLANNED** 📋
+**Status**: **COMPLETE** ✅ (2025-10-22)
 **Priority**: HIGH
 **Estimated Effort**: 3-4 days
 **Dependencies**: Stories 6.1-6.3 (Core prompt management, phase-specific prompts, developer tools)
@@ -259,7 +260,50 @@ Comprehensive AI prompt template management system including creation, editing, 
 
 ---
 
-### Story 6.5: Advanced Prompt Management & Analytics (Future)
+### Story 6.5: LLM Model Management Upgrade
+
+**Status**: **APPROVED** 📋
+**Priority**: MEDIUM
+**Estimated Effort**: 1-2 days
+**Dependencies**: Stories 6.1-6.4 (Core prompt management, phase-specific prompts, developer tools, narrative enhancement)
+
+#### Requirements
+Upgrade the default LLM model to a higher quality option and implement comprehensive model management capabilities, enabling system administrators to select optimal AI models per prompt while maintaining cost-effective flexibility.
+
+**Key Features**:
+- **Default Model Upgrade**: Change default from `gpt-4o-mini` to `gpt-5` for best quality
+- **Model Selection UI**: Dropdown interface for choosing AI models per prompt
+- **Required Field**: Make `ai_model` required in ai_prompts schema (with migration)
+- **Bulk Assignment**: Select multiple prompts and assign models in bulk
+- **Cost Visibility**: Display cost estimates and model capabilities in UI
+- **Schema Migration**: Populate existing prompts with default model before making field required
+
+**Business Value**:
+- **Quality Improvement**: Best-in-class AI models for NDIS-compliant narratives
+- **Flexibility**: Choose cost-effective models for non-critical use cases
+- **Cost Control**: Visibility into model costs enables informed decisions
+- **Production Ready**: Required field validation prevents prompts without models
+
+#### Acceptance Criteria
+- [x] **Default Model Upgrade**: Change default LLM model from `gpt-4o-mini` to `gpt-5`
+- [x] **Environment Configuration**: Update `LLM_MODEL` environment variable to new default
+- [x] **Schema Migration**: Populate all existing prompts with default model where `ai_model` is NULL
+- [x] **Required Field**: Change `ai_prompts.ai_model` from optional to required in schema
+- [x] **Model Dropdown**: Add model selection dropdown to prompt editor UI
+- [x] **Model Display**: Show current model in prompt listing/management interface
+- [x] **Bulk Model Assignment**: Select multiple prompts and assign a new model in bulk
+- [x] **Validation**: Ensure all new prompts have a model selected (required field validation)
+
+**Implementation Summary**:
+- Environment updates: `~/.env-configs/app.supportsignal.com.au.env` (LLM_MODEL configuration)
+- Migration script: `apps/convex/migrations/populatePromptModels.ts` (backfill existing prompts)
+- Schema change: `apps/convex/schema.ts` (make ai_model required)
+- UI components: Model selector dropdown, bulk assignment interface
+- Cost visibility: Display model costs and capabilities in selection UI
+
+---
+
+### Story 6.6: Advanced Prompt Management & Analytics (Future)
 
 **Status**: **FUTURE** 📋
 **Priority**: LOW
@@ -290,12 +334,12 @@ Enhance the prompt management system with advanced capabilities including A/B te
 
 Additional enhancements could include:
 
-### Story 6.6: Multi-Tenant Prompt Management (Future)
+### Story 6.7: Multi-Tenant Prompt Management (Future)
 - Company-specific prompt customizations
 - Template inheritance and override systems
 - Bulk template operations
 
-### Story 6.7: Prompt Version Management (Future)
+### Story 6.8: Prompt Version Management (Future)
 - Advanced versioning with rollback capabilities
 - Change approval workflows
 - Template change impact analysis
@@ -304,15 +348,16 @@ Additional enhancements could include:
 
 ## Epic Completion Status
 
-### Current State: **CORE STORIES COMPLETE, ENHANCEMENT IN PROGRESS** 🚧
+### Current State: **CORE STORIES COMPLETE, MODEL MANAGEMENT READY** 🚧
 
 **Story 6.1**: ✅ Complete - Core AI prompt management foundation
 **Story 6.2**: ✅ Complete - Phase-specific question generation prompts
 **Story 6.3**: ✅ Complete - Developer prompt testing & interpolation interface
-**Story 6.4**: 📋 Planned - Phase-specific narrative enhancement with auto-trigger
-**Story 6.5**: 📋 Future - Advanced analytics and management capabilities
-**Story 6.6**: 📋 Future - Multi-tenant prompt management
-**Story 6.7**: 📋 Future - Prompt version management
+**Story 6.4**: ✅ Complete - Phase-specific narrative enhancement with auto-trigger
+**Story 6.5**: 📋 Approved - LLM model management upgrade
+**Story 6.6**: 📋 Future - Advanced analytics and management capabilities
+**Story 6.7**: 📋 Future - Multi-tenant prompt management
+**Story 6.8**: 📋 Future - Prompt version management
 
 **Epic 6 Achievement Summary**:
 - ✅ **System Administrator Control**: Full prompt template management

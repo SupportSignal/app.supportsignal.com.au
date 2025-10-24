@@ -22,7 +22,8 @@ export interface Participant {
   // Service information
   support_level: "high" | "medium" | "low";
   care_notes?: string;
-  
+  site_id?: Id<"sites">; // Story 7.6: Default site for incident auto-population
+
   // Status
   status: "active" | "inactive" | "discharged";
   
