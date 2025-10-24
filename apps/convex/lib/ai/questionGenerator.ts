@@ -118,6 +118,18 @@ const generateQuestionsWithTemplate = async (
       correlationId,
     });
 
+    // CRITICAL DEBUG: Log the actual prompt being sent for post_event
+    if (phase === 'post_event') {
+      console.error("🚨 POST_EVENT PROMPT BEING SENT TO AI:", {
+        phase,
+        templateName,
+        promptPreview: interpolatedPrompt.substring(0, 500),
+        promptEnd: interpolatedPrompt.substring(interpolatedPrompt.length - 500),
+        fullPromptLength: interpolatedPrompt.length,
+        correlationId,
+      });
+    }
+
     // Call real AI service with processed prompt
     console.log("🤖 CALLING AI SERVICE", {
       promptLength: interpolatedPrompt.length,
