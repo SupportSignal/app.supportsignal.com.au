@@ -426,6 +426,7 @@ export const generateRandomIncidentMetadata = mutation({
       const randomParticipant = participants[Math.floor(Math.random() * participants.length)];
       const participantName = `${randomParticipant.first_name} ${randomParticipant.last_name}`;
       const participantId = randomParticipant._id;
+      const participantSiteId = randomParticipant.site_id; // Story 7.6: Include site_id from participant
       const randomLocation = sampleLocations[Math.floor(Math.random() * sampleLocations.length)];
       const randomDate = generateRandomDate();
 
@@ -439,6 +440,9 @@ export const generateRandomIncidentMetadata = mutation({
       if (!excludeFields.includes('participant_name')) {
         result.participant_name = participantName;
       }
+      if (!excludeFields.includes('site_id') && participantSiteId) {
+        result.site_id = participantSiteId; // Story 7.6: Auto-populate site from participant
+      }
       if (!excludeFields.includes('location')) {
         result.location = randomLocation;
       }
@@ -450,6 +454,7 @@ export const generateRandomIncidentMetadata = mutation({
         companyId: user.company_id,
         generatedBy: user._id,
         participantSelected: participantName,
+        participantSiteId: participantSiteId, // Story 7.6: Log site_id for verification
         hasRealParticipants: participants.length > 0,
         location: randomLocation,
         date: randomDate,
@@ -466,6 +471,7 @@ export const generateRandomIncidentMetadata = mutation({
             id: participantId,
             name: participantName,
             ndis_number: participantId ? participants.find(p => p._id === participantId)?.ndis_number : 'N/A (Sample)',
+            site_id: participantSiteId, // Story 7.6: Include site_id in metadata for debugging
           },
           location: randomLocation,
           date: randomDate,
