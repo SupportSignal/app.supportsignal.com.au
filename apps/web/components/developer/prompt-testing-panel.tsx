@@ -66,6 +66,7 @@ import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { Id } from '../../../convex/_generated/dataModel';
 import { toast } from 'sonner';
+import { ModelSelector } from '@/components/admin/model-selector';
 
 interface PromptTestingPanelProps {
   user: any;
@@ -104,14 +105,18 @@ export function PromptTestingPanel({
   const [isLoading, setIsLoading] = useState(false);
   const [editedTemplate, setEditedTemplate] = useState<string>('');
   const [hasTemplateChanges, setHasTemplateChanges] = useState(false);
-  
+  const [editedModel, setEditedModel] = useState<string>('');
+  const [hasModelChanges, setHasModelChanges] = useState(false);
+
   // Copy button states for visual feedback
   const [templateCopyStatus, setTemplateCopyStatus] = useState<'idle' | 'copying' | 'success' | 'error'>('idle');
   const [resolvedCopyStatus, setResolvedCopyStatus] = useState<'idle' | 'copying' | 'success' | 'error'>('idle');
   const [isSaving, setIsSaving] = useState(false);
+  const [isSavingModel, setIsSavingModel] = useState(false);
 
-  // Mutation for updating prompt template
+  // Mutations for updating prompts
   const updatePromptTemplate = useMutation(api.promptManager.updatePromptTemplate);
+  const updatePromptModel = useMutation(api.promptManager.updatePromptModel);
 
   // Check developer access using shared logic - MOVED BEFORE EARLY RETURN
   const hasAccess = useMemo(() => hasDeveloperAccess(user), [user]);
@@ -241,6 +246,13 @@ export function PromptTestingPanel({
     }
   }, [currentPrompt, hasTemplateChanges]);
 
+  // Sync edited model when prompt changes
+  useEffect(() => {
+    if (currentPrompt && !hasModelChanges) {
+      setEditedModel(currentPrompt.ai_model || '');
+    }
+  }, [currentPrompt, hasModelChanges]);
+
   // Don't render if user doesn't have access
   if (!user || !hasAccess) {
     return null;
@@ -274,6 +286,48 @@ export function PromptTestingPanel({
   const resetTemplate = () => {
     setEditedTemplate(currentPrompt?.prompt_template || '');
     setHasTemplateChanges(false);
+  };
+
+  // Handle model selection
+  const handleModelChange = (newModel: string) => {
+    setEditedModel(newModel);
+    setHasModelChanges(newModel !== (currentPrompt?.ai_model || ''));
+  };
+
+  // Reset model to original
+  const resetModel = () => {
+    setEditedModel(currentPrompt?.ai_model || '');
+    setHasModelChanges(false);
+  };
+
+  // Save model changes to production database
+  const saveModelChanges = async () => {
+    if (!currentPrompt || !hasModelChanges || !user?.sessionToken || !selectedPromptName) {
+      return;
+    }
+
+    setIsSavingModel(true);
+    try {
+      const result = await updatePromptModel({
+        sessionToken: user.sessionToken,
+        prompt_name: selectedPromptName,
+        ai_model: editedModel,
+        subsystem: "incidents",
+      });
+
+      if (result.success) {
+        setHasModelChanges(false);
+        toast.success(`Model updated to "${editedModel}" for prompt "${selectedPromptName}"`);
+        console.log('✅ Model updated:', result);
+      } else {
+        throw new Error("Update failed");
+      }
+    } catch (error) {
+      console.error('Failed to save model:', error);
+      toast.error(`Failed to save model: ${error.message || 'Unknown error'}`);
+    } finally {
+      setIsSavingModel(false);
+    }
   };
 
   // Save template changes to production database
@@ -570,12 +624,45 @@ export function PromptTestingPanel({
                       {currentTemplate.length} chars • {currentTemplate.split('\n').length} lines
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
-                    <span>Model: {currentPrompt.ai_model || 'default'}</span>
-                    <span>•</span>
-                    <span>Max Tokens: {currentPrompt.max_tokens || 'default'}</span>
-                    <span>•</span>
-                    <span>Temp: {currentPrompt.temperature || 'default'}</span>
+                  {/* Model Selector with Save/Reset */}
+                  <div className="mt-3 space-y-2">
+                    <div className="flex items-start gap-2">
+                      <div className="flex-1">
+                        <ModelSelector
+                          value={editedModel || currentPrompt.ai_model || ''}
+                          onChange={handleModelChange}
+                          label="AI Model"
+                          showDescription={false}
+                          className="w-full"
+                        />
+                      </div>
+                      {hasModelChanges && (
+                        <div className="flex items-center gap-1 mt-5">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={saveModelChanges}
+                            disabled={isSavingModel}
+                            className="h-6 text-xs text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                          >
+                            {isSavingModel ? 'Saving...' : 'Save'}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={resetModel}
+                            className="h-6 text-xs text-gray-600 hover:bg-gray-100"
+                          >
+                            Reset
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <span>Max Tokens: {currentPrompt.max_tokens || 'default'}</span>
+                      <span>•</span>
+                      <span>Temp: {currentPrompt.temperature || 'default'}</span>
+                    </div>
                   </div>
                 </div>
               )}

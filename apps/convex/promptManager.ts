@@ -1025,4 +1025,61 @@ export const updatePromptTemplate = mutation({
   },
 });
 
+// Update AI model for a prompt (Story 6.5: Model Management)
+export const updatePromptModel = mutation({
+  args: {
+    sessionToken: v.string(),
+    prompt_name: v.string(),
+    ai_model: v.string(),
+    subsystem: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // Authenticate user with developer permissions
+    const { user } = await requirePermission(
+      ctx,
+      args.sessionToken,
+      PERMISSIONS.SAMPLE_DATA, // Developer feature requires sample_data permission
+      { errorMessage: 'Developer permissions required to update prompt models' }
+    );
+
+    // Find the active prompt to update
+    const prompt = await ctx.db
+      .query("ai_prompts")
+      .withIndex("by_name", (q) => q.eq("prompt_name", args.prompt_name))
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("is_active"), true),
+          args.subsystem ? q.eq(q.field("subsystem"), args.subsystem) : true
+        )
+      )
+      .order("desc")
+      .first();
+
+    if (!prompt) {
+      throw new ConvexError(`Active prompt not found: ${args.prompt_name}`);
+    }
+
+    // Update the AI model
+    await ctx.db.patch(prompt._id, {
+      ai_model: args.ai_model,
+    });
+
+    console.log("🤖 PROMPT MODEL UPDATED", {
+      prompt_name: args.prompt_name,
+      prompt_id: prompt._id,
+      old_model: prompt.ai_model,
+      new_model: args.ai_model,
+      updated_by: user._id,
+    });
+
+    return {
+      success: true,
+      prompt_id: prompt._id,
+      prompt_name: args.prompt_name,
+      old_model: prompt.ai_model,
+      new_model: args.ai_model,
+    };
+  },
+});
+
 // Developer scope system removed - direct production prompt editing now supported

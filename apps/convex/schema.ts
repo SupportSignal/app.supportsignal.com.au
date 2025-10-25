@@ -435,7 +435,7 @@ export default defineSchema({
     // Usage Context
     workflow_step: v.optional(v.string()), // Which workflow step uses this prompt
     subsystem: v.optional(v.string()), // "incidents", "chat", etc.
-    ai_model: v.optional(v.string()), // Recommended AI model
+    ai_model: v.string(), // Required AI model (populated by migration)
     max_tokens: v.optional(v.number()), // Token limit for responses
     temperature: v.optional(v.number()), // AI temperature setting
     
