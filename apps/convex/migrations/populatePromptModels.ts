@@ -58,7 +58,7 @@ export default mutation({
         console.log(`✅ Updated prompt: ${prompt.prompt_name} (${prompt._id}) with model ${defaultModel}`);
       } catch (error) {
         failedCount++;
-        const errorMsg = `Failed to update prompt ${prompt.prompt_name} (${prompt._id}): ${error.message}`;
+        const errorMsg = `Failed to update prompt ${prompt.prompt_name} (${prompt._id}): ${error instanceof Error ? error.message : String(error)}`;
         console.error(`❌ ${errorMsg}`);
         errors.push(errorMsg);
       }
