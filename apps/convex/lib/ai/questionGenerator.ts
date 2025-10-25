@@ -118,32 +118,11 @@ const generateQuestionsWithTemplate = async (
       correlationId,
     });
 
-    // CRITICAL DEBUG: Log the actual prompt being sent for post_event
-    if (phase === 'post_event') {
-      console.error("🚨 POST_EVENT PROMPT BEING SENT TO AI:", {
-        phase,
-        templateName,
-        promptPreview: interpolatedPrompt.substring(0, 500),
-        promptEnd: interpolatedPrompt.substring(interpolatedPrompt.length - 500),
-        fullPromptLength: interpolatedPrompt.length,
-        correlationId,
-      });
-    }
-
     // Call real AI service with processed prompt
     console.log("🤖 CALLING AI SERVICE", {
       promptLength: interpolatedPrompt.length,
       model: prompt.ai_model || 'openai/gpt-4o-mini',
       temperature: prompt.temperature || 0.7,
-      correlationId,
-    });
-
-    // Log template variables for debugging
-    console.log(`🔍 TEMPLATE VARIABLES FOR ${phase.toUpperCase()}`, {
-      phase,
-      templateName,
-      variables: variables,
-      variableKeys: Object.keys(variables),
       correlationId,
     });
 
