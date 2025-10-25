@@ -189,10 +189,11 @@ export const seedPromptTemplates = mutation({
 
       if (!existingPrompt) {
         // Create new prompt from default template with sensible defaults
+        const config = getConfig();
         const promptId = await ctx.db.insert("ai_prompts", {
           ...defaultPrompt,
           prompt_version: (defaultPrompt as any).prompt_version || "v1.0.0",
-          ai_model: (defaultPrompt as any).ai_model || undefined, // Use system configuration by default
+          ai_model: (defaultPrompt as any).ai_model || config.llm.defaultModel, // Use system configuration default
           max_tokens: (defaultPrompt as any).max_tokens || 2000,
           temperature: (defaultPrompt as any).temperature || 0.3,
           is_active: (defaultPrompt as any).is_active !== false, // Default to true unless explicitly false
@@ -237,10 +238,11 @@ export const seedPromptTemplatesInternal = internalMutation({
 
       if (!existingPrompt) {
         // Create new prompt from default template with sensible defaults
+        const config = getConfig();
         const promptId = await ctx.db.insert("ai_prompts", {
           ...defaultPrompt,
           prompt_version: (defaultPrompt as any).prompt_version || "v1.0.0",
-          ai_model: (defaultPrompt as any).ai_model || undefined,
+          ai_model: (defaultPrompt as any).ai_model || config.llm.defaultModel, // Use system configuration default
           max_tokens: (defaultPrompt as any).max_tokens || 2000,
           temperature: (defaultPrompt as any).temperature || 0.3,
           is_active: (defaultPrompt as any).is_active !== false,
@@ -940,13 +942,14 @@ export const resetAndSeedPrompts = mutation({
     // Step 2: Seed new prompts
     const promptIds: string[] = [];
     const now = Date.now();
+    const config = getConfig();
 
     // Seed each default template
     for (const defaultPrompt of DEFAULT_PROMPTS) {
       const promptId = await ctx.db.insert("ai_prompts", {
         ...defaultPrompt,
         prompt_version: (defaultPrompt as any).prompt_version || "v1.0.0",
-        ai_model: (defaultPrompt as any).ai_model || undefined,
+        ai_model: (defaultPrompt as any).ai_model || config.llm.defaultModel, // Use system configuration default
         max_tokens: (defaultPrompt as any).max_tokens || 2000,
         temperature: (defaultPrompt as any).temperature || 0.3,
         is_active: (defaultPrompt as any).is_active !== false,
