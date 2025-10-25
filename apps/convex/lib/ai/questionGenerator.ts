@@ -121,7 +121,7 @@ const generateQuestionsWithTemplate = async (
     // Call real AI service with processed prompt
     console.log("🤖 CALLING AI SERVICE", {
       promptLength: interpolatedPrompt.length,
-      model: prompt.ai_model || 'openai/gpt-4o-mini',
+      model: prompt.ai_model || 'openai/gpt-5',
       temperature: prompt.temperature || 0.7,
       correlationId,
     });
@@ -129,7 +129,7 @@ const generateQuestionsWithTemplate = async (
     // Prepare AI request
     const aiRequest: AIRequest = {
       correlationId,
-      model: prompt.ai_model || 'openai/gpt-4o-mini',
+      model: prompt.ai_model || 'openai/gpt-5',
       prompt: interpolatedPrompt,
       temperature: prompt.temperature || 0.7,
       maxTokens: prompt.max_tokens || 1000,
