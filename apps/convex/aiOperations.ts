@@ -8,17 +8,18 @@ import { action } from "./_generated/server";
 import { v } from "convex/values";
 import { ConvexError } from "convex/values";
 import { api } from "./_generated/api";
-import { 
-  generateCorrelationId, 
-  RateLimiter, 
+import {
+  generateCorrelationId,
+  RateLimiter,
   CostTracker,
   CircuitBreaker,
   FallbackHandler,
   AIRequest,
-  AIResponse 
+  AIResponse
 } from "./aiService";
 import { aiManager } from "./aiMultiProvider";
 import { processTemplate } from "./aiPromptTemplates";
+import { MockAnswersResponseSchema, zodToJsonSchema } from "./aiResponseSchemas";
 
 // Initialize rate limiter, cost tracker, and circuit breaker
 const rateLimiter = new RateLimiter(60000, 20); // 20 requests per minute
@@ -118,7 +119,7 @@ export const generateClarificationQuestions = action({
         model: processedPrompt.model,
         prompt: processedPrompt.processedTemplate,
         temperature: processedPrompt.temperature || 0.7,
-        maxTokens: processedPrompt.maxTokens || 1000,
+        maxTokens: processedPrompt.maxTokens || 2000, // Increased for structured outputs (5 questions with context)
         metadata: {
           operation,
           incident_id: args.incident_id,
@@ -398,7 +399,7 @@ export const enhanceNarrativeContent = action({
         model: processedPrompt.model,
         prompt: processedPrompt.processedTemplate,
         temperature: processedPrompt.temperature || 0.3, // Lower temperature for consistent formatting
-        maxTokens: processedPrompt.maxTokens || 800,
+        maxTokens: processedPrompt.maxTokens || 1500, // Increased for detailed narrative enhancement
         metadata: {
           operation,
           incident_id: args.incident_id,
@@ -586,7 +587,7 @@ export const analyzeContributingConditions = action({
         model: processedPrompt.model,
         prompt: processedPrompt.processedTemplate,
         temperature: processedPrompt.temperature || 0.5,
-        maxTokens: processedPrompt.maxTokens || 1200,
+        maxTokens: processedPrompt.maxTokens || 2000, // Increased for comprehensive analysis output
         metadata: {
           operation,
           incident_id: args.incident_id,
@@ -696,9 +697,20 @@ export const generateMockAnswers = action({
     user_id: v.optional(v.id("users")),
   },
   handler: async (ctx, args): Promise<any> => {
+    console.log("🚀 generateMockAnswers CALLED with args:", {
+      participant_name: args.participant_name,
+      reporter_name: args.reporter_name,
+      location: args.location,
+      phase: args.phase,
+      phase_narrative_length: args.phase_narrative?.length,
+      questions_length: args.questions?.length,
+      incident_id: args.incident_id,
+      user_id: args.user_id,
+    });
+
     const correlationId = generateCorrelationId();
     const operation = "generateMockAnswers";
-    
+
     try {
       // Rate limiting check
       const rateLimitKey = args.user_id || 'anonymous';
@@ -719,19 +731,21 @@ export const generateMockAnswers = action({
         },
       });
 
-      // Prepare AI request
+      // Prepare AI request with structured outputs (Story 6.5)
       const aiRequest: AIRequest = {
         correlationId,
         model: processedPrompt.model,
         prompt: processedPrompt.processedTemplate,
         temperature: processedPrompt.temperature || 0.8, // Higher temperature for varied mock content
-        maxTokens: processedPrompt.maxTokens || 1000,
+        maxTokens: processedPrompt.maxTokens || 5000, // Increased to prevent truncation with gpt-5 detailed responses (Story 6.5)
         metadata: {
           operation,
           incident_id: args.incident_id,
           user_id: args.user_id,
           phase: args.phase,
         },
+        // Add structured output schema to guarantee response format
+        outputSchema: zodToJsonSchema(MockAnswersResponseSchema, 'mock_answers'),
       };
 
       // Send request through multi-provider manager
@@ -772,7 +786,7 @@ export const generateMockAnswers = action({
         // Questions count unknown
       }
 
-      // Format response according to n8n workflow specification  
+      // Format response according to n8n workflow specification
       const response = {
         mock_answers: {
           output: aiResponse.content.trim(),
@@ -783,11 +797,20 @@ export const generateMockAnswers = action({
           phase: args.phase,
           questions_answered: questionsAnswered,
           correlation_id: correlationId,
+          ai_model: aiResponse.model,
           processing_time_ms: aiResponse.processingTimeMs,
           tokens_used: aiResponse.tokensUsed,
           cost: aiResponse.cost,
         },
       };
+
+      console.log("✅ generateMockAnswers RETURNING:", {
+        hasMockAnswers: !!response.mock_answers,
+        hasOutput: !!response.mock_answers?.output,
+        outputLength: response.mock_answers?.output?.length,
+        outputPreview: response.mock_answers?.output?.substring(0, 200),
+        metadataStatus: response.metadata.status,
+      });
 
       return response;
 

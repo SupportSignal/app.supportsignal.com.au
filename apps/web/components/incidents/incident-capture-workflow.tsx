@@ -577,23 +577,44 @@ export function IncidentCaptureWorkflow() {
   };
 
   const handleFillQA = async () => {
+    console.log('🔴 FILL Q&A BUTTON CLICKED', {
+      timestamp: new Date().toISOString(),
+      hasUser: !!user,
+      hasSessionToken: !!user?.sessionToken,
+      incidentId,
+      currentStep
+    });
+
     if (!user?.sessionToken || !incidentId) {
-      console.warn('Cannot fill Q&A: missing session token or incident ID');
+      console.warn('❌ Cannot fill Q&A: missing session token or incident ID', {
+        hasUser: !!user,
+        hasSessionToken: !!user?.sessionToken,
+        incidentId
+      });
       return;
     }
 
     // Navigate to current Q&A step (3-6) or first Q&A step if not in range
     if (currentStep < 2 || currentStep > 5) {
+      console.log('⚠️ Navigating to first Q&A step (was on step:', currentStep, ')');
       setCurrentStep(2); // Go to first Q&A step (before_event)
     }
 
     try {
       const currentPhase = getCurrentPhase();
+      console.log('🚀 Calling generateMockAnswers', {
+        phase: currentPhase,
+        incidentId,
+        hasSessionToken: !!user.sessionToken
+      });
+
       const result = await generateMockAnswers({
         sessionToken: user.sessionToken,
         incident_id: incidentId,
         phase: currentPhase
       });
+
+      console.log('📥 generateMockAnswers returned:', result);
 
       if (result.success) {
         console.log('✅ Mock answers generated for phase:', currentPhase, result);

@@ -39,7 +39,7 @@ Epic 6 establishes the foundational infrastructure for AI prompt management that
 - [Story 6.3: Developer Prompt Testing & Interpolation Interface](#story-63-developer-prompt-testing--interpolation-interface) - ✅ **Complete** (Medium)
 - [Story 6.4: Phase-Specific Narrative Enhancement with Auto-Trigger](#story-64-phase-specific-narrative-enhancement-with-auto-trigger) - ✅ **Complete** (High)
 - [Story 6.5: LLM Model Management Upgrade](#story-65-llm-model-management-upgrade) - 📋 **Approved** (Medium)
-- [Story 6.6: Advanced Prompt Management & Analytics](#story-66-advanced-prompt-management--analytics-future) - 🔮 **Future** (Low)
+- [Story 6.6: Prompt Architecture & Schema Separation](#story-66-prompt-architecture--schema-separation-future) - 📋 **Planned** (Medium)
 - [Story 6.7: Multi-Tenant Prompt Management](#story-67-multi-tenant-prompt-management-future) - 🔮 **Future** (Low)
 - [Story 6.8: Prompt Version Management](#story-68-prompt-version-management-future) - 🔮 **Future** (Low)
 
@@ -293,6 +293,9 @@ Upgrade the default LLM model to a higher quality option and implement comprehen
 - [x] **Model Display**: Show current model in prompt listing/management interface
 - [x] **Bulk Model Assignment**: Select multiple prompts and assign a new model in bulk
 - [x] **Validation**: Ensure all new prompts have a model selected (required field validation)
+- [x] **Structured Outputs**: Implement OpenRouter JSON Schema for guaranteed response format compliance
+- [x] **Token Limit Optimization**: Increase token limits to support detailed responses from gpt-5
+- [x] **Response Validation**: Add Zod schema validation for all AI responses
 
 **Implementation Summary**:
 - Environment updates: `~/.env-configs/app.supportsignal.com.au.env` (LLM_MODEL configuration)
@@ -300,33 +303,61 @@ Upgrade the default LLM model to a higher quality option and implement comprehen
 - Schema change: `apps/convex/schema.ts` (make ai_model required)
 - UI components: Model selector dropdown, bulk assignment interface
 - Cost visibility: Display model costs and capabilities in selection UI
+- **Structured Outputs**: `apps/convex/aiResponseSchemas.ts` (Zod schemas + JSON Schema conversion)
+- **Token Limits**: Updated all AI operations in `apps/convex/aiOperations.ts`:
+  - generateClarificationQuestions: 2000 tokens
+  - generateMockAnswers: 5000 tokens (increased to 5000 to prevent truncation with gpt-5 detailed responses)
+  - enhanceNarrativeContent: 1500 tokens
+  - analyzeContributingConditions: 2000 tokens
+- **Prompt Templates**: Updated `apps/convex/promptManager.ts` DEFAULT_PROMPTS array for structured output format
+- **Cleanup**: Removed duplicate/unused `apps/convex/lib/prompts/default_prompts.ts` file
+- **Logging**: Added comprehensive logging to Fill Q&A button handler for debugging
+- **Documentation**: Created `docs/lessons-learned/ai-model-challenges-and-solutions.md` explaining model variability and token limits
+
+**Knowledge Capture Reference**:
+- [AI Token Limit Debugging Pattern](../patterns/ai-token-limit-debugging.md)
+- [Duplicate Configuration Systems Anti-Pattern](../patterns/duplicate-configuration-systems-antipattern.md)
+- [Logging Strategy for Debugging](../patterns/logging-strategy-for-debugging.md)
 
 ---
 
-### Story 6.6: Advanced Prompt Management & Analytics (Future)
+### Story 6.6: Prompt Architecture & Schema Separation (Future)
 
-**Status**: **FUTURE** 📋
-**Priority**: LOW
-**Estimated Effort**: 4-5 days
-**Dependencies**: Stories 6.2-6.4 (Phase-specific prompts, developer tools, auto-trigger)
+**Status**: **PLANNED** 📋
+**Priority**: MEDIUM
+**Estimated Effort**: 2-3 days
+**Dependencies**: Story 6.5 (Model management, structured outputs foundation)
 
 #### Requirements
-Enhance the prompt management system with advanced capabilities including A/B testing, performance analytics, testing sandbox, and workflow management for production optimization.
+Architectural improvements to separate prompt instructions from output schemas, enable production-to-code template synchronization, and support domain expert (Angela) workflow for continuous prompt improvement.
 
-**Advanced Functionality**:
-- **A/B Testing Framework**: Compare prompt effectiveness and automatically optimize
-- **Performance Analytics**: Track prompt effectiveness, response quality, and user satisfaction  
-- **Testing Sandbox**: Preview and test prompt changes before deployment
-- **Change Management**: Approval workflow for prompt modifications
-- **Rich Analytics Dashboard**: Real-time analytics on prompt performance metrics
-- **Advanced Version Control**: Full version history with rollback capabilities
+**Core Architectural Changes**:
+- **Schema Separation**: Split prompt templates into instructions (editable) and output schema (code-controlled)
+- **Structured Outputs**: OpenRouter JSON Schema integration for guaranteed response format compliance
+- **Template Sync Pattern**: Claude Code-based workflow to sync production improvements back to code templates
+- **Domain Expert Workflow**: Enable Angela to improve prompts in production without breaking schemas
+
+**Technical Implementation**:
+- Add `output_schema` field to ai_prompts table (JSON Schema format)
+- Lock schema editing in UI (developer-only via code)
+- Add template sync instructions to promptManager.ts file header
+- Create Zod schemas for all AI response types
+- Integrate `response_format` parameter in OpenRouter requests
+- Add validation layer using Zod for runtime type safety
 
 #### Acceptance Criteria
-- [ ] **A/B Testing**: Automated testing framework comparing prompt variants
-- [ ] **Performance Metrics**: Comprehensive tracking of response quality and user engagement
-- [ ] **Testing Sandbox**: Safe environment for testing prompt changes before deployment
-- [ ] **Analytics Dashboard**: Real-time performance metrics and reporting
-- [ ] **Change Management**: Approval workflow for prompt modifications
+- [ ] **Schema Separation**: Instructions and schema stored separately in database
+- [ ] **Locked Schemas**: UI prevents schema editing, shows read-only view
+- [ ] **Sync Workflow**: Documentation and pattern for syncing production prompts to code
+- [ ] **Structured Outputs**: All AI operations use JSON Schema with OpenRouter
+- [ ] **Zod Validation**: Runtime validation of all AI responses against schemas
+- [ ] **Model Agnostic**: Same schema works across all supported models (gpt-5, gpt-4o-mini, claude, etc.)
+
+**Business Value**:
+- **Quality**: Angela can continuously improve prompts based on real-world usage
+- **Reliability**: Structured outputs prevent model variability breaking responses
+- **Maintainability**: Production improvements flow back to code naturally
+- **Safety**: Schema changes require code review, preventing accidental breaking changes
 
 ---
 
@@ -354,8 +385,8 @@ Additional enhancements could include:
 **Story 6.2**: ✅ Complete - Phase-specific question generation prompts
 **Story 6.3**: ✅ Complete - Developer prompt testing & interpolation interface
 **Story 6.4**: ✅ Complete - Phase-specific narrative enhancement with auto-trigger
-**Story 6.5**: 📋 Approved - LLM model management upgrade
-**Story 6.6**: 📋 Future - Advanced analytics and management capabilities
+**Story 6.5**: ✅ Complete - LLM model management upgrade with structured outputs
+**Story 6.6**: 📋 Planned - Prompt architecture & schema separation
 **Story 6.7**: 📋 Future - Multi-tenant prompt management
 **Story 6.8**: 📋 Future - Prompt version management
 

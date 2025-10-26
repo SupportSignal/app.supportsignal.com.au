@@ -6,21 +6,32 @@ import { Badge } from '@starter/ui/badge';
 import { Button } from '@starter/ui/button';
 import { Input } from '@starter/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@starter/ui/select';
+import { Checkbox } from '@starter/ui/checkbox';
 import { useAllPrompts } from '@/lib/prompts/prompt-template-service';
 import { AIPromptTemplate, TEMPLATE_CATEGORIES, CATEGORY_LABELS, AIPrompt } from '@/types/prompt-templates';
 import { useAuth } from '@/components/auth/auth-provider';
 import { Search, Eye } from 'lucide-react';
+import { ModelSelector, AVAILABLE_MODELS } from './model-selector';
+import { useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { toast } from 'sonner';
+import type { Id } from '@/convex/_generated/dataModel';
 
 interface PromptTemplateListProps {
   onPreview?: (template: AIPromptTemplate) => void;
 }
 
-export function PromptTemplateList({ 
+export function PromptTemplateList({
   onPreview
 }: PromptTemplateListProps) {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [selectedPromptIds, setSelectedPromptIds] = useState<Set<string>>(new Set());
+  const [bulkModel, setBulkModel] = useState<string>(AVAILABLE_MODELS[0].id);
+  const [isApplyingBulk, setIsApplyingBulk] = useState(false);
+
+  const bulkUpdateModels = useMutation(api.promptManager.bulkUpdatePromptModels);
   // No longer need expandedPrompts state - all templates show as textareas
   
   const rawPrompts = useAllPrompts(user?.sessionToken, filterCategory === 'all' ? undefined : filterCategory);
@@ -44,16 +55,83 @@ export function PromptTemplateList({
   // Filter templates based on search and category
   const filteredTemplates = React.useMemo(() => {
     if (!templates) return [];
-    
+
     return templates.filter(template => {
       const matchesSearch = template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            (template.description || '').toLowerCase().includes(searchTerm.toLowerCase());
-      
+
       const matchesCategory = filterCategory === 'all' || template.category === filterCategory;
-      
+
       return matchesSearch && matchesCategory;
     });
   }, [templates, searchTerm, filterCategory]);
+
+  // Selection handlers
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const allIds = new Set(filteredTemplates.map(t => t._id));
+      setSelectedPromptIds(allIds);
+    } else {
+      setSelectedPromptIds(new Set());
+    }
+  };
+
+  const handleSelectPrompt = (promptId: string, checked: boolean) => {
+    const newSelected = new Set(selectedPromptIds);
+    if (checked) {
+      newSelected.add(promptId);
+    } else {
+      newSelected.delete(promptId);
+    }
+    setSelectedPromptIds(newSelected);
+  };
+
+  const isAllSelected = filteredTemplates.length > 0 &&
+                        filteredTemplates.every(t => selectedPromptIds.has(t._id));
+  const isSomeSelected = selectedPromptIds.size > 0 && !isAllSelected;
+
+  // Bulk update handler
+  const handleBulkUpdate = async () => {
+    if (!user?.sessionToken || selectedPromptIds.size === 0) {
+      toast.error('Please select prompts to update');
+      return;
+    }
+
+    setIsApplyingBulk(true);
+    try {
+      const promptIdsArray = Array.from(selectedPromptIds) as Id<"ai_prompts">[];
+      const result = await bulkUpdateModels({
+        sessionToken: user.sessionToken,
+        prompt_ids: promptIdsArray,
+        ai_model: bulkModel,
+      });
+
+      if (result.success) {
+        toast.success(
+          `Successfully updated ${result.updated} prompt${result.updated !== 1 ? 's' : ''} to ${bulkModel}`,
+          {
+            description: result.failed > 0
+              ? `${result.failed} prompt${result.failed !== 1 ? 's' : ''} failed to update`
+              : undefined,
+          }
+        );
+
+        // Clear selection after successful update
+        setSelectedPromptIds(new Set());
+      } else {
+        toast.error('Bulk update failed', {
+          description: 'Check console for details',
+        });
+      }
+    } catch (error) {
+      console.error('Bulk update error:', error);
+      toast.error('Failed to update prompts', {
+        description: error instanceof Error ? error.message : 'Unknown error occurred',
+      });
+    } finally {
+      setIsApplyingBulk(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -87,6 +165,47 @@ export function PromptTemplateList({
 
   return (
     <div className="space-y-6">
+      {/* Bulk Action Toolbar - Appears when items are selected */}
+      {selectedPromptIds.size > 0 && (
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="py-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-blue-900">
+                  {selectedPromptIds.size} prompt{selectedPromptIds.size !== 1 ? 's' : ''} selected
+                </p>
+                <p className="text-xs text-blue-700 mt-1">
+                  Apply a model to all selected prompts
+                </p>
+              </div>
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <div className="flex-1 sm:w-64">
+                  <ModelSelector
+                    value={bulkModel}
+                    onChange={setBulkModel}
+                    label=""
+                    showDescription={false}
+                  />
+                </div>
+                <Button
+                  onClick={handleBulkUpdate}
+                  disabled={isApplyingBulk}
+                  className="whitespace-nowrap"
+                >
+                  {isApplyingBulk ? 'Applying...' : 'Apply to Selected'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setSelectedPromptIds(new Set())}
+                  disabled={isApplyingBulk}
+                >
+                  Clear
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Search and Filter Controls */}
       <div className="flex flex-col sm:flex-row gap-4">
@@ -115,9 +234,32 @@ export function PromptTemplateList({
         </Select>
       </div>
 
-      {/* Results Summary */}
-      <div className="text-sm text-gray-600">
-        Showing {filteredTemplates.length} of {templates?.length || 0} templates
+      {/* Results Summary and Select All */}
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-gray-600">
+          Showing {filteredTemplates.length} of {templates?.length || 0} templates
+          {selectedPromptIds.size > 0 && (
+            <span className="ml-2 font-medium text-blue-600">
+              ({selectedPromptIds.size} selected)
+            </span>
+          )}
+        </div>
+        {filteredTemplates.length > 0 && (
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="select-all"
+              checked={isAllSelected}
+              onCheckedChange={handleSelectAll}
+              className={isSomeSelected ? 'data-[state=checked]:bg-blue-600' : ''}
+            />
+            <label
+              htmlFor="select-all"
+              className="text-sm font-medium cursor-pointer select-none"
+            >
+              Select All
+            </label>
+          </div>
+        )}
       </div>
 
       {/* Template List */}
@@ -134,13 +276,29 @@ export function PromptTemplateList({
             </CardContent>
           </Card>
         ) : (
-          filteredTemplates.map(template => (
-            <Card key={template._id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <CardTitle className="text-lg">{template.name}</CardTitle>
+          filteredTemplates.map(template => {
+            const isSelected = selectedPromptIds.has(template._id);
+            return (
+              <Card
+                key={template._id}
+                className={`hover:shadow-md transition-all ${
+                  isSelected ? 'ring-2 ring-blue-500 bg-blue-50' : ''
+                }`}
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                    <div className="flex items-start gap-3 flex-1">
+                      <Checkbox
+                        id={`select-${template._id}`}
+                        checked={isSelected}
+                        onCheckedChange={(checked) =>
+                          handleSelectPrompt(template._id, checked as boolean)
+                        }
+                        className="mt-1"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <CardTitle className="text-lg">{template.name}</CardTitle>
                       <Badge 
                         variant="outline" 
                         className={getStatusColor(template.is_active !== false)}
@@ -159,9 +317,10 @@ export function PromptTemplateList({
                       <span>Model: {template.ai_model || 'Not specified'}</span>
                       <span>Created: {new Date(template.created_at).toLocaleDateString()}</span>
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
                     {onPreview && (
                       <Button
                         variant="outline"
@@ -212,7 +371,8 @@ export function PromptTemplateList({
                 </div>
               </CardContent>
             </Card>
-          ))
+            );
+          })
         )}
       </div>
     </div>

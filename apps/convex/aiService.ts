@@ -23,6 +23,12 @@ export interface AIRequest {
   temperature?: number;
   maxTokens?: number;
   metadata?: Record<string, any>;
+  // Structured outputs support (Story 6.5)
+  outputSchema?: {
+    name: string;
+    strict: boolean;
+    schema: Record<string, any>;
+  };
 }
 
 export interface AIResponse {

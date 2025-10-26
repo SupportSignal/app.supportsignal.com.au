@@ -558,16 +558,20 @@ Based on the narrative context above, provide realistic and detailed answers to 
 Questions to answer:
 {{questions}}
 
-Return a JSON array of answer objects (no markdown formatting):
-[
-  {
-    "question_id": "question-id-here",
-    "answer": "Detailed realistic answer here"
-  }
-]`,
+**Output Format:**
+Return a JSON object with an "answers" array (no markdown formatting):
+{
+  "answers": [
+    {
+      "question_id": "question-id-here",
+      "answer": "Detailed, realistic answer here"
+    }
+  ]
+}`,
     description: "Generate realistic mock answers for clarification questions about an NDIS incident report",
     workflow_step: "sample_data_generation",
     subsystem: "incidents",
+    max_tokens: 5000, // Increased to prevent truncation with gpt-5 detailed responses
   },
   {
     prompt_name: "generate_clarification_questions_before_event",
@@ -1079,6 +1083,76 @@ export const updatePromptModel = mutation({
       old_model: prompt.ai_model,
       new_model: args.ai_model,
     };
+  },
+});
+
+// Bulk update AI models for multiple prompts (Story 6.5: Phase 5)
+export const bulkUpdatePromptModels = mutation({
+  args: {
+    sessionToken: v.string(),
+    prompt_ids: v.array(v.id("ai_prompts")),
+    ai_model: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Authenticate user with developer permissions
+    const { user } = await requirePermission(
+      ctx,
+      args.sessionToken,
+      PERMISSIONS.SAMPLE_DATA,
+      { errorMessage: 'Developer permissions required to bulk update prompt models' }
+    );
+
+    const results = {
+      success: true,
+      updated: 0,
+      failed: 0,
+      errors: [] as string[],
+    };
+
+    console.log("🔄 BULK MODEL UPDATE STARTED", {
+      count: args.prompt_ids.length,
+      target_model: args.ai_model,
+      updated_by: user._id,
+    });
+
+    // Update each prompt
+    for (const promptId of args.prompt_ids) {
+      try {
+        const prompt = await ctx.db.get(promptId);
+
+        if (!prompt) {
+          results.failed++;
+          results.errors.push(`Prompt not found: ${promptId}`);
+          continue;
+        }
+
+        if (!prompt.is_active) {
+          results.failed++;
+          results.errors.push(`Prompt inactive: ${prompt.prompt_name}`);
+          continue;
+        }
+
+        await ctx.db.patch(promptId, {
+          ai_model: args.ai_model,
+        });
+
+        results.updated++;
+        console.log("✅ Updated:", prompt.prompt_name);
+      } catch (error) {
+        results.failed++;
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        results.errors.push(`Failed to update ${promptId}: ${errorMsg}`);
+        console.error("❌ Update failed:", promptId, errorMsg);
+      }
+    }
+
+    console.log("🔄 BULK MODEL UPDATE COMPLETE", {
+      updated: results.updated,
+      failed: results.failed,
+      target_model: args.ai_model,
+    });
+
+    return results;
   },
 });
 

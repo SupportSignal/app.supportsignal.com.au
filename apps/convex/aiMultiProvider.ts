@@ -54,7 +54,7 @@ export class OpenRouterProvider extends AIProvider {
     const startTime = Date.now();
 
     try {
-      const payload = {
+      const payload: Record<string, any> = {
         model: request.model,
         messages: [
           {
@@ -65,6 +65,14 @@ export class OpenRouterProvider extends AIProvider {
         temperature: request.temperature || 0.7,
         max_tokens: request.maxTokens || 1000,
       };
+
+      // Add structured outputs if schema provided (Story 6.5)
+      if (request.outputSchema) {
+        payload.response_format = {
+          type: 'json_schema',
+          json_schema: request.outputSchema,
+        };
+      }
 
       const response = await fetch(`${this.config.baseUrl}/chat/completions`, {
         method: 'POST',
@@ -248,7 +256,15 @@ export class MultiProviderAIManager {
         name: 'OpenRouter',
         apiKey: openrouterApiKey,
         baseUrl: 'https://openrouter.ai/api/v1',
-        models: ['openai/gpt-5-nano', 'openai/gpt-5-mini', 'openai/gpt-5-chat', 'openai/gpt-5', 'openai/gpt-4.1-nano', 'openai/gpt-4', 'openai/gpt-4o-mini', 'openai/gpt-4o', 'anthropic/claude-3-haiku', 'anthropic/claude-3-sonnet'],
+        models: [
+          // OpenAI models
+          'openai/gpt-5-nano', 'openai/gpt-5-mini', 'openai/gpt-5-chat', 'openai/gpt-5',
+          'openai/gpt-4.1-nano', 'openai/gpt-4', 'openai/gpt-4o-mini', 'openai/gpt-4o',
+          // Anthropic models - using actual OpenRouter model IDs
+          'anthropic/claude-3-haiku', 'anthropic/claude-3.5-haiku',
+          'anthropic/claude-3.5-sonnet', 'anthropic/claude-sonnet-4', 'anthropic/claude-sonnet-4.5',
+          'anthropic/claude-haiku-4.5',
+        ],
         priority: 1,
         enabled: true,
       }));

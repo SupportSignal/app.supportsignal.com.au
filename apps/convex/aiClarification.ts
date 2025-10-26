@@ -4,6 +4,7 @@ import { query, mutation, action, internalMutation } from "./_generated/server";
 import { api, internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import { requirePermission, PERMISSIONS } from "./permissions";
+import { MockAnswersResponseSchema } from "./aiResponseSchemas";
 
 // Retry configuration for preventing infinite loops
 const RETRY_CONFIG = {
@@ -844,7 +845,18 @@ export const generateMockAnswers = action({
     });
 
     // aiOperations.generateMockAnswers returns { mock_answers: { output }, metadata }
+    console.log("🔍 AI RESULT STRUCTURE:", {
+      hasResult: !!aiResult,
+      resultKeys: aiResult ? Object.keys(aiResult) : [],
+      hasMockAnswers: !!(aiResult?.mock_answers),
+      mockAnswersKeys: aiResult?.mock_answers ? Object.keys(aiResult.mock_answers) : [],
+      hasOutput: !!(aiResult?.mock_answers?.output),
+      outputPreview: aiResult?.mock_answers?.output?.substring(0, 200),
+      fullResult: JSON.stringify(aiResult, null, 2).substring(0, 500)
+    });
+
     if (!aiResult.mock_answers || !aiResult.mock_answers.output) {
+      console.error("❌ AI RESULT MISSING EXPECTED STRUCTURE:", aiResult);
       throw new Error(`AI service failed: No mock answers returned`);
     }
 
@@ -852,45 +864,61 @@ export const generateMockAnswers = action({
     let parsedAnswers;
     try {
       let jsonContent = aiResult.mock_answers.output.trim();
-      
+
       // Handle markdown-wrapped JSON (AI ignoring template instructions)
       const markdownMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
       if (markdownMatch) {
         jsonContent = markdownMatch[1].trim();
       }
-      
+
       // Enhanced JSON parsing with better error handling
+      let parsedResponse;
       try {
-        parsedAnswers = JSON.parse(jsonContent);
+        parsedResponse = JSON.parse(jsonContent);
       } catch (parseError) {
-        console.warn("Initial JSON parse failed, attempting to fix common AI response issues...");
-        
-        // Try to fix common AI response formatting issues
+        console.warn("Initial JSON parse failed, attempting minimal safe cleanup...");
+
+        // Apply only minimal, safe cleanup operations
         let fixedContent = jsonContent
-          // Fix unescaped quotes in strings (basic heuristic)
-          .replace(/"([^"]*)"([^"]*)"([^"]*)"/g, '"$1\\"$2\\"$3"')
-          // Fix unescaped newlines
-          .replace(/\n/g, '\\n')
-          .replace(/\r/g, '\\r')
-          // Fix unescaped tabs
-          .replace(/\t/g, '\\t')
-          // Fix trailing commas
-          .replace(/,(\s*[}\]])/g, '$1');
-        
+          // Remove trailing commas (common AI mistake)
+          .replace(/,(\s*[}\]])/g, '$1')
+          // Trim whitespace
+          .trim();
+
         try {
-          parsedAnswers = JSON.parse(fixedContent);
-          console.log("✅ Successfully parsed AI response after fixing formatting issues");
+          parsedResponse = JSON.parse(fixedContent);
+          console.log("✅ Successfully parsed AI response after minimal cleanup");
         } catch (secondParseError) {
           // If still failing, log the problematic content for debugging
-          console.error("❌ AI Response parsing failed even after fixes:");
+          console.error("❌ AI Response parsing failed even after cleanup:");
           console.error("Original response:", jsonContent.substring(0, 500) + "...");
-          console.error("Fixed response:", fixedContent.substring(0, 500) + "...");
+          console.error("Cleaned response:", fixedContent.substring(0, 500) + "...");
+          console.error("Parse error:", secondParseError instanceof Error ? secondParseError.message : 'Unknown parsing error');
           throw new Error(`JSON parsing failed: ${secondParseError instanceof Error ? secondParseError.message : 'Unknown parsing error'}`);
         }
       }
-      
+
+      // Validate against Zod schema (Story 6.5 - structured outputs)
+      const validationResult = MockAnswersResponseSchema.safeParse(parsedResponse);
+      if (!validationResult.success) {
+        console.warn("⚠️ AI response failed schema validation:", validationResult.error);
+        console.warn("Response data:", parsedResponse);
+        // Try to extract answers array anyway if it exists
+        if (parsedResponse && typeof parsedResponse === 'object' && 'answers' in parsedResponse) {
+          parsedAnswers = parsedResponse.answers;
+        } else if (Array.isArray(parsedResponse)) {
+          // Fallback: if it's already an array (old format), use it
+          parsedAnswers = parsedResponse;
+        } else {
+          throw new Error("Cannot extract answers array from response");
+        }
+      } else {
+        // Schema validation passed - extract the answers array
+        parsedAnswers = validationResult.data.answers;
+      }
+
       if (!Array.isArray(parsedAnswers)) {
-        throw new Error("AI response is not an array");
+        throw new Error("AI response answers is not an array");
       }
     } catch (error) {
       console.error("Failed to parse AI response:", aiResult.mock_answers.output);
@@ -931,15 +959,15 @@ export const generateMockAnswers = action({
       });
     }
 
-    // AI request is already logged by aiOperations.generateMockAnswers, 
+    // AI request is already logged by aiOperations.generateMockAnswers,
     // but we can add supplementary logging for the clarification context
     console.log(`🤖 AI-GENERATED MOCK ANSWERS`, {
       phase: args.phase,
       questions_count: questions.length,
       answers_generated: storedAnswers.length,
       processing_time_ms: processingTime,
-      ai_model: aiResult.model,
-      correlation_id: aiResult.correlationId,
+      ai_model: aiResult.metadata?.ai_model,
+      correlation_id: aiResult.metadata?.correlation_id,
       incident_id: args.incident_id,
       user_id: user._id,
     });
