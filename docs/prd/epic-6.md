@@ -1,6 +1,6 @@
 # Epic 6: AI Prompt Management System
 
-> **Quick Navigation:** [6.1](#story-61-core-ai-prompt-management-foundation-) · [6.2](#story-62-phase-specific-question-generation-prompts) · [6.3](#story-63-developer-prompt-testing--interpolation-interface) · [6.4](#story-64-phase-specific-narrative-enhancement-with-auto-trigger) · [6.5](#story-65-llm-model-management-upgrade) · [6.6](#story-66-advanced-prompt-management--analytics-future) · [6.7](#story-67-multi-tenant-prompt-management-future) · [6.8](#story-68-prompt-version-management-future)
+> **Quick Navigation:** [6.1](#story-61-core-ai-prompt-management-foundation-) · [6.2](#story-62-phase-specific-question-generation-prompts) · [6.3](#story-63-developer-prompt-testing--interpolation-interface) · [6.4](#story-64-phase-specific-narrative-enhancement-with-auto-trigger) · [6.5](#story-65-llm-model-management-upgrade) · [6.6](#story-66-prompt-architecture--schema-separation-future) · [6.7](#story-67-multi-tenant-prompt-management-future) · [6.8](#story-68-prompt-version-management-future) · [6.9](#story-69-adaptive-token-management-with-self-healing)
 
 ## Epic Overview
 
@@ -42,6 +42,7 @@ Epic 6 establishes the foundational infrastructure for AI prompt management that
 - [Story 6.6: Prompt Architecture & Schema Separation](#story-66-prompt-architecture--schema-separation-future) - 📋 **Planned** (Medium)
 - [Story 6.7: Multi-Tenant Prompt Management](#story-67-multi-tenant-prompt-management-future) - 🔮 **Future** (Low)
 - [Story 6.8: Prompt Version Management](#story-68-prompt-version-management-future) - 🔮 **Future** (Low)
+- [Story 6.9: Adaptive Token Management with Self-Healing](#story-69-adaptive-token-management-with-self-healing) - 📝 **Draft** (High)
 
 ---
 
@@ -318,6 +319,378 @@ Upgrade the default LLM model to a higher quality option and implement comprehen
 - [AI Token Limit Debugging Pattern](../patterns/ai-token-limit-debugging.md)
 - [Duplicate Configuration Systems Anti-Pattern](../patterns/duplicate-configuration-systems-antipattern.md)
 - [Logging Strategy for Debugging](../patterns/logging-strategy-for-debugging.md)
+
+---
+
+### Story 6.9: Adaptive Token Management with Self-Healing
+
+**Status**: **DRAFT** 📝
+**Priority**: HIGH
+**Estimated Effort**: 2-3 days
+**Dependencies**: Story 6.5 (Model management, token limit optimization), ai_requests table schema
+
+#### Problem Statement
+
+**Current Issue**: Manual token limit adjustments in Story 6.5 solved immediate truncation problems but created a maintenance burden. When AI models generate responses that exceed `max_tokens` limits, responses are silently truncated mid-JSON, causing parsing failures and hanging UI spinners. Developers must manually identify truncation issues, update template definitions, and reseed prompts.
+
+**Evidence from Production**:
+- END_EVENT question generation hung spinner (Investigation: `docs/investigations/step-5-end-event-question-generation-failure.md`)
+- Story 6.5 manually increased `generateMockAnswers` from 2000 to 5000 tokens after discovering truncation
+- Retry logic (3 attempts with exponential backoff) wastes time retrying with same inadequate token limit
+- No visibility into which prompts are hitting limits without manual investigation
+
+**Root Cause**: Static token limits in template definitions don't adapt to actual AI model response patterns, creating a reactive "break-fix-reseed" cycle instead of proactive self-healing.
+
+#### Requirements
+
+Implement intelligent, self-healing token management that automatically detects truncation, incrementally escalates token limits, persists optimizations to the database, and provides visibility into baseline vs. adjusted values through the AI Prompt Management UI.
+
+**Core Features**:
+
+1. **Truncation Detection**
+   - Extract `finish_reason` from OpenRouter API responses
+   - Detect when `finish_reason === "length"` (truncation indicator)
+   - Correlate JSON parsing errors with token limit issues
+   - Log truncation events with context (prompt name, tokens used, limit hit)
+
+2. **Adaptive Retry with Incremental Escalation**
+   - Replace current fixed-retry logic with adaptive token escalation
+   - Escalation pattern: Start at baseline → Increment by 500 tokens per attempt
+   - Example: 2000 → 2500 → 3000 → 3500 (max 3-4 escalation attempts)
+   - Only escalate on truncation-related failures (not auth errors, network issues)
+   - Success on attempt 2+ triggers automatic database update
+
+3. **Self-Healing Database Updates**
+   - When escalated retry succeeds, persist new `max_tokens` value to database
+   - Update `ai_prompts.max_tokens` for the specific prompt template
+   - Baseline in code template definitions remains unchanged (e.g., 2000)
+   - Database now stores "learned" optimal value (e.g., 3000)
+   - Future requests use optimized value immediately (no more truncation)
+
+4. **Visual Diff in AI Prompt Management UI**
+   - Show baseline vs. current token limit in prompt listing
+   - Color-coded indicators:
+     - **Green**: Using baseline (no adjustment needed)
+     - **Blue** (with diff badge): Adjusted value ("↑ +1000 tokens from baseline")
+     - **Yellow**: Approaching escalation limit (warn admin)
+   - Diff tooltip: "Auto-increased from 2000 to 3000 on 2025-10-27 after 2 escalation attempts"
+   - Reset button: "Reset to Baseline" (admin can manually reset if needed)
+
+5. **Escalation Limits & Safety**
+   - Maximum escalation cap: 10,000 tokens (prevent runaway costs)
+   - Log warning when prompt reaches 80% of cap (8,000 tokens)
+   - Alert admin UI: "Prompt 'generate_end_event_questions' consistently needs high token limits - consider prompt optimization"
+   - Track escalation events in logs (how often each prompt hits limits)
+
+6. **Logging Integration**
+   - Log truncation events with full context (prompt name, tokens used, limit hit, finish_reason)
+   - Log each escalation attempt with before/after token limits
+   - Log successful self-healing database updates
+   - All logs visible in Convex dashboard for debugging
+
+**Business Value**:
+- **Zero-Touch Optimization**: System self-heals without developer intervention
+- **Improved Reliability**: No more hanging spinners from truncated responses
+- **Cost Efficiency**: Only escalate when needed (don't overprovision all prompts to 5000 tokens)
+- **Operational Visibility**: Admins see which prompts need attention
+- **Reduced Maintenance**: No more manual "find truncation → update code → reseed" cycles
+- **Institutional Learning**: System learns optimal token limits from production usage
+
+#### Acceptance Criteria
+
+**Backend - Truncation Detection**:
+- [ ] Extract `finish_reason` from OpenRouter API response in `apps/convex/aiService.ts`
+- [ ] Add `finishReason` field to `AIResponse` interface
+- [ ] Log truncation events: `⚠️ TRUNCATION DETECTED: prompt='X', tokens_used=2484, max_tokens=2000, finish_reason='length'`
+
+**Backend - Adaptive Retry**:
+- [ ] Replace `retryWithBackoff` with `retryWithAdaptiveTokens` in `apps/convex/aiClarification.ts`
+- [ ] Implement escalation pattern: baseline → +500 → +500 → +500 (up to 3 escalations)
+- [ ] Pass dynamic `maxTokens` parameter through operation function signature
+- [ ] Only escalate on truncation-related failures (check `finish_reason` or JSON parse errors)
+- [ ] Log each escalation attempt: `🔄 ESCALATION ATTEMPT 2: Increasing max_tokens from 2000 to 2500`
+
+**Backend - Self-Healing Database Updates**:
+- [ ] On successful escalated retry, update `ai_prompts.max_tokens` in database
+- [ ] Mutation: `updatePromptTokenLimit({ prompt_name, new_max_tokens, reason })`
+- [ ] Log self-healing action: `✅ SELF-HEALING: Updated 'generate_end_event_questions' max_tokens from 2000 to 3000`
+- [ ] Record metadata: `adjusted_at` timestamp, `adjustment_reason`, `baseline_max_tokens` (from code)
+
+**Database Schema**:
+- [ ] Add optional fields to `ai_prompts` table:
+  - `baseline_max_tokens: v.optional(v.number())` - Original value from code template
+  - `adjusted_at: v.optional(v.number())` - Timestamp of last auto-adjustment
+  - `adjustment_reason: v.optional(v.string())` - Why adjustment was made
+- [ ] Migration script to backfill `baseline_max_tokens` from current `max_tokens` values
+
+**UI - Visual Diff Display**:
+- [ ] Prompt listing shows baseline vs. current token limit
+- [ ] Color-coded badges:
+  - Green checkmark: `max_tokens === baseline_max_tokens` (no adjustment)
+  - Blue badge with ↑ arrow: `max_tokens > baseline_max_tokens` (shows diff: "+1000")
+- [ ] Tooltip on hover: "Auto-increased from 2000 to 3000 on 2025-10-27 after detecting truncation"
+- [ ] "Reset to Baseline" button (admin action) - resets `max_tokens` to `baseline_max_tokens`
+
+**Safety & Limits**:
+- [ ] Maximum escalation cap: 10,000 tokens (configurable via environment variable)
+- [ ] Prevent escalation beyond cap: log error and fail operation if exceeded
+- [ ] Warning log at 80% of cap: `⚠️ Prompt 'X' approaching token limit cap (8000/10000 tokens)`
+- [ ] Admin alert UI: Dashboard widget showing prompts near escalation cap
+
+**Logging & Observability**:
+- [ ] Log truncation detection events with context
+- [ ] Log each escalation attempt (before/after token limits)
+- [ ] Log successful self-healing database updates
+- [ ] Log escalation failures (hit cap, non-truncation errors)
+
+**Testing & Validation**:
+- [ ] Unit tests: Adaptive retry logic with mocked truncation responses
+- [ ] Integration tests: End-to-end truncation → escalation → database update flow
+- [ ] Manual test: Temporarily set `max_tokens: 100` for test prompt, trigger truncation, verify auto-escalation
+- [ ] Verify no infinite loops: Cap reached → operation fails gracefully
+- [ ] Test UI displays correct diff badges and tooltips
+
+**Documentation**:
+- [ ] Update `docs/patterns/ai-token-limit-debugging.md` with new adaptive approach
+- [ ] Create `docs/patterns/self-healing-token-management.md` pattern guide
+- [ ] Update Admin Guide: How to interpret token limit diffs in UI
+- [ ] Create runbook: "What to do when prompts hit escalation cap"
+- [ ] **Cleanup**: Delete `docs/investigations/step-5-end-event-question-generation-failure.md` (investigation complete, solution implemented)
+
+#### Technical Implementation
+
+**Implementation Timeline**: 2-3 days across 4 phases (detection, retry logic, database, UI)
+
+**Phase 1: Detection & Logging** (Day 1)
+1. Update `AIResponse` interface in `apps/convex/aiService.ts`:
+   ```typescript
+   export interface AIResponse {
+     correlationId: string;
+     content: string;
+     model: string;
+     tokensUsed?: number;
+     finishReason?: 'stop' | 'length' | 'content_filter';  // NEW
+     processingTimeMs: number;
+     cost?: number;
+     success: boolean;
+     error?: string;
+   }
+   ```
+
+2. Extract `finish_reason` from OpenRouter response (line ~155):
+   ```typescript
+   return {
+     content: data.choices[0].message.content,
+     usage: data.usage,
+     finishReason: data.choices[0].finish_reason,  // NEW
+   };
+   ```
+
+3. Add truncation detection logging throughout `aiClarification.ts`:
+   ```typescript
+   if (result.finishReason === 'length') {
+     console.warn('⚠️ TRUNCATION DETECTED', {
+       prompt_name: promptConfig.name,
+       tokens_used: result.tokensUsed,
+       max_tokens: maxTokens,
+       finish_reason: result.finishReason,
+       timestamp: new Date().toISOString()
+     });
+   }
+   ```
+
+**Phase 2: Adaptive Retry Logic** (Day 1-2)
+1. Create new retry function in `apps/convex/aiClarification.ts`:
+   ```typescript
+   const retryWithAdaptiveTokens = async <T>(
+     operation: (maxTokens: number) => Promise<AIResponse & T>,
+     context: { prompt_name: string; baseline_max_tokens: number },
+     escalation_increment: number = 500,
+     max_escalations: number = 4
+   ): Promise<T> => {
+     const TOKEN_CAP = parseInt(process.env.MAX_TOKEN_ESCALATION_CAP || '10000');
+
+     for (let attempt = 0; attempt < max_escalations; attempt++) {
+       const maxTokens = Math.min(
+         context.baseline_max_tokens + (attempt * escalation_increment),
+         TOKEN_CAP
+       );
+
+       console.log(`🔄 ADAPTIVE RETRY ATTEMPT ${attempt + 1}/${max_escalations}`, {
+         max_tokens: maxTokens,
+         escalation_from_baseline: maxTokens - context.baseline_max_tokens,
+       });
+
+       try {
+         const result = await operation(maxTokens);
+
+         // Check if truncated
+         if (result.finishReason === 'length') {
+           console.warn(`⚠️ Response truncated at ${maxTokens} tokens, escalating...`);
+           if (attempt < max_escalations - 1) continue;  // Try next increment
+           throw new Error(`Token limit exceeded even after ${max_escalations} escalations`);
+         }
+
+         // Success! Update database if escalated
+         if (attempt > 0) {
+           await ctx.runMutation(api.promptManager.updatePromptTokenLimit, {
+             prompt_name: context.prompt_name,
+             new_max_tokens: maxTokens,
+             baseline_max_tokens: context.baseline_max_tokens,
+             adjustment_reason: `Auto-increased after ${attempt + 1} truncation-based escalation attempts`,
+           });
+
+           console.log(`✅ SELF-HEALING: Updated '${context.prompt_name}' max_tokens to ${maxTokens}`);
+         }
+
+         return result;
+
+       } catch (error) {
+         // Only retry on truncation-related errors
+         const isTruncationError =
+           error.message.includes('JSON') ||
+           error.message.includes('parse') ||
+           error.message.includes('truncat');
+
+         if (!isTruncationError || attempt >= max_escalations - 1) {
+           throw error;  // Not truncation or out of attempts
+         }
+       }
+     }
+   };
+   ```
+
+2. Update `generateClarificationQuestions` and other AI operations to use adaptive retry
+3. Pass baseline value from prompt template definition through to retry function
+
+**Phase 3: Database Schema & Mutation** (Day 2)
+1. Add fields to `ai_prompts` schema:
+   ```typescript
+   ai_prompts: defineTable({
+     // ... existing fields ...
+     max_tokens: v.number(),  // Current effective value (may be adjusted)
+     baseline_max_tokens: v.optional(v.number()),  // Original from code template
+     adjusted_at: v.optional(v.number()),  // Timestamp of last adjustment
+     adjustment_reason: v.optional(v.string()),  // Why it was adjusted
+   })
+   ```
+
+2. Create mutation in `apps/convex/promptManager.ts`:
+   ```typescript
+   export const updatePromptTokenLimit = mutation({
+     args: {
+       prompt_name: v.string(),
+       new_max_tokens: v.number(),
+       baseline_max_tokens: v.number(),
+       adjustment_reason: v.string(),
+     },
+     handler: async (ctx, args) => {
+       const prompt = await ctx.db
+         .query("ai_prompts")
+         .withIndex("by_name", q => q.eq("prompt_name", args.prompt_name))
+         .filter(q => q.eq(q.field("is_active"), true))
+         .first();
+
+       if (!prompt) throw new Error(`Prompt not found: ${args.prompt_name}`);
+
+       await ctx.db.patch(prompt._id, {
+         max_tokens: args.new_max_tokens,
+         baseline_max_tokens: args.baseline_max_tokens,
+         adjusted_at: Date.now(),
+         adjustment_reason: args.adjustment_reason,
+       });
+
+       return { success: true, updated_prompt: args.prompt_name };
+     },
+   });
+   ```
+
+**Phase 4: UI Visual Diff** (Day 2-3)
+1. Update AI Prompt Management listing component:
+   ```typescript
+   // Show token limit with diff badge
+   const TokenLimitDisplay = ({ prompt }) => {
+     const isAdjusted = prompt.max_tokens !== prompt.baseline_max_tokens;
+     const diff = isAdjusted ? prompt.max_tokens - prompt.baseline_max_tokens : 0;
+
+     return (
+       <div className="flex items-center gap-2">
+         <span>{prompt.max_tokens} tokens</span>
+         {isAdjusted && (
+           <Badge variant="blue" className="text-xs">
+             ↑ +{diff}
+           </Badge>
+         )}
+         {!isAdjusted && <CheckCircle className="h-4 w-4 text-green-500" />}
+       </div>
+     );
+   };
+   ```
+
+2. Add tooltip with adjustment details
+3. Add "Reset to Baseline" button (admin only)
+
+#### Success Criteria
+
+**Operational Success**:
+- Zero manual token limit adjustments after deployment
+- All truncation-related failures automatically resolve via escalation
+- Admin UI clearly shows which prompts have been auto-adjusted
+- No prompts hit escalation cap (proper baseline values established)
+
+**Performance Success**:
+- First-attempt success rate increases from ~70% to ~95% (fewer retries needed)
+- Average API call count per operation decreases (less wasted retry attempts)
+- No increase in overall token costs (only escalate when needed)
+
+**User Experience Success**:
+- Zero hanging spinners from truncated responses
+- Operations complete faster (fewer retry delays)
+- Admins can identify problematic prompts at a glance
+
+**System Health**:
+- Escalation events logged and trackable
+- Token usage trends visible in analytics
+- Automatic optimization learning from production usage
+
+#### Risks & Mitigations
+
+**Risk 1: Runaway Token Escalation**
+- Mitigation: Hard cap at 10,000 tokens (configurable)
+- Mitigation: Warning at 80% of cap
+- Mitigation: Admin alerts for prompts consistently hitting high limits
+
+**Risk 2: Cost Increase from Higher Token Limits**
+- Mitigation: Only escalate on actual truncation (not preemptive)
+- Mitigation: Track cost per prompt template in analytics
+- Mitigation: Admin dashboard shows cost trends
+
+**Risk 3: Database Corruption from Concurrent Updates**
+- Mitigation: Use Convex optimistic concurrency control
+- Mitigation: Log all adjustments for audit trail
+- Mitigation: Admin "Reset to Baseline" escape hatch
+
+**Risk 4: False Positives (Non-Truncation Errors Triggering Escalation)**
+- Mitigation: Only escalate on `finish_reason === 'length'` or JSON parse errors
+- Mitigation: Don't escalate on auth errors, network failures, rate limits
+- Mitigation: Log escalation triggers for pattern analysis
+
+#### Future Enhancements
+
+**Post-Story Improvements** (Story 6.10 or later, after accumulating ai_requests data):
+- **Historical Analytics** (REQUIRES DATA): Calculate P95/P99 token usage per prompt from ai_requests table, recommend baseline adjustments
+- **Token Usage Dashboard**: Admin UI showing token limit health, trends, cost analysis
+- **Predictive Baselines**: Use historical data to set optimal baselines before deployment
+- **Machine Learning**: Predict optimal token limits based on prompt characteristics
+- **A/B Testing**: Test different escalation increments (500 vs 1000 tokens)
+- **Cost Optimization**: Automatically reduce token limits if P99 usage drops over time
+- **Multi-Model Support**: Different baselines for gpt-5 vs gpt-4o-mini
+- **Prompt Recommendations**: "Your prompt is verbose - consider simplification to reduce tokens"
+
+**Integration Opportunities**:
+- Story 6.6: Schema separation (prompt instructions vs output schema)
+- Story 6.8: Version management (track token limit changes across versions)
+- Story 6.10: Historical analytics using accumulated ai_requests data
 
 ---
 

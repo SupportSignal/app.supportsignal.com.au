@@ -1,6 +1,6 @@
 # Epic 0: Technical Debt & Continuous Improvement
 
-> **Quick Navigation:** [0.1](#story-01-technical-debt---environment-variable-deduplication-audit) · [0.2](#story-02-technical-debt---database-schema-audit--cleanup) · [0.3](#story-03-technical-debt---dead-code-discovery--cleanup-functions-routes-components-workers) · [0.4](#story-04-technical-debt---apply-coding-standards-from-inconsistencies-audit) · [0.5](#story-05-technical-debt---file-naming-migration-to-kebab-case) · [0.6](#story-06-developer-experience---database-export--analysis-system) · [0.7](#story-07-user-experience---authorization-ui-consistency)
+> **Quick Navigation:** [0.1](#story-01-technical-debt---environment-variable-deduplication-audit) · [0.2](#story-02-technical-debt---database-schema-audit--cleanup) · [0.3](#story-03-technical-debt---dead-code-discovery--cleanup-functions-routes-components-workers) · [0.4](#story-04-technical-debt---apply-coding-standards-from-inconsistencies-audit) · [0.5](#story-05-technical-debt---file-naming-migration-to-kebab-case) · [0.6](#story-06-developer-experience---database-export--analysis-system) · [0.7](#story-07-user-experience---authorization-ui-consistency) · [0.8](#story-08-user-experience---loading-state-pattern-implementation)
 
 ## Epic Overview
 
@@ -34,15 +34,6 @@ Epic 0 represents the critical but often invisible work that keeps the SupportSi
 ## Quick Navigation
 
 **Stories in this Epic:**
-- [0.1](#story-01-technical-debt---environment-variable-deduplication-audit)
-- [0.2](#story-02-technical-debt---database-schema-audit--cleanup)
-- [0.3](#story-03-technical-debt---dead-code-discovery--cleanup-functions-routes-components-workers)
-- [0.4](#story-04-technical-debt---apply-coding-standards-from-inconsistencies-audit)
-- [0.5](#story-05-technical-debt---file-naming-migration-to-kebab-case)
-- [0.6](#story-06-developer-experience---database-export--analysis-system)
-- [0.7](#story-07-user-experience---authorization-ui-consistency)
-
-**Stories in this Epic:**
 - [Story 0.1: Environment Variable Deduplication Audit](#story-01-technical-debt---environment-variable-deduplication-audit) - ✅ **Complete** (P1 - High)
 - [Story 0.2: Database Schema Audit & Cleanup](#story-02-technical-debt---database-schema-audit--cleanup) - ✅ **Complete** (P2 - Medium)
 - [Story 0.3: Dead Code Discovery & Cleanup](#story-03-technical-debt---dead-code-discovery--cleanup-functions-routes-components-workers) - 🔄 **In Progress** (P2 - Medium)
@@ -50,6 +41,7 @@ Epic 0 represents the critical but often invisible work that keeps the SupportSi
 - [Story 0.5: File Naming Migration to Kebab-Case](#story-05-technical-debt---file-naming-migration-to-kebab-case) - ✅ **Complete** (P2 - Medium)
 - [Story 0.6: Database Export & Analysis System](#story-06-developer-experience---database-export--analysis-system) - ✅ **Complete** (P2 - Medium)
 - [Story 0.7: Authorization UI Consistency](#story-07-user-experience---authorization-ui-consistency) - 📋 **Planned** (P1 - High)
+- [Story 0.8: Loading State Pattern Implementation](#story-08-user-experience---loading-state-pattern-implementation) - 📋 **Planned** (P1 - High)
 
 ---
 
@@ -665,6 +657,126 @@ interface UnauthorizedAccessCardProps {
 - Manual SAT with role-based URL testing matrix
 - Document findings before implementing fixes
 - Verify no ConvexErrors for unauthorized access (Story 7.5 bug pattern)
+
+---
+
+### Story 0.8: User Experience - Loading State Pattern Implementation
+
+**Priority**: P1 (High)
+**Estimated Effort**: Medium (6-8 hours)
+**Category**: User Experience / Technical Debt
+**Discovered**: October 2025 - Story 6.4 identified need for consistent loading state patterns
+
+#### Problem Statement
+
+The application currently lacks a consistent loading state pattern, resulting in poor user experience during AI operations and other asynchronous processes. During Story 6.4 implementation, a three-tier loading pattern was designed but only implemented for narrative enhancement. The pattern was documented inline in Story 6.4 but never extracted to `docs/patterns/` and never applied consistently across the codebase.
+
+**Current State**:
+- ❌ No `docs/patterns/loading-states.md` documentation
+- ❌ Inconsistent loading indicators across features
+- ❌ Some operations have 5+ second delays with no visual feedback
+- ✅ Three-tier pattern designed and proven in Story 6.4
+
+**User Impact**:
+- Users click buttons and wait with no feedback
+- Unclear if application is processing or frozen
+- Inconsistent experience across different features
+- Poor perceived performance even when actual performance is good
+
+#### Scope
+
+**Phase 1: Pattern Documentation**
+- Extract three-tier loading pattern from Story 6.4 to `docs/patterns/loading-states.md`
+- Document when to use each tier (inline/card/page-level)
+- Provide implementation examples for each tier
+- Create reusable loading components if needed
+
+**Phase 2: Codebase Audit**
+- Identify all locations requiring loading states
+- Categorize by expected duration (< 2s, 2-5s, > 5s)
+- Document current state and required changes
+- Prioritize by user impact
+
+**Phase 3: Implementation**
+- Apply appropriate loading pattern to each identified location
+- Test with realistic delays
+- Ensure consistent UX across all features
+
+**Phase 4: Component Library** (if needed)
+- Create reusable LoadingOverlay components
+- Document component API
+- Add to component library
+
+#### Acceptance Criteria
+
+**Phase 1**:
+- [ ] Pattern document created at `docs/patterns/loading-states.md`
+- [ ] Three-tier pattern documented with code examples
+- [ ] Decision criteria for tier selection documented
+- [ ] Implementation examples provided
+
+**Phase 2**:
+- [ ] Audit complete with all async operations identified
+- [ ] Operations categorized by duration tier
+- [ ] Current state vs required state documented
+- [ ] Priority order established
+
+**Phase 3**:
+- [ ] Loading states implemented for all identified locations
+- [ ] Visual consistency achieved across tiers
+- [ ] Testing completed with simulated delays
+- [ ] User feedback during operations is clear
+
+**Phase 4**:
+- [ ] Reusable components created (if needed)
+- [ ] Component documentation complete
+- [ ] Examples added to component library
+
+**Validation**:
+- [ ] TypeScript, lint, tests, build, CI all pass
+- [ ] Manual testing: All async operations show appropriate feedback
+- [ ] No operations with 5+ second delays lack visual feedback
+
+#### Implementation Notes
+
+**Three-Tier Loading Pattern** (from Story 6.4):
+
+1. **Inline Spinner** (< 2 seconds expected):
+   - Use for quick operations
+   - Loader2 icon from lucide-react
+   - Small, unobtrusive indicator
+
+2. **Card-Level Loader** (2-5 seconds expected):
+   - Use for medium-duration operations
+   - Overlay on specific component/card
+   - Shows operation-specific message
+   - Prevents interaction with loading area
+
+3. **Page-Level Loader** (> 5 seconds expected):
+   - Use for long operations
+   - Full-screen overlay
+   - Detailed progress message
+   - Prevents all page interaction
+
+**Known Locations Requiring Loading States**:
+- AI question generation (Story 3.2)
+- AI narrative enhancement (Story 6.4) - ✅ Already implemented
+- AI mock answer generation (Story 6.5)
+- Contributing conditions analysis
+- Form submissions
+- Data mutations
+- [Additional locations to be identified during audit]
+
+**Design Considerations**:
+- Consistent spinner icon (Loader2 from lucide-react)
+- Consistent color scheme (blue-500)
+- Consistent animation (animate-spin)
+- Clear, contextual messaging
+- Accessibility (ARIA labels, screen reader support)
+
+**Reference**:
+- Story 6.4 loading pattern design (lines 328-377)
+- Story 6.4 lesson learned: "Loading States: Cross-cutting UX concerns belong in Epic 0 (infrastructure), not feature stories"
 
 ---
 

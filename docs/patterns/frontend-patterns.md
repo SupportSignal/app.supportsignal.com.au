@@ -666,10 +666,41 @@ const WorkflowContainer = () => {
 
 **Implementation Reference**: Story 4.2 - Workflow Continuation System
 
+## Loading State Patterns
+
+### Three-Tier Loading Pattern
+
+**Context**: Providing consistent, appropriate visual feedback during asynchronous operations
+**Implementation**:
+
+Use a three-tier system based on operation duration and impact:
+
+1. **Inline Spinner** (< 2 seconds): Small spinner within the triggering element
+2. **Card-Level Loader** (2-5 seconds): Overlay on affected component with medium spinner
+3. **Page-Level Loader** (> 5 seconds OR mutations): Full-page overlay blocking all interaction
+
+**Quick Decision Rule**: Any mutation that changes database state → Page-Level Loader
+
+**Example**: See [Loading States Pattern](loading-states.md) for complete implementation guide with:
+- Visual design specifications (sizes, colors, overlays)
+- Code examples for all three tiers
+- Accessibility guidelines (ARIA labels, screen reader support)
+- State management patterns (try/finally, no cancellation needed)
+- Migration guide from existing patterns
+
+**Rationale**:
+- Duration-based selection ensures appropriate feedback for operation complexity
+- Page-Level blocking for mutations prevents navigation during state changes
+- Simplified state management (boolean flags, no rollback/cancellation logic)
+- Consistent visual hierarchy across application
+
+**Implementation Reference**: Story 6.4, Story 0.8
+
 ## Related Documentation
 
-- [Backend Patterns](backend-patterns.md) - For API integration patterns  
+- [Backend Patterns](backend-patterns.md) - For API integration patterns
 - [Testing Patterns](testing-patterns.md) - For frontend testing approaches
 - [Architecture Patterns](architecture-patterns.md) - For overall system design
+- **[Loading States Pattern](loading-states.md)** - **Complete guide** to three-tier loading pattern implementation
 - **[React + Convex Patterns KDD](../technical-guides/react-convex-patterns-kdd.md)** - **CRITICAL** - Comprehensive guide to avoid useEffect recursion and data flow anti-patterns
 - **[Incident Workflow Patterns KDD](../incident-workflow/incident-workflow-patterns-kdd.md)** - Workflow-specific state management and save patterns
