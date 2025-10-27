@@ -23,6 +23,7 @@ import { WorkflowImportResult } from '@/types/workflowData';
 import { ContinueWorkflowModal } from './continue-workflow-modal';
 import { useViewport } from '@/hooks/mobile/useViewport';
 import { cn } from '@/lib/utils';
+import { Loader2 } from 'lucide-react';
 
 /**
  * Main Incident Capture Workflow Component
@@ -61,6 +62,10 @@ export function IncidentCaptureWorkflow() {
   const [showContinueModal, setShowContinueModal] = useState(false);
   const [hasCheckedForIncompleteIncidents, setHasCheckedForIncompleteIncidents] = useState(false);
   const [userMadeChoice, setUserMadeChoice] = useState(false); // Track if user already made a choice
+
+  // Story 0.8: Page-Level loading states for AI operations
+  const [isGeneratingAnswers, setIsGeneratingAnswers] = useState(false); // Fill Q&A button
+  const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false); // Step 2→3 transition
 
   // Query for incomplete incidents to show modal
   const incompleteIncidentsResult = useQuery(
@@ -416,18 +421,53 @@ export function IncidentCaptureWorkflow() {
     post_event: string;
   }) => {
     console.log('🐛 Narrative collection completed');
+
+    // Story 0.8: Idempotency guard - prevent duplicate question generation
+    if (isGeneratingQuestions) {
+      console.warn('⚠️ Question generation already in progress, ignoring duplicate call');
+      return;
+    }
+
     setCompletedSteps(prev => new Set(prev).add('narrative'));
 
     // 🚀 Proactive Question Generation (Story 3.2.5)
     if (user?.sessionToken && incidentId) {
+      // ⏱️ TIMING INSTRUMENTATION - START
+      const operationStartTime = performance.now();
+      const operationStartISO = new Date().toISOString();
+
+      console.log('📊 STEP 2→3 TRANSITION - TIMING START');
+      console.log('⏱️ Start Time:', operationStartISO);
+      console.log('🔍 Parameters:', {
+        incidentId,
+        hasSessionToken: !!user?.sessionToken,
+        narrativeLength: {
+          before_event: narrativeData.before_event.length,
+          during_event: narrativeData.during_event.length,
+          end_event: narrativeData.end_event.length,
+          post_event: narrativeData.post_event.length,
+        },
+      });
       console.log('🤖 Starting proactive question generation for all phases...');
+
+      // Story 0.8: Show Page-Level Loader during question generation
+      setIsGeneratingQuestions(true);
+
       try {
+        const apiCallStartTime = performance.now();
+        console.log('🚀 API CALL START - generateAllQuestions');
+
         const result = await generateAllQuestions({
           sessionToken: user.sessionToken,
           incident_id: incidentId,
           narrative: narrativeData,
         });
 
+        const apiCallEndTime = performance.now();
+        const apiCallDuration = (apiCallEndTime - apiCallStartTime) / 1000;
+
+        console.log('📥 API CALL COMPLETE - generateAllQuestions');
+        console.log('⏱️ API Call Duration:', apiCallDuration.toFixed(2), 'seconds');
         console.log('✅ Proactive question generation completed:', {
           success: result.success,
           total_questions: result.total_questions_generated,
@@ -443,6 +483,19 @@ export function IncidentCaptureWorkflow() {
       } catch (error) {
         console.error('❌ Proactive question generation failed:', error);
         console.log('🔧 Manual generation buttons will be available as fallback');
+      } finally {
+        // Story 0.8: Always hide loader when operation completes
+        setIsGeneratingQuestions(false);
+
+        // ⏱️ TIMING INSTRUMENTATION - END
+        const operationEndTime = performance.now();
+        const operationEndISO = new Date().toISOString();
+        const totalDuration = (operationEndTime - operationStartTime) / 1000;
+
+        console.log('📊 STEP 2→3 TRANSITION - TIMING END');
+        console.log('⏱️ End Time:', operationEndISO);
+        console.log('⏱️ Total Duration:', totalDuration.toFixed(2), 'seconds');
+        console.log('═══════════════════════════════════════════');
       }
     }
 
@@ -600,9 +653,26 @@ export function IncidentCaptureWorkflow() {
       setCurrentStep(2); // Go to first Q&A step (before_event)
     }
 
+    // ⏱️ TIMING INSTRUMENTATION - START
+    const operationStartTime = performance.now();
+    const operationStartISO = new Date().toISOString();
+    const currentPhase = getCurrentPhase();
+
+    console.log('📊 FILL Q&A OPERATION - TIMING START');
+    console.log('⏱️ Start Time:', operationStartISO);
+    console.log('🔍 Parameters:', {
+      incidentId,
+      currentStep,
+      phase: currentPhase,
+      hasSessionToken: !!user?.sessionToken,
+    });
+
+    // Story 0.8: Show Page-Level Loader during mutation
+    setIsGeneratingAnswers(true);
+
     try {
-      const currentPhase = getCurrentPhase();
-      console.log('🚀 Calling generateMockAnswers', {
+      const apiCallStartTime = performance.now();
+      console.log('🚀 API CALL START - generateMockAnswers', {
         phase: currentPhase,
         incidentId,
         hasSessionToken: !!user.sessionToken
@@ -614,6 +684,11 @@ export function IncidentCaptureWorkflow() {
         phase: currentPhase
       });
 
+      const apiCallEndTime = performance.now();
+      const apiCallDuration = (apiCallEndTime - apiCallStartTime) / 1000;
+
+      console.log('📥 API CALL COMPLETE - generateMockAnswers');
+      console.log('⏱️ API Call Duration:', apiCallDuration.toFixed(2), 'seconds');
       console.log('📥 generateMockAnswers returned:', result);
 
       if (result.success) {
@@ -624,6 +699,19 @@ export function IncidentCaptureWorkflow() {
       }
     } catch (error) {
       console.error('❌ Error generating mock answers:', error);
+    } finally {
+      // Story 0.8: Always hide loader when operation completes
+      setIsGeneratingAnswers(false);
+
+      // ⏱️ TIMING INSTRUMENTATION - END
+      const operationEndTime = performance.now();
+      const operationEndISO = new Date().toISOString();
+      const totalDuration = (operationEndTime - operationStartTime) / 1000;
+
+      console.log('📊 FILL Q&A OPERATION - TIMING END');
+      console.log('⏱️ End Time:', operationEndISO);
+      console.log('⏱️ Total Duration:', totalDuration.toFixed(2), 'seconds');
+      console.log('═══════════════════════════════════════════');
     }
   };
 
@@ -991,6 +1079,50 @@ export function IncidentCaptureWorkflow() {
             onContinue={handleContinueIncident}
             onStartNew={handleStartNewIncident}
           />
+        )}
+
+        {/* Story 0.8: Page-Level Loader for Fill Q&A */}
+        {isGeneratingAnswers && (
+          <div
+            className="fixed inset-0 bg-black/20 flex items-center justify-center z-50"
+            role="status"
+            aria-live="polite"
+            aria-label="Generating answers, please wait"
+          >
+            <Card>
+              <CardContent className="p-6 flex flex-col items-center gap-3">
+                <Loader2 className="h-12 w-12 animate-spin text-blue-500" aria-hidden="true" />
+                <p className="text-base font-medium">
+                  Generating answers for current phase...
+                </p>
+                <p className="text-sm text-gray-500">
+                  This may take up to 30 seconds
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Story 0.8: Page-Level Loader for Step 2→3 Transition */}
+        {isGeneratingQuestions && (
+          <div
+            className="fixed inset-0 bg-black/20 flex items-center justify-center z-50"
+            role="status"
+            aria-live="polite"
+            aria-label="Preparing questions, please wait"
+          >
+            <Card>
+              <CardContent className="p-6 flex flex-col items-center gap-3">
+                <Loader2 className="h-12 w-12 animate-spin text-blue-500" aria-hidden="true" />
+                <p className="text-base font-medium">
+                  Preparing questions for next step...
+                </p>
+                <p className="text-sm text-gray-500">
+                  This may take a few moments
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
     </div>
