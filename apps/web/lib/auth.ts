@@ -291,7 +291,7 @@ export class AuthService {
 
   async requestPasswordReset(email: string) {
     try {
-      const result = await convex.mutation(api.auth.requestPasswordReset, {
+      const result = await convex.action(api.auth.requestPasswordReset, {
         email,
       });
       return { success: true };

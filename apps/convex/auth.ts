@@ -564,8 +564,8 @@ export const changePassword = mutation({
   },
 });
 
-// Request password reset mutation
-export const requestPasswordReset = mutation({
+// Internal mutation to create password reset token (called by action)
+export const createPasswordResetToken = mutation({
   args: {
     email: v.string(),
   },
@@ -603,18 +603,33 @@ export const requestPasswordReset = mutation({
       expires,
     });
 
-    // Send email with reset token (mock implementation)
-    console.log('📧 MOCK EMAIL SENT - PASSWORD RESET');
-    console.log('==================================');
-    console.log(`To: ${args.email}`);
-    console.log(`Token: ${token}`);
-    const resetUrl = generatePasswordResetUrl(token);
-    console.log(`Reset URL: ${resetUrl}`);
-    console.log(`Expires: ${new Date(expires).toISOString()}`);
-    console.log(`Sent at: ${new Date().toISOString()}`);
-    console.log('==================================');
+    return { success: true, token, email: args.email };
+  },
+});
 
-    return { success: true };
+// Request password reset action (sends real email)
+export const requestPasswordReset = action({
+  args: {
+    email: v.string(),
+  },
+  handler: async (ctx: ActionCtx, args: { email: string }) => {
+    try {
+      // Step 1: Create password reset token in database
+      const tokenResult = await ctx.runMutation(api.auth.createPasswordResetToken, {
+        email: args.email,
+      });
+
+      // Step 2: Send real email via email worker
+      await ctx.runAction(api.email.sendPasswordResetEmail, {
+        email: tokenResult.email,
+        token: tokenResult.token,
+      });
+
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Password reset failed:', error);
+      throw error;
+    }
   },
 });
 
