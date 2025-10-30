@@ -22,7 +22,7 @@ import { getUserFromSession } from './lib/sessionResolver';
  * @param user - User object with role and email
  * @returns boolean - true if user has developer access
  */
-function hasDeveloperAccess(user?: any | null): boolean {
+export function hasDeveloperAccess(user?: any | null): boolean {
   if (!user) return false;
 
   // Specific users granted developer access

@@ -438,7 +438,14 @@ export default defineSchema({
     ai_model: v.string(), // Required AI model (populated by migration)
     max_tokens: v.optional(v.number()), // Token limit for responses
     temperature: v.optional(v.number()), // AI temperature setting
-    
+
+    // Story 6.9: Adaptive Token Management
+    baseline_max_tokens: v.optional(v.number()), // Original max_tokens before adjustments
+    adjusted_at: v.optional(v.number()), // When max_tokens was last adjusted
+    adjustment_reason: v.optional(v.string()), // Reason for adjustment (e.g., "Auto-escalated: 3 truncations")
+    acknowledged_at: v.optional(v.number()), // When the adjustment was reviewed/acknowledged by admin
+    acknowledged_by: v.optional(v.id("users")), // Admin who acknowledged the adjustment
+
     // Versioning
     is_active: v.optional(v.boolean()), // Whether this version is currently active
     created_at: v.number(),

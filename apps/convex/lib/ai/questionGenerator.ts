@@ -2,12 +2,13 @@
 import { v } from "convex/values";
 import { action } from "../../_generated/server";
 import { internal, api } from "../../_generated/api";
-import { 
+import {
   generateCorrelationId,
   AIRequest,
   AIResponse
 } from "../../aiService";
 import { aiManager } from "../../aiMultiProvider";
+import { retryWithAdaptiveTokens } from "../../aiClarification";
 
 // Common output format for all question generation functions
 interface GeneratedQuestion {
@@ -118,87 +119,124 @@ const generateQuestionsWithTemplate = async (
       correlationId,
     });
 
-    // Call real AI service with processed prompt
-    console.log("🤖 CALLING AI SERVICE", {
+    // Call AI service with adaptive token management (Story 6.9)
+    const baselineMaxTokens = prompt.max_tokens || 1000;
+
+    console.log("🤖 CALLING AI SERVICE WITH ADAPTIVE TOKENS", {
       promptLength: interpolatedPrompt.length,
       model: prompt.ai_model || 'openai/gpt-5',
       temperature: prompt.temperature || 0.7,
+      baseline_max_tokens: baselineMaxTokens,
       correlationId,
     });
 
-    // Prepare AI request
-    const aiRequest: AIRequest = {
-      correlationId,
-      model: prompt.ai_model || 'openai/gpt-5',
-      prompt: interpolatedPrompt,
-      temperature: prompt.temperature || 0.7,
-      maxTokens: prompt.max_tokens || 1000,
-      metadata: {
-        operation: `generate_${phase}_questions`,
-        templateName,
-        phase,
-        variables: Object.keys(variables),
-      },
-    };
+    // Define the AI operation with adaptive token management
+    const aiOperation = async (maxTokens: number) => {
+      // Prepare AI request with dynamic maxTokens
+      const aiRequest: AIRequest = {
+        correlationId,
+        model: prompt.ai_model || 'openai/gpt-5',
+        prompt: interpolatedPrompt,
+        temperature: prompt.temperature || 0.7,
+        maxTokens: maxTokens,
+        metadata: {
+          operation: `generate_${phase}_questions`,
+          templateName,
+          phase,
+          variables: Object.keys(variables),
+        },
+      };
 
-    // Send request through multi-provider manager
-    const aiResponse = await aiManager.sendRequest(aiRequest);
+      // Send request through multi-provider manager
+      const aiResponse = await aiManager.sendRequest(aiRequest);
 
-    console.log("🤖 AI RESPONSE RECEIVED", {
-      success: aiResponse.success,
-      contentLength: aiResponse.content?.length || 0,
-      processingTime: aiResponse.processingTimeMs,
-      tokensUsed: aiResponse.tokensUsed,
-      cost: aiResponse.cost,
-      correlationId,
-    });
-
-    // Log the AI request
-    await ctx.runMutation(api.aiLogging.logAIRequest, {
-      correlationId: aiRequest.correlationId,
-      operation: `generate_${phase}_questions`,
-      model: aiRequest.model,
-      promptTemplate: templateName,
-      inputData: aiRequest.metadata,
-      outputData: aiResponse.success ? { content: aiResponse.content } : null,
-      processingTimeMs: aiResponse.processingTimeMs,
-      tokensUsed: aiResponse.tokensUsed,
-      cost: aiResponse.cost,
-      success: aiResponse.success,
-      error: aiResponse.error,
-    });
-
-    // Record prompt usage
-    await ctx.runMutation(api.promptManager.updatePromptUsage, {
-      prompt_name: prompt.prompt_name,
-      response_time_ms: aiResponse.processingTimeMs,
-      success: aiResponse.success,
-    });
-
-    if (!aiResponse.success) {
-      throw new Error(`AI request failed: ${aiResponse.error}`);
-    }
-
-    // Parse AI response (should be JSON)
-    let aiQuestions;
-    try {
-      // Extract JSON from response if wrapped in markdown
-      const jsonMatch = aiResponse.content.match(/```json\s*([\s\S]*?)\s*```/) || 
-                       aiResponse.content.match(/```\s*([\s\S]*?)\s*```/) ||
-                       [null, aiResponse.content];
-      
-      const jsonContent = jsonMatch[1] || aiResponse.content;
-      aiQuestions = JSON.parse(jsonContent.trim());
-    } catch (parseError) {
-      console.error("❌ FAILED TO PARSE AI RESPONSE", {
-        error: parseError.message,
-        rawContent: aiResponse.content?.substring(0, 200) + '...',
+      console.log("🤖 AI RESPONSE RECEIVED", {
+        success: aiResponse.success,
+        contentLength: aiResponse.content?.length || 0,
+        processingTime: aiResponse.processingTimeMs,
+        tokensUsed: aiResponse.tokensUsed,
+        cost: aiResponse.cost,
+        finishReason: aiResponse.finishReason,
+        maxTokens: maxTokens,
         correlationId,
       });
-      throw new Error(`Failed to parse AI response as JSON: ${parseError.message}`);
-    }
 
-    return validateQuestionOutput(aiQuestions, phase);
+      // Log the AI request
+      await ctx.runMutation(api.aiLogging.logAIRequest, {
+        correlationId: aiRequest.correlationId,
+        operation: `generate_${phase}_questions`,
+        model: aiRequest.model,
+        promptTemplate: templateName,
+        inputData: { ...aiRequest.metadata, maxTokens },
+        outputData: aiResponse.success ? { content: aiResponse.content } : null,
+        processingTimeMs: aiResponse.processingTimeMs,
+        tokensUsed: aiResponse.tokensUsed,
+        cost: aiResponse.cost,
+        success: aiResponse.success,
+        error: aiResponse.error,
+      });
+
+      if (!aiResponse.success) {
+        throw new Error(`AI request failed: ${aiResponse.error}`);
+      }
+
+      // Parse AI response (should be JSON) - parsing errors will trigger escalation
+      let aiQuestions;
+      try {
+        // Extract JSON from response if wrapped in markdown
+        const jsonMatch = aiResponse.content.match(/```json\s*([\s\S]*?)\s*```/) ||
+                         aiResponse.content.match(/```\s*([\s\S]*?)\s*```/) ||
+                         [null, aiResponse.content];
+
+        const jsonContent = jsonMatch[1] || aiResponse.content;
+        aiQuestions = JSON.parse(jsonContent.trim());
+      } catch (parseError) {
+        console.error("❌ JSON PARSE ERROR (potential truncation)", {
+          error: parseError.message,
+          rawContent: aiResponse.content?.substring(0, 200) + '...',
+          maxTokens: maxTokens,
+          correlationId,
+        });
+        // Throw parse error - retryWithAdaptiveTokens will detect this and escalate
+        throw new Error(`Failed to parse AI response as JSON: ${parseError.message}`);
+      }
+
+      // Return parsed questions with finishReason for truncation detection
+      return {
+        result: aiQuestions,
+        finishReason: aiResponse.finishReason,
+      };
+    };
+
+    // Execute with adaptive token escalation (Story 6.9 - Task 6: Database updates)
+    const escalationResult = await retryWithAdaptiveTokens(
+      ctx, // Pass Convex context for database updates
+      aiOperation,
+      {
+        prompt_name: templateName,
+        baseline_max_tokens: baselineMaxTokens,
+        correlation_id: correlationId,
+      }
+    );
+
+    console.log("✅ ADAPTIVE TOKEN ESCALATION COMPLETE", {
+      final_max_tokens: escalationResult.final_max_tokens,
+      baseline_max_tokens: baselineMaxTokens,
+      escalations_used: escalationResult.escalations_used,
+      finish_reason: escalationResult.finishReason,
+      phase,
+      correlationId,
+    });
+
+    // Record final prompt usage with escalated tokens
+    await ctx.runMutation(api.promptManager.updatePromptUsage, {
+      prompt_name: prompt.prompt_name,
+      response_time_ms: 0, // Already logged in aiOperation
+      success: true,
+    });
+
+    // Validate and return questions
+    return validateQuestionOutput(escalationResult.result, phase);
 
   } catch (error) {
     console.error(`❌ FAILED TO GENERATE ${phase.toUpperCase()} QUESTIONS`, {

@@ -14,6 +14,13 @@ const RETRY_CONFIG = {
   BACKOFF_MULTIPLIER: 2
 };
 
+// Token escalation configuration (Story 6.9)
+const TOKEN_ESCALATION_CONFIG = {
+  DEFAULT_INCREMENT: 500,
+  DEFAULT_MAX_ESCALATIONS: 3,
+  DEFAULT_TOKEN_CAP: 10000,
+};
+
 // Helper function to implement exponential backoff
 const retryWithBackoff = async <T>(
   operation: () => Promise<T>,
@@ -21,19 +28,19 @@ const retryWithBackoff = async <T>(
   maxAttempts = RETRY_CONFIG.MAX_ATTEMPTS
 ): Promise<T> => {
   let lastError: Error | null = null;
-  
+
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       return await operation();
     } catch (error) {
       lastError = error instanceof Error ? error : new Error('Unknown error');
-      
+
       console.warn(`🔄 RETRY ATTEMPT ${attempt}/${maxAttempts}`, {
         context,
         error: lastError.message,
         timestamp: new Date().toISOString()
       });
-      
+
       // Don't wait on the last attempt
       if (attempt < maxAttempts) {
         const delay = Math.min(
@@ -44,7 +51,7 @@ const retryWithBackoff = async <T>(
       }
     }
   }
-  
+
   // All retries exhausted
   console.error(`❌ ALL RETRIES EXHAUSTED`, {
     context,
@@ -52,8 +59,231 @@ const retryWithBackoff = async <T>(
     finalError: lastError?.message,
     timestamp: new Date().toISOString()
   });
-  
+
   throw new Error(`Operation failed after ${maxAttempts} attempts: ${lastError?.message}`);
+};
+
+/**
+ * Adaptive token management with self-healing (Story 6.9)
+ *
+ * Automatically detects token truncation and escalates max_tokens until success.
+ * Pattern: baseline → +500 → +500 → +500 (configurable)
+ *
+ * @param ctx - Convex action context for database updates
+ * @param operation - Function that accepts max_tokens and returns result + finishReason
+ * @param context - Prompt name, baseline tokens, correlation ID for logging
+ * @param escalation_increment - Tokens to add per retry (default: 500)
+ * @param max_escalations - Maximum number of escalation attempts (default: 3)
+ * @returns The successful operation result
+ * @throws Error if all escalations fail or token cap is reached
+ */
+export const retryWithAdaptiveTokens = async <T>(
+  ctx: any, // ActionCtx from Convex (allows runMutation calls)
+  operation: (maxTokens: number) => Promise<{
+    result: T;
+    finishReason?: string;
+  }>,
+  context: {
+    prompt_name: string;
+    baseline_max_tokens: number;
+    correlation_id?: string;
+  },
+  escalation_increment: number = TOKEN_ESCALATION_CONFIG.DEFAULT_INCREMENT,
+  max_escalations: number = TOKEN_ESCALATION_CONFIG.DEFAULT_MAX_ESCALATIONS
+): Promise<{
+  result: T;
+  final_max_tokens: number;
+  escalations_used: number;
+  finishReason?: string;
+}> => {
+  // Get token cap from environment variable or use default
+  const tokenCap = parseInt(process.env.MAX_TOKEN_ESCALATION_CAP || '') || TOKEN_ESCALATION_CONFIG.DEFAULT_TOKEN_CAP;
+
+  let currentMaxTokens = context.baseline_max_tokens;
+  let lastError: Error | null = null;
+  let lastFinishReason: string | undefined;
+  let truncationType: 'finish_reason: length' | 'JSON parse error' | undefined;
+
+  console.log(`🚀 ADAPTIVE TOKEN ESCALATION START`, {
+    prompt_name: context.prompt_name,
+    baseline_max_tokens: context.baseline_max_tokens,
+    escalation_increment,
+    max_escalations,
+    token_cap: tokenCap,
+    correlation_id: context.correlation_id,
+    timestamp: new Date().toISOString(),
+  });
+
+  for (let attempt = 1; attempt <= max_escalations + 1; attempt++) {
+    // Enforce token cap
+    if (currentMaxTokens > tokenCap) {
+      console.error(`❌ TOKEN CAP REACHED`, {
+        prompt_name: context.prompt_name,
+        current_max_tokens: currentMaxTokens,
+        token_cap: tokenCap,
+        attempt,
+        correlation_id: context.correlation_id,
+        timestamp: new Date().toISOString(),
+      });
+      throw new Error(
+        `Token limit exceeded: ${currentMaxTokens} > ${tokenCap}. ` +
+        `Consider optimizing prompt or increasing MAX_TOKEN_ESCALATION_CAP environment variable.`
+      );
+    }
+
+    try {
+      console.log(`🔄 ESCALATION ATTEMPT ${attempt}/${max_escalations + 1}`, {
+        prompt_name: context.prompt_name,
+        current_max_tokens: currentMaxTokens,
+        baseline_max_tokens: context.baseline_max_tokens,
+        increment_from_baseline: currentMaxTokens - context.baseline_max_tokens,
+        correlation_id: context.correlation_id,
+        timestamp: new Date().toISOString(),
+      });
+
+      const response = await operation(currentMaxTokens);
+      lastFinishReason = response.finishReason;
+
+      // Check for truncation via finishReason
+      if (response.finishReason === "length") {
+        truncationType = 'finish_reason: length'; // Track truncation cause
+
+        console.warn(`⚠️ TRUNCATION DETECTED (finish_reason="length")`, {
+          prompt_name: context.prompt_name,
+          current_max_tokens: currentMaxTokens,
+          attempt,
+          correlation_id: context.correlation_id,
+          timestamp: new Date().toISOString(),
+        });
+
+        // Last attempt - throw error
+        if (attempt > max_escalations) {
+          throw new Error(
+            `Content truncated after ${attempt} attempts (max_tokens: ${currentMaxTokens}). ` +
+            `Reached maximum escalations (${max_escalations}).`
+          );
+        }
+
+        // Escalate tokens for next attempt
+        currentMaxTokens += escalation_increment;
+        continue;
+      }
+
+      // Success - normal completion or other non-length finish_reason
+      console.log(`✅ ADAPTIVE TOKEN ESCALATION SUCCESS`, {
+        prompt_name: context.prompt_name,
+        final_max_tokens: currentMaxTokens,
+        baseline_max_tokens: context.baseline_max_tokens,
+        total_escalation: currentMaxTokens - context.baseline_max_tokens,
+        escalations_used: attempt - 1,
+        finish_reason: response.finishReason,
+        correlation_id: context.correlation_id,
+        timestamp: new Date().toISOString(),
+      });
+
+      // Story 6.9 - Task 6: Persist token adjustments to database (non-blocking)
+      // Only update database if escalation actually occurred
+      if (attempt > 1) {
+        try {
+          // Generate adjustment reason based on escalation count and truncation type
+          const escalationCount = attempt - 1;
+          const truncationCause = truncationType || 'Unknown truncation';
+          const adjustmentReason = `Auto-escalated: ${escalationCount} truncation(s) detected (${truncationCause})`;
+
+          await ctx.runMutation(api.promptManager.updatePromptTokenLimit, {
+            prompt_name: context.prompt_name,
+            new_max_tokens: currentMaxTokens,
+            adjustment_reason: adjustmentReason,
+            correlation_id: context.correlation_id,
+          });
+
+          console.log(`💾 DATABASE UPDATE SUCCESS`, {
+            prompt_name: context.prompt_name,
+            new_max_tokens: currentMaxTokens,
+            adjustment_reason: adjustmentReason,
+            correlation_id: context.correlation_id,
+            timestamp: new Date().toISOString(),
+          });
+        } catch (dbError) {
+          // Non-blocking: log error but don't fail the main operation
+          console.warn(`⚠️ DATABASE UPDATE FAILED (non-blocking)`, {
+            prompt_name: context.prompt_name,
+            error: dbError instanceof Error ? dbError.message : "Unknown error",
+            correlation_id: context.correlation_id,
+            timestamp: new Date().toISOString(),
+          });
+        }
+      }
+
+      return {
+        result: response.result,
+        final_max_tokens: currentMaxTokens,
+        escalations_used: attempt - 1,
+        finishReason: response.finishReason,
+      };
+
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error('Unknown error');
+
+      // Check if error is JSON parse error (potential truncation)
+      const isJsonParseError = lastError.message.toLowerCase().includes('json') ||
+                               lastError.message.toLowerCase().includes('parse');
+
+      if (isJsonParseError) {
+        truncationType = 'JSON parse error'; // Track truncation cause
+
+        console.warn(`⚠️ JSON PARSE ERROR (potential truncation)`, {
+          prompt_name: context.prompt_name,
+          current_max_tokens: currentMaxTokens,
+          error: lastError.message,
+          attempt,
+          correlation_id: context.correlation_id,
+          timestamp: new Date().toISOString(),
+        });
+
+        // Last attempt - throw error
+        if (attempt > max_escalations) {
+          throw new Error(
+            `JSON parse error after ${attempt} attempts (max_tokens: ${currentMaxTokens}). ` +
+            `Original error: ${lastError.message}`
+          );
+        }
+
+        // Escalate tokens for next attempt
+        currentMaxTokens += escalation_increment;
+        continue;
+      }
+
+      // Non-truncation error - throw immediately (don't escalate)
+      console.error(`❌ NON-TRUNCATION ERROR`, {
+        prompt_name: context.prompt_name,
+        current_max_tokens: currentMaxTokens,
+        error: lastError.message,
+        attempt,
+        correlation_id: context.correlation_id,
+        timestamp: new Date().toISOString(),
+      });
+      throw lastError;
+    }
+  }
+
+  // All escalations exhausted
+  console.error(`❌ ALL ESCALATIONS EXHAUSTED`, {
+    prompt_name: context.prompt_name,
+    final_max_tokens: currentMaxTokens,
+    baseline_max_tokens: context.baseline_max_tokens,
+    max_escalations,
+    last_finish_reason: lastFinishReason,
+    last_error: lastError?.message,
+    correlation_id: context.correlation_id,
+    timestamp: new Date().toISOString(),
+  });
+
+  throw new Error(
+    `Operation failed after ${max_escalations + 1} attempts with token escalation. ` +
+    `Final max_tokens: ${currentMaxTokens}. ` +
+    `${lastError ? `Last error: ${lastError.message}` : `Last finish_reason: ${lastFinishReason}`}`
+  );
 };
 
 // Generate clarification questions for an incident phase
@@ -304,13 +534,17 @@ export const generateAllClarificationQuestions = action({
       timestamp: new Date().toISOString(),
     });
 
+    // Capture wall clock time for entire batch
+    const batch_start_time = Date.now();
+
     // Define all phases to process
     const phases = ["before_event", "during_event", "end_event", "post_event"] as const;
-    
-    // Create individual generation promises for parallel processing
+
+    // Create individual generation promises for parallel processing with timing
     const generationPromises = phases.map(async (phase) => {
+      const startTime = Date.now();
       const narrative_content = args.narrative[phase];
-      
+
       // Skip phases with no content
       if (!narrative_content?.trim()) {
         console.log(`⏭️ Skipping ${phase} - no narrative content`);
@@ -319,12 +553,13 @@ export const generateAllClarificationQuestions = action({
           success: false,
           reason: "no_content",
           questions: [],
+          processing_time_ms: 0,
         };
       }
 
       try {
         console.log(`🔄 Generating questions for ${phase}...`);
-        
+
         const result = await ctx.runAction(internal.aiClarification.generateClarificationQuestions, {
           sessionToken: args.sessionToken,
           incident_id: args.incident_id,
@@ -332,49 +567,81 @@ export const generateAllClarificationQuestions = action({
           narrative_content,
         });
 
+        const endTime = Date.now();
+        const processing_time_ms = endTime - startTime;
+
         console.log(`✅ Successfully generated ${result.questions?.length || 0} questions for ${phase}`);
-        
+
         return {
           phase,
           success: true,
           questions: result.questions || [],
           cached: result.cached || false,
           correlation_id: result.correlation_id,
+          processing_time_ms,
         };
       } catch (error) {
         console.error(`❌ Failed to generate questions for ${phase}:`, error);
-        
+
+        const endTime = Date.now();
+        const processing_time_ms = endTime - startTime;
+
         return {
           phase,
           success: false,
           reason: error instanceof Error ? error.message : "unknown_error",
           questions: [],
+          processing_time_ms,
         };
       }
     });
 
     // Execute all generations in parallel
     const results = await Promise.allSettled(generationPromises);
-    
-    // Process results
+
+    // Capture wall clock time for entire batch
+    const batch_end_time = Date.now();
+    const wall_clock_time_ms = batch_end_time - batch_start_time;
+
+    // Process results and collect timing data
     const successful_phases: string[] = [];
     const failed_phases: string[] = [];
+    const phase_timings: Record<string, number> = {};
+
     const total_questions_generated = results.reduce((count, result) => {
       if (result.status === "fulfilled" && result.value.success) {
         successful_phases.push(result.value.phase);
+        phase_timings[result.value.phase] = result.value.processing_time_ms || 0;
         return count + result.value.questions.length;
       } else {
-        failed_phases.push(result.status === "fulfilled" ? result.value.phase : "unknown");
+        const phase = result.status === "fulfilled" ? result.value.phase : "unknown";
+        failed_phases.push(phase);
+        if (result.status === "fulfilled") {
+          phase_timings[result.value.phase] = result.value.processing_time_ms || 0;
+        }
         return count;
       }
     }, 0);
 
-    console.log("🎯 Batch generation completed", {
+    // Calculate sum of individual phase times (for comparison with wall clock)
+    const sum_of_phase_times_ms = Object.values(phase_timings).reduce((sum, time) => sum + time, 0);
+    const slowest_phase_ms = Math.max(...Object.values(phase_timings));
+
+    console.log("🎯 BATCH GENERATION COMPLETED - ALL PHASE TIMINGS", {
       incident_id: args.incident_id,
       successful_phases,
       failed_phases,
       total_questions_generated,
-      duration_ms: Date.now(),
+      phase_timings: {
+        before_event_ms: phase_timings["before_event"] || 0,
+        during_event_ms: phase_timings["during_event"] || 0,
+        end_event_ms: phase_timings["end_event"] || 0,
+        post_event_ms: phase_timings["post_event"] || 0,
+      },
+      wall_clock_time_ms,            // Actual user wait time (parallel execution)
+      slowest_phase_ms,               // Longest individual phase
+      sum_of_phase_times_ms,          // Sum of all phases (would be sequential time)
+      parallelization_benefit_ms: sum_of_phase_times_ms - wall_clock_time_ms,  // Time saved by parallel execution
     });
 
     // Return comprehensive results

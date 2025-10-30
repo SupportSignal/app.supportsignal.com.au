@@ -1,0 +1,47 @@
+# SupportSignal Workspace Layout
+# Location: ~/dev/clients/supportsignal/app.supportsignal.com.au/.workspace.yaml
+# Usage: Navigate here with `jss-app`, then run `layout`
+
+# Window ratio: quarter (¼), third (⅓), or half (½)
+layout: thirds
+
+zones:
+  # Top zone - AI communication
+  top:
+    type: conversation
+    panes: 1  # Single Claude Code session
+
+  # Bottom zone - Development servers and tests
+  bottom:
+    type: execution
+    layout: grid-3x2  # 3 columns × 2 rows = 6 panes total
+
+    # Panes layout (3 columns × 2 rows):
+    # [Web Server ] [Convex DB    ] [Worker/Logs ]
+    # [Web Tests  ] [Convex Tests ] [Worker Tests]
+
+    panes:
+      # Row 1: Servers
+      - cmd: "bun run web:dev"
+        label: "Web Server"
+
+      - cmd: "bun run convex:dev"
+        label: "Convex DB"
+
+      - cmd: "bun run worker:dev"
+        label: "Worker/Logs"
+
+      # Row 2: Tests (watch mode)
+      - cmd: "bun run test:web:coverage:watch"
+        label: "Web Tests"
+
+      - cmd: "bun run test:convex:coverage:watch"
+        label: "Convex Tests"
+
+      - cmd: "bun run test:worker:coverage:watch"
+        label: "Worker Tests"
+
+# Notes:
+# - This is your most complex setup (6 panes)
+# - Layout: Web/Tests on left, Convex/Tests in middle, Worker/Tests on right
+# - Each column has server on top, tests below

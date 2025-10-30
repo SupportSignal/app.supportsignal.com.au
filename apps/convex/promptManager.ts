@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { query, mutation, internalMutation } from "./_generated/server";
-import { requirePermission, PERMISSIONS } from "./permissions";
+import { internal } from "./_generated/api";
+import { requirePermission, PERMISSIONS, hasDeveloperAccess } from "./permissions";
 import { ConvexError } from "convex/values";
 import { getConfig } from "./lib/config";
 
@@ -1153,6 +1154,311 @@ export const bulkUpdatePromptModels = mutation({
     });
 
     return results;
+  },
+});
+
+/**
+ * Update prompt token limit with adaptive token management
+ * Story 6.9 - Phase 3: Self-Healing Database Updates
+ *
+ * Used by retryWithAdaptiveTokens when AI responses are truncated.
+ * Automatically adjusts max_tokens upward to prevent future truncation.
+ */
+export const updatePromptTokenLimit = mutation({
+  args: {
+    prompt_name: v.string(),
+    new_max_tokens: v.number(),
+    baseline_max_tokens: v.optional(v.number()),
+    adjustment_reason: v.string(),
+    correlation_id: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const correlationId = args.correlation_id || `token-update-${Date.now()}`;
+
+    console.log("🔧 UPDATING PROMPT TOKEN LIMIT", {
+      prompt_name: args.prompt_name,
+      new_max_tokens: args.new_max_tokens,
+      baseline_max_tokens: args.baseline_max_tokens,
+      adjustment_reason: args.adjustment_reason,
+      correlationId,
+    });
+
+    // Find the active prompt to update
+    const prompt = await ctx.db
+      .query("ai_prompts")
+      .withIndex("by_name", (q) => q.eq("prompt_name", args.prompt_name))
+      .filter((q) => q.eq(q.field("is_active"), true))
+      .order("desc")
+      .first();
+
+    if (!prompt) {
+      const errorMsg = `Active prompt not found: ${args.prompt_name}`;
+      console.error("❌ PROMPT NOT FOUND", {
+        prompt_name: args.prompt_name,
+        correlationId,
+      });
+      throw new ConvexError(errorMsg);
+    }
+
+    // Prepare update object
+    const updateData: any = {
+      max_tokens: args.new_max_tokens,
+      adjusted_at: Date.now(),
+      adjustment_reason: args.adjustment_reason,
+    };
+
+    // Set baseline_max_tokens if not already set OR if explicitly provided
+    if (args.baseline_max_tokens !== undefined) {
+      updateData.baseline_max_tokens = args.baseline_max_tokens;
+    } else if (!prompt.baseline_max_tokens) {
+      // Backfill baseline with current max_tokens if not set
+      updateData.baseline_max_tokens = prompt.max_tokens || args.new_max_tokens;
+    }
+
+    // Update the prompt
+    await ctx.db.patch(prompt._id, updateData);
+
+    console.log("✅ PROMPT TOKEN LIMIT UPDATED", {
+      prompt_name: args.prompt_name,
+      prompt_id: prompt._id,
+      old_max_tokens: prompt.max_tokens,
+      new_max_tokens: args.new_max_tokens,
+      baseline_max_tokens: updateData.baseline_max_tokens,
+      adjustment_reason: args.adjustment_reason,
+      correlationId,
+    });
+
+    return {
+      success: true,
+      prompt_id: prompt._id,
+      prompt_name: args.prompt_name,
+      old_max_tokens: prompt.max_tokens,
+      new_max_tokens: args.new_max_tokens,
+      baseline_max_tokens: updateData.baseline_max_tokens || prompt.baseline_max_tokens, // Return existing if not updated
+      adjusted_at: updateData.adjusted_at,
+      adjustment_reason: args.adjustment_reason,
+      correlationId,
+    };
+  },
+});
+
+/**
+ * Reset prompt token limit to baseline - Story 6.9 - Task 8
+ * Reverts max_tokens back to baseline_max_tokens and clears adjustment metadata
+ */
+export const resetPromptToBaseline = mutation({
+  args: {
+    sessionToken: v.string(),
+    prompt_name: v.string(),
+    correlation_id: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const correlationId = args.correlation_id || `token-reset-${Date.now()}`;
+
+    // Authenticate user
+    const sessionToken = args.sessionToken;
+    // @ts-ignore - Type inference issue with internal.auth.verifySession
+    const user: any = await ctx.runQuery(internal.auth.verifySession, {
+      sessionToken,
+    });
+
+    if (!user) {
+      throw new ConvexError("Authentication required");
+    }
+
+    // Find the active prompt
+    const prompt = await ctx.db
+      .query("ai_prompts")
+      .withIndex("by_name", (q) => q.eq("prompt_name", args.prompt_name))
+      .filter((q) => q.eq(q.field("is_active"), true))
+      .order("desc")
+      .first();
+
+    if (!prompt) {
+      throw new ConvexError(`Active prompt not found: ${args.prompt_name}`);
+    }
+
+    // Check if baseline exists
+    if (!prompt.baseline_max_tokens) {
+      throw new ConvexError(`Prompt has no baseline_max_tokens set: ${args.prompt_name}`);
+    }
+
+    // Check if already at baseline
+    if (prompt.max_tokens === prompt.baseline_max_tokens) {
+      console.log("⚠️ PROMPT ALREADY AT BASELINE", {
+        prompt_name: args.prompt_name,
+        baseline_max_tokens: prompt.baseline_max_tokens,
+        correlationId,
+      });
+
+      return {
+        success: true,
+        prompt_id: prompt._id,
+        prompt_name: args.prompt_name,
+        old_max_tokens: prompt.max_tokens,
+        new_max_tokens: prompt.baseline_max_tokens,
+        baseline_max_tokens: prompt.baseline_max_tokens,
+        message: "Prompt already at baseline",
+        correlationId,
+      };
+    }
+
+    const oldMaxTokens = prompt.max_tokens;
+
+    // Reset to baseline
+    await ctx.db.patch(prompt._id, {
+      max_tokens: prompt.baseline_max_tokens,
+      adjusted_at: undefined, // Clear adjustment timestamp
+      adjustment_reason: undefined, // Clear adjustment reason
+    });
+
+    console.log("✅ PROMPT RESET TO BASELINE", {
+      prompt_name: args.prompt_name,
+      prompt_id: prompt._id,
+      old_max_tokens: oldMaxTokens,
+      baseline_max_tokens: prompt.baseline_max_tokens,
+      reset_by: user.email,
+      correlationId,
+      timestamp: new Date().toISOString(),
+    });
+
+    return {
+      success: true,
+      prompt_id: prompt._id,
+      prompt_name: args.prompt_name,
+      old_max_tokens: oldMaxTokens,
+      new_max_tokens: prompt.baseline_max_tokens,
+      baseline_max_tokens: prompt.baseline_max_tokens,
+      reset_by: user.email,
+      correlationId,
+    };
+  },
+});
+
+/**
+ * Story 6.9 - Task 8b: Acknowledge Prompt Token Adjustment
+ *
+ * Allows admins to acknowledge/approve automatic token limit adjustments.
+ * This marks the adjustment as reviewed without changing the token limit.
+ * Once acknowledged, the prompt no longer appears in the alert widget.
+ *
+ * @param sessionToken - User session token for authentication
+ * @param prompt_name - Name of the prompt to acknowledge
+ * @param correlation_id - Optional correlation ID for tracking
+ * @returns Acknowledgment details including timestamp and admin info
+ */
+export const acknowledgePromptAdjustment = mutation({
+  args: {
+    sessionToken: v.string(),
+    prompt_name: v.string(),
+    correlation_id: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const correlationId = args.correlation_id || `token-acknowledge-${Date.now()}`;
+
+    console.log("🔔 ACKNOWLEDGE PROMPT ADJUSTMENT REQUEST", {
+      prompt_name: args.prompt_name,
+      correlationId,
+    });
+
+    // Verify authentication
+    const sessionToken = args.sessionToken;
+    // @ts-ignore - Type inference issue with internal.auth.verifySession
+    const user: any = await ctx.runQuery(internal.auth.verifySession, {
+      sessionToken,
+    });
+
+    if (!user) {
+      console.log("❌ ACKNOWLEDGE FAILED - Authentication required");
+      throw new ConvexError("Authentication required");
+    }
+
+    // Developer access required
+    if (!hasDeveloperAccess(user)) {
+      console.log("❌ ACKNOWLEDGE FAILED - Developer access required", {
+        user_email: user.email,
+        user_role: user.role,
+      });
+      throw new ConvexError("Developer access required to acknowledge prompt adjustments");
+    }
+
+    // Find the prompt
+    const prompt = await ctx.db
+      .query("ai_prompts")
+      .withIndex("by_name", (q) => q.eq("prompt_name", args.prompt_name))
+      .filter((q) => q.eq(q.field("is_active"), true))
+      .order("desc")
+      .first();
+
+    if (!prompt) {
+      console.log("❌ ACKNOWLEDGE FAILED - Prompt not found", {
+        prompt_name: args.prompt_name,
+      });
+      throw new ConvexError(`Active prompt not found: ${args.prompt_name}`);
+    }
+
+    // Verify prompt has been adjusted
+    if (!prompt.adjusted_at) {
+      console.log("⚠️ ACKNOWLEDGE WARNING - Prompt has no adjustments to acknowledge", {
+        prompt_name: args.prompt_name,
+      });
+      return {
+        success: true,
+        message: "Prompt has no adjustments to acknowledge",
+        prompt_name: args.prompt_name,
+        correlationId,
+      };
+    }
+
+    // Check if already acknowledged
+    if (prompt.acknowledged_at) {
+      console.log("ℹ️ ACKNOWLEDGE INFO - Prompt already acknowledged", {
+        prompt_name: args.prompt_name,
+        acknowledged_at: prompt.acknowledged_at,
+        acknowledged_by: prompt.acknowledged_by,
+      });
+      return {
+        success: true,
+        message: "Prompt adjustment already acknowledged",
+        prompt_name: args.prompt_name,
+        acknowledged_at: prompt.acknowledged_at,
+        acknowledged_by: prompt.acknowledged_by,
+        correlationId,
+      };
+    }
+
+    // Acknowledge the adjustment
+    const now = Date.now();
+    await ctx.db.patch(prompt._id, {
+      acknowledged_at: now,
+      acknowledged_by: user._id,
+    });
+
+    console.log("✅ PROMPT ADJUSTMENT ACKNOWLEDGED", {
+      prompt_name: args.prompt_name,
+      baseline_max_tokens: prompt.baseline_max_tokens,
+      current_max_tokens: prompt.max_tokens,
+      difference: (prompt.max_tokens || 0) - (prompt.baseline_max_tokens || 0),
+      adjusted_at: prompt.adjusted_at,
+      adjustment_reason: prompt.adjustment_reason,
+      acknowledged_at: now,
+      acknowledged_by: user.email,
+      correlationId,
+    });
+
+    return {
+      success: true,
+      message: "Prompt adjustment acknowledged successfully",
+      prompt_name: args.prompt_name,
+      baseline_max_tokens: prompt.baseline_max_tokens,
+      current_max_tokens: prompt.max_tokens,
+      difference: (prompt.max_tokens || 0) - (prompt.baseline_max_tokens || 0),
+      adjusted_at: prompt.adjusted_at,
+      adjustment_reason: prompt.adjustment_reason,
+      acknowledged_at: now,
+      acknowledged_by: user.email,
+      correlationId,
+    };
   },
 });
 

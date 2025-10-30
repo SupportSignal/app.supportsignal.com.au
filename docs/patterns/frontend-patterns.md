@@ -702,5 +702,7 @@ Use a three-tier system based on operation duration and impact:
 - [Testing Patterns](testing-patterns.md) - For frontend testing approaches
 - [Architecture Patterns](architecture-patterns.md) - For overall system design
 - **[Loading States Pattern](loading-states.md)** - **Complete guide** to three-tier loading pattern implementation
+- **[DX Tool Pattern Exceptions](dx-tool-pattern-exceptions.md)** - When and how to deviate from production patterns for developer tools
+- **[AI Model Selection for Performance](ai-model-selection-performance.md)** - Model selection strategies for optimizing speed vs quality
 - **[React + Convex Patterns KDD](../technical-guides/react-convex-patterns-kdd.md)** - **CRITICAL** - Comprehensive guide to avoid useEffect recursion and data flow anti-patterns
 - **[Incident Workflow Patterns KDD](../incident-workflow/incident-workflow-patterns-kdd.md)** - Workflow-specific state management and save patterns

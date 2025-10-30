@@ -26,15 +26,19 @@ Detailed specifications for each development phase:
 - **Dependencies**: Epic 1 (database and AI services)
 - **Deliverables**: Complete frontline worker experience
 
-#### **[Epic 3: Incident Capture Workflow](./epic-3.md)**  
+#### **[Epic 3: Incident Capture Workflow](./epic-3.md)**
 - **Scope**: 7-step capture wizard, narrative collection, AI clarification system
 - **Duration**: 3-4 weeks
 - **Dependencies**: Epic 1 (database and AI services)
 - **Deliverables**: Complete frontline worker experience
+- **Status**: ✅ Complete
 
-#### **Epic 4: [RESERVED]**
-- **Scope**: To be defined
-- **Status**: Reserved for future epic
+#### **[Epic 4: Incident Management & Listing](./epic-4.md)**
+- **Scope**: Incident listing, filtering, workflow continuation, status management
+- **Duration**: 2-3 weeks
+- **Dependencies**: Epic 1 (Data Foundation), Epic 2 (Entity Management), Epic 3 (Incident Capture)
+- **Deliverables**: Comprehensive incident management and oversight capabilities
+- **Status**: ✅ Stories 4.1-4.2 Complete, 📋 Stories 4.3-4.4 Planned
 
 #### **[Epic 5: Incident Analysis Workflow](./epic-5.md)**
 - **Scope**: 4-step analysis process, contributing conditions, classification system
@@ -47,18 +51,28 @@ Detailed specifications for each development phase:
 - **Duration**: 1-2 weeks
 - **Dependencies**: Epic 1 (AI services, authentication)
 - **Deliverables**: Complete AI prompt management system
+- **Status**: ✅ Stories 6.1-6.5 Complete, 📋 Story 6.9 Draft
 
 #### **[Epic 7: Participant Management System](./epic-7.md)**
 - **Scope**: CRUD operations, sites management, validation, impersonation
 - **Duration**: 2-3 weeks
 - **Dependencies**: Epic 1 (database, authentication)
 - **Deliverables**: Complete participant and site management
+- **Status**: ✅ Complete
+
+#### **[Epic 8: Multi-Prompt Analysis System](./epic-8-multi-prompt-analysis-system.md)**
+- **Scope**: Refactor AI prompt UI and extend with parallel batch analysis (20-50+ prompts)
+- **Duration**: 4 weeks
+- **Dependencies**: Epic 6 (AI Prompt Management - Complete), Epic 3 (Incident Capture - Complete)
+- **Deliverables**: Unified prompt management with automated incident analysis
+- **Status**: 📋 Planned (Cross-epic feature extending Epic 6 and Epic 3)
 
 #### **[Epic 10: Claude Analysis Server](./epic-10.md)**
 - **Scope**: Agent SDK server, database export slicer CLI, LLM-powered analysis
 - **Duration**: 2-3 weeks
 - **Dependencies**: Story 0.6 (Database Export)
 - **Deliverables**: Local Claude Code analysis server and data slicing tools
+- **Status**: TBD
 
 ---
 
@@ -93,10 +107,13 @@ gantt
 |------|----------|---------|----------------------|
 | Epic 1 | Project setup | All features | None (foundation first) |
 | Epic 2 | Epic 1 complete | Capture workflow | Epic 3 (after Epic 1) |
-| Epic 3 | Epic 1 + Epic 2 | Analysis workflow | Epic 5 foundation, Epic 6 |
-| Epic 4 | [RESERVED] | TBD | TBD |
+| Epic 3 | Epic 1 + Epic 2 | Analysis workflow, Epic 8 | Epic 4, Epic 5 foundation, Epic 6 |
+| Epic 4 | Epic 1, Epic 2, Epic 3 | Incident oversight | Epic 5, Epic 6, Epic 7 |
 | Epic 5 | Epic 1 + Epic 3 data | Full platform | None (analysis completion) |
-| Epic 6 | Epic 1 only | AI customization | All AI features |
+| Epic 6 | Epic 1 only | AI customization, Epic 8 | All AI features |
+| Epic 7 | Epic 1 | Participant management | Can run parallel with most epics |
+| Epic 8 | Epic 3 + Epic 6 | Automated analysis | Epic 5 (when implemented) |
+| Epic 10 | Story 0.6 | Claude analysis tools | Independent of other epics |
 
 ---
 
@@ -119,8 +136,11 @@ gantt
 - [x] **Story 3.2**: AI-Powered Clarification System ✅
 - [x] **Story 3.3**: Narrative Enhancement & Completion ✅
 
-### Epic 4: [RESERVED]
-- **Status**: Reserved for future epic definition
+### Epic 4: Incident Management & Listing
+- [x] **Story 4.1**: Incident Listing Foundation ✅
+- [x] **Story 4.2**: Workflow Continuation System ✅
+- [ ] **Story 4.3**: Incident Status Management
+- [ ] **Story 4.4**: Incident Click-Through Actions
 
 ### Epic 5: Incident Analysis Workflow  
 - [ ] **Story 5.1**: Analysis Workflow Setup
@@ -130,7 +150,24 @@ gantt
 
 ### Epic 6: AI Prompt Management System
 - [x] **Story 6.1**: Core AI Prompt Management Foundation ✅
-- [ ] **Story 6.2**: Advanced Prompt Management & Analytics
+- [x] **Story 6.2**: Advanced Prompt Management & Analytics ✅
+- [x] **Story 6.3**: Developer Prompt Testing & Interpolation Interface ✅
+- [x] **Story 6.4**: Prompt Phase Management ✅
+- [x] **Story 6.5**: LLM Model Management & Selection ✅
+- [ ] **Story 6.9**: Adaptive Token Management with Self-Healing (Draft)
+
+### Epic 7: Participant Management System
+- [x] **Epic 7**: Complete ✅
+
+### Epic 8: Multi-Prompt Analysis System
+- [ ] **Story 8.0**: AI Prompt Admin UI Refactor
+- [ ] **Story 8.1**: Extend Unified Prompt System (Backend)
+- [ ] **Story 8.2**: Analysis Prompts Admin UI
+- [ ] **Story 8.3**: Parallel Execution Engine
+- [ ] **Story 8.4**: Results Dashboard & Incident Integration
+- [ ] **Story 8.5**: Event-Level Observations (Future)
+- [ ] **Story 8.6**: Moments That Matter Analysis (Future)
+- [ ] **Story 8.7**: Advanced Analytics (Future)
 
 ---
 

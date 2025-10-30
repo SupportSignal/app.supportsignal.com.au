@@ -7,10 +7,21 @@ import { Button } from '@starter/ui/button';
 import { Input } from '@starter/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@starter/ui/select';
 import { Checkbox } from '@starter/ui/checkbox';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@starter/ui/tooltip';
 import { useAllPrompts } from '@/lib/prompts/prompt-template-service';
 import { AIPromptTemplate, TEMPLATE_CATEGORIES, CATEGORY_LABELS, AIPrompt } from '@/types/prompt-templates';
 import { useAuth } from '@/components/auth/auth-provider';
-import { Search, Eye } from 'lucide-react';
+import { Search, Eye, Check, TrendingUp, RotateCcw } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@starter/ui/alert-dialog';
 import { ModelSelector, AVAILABLE_MODELS } from './model-selector';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
@@ -30,8 +41,13 @@ export function PromptTemplateList({
   const [selectedPromptIds, setSelectedPromptIds] = useState<Set<string>>(new Set());
   const [bulkModel, setBulkModel] = useState<string>(AVAILABLE_MODELS[0].id);
   const [isApplyingBulk, setIsApplyingBulk] = useState(false);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [acknowledgeDialogOpen, setAcknowledgeDialogOpen] = useState(false);
+  const [resetTargetPrompt, setResetTargetPrompt] = useState<AIPromptTemplate | null>(null);
 
   const bulkUpdateModels = useMutation(api.promptManager.bulkUpdatePromptModels);
+  const resetPromptToBaseline = useMutation(api.promptManager.resetPromptToBaseline);
+  const acknowledgePromptAdjustment = useMutation(api.promptManager.acknowledgePromptAdjustment);
   // No longer need expandedPrompts state - all templates show as textareas
   
   const rawPrompts = useAllPrompts(user?.sessionToken, filterCategory === 'all' ? undefined : filterCategory);
@@ -133,6 +149,77 @@ export function PromptTemplateList({
     }
   };
 
+  // Story 6.9 - Task 8: Reset to baseline handlers
+  const handleAcknowledgeClick = (template: AIPromptTemplate) => {
+    setResetTargetPrompt(template);
+    setAcknowledgeDialogOpen(true);
+  };
+
+  const handleAcknowledgeConfirm = async () => {
+    if (!user?.sessionToken || !resetTargetPrompt) {
+      return;
+    }
+
+    try {
+      const result = await acknowledgePromptAdjustment({
+        sessionToken: user.sessionToken,
+        prompt_name: resetTargetPrompt.name,
+      });
+
+      if (result.success) {
+        toast.success(
+          `Adjustment acknowledged`,
+          {
+            description: `${resetTargetPrompt.name}: Token limit increase approved`,
+          }
+        );
+      }
+    } catch (error) {
+      console.error('Acknowledge error:', error);
+      toast.error('Failed to acknowledge adjustment', {
+        description: error instanceof Error ? error.message : 'Unknown error occurred',
+      });
+    } finally {
+      setAcknowledgeDialogOpen(false);
+      setResetTargetPrompt(null);
+    }
+  };
+
+  const handleResetClick = (template: AIPromptTemplate) => {
+    setResetTargetPrompt(template);
+    setResetDialogOpen(true);
+  };
+
+  const handleResetConfirm = async () => {
+    if (!user?.sessionToken || !resetTargetPrompt) {
+      return;
+    }
+
+    try {
+      const result = await resetPromptToBaseline({
+        sessionToken: user.sessionToken,
+        prompt_name: resetTargetPrompt.name,
+      });
+
+      if (result.success) {
+        toast.success(
+          `Token limit reset to baseline`,
+          {
+            description: `${resetTargetPrompt.name}: ${result.old_max_tokens} → ${result.new_max_tokens} tokens`,
+          }
+        );
+      }
+    } catch (error) {
+      console.error('Reset error:', error);
+      toast.error('Failed to reset token limit', {
+        description: error instanceof Error ? error.message : 'Unknown error occurred',
+      });
+    } finally {
+      setResetDialogOpen(false);
+      setResetTargetPrompt(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -160,6 +247,99 @@ export function PromptTemplateList({
 
   const getStatusColor = (isActive: boolean) => {
     return isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
+  };
+
+  // Story 6.9 - Task 7: Token adjustment badge logic
+  const getTokenAdjustmentBadge = (template: AIPromptTemplate) => {
+    const maxTokens = template.max_tokens;
+    const baselineTokens = (template as any).baseline_max_tokens;
+    const adjustedAt = (template as any).adjusted_at;
+    const adjustmentReason = (template as any).adjustment_reason;
+    const acknowledgedAt = (template as any).acknowledged_at;
+
+    // No max_tokens set
+    if (!maxTokens) {
+      return null;
+    }
+
+    // No baseline OR baseline equals current (not adjusted)
+    if (!baselineTokens || maxTokens === baselineTokens) {
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
+                <Check size={12} className="mr-1" />
+                Baseline
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-sm">Token limit at baseline ({maxTokens} tokens)</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    }
+
+    // Token limit has been adjusted
+    const diff = maxTokens - baselineTokens;
+    const adjustedDate = adjustedAt ? new Date(adjustedAt).toLocaleString() : 'Unknown';
+    const acknowledgedDate = acknowledgedAt ? new Date(acknowledgedAt).toLocaleString() : null;
+
+    // Acknowledged adjustment - shows as blue (reviewed, approved)
+    if (acknowledgedAt) {
+      return (
+        <TooltipProvider delayDuration={300}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-block cursor-help">
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300">
+                  <Check size={12} className="mr-1" />
+                  +{diff}
+                </Badge>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs" side="top">
+              <div className="space-y-1 text-sm">
+                <p className="font-semibold">Adjustment Acknowledged</p>
+                <p>Baseline: {baselineTokens} tokens</p>
+                <p>Current: {maxTokens} tokens (+{diff})</p>
+                {adjustmentReason && <p className="text-xs text-gray-600 mt-2">{adjustmentReason}</p>}
+                <p className="text-xs text-gray-500 mt-1">Adjusted: {adjustedDate}</p>
+                {acknowledgedDate && (
+                  <p className="text-xs text-blue-600 mt-1">✓ Acknowledged: {acknowledgedDate}</p>
+                )}
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    }
+
+    // Needs review - shows as orange (requires admin attention)
+    return (
+      <TooltipProvider delayDuration={300}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="inline-block cursor-help">
+              <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-300">
+                <TrendingUp size={12} className="mr-1" />
+                +{diff}
+              </Badge>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs" side="top">
+            <div className="space-y-1 text-sm">
+              <p className="font-semibold">⚠️ Needs Review</p>
+              <p>Baseline: {baselineTokens} tokens</p>
+              <p>Current: {maxTokens} tokens (+{diff})</p>
+              {adjustmentReason && <p className="text-xs text-gray-600 mt-2">{adjustmentReason}</p>}
+              <p className="text-xs text-gray-500 mt-1">Adjusted: {adjustedDate}</p>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
   };
 
 
@@ -332,6 +512,35 @@ export function PromptTemplateList({
                         Preview
                       </Button>
                     )}
+                    {/* Story 6.9 - Task 8: Acknowledge and Reset buttons */}
+                    {(template as any).baseline_max_tokens &&
+                     template.max_tokens &&
+                     template.max_tokens > (template as any).baseline_max_tokens && (
+                      <>
+                        {/* Primary action: Acknowledge (only if not yet acknowledged) */}
+                        {!(template as any).acknowledged_at && (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => handleAcknowledgeClick(template)}
+                            className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white"
+                          >
+                            <Check size={14} />
+                            Acknowledge Adjustment
+                          </Button>
+                        )}
+                        {/* Secondary action: Reset (always available for rollback) */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleResetClick(template)}
+                          className="flex items-center gap-1 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                        >
+                          <RotateCcw size={14} />
+                          Reset to Baseline
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
               </CardHeader>
@@ -351,7 +560,7 @@ export function PromptTemplateList({
                 {/* Template Metadata */}
                 <div className="mt-3">
                   <div className="text-xs font-medium text-gray-700 mb-2">Template Details:</div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 items-center">
                     {template.workflow_step && (
                       <Badge variant="outline" className="text-xs">
                         Step: {template.workflow_step}
@@ -367,6 +576,8 @@ export function PromptTemplateList({
                         Max Tokens: {template.max_tokens}
                       </Badge>
                     )}
+                    {/* Story 6.9 - Task 7: Token adjustment status badge */}
+                    {getTokenAdjustmentBadge(template)}
                   </div>
                 </div>
               </CardContent>
@@ -375,6 +586,113 @@ export function PromptTemplateList({
           })
         )}
       </div>
+
+      {/* Story 6.9 - Task 8: Reset to Baseline confirmation dialog */}
+      {/* Acknowledge Dialog */}
+      <AlertDialog open={acknowledgeDialogOpen} onOpenChange={setAcknowledgeDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Acknowledge Token Limit Adjustment?</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              {resetTargetPrompt && (
+                <>
+                  <p>
+                    Acknowledge the automatic token limit increase for{' '}
+                    <span className="font-semibold">{resetTargetPrompt.name}</span>.
+                  </p>
+                  <div className="bg-green-50 rounded-lg p-3 space-y-1 text-sm border border-green-200">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Baseline Limit:</span>
+                      <span className="font-semibold">{(resetTargetPrompt as any).baseline_max_tokens} tokens</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Current Limit:</span>
+                      <span className="font-semibold text-green-600">
+                        {resetTargetPrompt.max_tokens} tokens
+                      </span>
+                    </div>
+                    <div className="flex justify-between pt-2 border-t border-green-200">
+                      <span className="text-gray-600">Increase:</span>
+                      <span className="font-semibold text-green-700">
+                        +{(resetTargetPrompt.max_tokens || 0) - (resetTargetPrompt as any).baseline_max_tokens} tokens
+                      </span>
+                    </div>
+                  </div>
+                  {(resetTargetPrompt as any).adjustment_reason && (
+                    <div className="bg-gray-50 rounded p-2 text-sm">
+                      <span className="font-medium">Reason: </span>
+                      {(resetTargetPrompt as any).adjustment_reason}
+                    </div>
+                  )}
+                  <p className="text-sm text-gray-500 pt-2">
+                    ✓ This acknowledges the adjustment without changing the token limit.
+                    The increased limit will remain in effect, and this prompt will be removed from the alert widget.
+                  </p>
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleAcknowledgeConfirm}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Acknowledge Adjustment
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Reset Dialog */}
+      <AlertDialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset Token Limit to Baseline?</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              {resetTargetPrompt && (
+                <>
+                  <p>
+                    You are about to reset the token limit for{' '}
+                    <span className="font-semibold">{resetTargetPrompt.name}</span> to its baseline value.
+                  </p>
+                  <div className="bg-gray-50 rounded-lg p-3 space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Current Limit:</span>
+                      <span className="font-semibold">{resetTargetPrompt.max_tokens} tokens</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Baseline Limit:</span>
+                      <span className="font-semibold text-green-600">
+                        {(resetTargetPrompt as any).baseline_max_tokens} tokens
+                      </span>
+                    </div>
+                    <div className="flex justify-between pt-2 border-t">
+                      <span className="text-gray-600">Change:</span>
+                      <span className="font-semibold text-orange-600">
+                        {(resetTargetPrompt.max_tokens || 0) - (resetTargetPrompt as any).baseline_max_tokens} tokens
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-500 pt-2">
+                    ⚠️ This action will remove the automatic adjustment and restore the original limit.
+                    Use this only if the escalation was incorrect.
+                  </p>
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleResetConfirm}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              Reset to Baseline
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

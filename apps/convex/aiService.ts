@@ -40,6 +40,7 @@ export interface AIResponse {
   cost?: number;
   success: boolean;
   error?: string;
+  finishReason?: string; // OpenRouter finish_reason: "stop" (normal), "length" (truncated), "content_filter"
 }
 
 export interface AIMetrics {
@@ -85,6 +86,11 @@ export class OpenRouterClient {
         const response = await this.makeAPICall(request);
         const processingTimeMs = Date.now() - startTime;
 
+        // Log finish_reason for debugging and truncation detection
+        if (response.finishReason) {
+          console.log(`[${request.correlationId}] OpenRouter finish_reason: ${response.finishReason}`);
+        }
+
         return {
           correlationId: request.correlationId,
           content: response.content,
@@ -93,6 +99,7 @@ export class OpenRouterClient {
           processingTimeMs,
           cost: this.calculateCost(response.usage?.total_tokens, request.model),
           success: true,
+          finishReason: response.finishReason, // Pass through finish_reason for truncation detection
         };
       } catch (error) {
         lastError = error as Error;
@@ -161,6 +168,7 @@ export class OpenRouterClient {
     return {
       content: data.choices[0].message.content,
       usage: data.usage,
+      finishReason: data.choices[0].finish_reason, // Extract finish_reason for truncation detection
     };
   }
 

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/components/auth/auth-provider';
 import { cn } from '@/lib/utils';
 import { hasDeveloperAccess } from '@/lib/utils/developerAccess';
+import { TokenUsageAlertWidget } from '@/components/admin/token-usage-alert-widget';
 
 interface AdminCardData {
   id: string;
@@ -266,6 +267,9 @@ export default function AdminDashboard() {
           Manage and monitor your SupportSignal system
         </p>
       </div>
+
+      {/* Story 6.9 - Task 9: Token Usage Alert Widget */}
+      {hasDeveloperAccess(user) && <TokenUsageAlertWidget />}
 
       {visibleSections.map((section) => (
         <AdminSection

@@ -382,6 +382,88 @@ export const fixParticipantSites = mutation({
   },
 });
 
+/**
+ * Backfill baseline_max_tokens for all existing ai_prompts
+ * Story 6.9 - Phase 3: Adaptive Token Management
+ *
+ * Logic:
+ * 1. For each ai_prompts record that has max_tokens but no baseline_max_tokens
+ * 2. Set baseline_max_tokens = current max_tokens value
+ * 3. This preserves the original token limit before any adaptive adjustments
+ */
+export const backfillAIPromptBaselineTokens = mutation({
+  args: {},
+  handler: async (ctx: MutationCtx) => {
+    console.log('🔧 MIGRATION START: Backfill ai_prompts baseline_max_tokens');
+
+    // Get all ai_prompts records
+    const allPrompts = await ctx.db.query('ai_prompts').collect();
+    console.log(`📊 Found ${allPrompts.length} total ai_prompts`);
+
+    const updated: any[] = [];
+    const skipped: any[] = [];
+    const errors: any[] = [];
+
+    for (const prompt of allPrompts) {
+      try {
+        // Skip if already has baseline_max_tokens
+        if ('baseline_max_tokens' in prompt && prompt.baseline_max_tokens !== undefined) {
+          skipped.push({
+            promptId: prompt._id,
+            promptName: prompt.prompt_name,
+            reason: 'Already has baseline_max_tokens',
+          });
+          continue;
+        }
+
+        // Skip if no max_tokens to copy from
+        if (!prompt.max_tokens) {
+          skipped.push({
+            promptId: prompt._id,
+            promptName: prompt.prompt_name,
+            reason: 'No max_tokens to copy',
+          });
+          continue;
+        }
+
+        // Backfill baseline_max_tokens with current max_tokens
+        await ctx.db.patch(prompt._id, {
+          baseline_max_tokens: prompt.max_tokens,
+        });
+
+        updated.push({
+          promptId: prompt._id,
+          promptName: prompt.prompt_name,
+          baselineMaxTokens: prompt.max_tokens,
+        });
+
+        console.log(`✅ Backfilled: ${prompt.prompt_name} -> baseline_max_tokens: ${prompt.max_tokens}`);
+      } catch (error: any) {
+        errors.push({
+          promptId: prompt._id,
+          promptName: prompt.prompt_name,
+          error: error.message,
+        });
+        console.error(`❌ Error backfilling prompt ${prompt._id}:`, error);
+      }
+    }
+
+    const summary = {
+      total: allPrompts.length,
+      updated: updated.length,
+      skipped: skipped.length,
+      errors: errors.length,
+      updatedDetails: updated,
+      skippedDetails: skipped,
+      errorDetails: errors,
+    };
+
+    console.log('🔧 MIGRATION COMPLETE', summary);
+
+    return summary;
+  },
+});
+
 // =============================================================================
 // ARCHIVED MIGRATIONS (COMPLETED)
 // These were one-time migrations that have been completed successfully.
