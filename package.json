@@ -106,6 +106,7 @@
     "@types/jscodeshift": "^17.3.0",
     "@typescript-eslint/eslint-plugin": "^8.37.0",
     "@typescript-eslint/parser": "^8.37.0",
+    "convex-test": "^0.0.38",
     "eslint": "^8.57.0",
     "husky": "^9.1.7",
     "jscodeshift": "^17.3.0",

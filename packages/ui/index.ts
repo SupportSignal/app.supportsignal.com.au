@@ -11,6 +11,7 @@ export {
   AlertDialogTitle, 
   AlertDialogTrigger 
 } from "./src/alert-dialog"
+export { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "./src/accordion"
 export { Badge, badgeVariants, type BadgeProps } from "./src/badge"
 export { Button, type ButtonProps } from "./src/button"
 export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, type CardProps } from "./src/card"

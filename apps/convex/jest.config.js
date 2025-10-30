@@ -41,7 +41,7 @@ module.exports = {
   },
 
   // Allow Jest to transform ESM modules
-  transformIgnorePatterns: ['node_modules/(?!(convex|@convex)/)'],
+  transformIgnorePatterns: ['node_modules/(?!(convex|@convex|convex-test)/)'],
 
   // ESM support
   preset: 'ts-jest/presets/default-esm',

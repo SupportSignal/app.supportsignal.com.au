@@ -1,20 +1,32 @@
+/**
+ * Story 11.0: AI Prompts Admin Page
+ *
+ * Enhanced with group-based organization, tabs for Generation vs Analysis,
+ * and integrated template library for quick prompt creation.
+ */
+
 "use client";
 
 import React, { useState } from 'react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { PromptTemplateList } from '@/components/admin/prompt-template-list';
 import { TemplateSeederInterface } from '@/components/admin/template-seeder-interface';
+import { PromptGroupManager } from '@/components/admin/prompts/PromptGroupManager';
+import { TemplateLibrary } from '@/components/admin/prompts/TemplateLibrary';
 import { AIPromptTemplate } from '@/types/prompt-templates';
 import { Button } from '@starter/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@starter/ui/card';
-import { ArrowLeft, Settings } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@starter/ui/tabs';
+import { ArrowLeft, Settings, Plus } from 'lucide-react';
 import { hasDeveloperAccess } from '@/lib/utils/developerAccess';
 
-type ViewMode = 'list' | 'seeder';
+type ViewMode = 'groups' | 'templates' | 'seeder' | 'legacy-list';
+type PromptCategory = 'generation' | 'analysis';
 
 export default function AIPromptsAdminPage() {
   const { user } = useAuth();
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [viewMode, setViewMode] = useState<ViewMode>('groups');
+  const [activeCategory, setActiveCategory] = useState<PromptCategory>('generation');
 
   // Access control - developer access required
   if (!user || !hasDeveloperAccess(user)) {
@@ -40,7 +52,27 @@ export default function AIPromptsAdminPage() {
   };
 
   const handleSeedingComplete = () => {
-    setViewMode('list');
+    setViewMode('groups');
+  };
+
+  const handleUseTemplate = (template: any) => {
+    // TODO: Story 11.1 - Implement prompt creation from template
+    alert(`Create prompt from template: ${template.name}\n\nThis will be implemented in Story 11.1`);
+  };
+
+  const handleCreateGroup = () => {
+    // TODO: Story 11.1 - Implement group creation dialog
+    alert('Group creation dialog will be implemented in Story 11.1');
+  };
+
+  const handleEditGroup = (groupId: string) => {
+    // TODO: Story 11.1 - Implement group editing dialog
+    alert(`Edit group: ${groupId}\n\nThis will be implemented in Story 11.1`);
+  };
+
+  const handleDeleteGroup = (groupId: string) => {
+    // TODO: Story 11.1 - Implement group deletion confirmation
+    alert(`Delete group: ${groupId}\n\nThis will be implemented in Story 11.1`);
   };
 
   return (
@@ -49,62 +81,105 @@ export default function AIPromptsAdminPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            AI Prompt Templates
+            AI Prompt Management
           </h1>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Manage AI prompt templates for incident processing and analysis
+            Organize, test, and manage AI prompts with group-based workflows
           </p>
         </div>
 
         {/* Navigation Actions */}
         <div className="flex items-center gap-3">
-          {viewMode !== 'list' && (
+          {viewMode !== 'groups' && (
             <Button
               variant="outline"
-              onClick={() => setViewMode('list')}
+              onClick={() => setViewMode('groups')}
               className="flex items-center gap-2"
             >
               <ArrowLeft size={16} />
-              Back to List
+              Back to Groups
             </Button>
           )}
-          
-          {viewMode === 'list' && (
-            <Button
-              variant="outline"
-              onClick={handleOpenSeeder}
-              className="flex items-center gap-2"
-            >
-              <Settings size={16} />
-              Template Management
-            </Button>
+
+          {viewMode === 'groups' && (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => setViewMode('templates')}
+                className="flex items-center gap-2"
+              >
+                <Plus size={16} />
+                Template Library
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleOpenSeeder}
+                className="flex items-center gap-2"
+              >
+                <Settings size={16} />
+                System Templates
+              </Button>
+            </>
           )}
         </div>
       </div>
 
       {/* Main Content */}
       <div className="min-h-96">
-        {viewMode === 'list' && (
-          <PromptTemplateList
-            onPreview={handlePreview}
-          />
+        {/* Groups View - New Default */}
+        {viewMode === 'groups' && (
+          <Tabs value={activeCategory} onValueChange={(v) => setActiveCategory(v as PromptCategory)}>
+            <TabsList className="mb-4">
+              <TabsTrigger value="generation">Generation Prompts</TabsTrigger>
+              <TabsTrigger value="analysis">Analysis Prompts</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="generation" className="space-y-4">
+              <PromptGroupManager
+                onCreateGroup={handleCreateGroup}
+                onEditGroup={handleEditGroup}
+                onDeleteGroup={handleDeleteGroup}
+              />
+            </TabsContent>
+
+            <TabsContent value="analysis" className="space-y-4">
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <p className="text-muted-foreground">
+                    Analysis prompts will be organized in Story 11.2
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    This tab prepares the UI for batch analysis workflows
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         )}
 
+        {/* Template Library View */}
+        {viewMode === 'templates' && (
+          <TemplateLibrary onUseTemplate={handleUseTemplate} />
+        )}
+
+        {/* Legacy List View - Preserved for backward compatibility */}
+        {viewMode === 'legacy-list' && (
+          <PromptTemplateList onPreview={handlePreview} />
+        )}
+
+        {/* System Template Seeder */}
         {viewMode === 'seeder' && (
           <div className="space-y-6">
-            <TemplateSeederInterface
-              onSeedingComplete={handleSeedingComplete}
-            />
-            
-            {/* Back to Templates Button */}
+            <TemplateSeederInterface onSeedingComplete={handleSeedingComplete} />
+
             <div className="flex justify-start">
               <Button
                 variant="outline"
-                onClick={() => setViewMode('list')}
+                onClick={() => setViewMode('groups')}
                 className="flex items-center gap-2"
               >
                 <ArrowLeft size={16} />
-                Back to Templates
+                Back to Groups
               </Button>
             </div>
           </div>
@@ -112,28 +187,34 @@ export default function AIPromptsAdminPage() {
       </div>
 
       {/* Help Information */}
-      {viewMode === 'list' && (
+      {viewMode === 'groups' && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Getting Started</CardTitle>
+            <CardTitle className="text-lg">Prompt Organization Guide</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
             <div className="flex items-start gap-2">
               <span className="text-blue-600 font-medium">1.</span>
               <div>
-                <strong>First Time Setup:</strong> Click &ldquo;Template Management&rdquo; to seed the system with hardcoded AI prompt templates for incident processing.
+                <strong>Group-Based Organization:</strong> Prompts are organized into collapsible groups for better workflow management. Drag-and-drop to reorder prompts within groups.
               </div>
             </div>
             <div className="flex items-start gap-2">
               <span className="text-blue-600 font-medium">2.</span>
               <div>
-                <strong>Template System:</strong> Templates are defined in code and seeded into the database. Templates include clarification questions, narrative enhancement, and mock data generation.
+                <strong>Template Library:</strong> Click &ldquo;Template Library&rdquo; to access starter templates for common prompt patterns (predicate, classification, observation).
               </div>
             </div>
             <div className="flex items-start gap-2">
               <span className="text-blue-600 font-medium">3.</span>
               <div>
-                <strong>Variable Substitution:</strong> Templates use &ldquo;{`{{variable_name}}`}&rdquo; syntax for dynamic content substitution during AI processing.
+                <strong>Cost Indicators:</strong> All prompts show estimated execution costs based on the selected AI model. Use this to optimize your prompt choices.
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-blue-600 font-medium">4.</span>
+              <div>
+                <strong>First Time Setup:</strong> Click &ldquo;System Templates&rdquo; to seed the database with default incident processing prompts if needed.
               </div>
             </div>
           </CardContent>

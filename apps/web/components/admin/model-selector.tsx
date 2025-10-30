@@ -1,52 +1,23 @@
+/**
+ * Story 11.0: Enhanced Model Selector with Cost Indicators
+ *
+ * Model selector dropdown component for AI prompt configuration.
+ * Displays available AI models with capabilities, recommendations, and cost estimates.
+ */
+
 "use client";
 
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@starter/ui/select';
 import { Label } from '@starter/ui/label';
 import { Badge } from '@starter/ui/badge';
-import { Sparkles } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@starter/ui/tooltip';
+import { Sparkles, Info } from 'lucide-react';
+import { AI_MODELS, calculatePromptCost, formatCost } from '@/lib/ai-models';
 
-// Available AI models for prompts
-// Keep this in sync with environment configuration defaults
-export const AVAILABLE_MODELS = [
-  {
-    id: 'openai/gpt-5',
-    name: 'GPT-5',
-    provider: 'OpenAI',
-    description: 'Highest quality, best for complex reasoning',
-    recommended: true,
-  },
-  {
-    id: 'openai/gpt-4o',
-    name: 'GPT-4o',
-    provider: 'OpenAI',
-    description: 'High quality, multimodal capabilities',
-    recommended: false,
-  },
-  {
-    id: 'openai/gpt-4o-mini',
-    name: 'GPT-4o Mini',
-    provider: 'OpenAI',
-    description: 'Fast and cost-effective, good for simple tasks',
-    recommended: false,
-  },
-  {
-    id: 'anthropic/claude-3.5-sonnet',
-    name: 'Claude 3.5 Sonnet',
-    provider: 'Anthropic',
-    description: 'Excellent for writing and analysis',
-    recommended: false,
-  },
-  {
-    id: 'anthropic/claude-3-haiku',
-    name: 'Claude 3 Haiku',
-    provider: 'Anthropic',
-    description: 'Fast and efficient for straightforward tasks',
-    recommended: false,
-  },
-] as const;
-
-export type ModelId = typeof AVAILABLE_MODELS[number]['id'];
+// Re-export for backward compatibility
+export const AVAILABLE_MODELS = AI_MODELS;
+export type ModelId = typeof AI_MODELS[number]['id'];
 
 interface ModelSelectorProps {
   value: string;
@@ -65,14 +36,30 @@ export function ModelSelector({
   disabled = false,
   className = '',
 }: ModelSelectorProps) {
-  const selectedModel = AVAILABLE_MODELS.find(m => m.id === value);
+  const selectedModel = AI_MODELS.find(m => m.id === value);
+  const selectedModelCost = selectedModel ? calculatePromptCost(selectedModel.id) : 0;
 
   return (
     <div className={className}>
       {label && (
-        <Label className="text-xs font-medium text-gray-700 mb-1 block">
-          {label}
-        </Label>
+        <div className="flex items-center gap-2 mb-1">
+          <Label className="text-xs font-medium text-gray-700">
+            {label}
+          </Label>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Info className="h-3 w-3 text-gray-400 cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p className="text-xs">
+                  Cost estimates based on average prompt size (~1000 tokens).
+                  Actual costs vary by prompt length and response complexity.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       )}
 
       <Select value={value} onValueChange={onChange} disabled={disabled}>
@@ -89,28 +76,38 @@ export function ModelSelector({
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
-          {AVAILABLE_MODELS.map((model) => (
-            <SelectItem key={model.id} value={model.id} className="text-xs">
-              <div className="flex items-center justify-between w-full gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{model.name}</span>
-                  {model.recommended && (
-                    <Badge variant="outline" className="text-xs px-1 py-0 border-yellow-300 text-yellow-600">
-                      Recommended
-                    </Badge>
-                  )}
+          {AI_MODELS.map((model) => {
+            const cost = calculatePromptCost(model.id);
+            return (
+              <SelectItem key={model.id} value={model.id} className="text-xs">
+                <div className="flex items-center justify-between w-full gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{model.name}</span>
+                    {model.recommended && (
+                      <Badge variant="outline" className="text-xs px-1 py-0 border-yellow-300 text-yellow-600">
+                        Recommended
+                      </Badge>
+                    )}
+                  </div>
+                  <span className="text-gray-500 text-xs font-mono">
+                    {formatCost(cost)}/prompt
+                  </span>
                 </div>
-                <span className="text-gray-500 text-xs">{model.provider}</span>
-              </div>
-            </SelectItem>
-          ))}
+              </SelectItem>
+            );
+          })}
         </SelectContent>
       </Select>
 
       {showDescription && selectedModel && (
-        <p className="text-xs text-gray-500 mt-1">
-          {selectedModel.description}
-        </p>
+        <div className="mt-1 space-y-1">
+          <p className="text-xs text-gray-500">
+            {selectedModel.description}
+          </p>
+          <p className="text-xs text-gray-400 font-mono">
+            Est. cost: {formatCost(selectedModelCost)} per prompt
+          </p>
+        </div>
       )}
     </div>
   );

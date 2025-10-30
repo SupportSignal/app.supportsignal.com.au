@@ -415,23 +415,36 @@ export default defineSchema({
     .index("by_created", ["created_at"]),
 
   // AI Prompts subsystem (reusable across platform)
+  // Story 11.0: Prompt groups for organizing AI prompts
+  prompt_groups: defineTable({
+    group_name: v.string(), // "Question Generation", "NDIS Compliance"
+    description: v.optional(v.string()), // Human-readable description
+    display_order: v.number(), // For drag-drop reordering
+    is_collapsible: v.optional(v.boolean()), // UI hint for collapsible sections
+    default_collapsed: v.optional(v.boolean()), // UI hint for default state
+    created_at: v.number(),
+    created_by: v.optional(v.id("users")),
+  })
+    .index("by_name", ["group_name"])
+    .index("by_display_order", ["display_order"]),
+
   ai_prompts: defineTable({
     // Prompt Identity
     prompt_name: v.string(), // Identifier (e.g., "generate_clarification_questions")
     prompt_version: v.string(), // Version number (e.g., "v1.2.0")
-    
+
     // Prompt Content
     prompt_template: v.string(), // The actual prompt template
     description: v.optional(v.string()), // Human-readable description
     input_schema: v.optional(v.string()), // JSON schema for expected inputs
     output_schema: v.optional(v.string()), // JSON schema for expected outputs
-    
+
     // Developer Scoping (backward compatibility for existing data - fields are optional)
-    scope: v.optional(v.union(v.literal("production"), v.literal("developer"))), 
+    scope: v.optional(v.union(v.literal("production"), v.literal("developer"))),
     developer_session_id: v.optional(v.string()),
     parent_prompt_id: v.optional(v.id("ai_prompts")),
     expires_at: v.optional(v.number()),
-    
+
     // Usage Context
     workflow_step: v.optional(v.string()), // Which workflow step uses this prompt
     subsystem: v.optional(v.string()), // "incidents", "chat", etc.
@@ -446,13 +459,17 @@ export default defineSchema({
     acknowledged_at: v.optional(v.number()), // When the adjustment was reviewed/acknowledged by admin
     acknowledged_by: v.optional(v.id("users")), // Admin who acknowledged the adjustment
 
+    // Story 11.0: Group management and ordering
+    group_id: v.optional(v.id("prompt_groups")), // Foreign key to prompt_groups
+    display_order: v.optional(v.number()), // Order within group
+
     // Versioning
     is_active: v.optional(v.boolean()), // Whether this version is currently active
     created_at: v.number(),
     created_by: v.optional(v.id("users")), // Temporarily optional for seed data - should be required in production
     replaced_at: v.optional(v.number()), // When this version was replaced
     replaced_by: v.optional(v.string()), // Which version replaced this
-    
+
     // Performance Metrics
     usage_count: v.optional(v.number()), // How many times this prompt was used
     average_response_time: v.optional(v.number()), // Average AI response time
@@ -462,7 +479,8 @@ export default defineSchema({
     .index("by_name_version", ["prompt_name", "prompt_version"])
     .index("by_active", ["is_active"])
     .index("by_workflow", ["workflow_step"])
-    .index("by_subsystem", ["subsystem"]),
+    .index("by_subsystem", ["subsystem"])
+    .index("by_group", ["group_id"]),
 
   // AI request/response logging for performance monitoring and debugging
   ai_request_logs: defineTable({
