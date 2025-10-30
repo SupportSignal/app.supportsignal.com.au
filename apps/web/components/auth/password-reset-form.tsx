@@ -81,10 +81,6 @@ export function PasswordResetForm() {
       {success && (
         <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
           Password reset email sent! Check your email for instructions.
-          <br />
-          <small className="text-green-600 mt-2 block">
-            (Development mode: Check the browser console for the mock email)
-          </small>
         </div>
       )}
 
