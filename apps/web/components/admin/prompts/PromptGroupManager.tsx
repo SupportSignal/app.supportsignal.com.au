@@ -66,7 +66,6 @@ export function PromptGroupManager({
   const [activePromptId, setActivePromptId] = useState<Id<'ai_prompts'> | null>(null);
 
   // Fetch groups and prompts
-  // @ts-expect-error - Convex type inference issue: "Type instantiation is excessively deep"
   const groups = useQuery(api.promptGroups.listGroups) ?? [];
   const prompts = useQuery(api.promptGroups.listPrompts, { activeOnly: true }) ?? [];
 
@@ -84,7 +83,7 @@ export function PromptGroupManager({
   );
 
   // Group prompts by group_id
-  const promptsByGroup = prompts.reduce((acc, prompt) => {
+  const promptsByGroup = prompts.reduce((acc: any, prompt: any) => {
     const groupId = prompt.group_id ?? 'ungrouped';
     if (!acc[groupId as string]) {
       acc[groupId as string] = [];
