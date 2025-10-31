@@ -243,7 +243,17 @@ echo "prod:graceful-shrimp-355|{key}" | gh secret set CONVEX_DEPLOY_KEY
 ```
 
 **Step 2: Update CI workflow** (`.github/workflows/ci.yml`)
+
+**ALL jobs that run turborepo need CONVEX_DEPLOY_KEY** because turborepo dependencies trigger convex-backend:build:
+
 ```yaml
+# Lint job
+- name: Run ESLint
+  env:
+    CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+  run: bun run lint || true
+
+# Test job
 - name: Generate Convex files
   env:
     CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
@@ -251,8 +261,30 @@ echo "prod:graceful-shrimp-355|{key}" | gh secret set CONVEX_DEPLOY_KEY
 
 - name: Run type checks
   env:
-    CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}  # ALSO needed here!
+    CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
   run: bun run typecheck
+
+# Build job
+- name: Generate Convex files
+  env:
+    CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+  run: cd apps/convex && bun run build
+
+- name: Build applications
+  env:
+    CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+  run: bun run build
+
+# Deploy Convex Backend job
+- name: Generate Convex files
+  env:
+    CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+  run: cd apps/convex && bun run build
+
+- name: Deploy to Convex Production
+  env:
+    CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+  run: cd apps/convex && npx convex deploy --yes
 ```
 
 **Step 3: Configure turborepo** (`turbo.json`)
@@ -277,12 +309,17 @@ echo "prod:graceful-shrimp-355|{key}" | gh secret set CONVEX_DEPLOY_KEY
    - `globalEnv`: Makes var available to all tasks
    - Task-level `env`: Passes var to specific task and dependencies
 
-3. **Multiple codegen triggers in CI**:
-   - Explicit: "Generate Convex files" step
-   - Implicit: typecheck → turborepo → convex-backend:build → codegen
-   - Both need CONVEX_DEPLOY_KEY
+3. **Multiple codegen triggers in CI** - EVERY job that uses turborepo needs the key:
+   - **Lint job**: `bun run lint` → turborepo → convex-backend:build
+   - **Test job**: Explicit `bun run build` + implicit via `bun run typecheck`
+   - **Build job**: Explicit `bun run build` (twice - Generate Convex files + Build applications)
+   - **Deploy Convex Backend job**: Explicit `bun run build` + `convex deploy`
+   - All need CONVEX_DEPLOY_KEY because turborepo dependency graph includes convex-backend:build
+
+4. **Complete coverage required**: Missing CONVEX_DEPLOY_KEY from ANY job that runs turborepo causes CI failure
 
 **Implementation Priority**: ✅ RESOLVED (October 31, 2025)
+**Final Fix**: Added CONVEX_DEPLOY_KEY to ALL 4 CI jobs (Lint, Test, Build, Deploy Convex Backend)
 
 ---
 
