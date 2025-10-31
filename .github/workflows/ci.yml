@@ -223,6 +223,8 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Generate Convex files
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
         run: |
           cd apps/convex && bun run build
 
