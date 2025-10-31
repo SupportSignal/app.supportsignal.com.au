@@ -92,6 +92,8 @@ jobs:
           echo "Coverage thresholds already checked in test:ci step above"
 
       - name: Generate Convex files
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
         run: |
           cd apps/convex && bun run build
 
