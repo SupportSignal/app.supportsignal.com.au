@@ -79,6 +79,9 @@ export const seedDefaultGroups = action({
 /**
  * Assign existing prompts to groups based on workflow_step
  * Maps workflow_step values to appropriate groups
+ *
+ * IMPORTANT: This only assigns prompts that DON'T have a group_id.
+ * Use reassignPromptsToGroups to fix incorrectly assigned prompts.
  */
 export const assignPromptsToGroups = internalAction({
   args: {},
@@ -96,8 +99,9 @@ export const assignPromptsToGroups = internalAction({
     // Workflow step to group mapping - Updated to match actual workflow_step values
     const workflowStepMapping: Record<string, string> = {
       "clarification_questions": "Question Generation",
-      "enhance_narrative": "Narrative Enhancement",
+      "narrative_consolidation": "Narrative Enhancement",
       "analyze_contributing": "Contributing Analysis",
+      "sample_data_generation": "Ungrouped", // Mock data generator
       // Add more mappings as needed
     };
 
@@ -132,6 +136,69 @@ export const assignPromptsToGroups = internalAction({
         results.assigned++;
       } catch (error) {
         results.errors.push(`Failed to assign prompt ${prompt._id}: ${error}`);
+      }
+    }
+
+    return results;
+  },
+});
+
+/**
+ * Reassign ALL prompts to correct groups based on workflow_step
+ * Use this to fix incorrectly assigned prompts
+ */
+export const reassignPromptsToGroups = action({
+  args: {},
+  handler: async (ctx) => {
+    const results = {
+      reassigned: 0,
+      unchanged: 0,
+      errors: [] as string[],
+    };
+
+    // Get all groups
+    const groups = await ctx.runQuery(internal.promptGroups._internal_listGroups, {});
+    const groupMap = new Map(groups.map((g: { group_name: string; _id: string }) => [g.group_name, g._id]));
+
+    // Workflow step to group mapping - Updated to match actual workflow_step values
+    const workflowStepMapping: Record<string, string> = {
+      "clarification_questions": "Question Generation",
+      "narrative_consolidation": "Narrative Enhancement",
+      "analyze_contributing": "Contributing Analysis",
+      "sample_data_generation": "Ungrouped", // Mock data generator
+    };
+
+    // Get all prompts from the database
+    const prompts = await ctx.runQuery(internal.promptGroups._internal_listAllPrompts, {});
+
+    // Reassign each prompt based on its workflow_step
+    for (const prompt of prompts) {
+      // Determine correct group based on workflow_step
+      const workflowStep = prompt.workflow_step;
+      const groupName = workflowStep ? workflowStepMapping[workflowStep] : "Ungrouped";
+      const targetGroupName = groupName || "Ungrouped";
+      const targetGroupId = groupMap.get(targetGroupName);
+
+      if (!targetGroupId) {
+        results.errors.push(`Group "${targetGroupName}" not found for prompt ${prompt._id}`);
+        continue;
+      }
+
+      // Check if already in correct group
+      if (prompt.group_id === targetGroupId) {
+        results.unchanged++;
+        continue;
+      }
+
+      try {
+        // Update prompt with correct group_id
+        await ctx.runMutation(internal.promptGroups._internal_assignPromptToGroup, {
+          promptId: prompt._id,
+          groupId: targetGroupId,
+        });
+        results.reassigned++;
+      } catch (error) {
+        results.errors.push(`Failed to reassign prompt ${prompt._id}: ${error}`);
       }
     }
 
