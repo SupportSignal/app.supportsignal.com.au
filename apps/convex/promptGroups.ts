@@ -124,6 +124,32 @@ export const getGroupById = query({
 });
 
 /**
+ * List all AI prompts (optionally filter by active status)
+ */
+export const listPrompts = query({
+  args: {
+    activeOnly: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    let promptsQuery = ctx.db.query('ai_prompts');
+
+    if (args.activeOnly) {
+      promptsQuery = promptsQuery.filter((q) => q.eq(q.field('is_active'), true));
+    }
+
+    const prompts = await promptsQuery.collect();
+
+    // Sort by group_id and display_order
+    return prompts.sort((a, b) => {
+      if (a.group_id === b.group_id) {
+        return (a.display_order || 0) - (b.display_order || 0);
+      }
+      return (a.group_id || '').localeCompare(b.group_id || '');
+    });
+  },
+});
+
+/**
  * Reorder multiple prompts (bulk display_order update)
  */
 export const reorderPrompts = mutation({

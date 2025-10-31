@@ -67,8 +67,7 @@ export function PromptGroupManager({
 
   // Fetch groups and prompts
   const groups = useQuery(api.promptGroups.listGroups) ?? [];
-  // TODO: Replace with actual prompts query when available
-  const prompts: Prompt[] = [];
+  const prompts = useQuery(api.promptGroups.listPrompts, { activeOnly: true }) ?? [];
 
   // Mutations
   const reorderPrompts = useMutation(api.promptGroups.reorderPrompts);
