@@ -93,7 +93,7 @@ jobs:
 
       - name: Generate Convex files
         env:
-          NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
+          CONVEX_DEPLOYMENT: ${{ secrets.CONVEX_DEPLOYMENT }}
         run: |
           cd apps/convex && bun run build
 
