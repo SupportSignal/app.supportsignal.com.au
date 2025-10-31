@@ -60,7 +60,14 @@ Detailed specifications for each development phase:
 - **Deliverables**: Complete participant and site management
 - **Status**: ✅ Complete
 
-#### **[Epic 8: Multi-Prompt Analysis System](./epic-8-multi-prompt-analysis-system.md)**
+#### **[Epic 8: Environment Architecture & Deployment Separation](./epic-8.md)**
+- **Scope**: Infrastructure, environment separation, deployment configuration
+- **Duration**: 1-2 weeks
+- **Dependencies**: All previous epics (affects core infrastructure)
+- **Deliverables**: Production environment separation, URL configuration, OAuth setup, deployment pipelines
+- **Status**: ✅ Complete
+
+#### **[Epic 11: Multi-Prompt Analysis System](./epic-11-multi-prompt-analysis-system.md)**
 - **Scope**: Refactor AI prompt UI and extend with parallel batch analysis (20-50+ prompts)
 - **Duration**: 4 weeks
 - **Dependencies**: Epic 6 (AI Prompt Management - Complete), Epic 3 (Incident Capture - Complete)
@@ -107,13 +114,14 @@ gantt
 |------|----------|---------|----------------------|
 | Epic 1 | Project setup | All features | None (foundation first) |
 | Epic 2 | Epic 1 complete | Capture workflow | Epic 3 (after Epic 1) |
-| Epic 3 | Epic 1 + Epic 2 | Analysis workflow, Epic 8 | Epic 4, Epic 5 foundation, Epic 6 |
+| Epic 3 | Epic 1 + Epic 2 | Analysis workflow, Epic 11 | Epic 4, Epic 5 foundation, Epic 6 |
 | Epic 4 | Epic 1, Epic 2, Epic 3 | Incident oversight | Epic 5, Epic 6, Epic 7 |
 | Epic 5 | Epic 1 + Epic 3 data | Full platform | None (analysis completion) |
-| Epic 6 | Epic 1 only | AI customization, Epic 8 | All AI features |
+| Epic 6 | Epic 1 only | AI customization, Epic 11 | All AI features |
 | Epic 7 | Epic 1 | Participant management | Can run parallel with most epics |
-| Epic 8 | Epic 3 + Epic 6 | Automated analysis | Epic 5 (when implemented) |
+| Epic 8 | All previous epics | Production deployment | Infrastructure foundation |
 | Epic 10 | Story 0.6 | Claude analysis tools | Independent of other epics |
+| Epic 11 | Epic 3 + Epic 6 | Automated analysis | Epic 5 (when implemented) |
 
 ---
 
@@ -159,15 +167,18 @@ gantt
 ### Epic 7: Participant Management System
 - [x] **Epic 7**: Complete ✅
 
-### Epic 8: Multi-Prompt Analysis System
-- [ ] **Story 8.0**: AI Prompt Admin UI Refactor
-- [ ] **Story 8.1**: Extend Unified Prompt System (Backend)
-- [ ] **Story 8.2**: Analysis Prompts Admin UI
-- [ ] **Story 8.3**: Parallel Execution Engine
-- [ ] **Story 8.4**: Results Dashboard & Incident Integration
-- [ ] **Story 8.5**: Event-Level Observations (Future)
-- [ ] **Story 8.6**: Moments That Matter Analysis (Future)
-- [ ] **Story 8.7**: Advanced Analytics (Future)
+### Epic 8: Environment Architecture & Deployment Separation
+- [x] **Epic 8**: Complete ✅
+
+### Epic 11: Multi-Prompt Analysis System
+- [ ] **Story 11.0**: AI Prompt Admin UI Refactor
+- [ ] **Story 11.1**: Extend Unified Prompt System (Backend)
+- [ ] **Story 11.2**: Analysis Prompts Admin UI
+- [ ] **Story 11.3**: Parallel Execution Engine
+- [ ] **Story 11.4**: Results Dashboard & Incident Integration
+- [ ] **Story 11.5**: Event-Level Observations (Future)
+- [ ] **Story 11.6**: Moments That Matter Analysis (Future)
+- [ ] **Story 11.7**: Advanced Analytics (Future)
 
 ---
 

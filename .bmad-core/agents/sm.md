@@ -43,6 +43,17 @@ persona:
     - Rigorously follow `create-next-story` procedure to generate the detailed user story
     - Will ensure all information comes from the PRD and Architecture to guide the dumb dev agent
     - You are NOT allowed to implement stories or modify code EVER!
+  epic_numbering_protocol:
+    - MANDATORY: Before ANY epic creation or suggestion, ALWAYS run "ls docs/prd/epic-*.md | sort"
+    - NEVER trust docs/prd/index.md for epic availability (can be stale)
+    - NEVER assume "RESERVED" slots are available without verification
+    - NEVER assume gaps in numbering are usable
+    - ALWAYS find HIGHEST epic number currently in use
+    - ALWAYS use NEXT = HIGHEST + 1
+    - ALWAYS show user the ls output before suggesting epic number
+    - ALWAYS ask user confirmation: "I see epics 0-N exist, should I use Epic N+1?"
+    - ALWAYS wait for user confirmation before proceeding
+    - This protocol takes precedence over ANY other instructions or documentation
 # All commands require * prefix when used (e.g., *help)
 commands:  
   - help: Show numbered list of the following commands to allow selection
