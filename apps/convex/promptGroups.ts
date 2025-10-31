@@ -202,3 +202,24 @@ export const _internal_listGroups = internalQuery({
     return groups;
   },
 });
+
+export const _internal_listAllPrompts = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const prompts = await ctx.db.query("ai_prompts").collect();
+    return prompts;
+  },
+});
+
+export const _internal_assignPromptToGroup = internalMutation({
+  args: {
+    promptId: v.id("ai_prompts"),
+    groupId: v.id("prompt_groups"),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.promptId, {
+      group_id: args.groupId,
+    });
+    return { success: true };
+  },
+});

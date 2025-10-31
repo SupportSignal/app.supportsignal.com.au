@@ -80,7 +80,7 @@ export const seedDefaultGroups = action({
  * Assign existing prompts to groups based on workflow_step
  * Maps workflow_step values to appropriate groups
  */
-export const assignPromptsToGroups = action({
+export const assignPromptsToGroups = internalAction({
   args: {},
   handler: async (ctx) => {
     const results = {
@@ -93,24 +93,49 @@ export const assignPromptsToGroups = action({
     const groups = await ctx.runQuery(internal.promptGroups._internal_listGroups, {});
     const groupMap = new Map(groups.map((g: { group_name: string; _id: string }) => [g.group_name, g._id]));
 
-    // Workflow step to group mapping
+    // Workflow step to group mapping - Updated to match actual workflow_step values
     const workflowStepMapping: Record<string, string> = {
-      "generate_clarification_questions": "Question Generation",
+      "clarification_questions": "Question Generation",
       "enhance_narrative": "Narrative Enhancement",
-      "analyze_contributing_conditions": "Contributing Analysis",
+      "analyze_contributing": "Contributing Analysis",
       // Add more mappings as needed
     };
 
-    // Get all prompts (we need to query through mutations since we're in an action)
-    // Note: In a real scenario, you'd use ctx.runQuery to get prompts
-    // For now, we'll note that this needs to be run with proper queries
+    // Get all prompts from the database
+    const prompts = await ctx.runQuery(internal.promptGroups._internal_listAllPrompts, {});
 
-    const message = `Migration script created. Manual execution required:
-1. Review workflow_step values in production
-2. Update workflowStepMapping in this file
-3. Run: bunx convex run migrations/assignPromptsToGroups:assignPromptsToGroups`;
+    // Assign each prompt to appropriate group
+    for (const prompt of prompts) {
+      // Skip if already assigned to a group
+      if (prompt.group_id) {
+        results.skipped++;
+        continue;
+      }
 
-    return { results, message };
+      // Determine group based on workflow_step
+      const workflowStep = prompt.workflow_step;
+      const groupName = workflowStep ? workflowStepMapping[workflowStep] : "Ungrouped";
+      const targetGroupName = groupName || "Ungrouped";
+      const groupId = groupMap.get(targetGroupName);
+
+      if (!groupId) {
+        results.errors.push(`Group "${targetGroupName}" not found for prompt ${prompt._id}`);
+        continue;
+      }
+
+      try {
+        // Update prompt with group_id
+        await ctx.runMutation(internal.promptGroups._internal_assignPromptToGroup, {
+          promptId: prompt._id,
+          groupId: groupId,
+        });
+        results.assigned++;
+      } catch (error) {
+        results.errors.push(`Failed to assign prompt ${prompt._id}: ${error}`);
+      }
+    }
+
+    return results;
   },
 });
 
