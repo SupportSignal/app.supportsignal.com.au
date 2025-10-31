@@ -54,6 +54,8 @@ jobs:
 
       - name: Run ESLint
         # TEMPORARY: Allow lint to pass with warnings/errors until technical debt cleanup (see docs/lessons-learned/eslint-technical-debt-275-errors.md)
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
         run: bun run lint || true
 
   test:
