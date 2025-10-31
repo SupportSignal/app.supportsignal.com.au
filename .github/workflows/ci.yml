@@ -98,6 +98,8 @@ jobs:
           cd apps/convex && bun run build
 
       - name: Run type checks
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
         run: bun run typecheck
 
   test-e2e:
