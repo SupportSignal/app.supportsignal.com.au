@@ -180,10 +180,14 @@ jobs:
           env | grep NEXT_PUBLIC || echo "No NEXT_PUBLIC vars found"
 
       - name: Generate Convex files
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
         run: |
           cd apps/convex && bun run build
 
       - name: Build applications
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
         run: bun run build
 
       - name: Build for Cloudflare Pages
