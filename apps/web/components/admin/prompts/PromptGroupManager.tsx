@@ -112,8 +112,8 @@ export function PromptGroupManager({
       const overId = over.id as Id<'ai_prompts'>;
 
       // Find which groups these prompts belong to
-      const activePrompt = prompts.find((p) => p._id === activeId);
-      const overPrompt = prompts.find((p) => p._id === overId);
+      const activePrompt = prompts.find((p: any) => p._id === activeId);
+      const overPrompt = prompts.find((p: any) => p._id === overId);
 
       if (!activePrompt) {
         // Active prompt not found - this shouldn't happen in normal operation
@@ -124,18 +124,18 @@ export function PromptGroupManager({
       if (activePrompt.group_id === overPrompt?.group_id) {
         const groupId = activePrompt.group_id;
         const groupPrompts = promptsByGroup[groupId as string] || [];
-        const oldIndex = groupPrompts.findIndex((p) => p._id === activeId);
-        const newIndex = groupPrompts.findIndex((p) => p._id === overId);
+        const oldIndex = groupPrompts.findIndex((p: any) => p._id === activeId);
+        const newIndex = groupPrompts.findIndex((p: any) => p._id === overId);
 
         if (oldIndex === -1 || newIndex === -1) return;
 
         // Calculate new display_order values
-        const promptIds = groupPrompts.map((p) => p._id);
+        const promptIds = groupPrompts.map((p: any) => p._id);
         const [removed] = promptIds.splice(oldIndex, 1);
         promptIds.splice(newIndex, 0, removed);
 
         // Generate new display orders (0, 1, 2, ...)
-        const newOrders = promptIds.map((_, index) => index);
+        const newOrders = promptIds.map((_: any, index: number) => index);
 
         // Call reorderPrompts mutation
         await reorderPrompts({
@@ -186,7 +186,7 @@ export function PromptGroupManager({
             .sort((a: PromptGroup, b: PromptGroup) => a.display_order - b.display_order)
             .map((group: PromptGroup) => {
               const groupPrompts = promptsByGroup[group._id] ?? [];
-              const promptIds = groupPrompts.map((p) => p._id);
+              const promptIds = groupPrompts.map((p: any) => p._id);
 
               return (
                 <AccordionItem key={group._id} value={group._id}>
@@ -238,7 +238,7 @@ export function PromptGroupManager({
                             No prompts in this group
                           </div>
                         ) : (
-                          groupPrompts.map((prompt) => (
+                          groupPrompts.map((prompt: any) => (
                             <PromptCard
                               key={prompt._id}
                               prompt={prompt}
@@ -259,7 +259,7 @@ export function PromptGroupManager({
           {activePromptId ? (
             <div className="opacity-50">
               <PromptCard
-                prompt={prompts.find((p) => p._id === activePromptId)!}
+                prompt={prompts.find((p: any) => p._id === activePromptId)!}
                 isDragging={true}
               />
             </div>
