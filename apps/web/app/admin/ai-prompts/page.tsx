@@ -87,11 +87,11 @@ export default function AIPromptsAdminPage() {
       {/* Version Banner - Red indicator to verify deployment changes */}
       <div className="bg-red-600 text-white px-4 py-2 rounded text-sm font-mono flex items-center justify-between">
         <div>
-          <strong>BUILD:</strong> 2025-11-01T04:35:00Z |
-          <strong className="ml-2">DEPLOY:</strong> v11.0.debug.4-FORCE-REBUILD
+          <strong>BUILD:</strong> 2025-11-01T04:50:00Z |
+          <strong className="ml-2">DEPLOY:</strong> v11.0.debug.5-API-CHECK
         </div>
         <div className="text-xs opacity-75">
-          Forcing complete rebuild to clear stale API cache
+          Checking if api.promptGroups.listGroups exists in generated API
         </div>
       </div>
 

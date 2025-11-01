@@ -72,13 +72,17 @@ export function PromptGroupManager({
   // Enhanced Debug logging
   console.log('🔍 CLIENT - PromptGroupManager - Component mounted', {
     timestamp: new Date().toISOString(),
-    buildTime: '2025-11-01T04:15:00Z',
-    apiAvailable: typeof api.promptGroups.listGroups !== 'undefined'
+    buildTime: '2025-11-01T04:50:00Z-REBUILD-5',
+    apiAvailable: typeof api.promptGroups.listGroups !== 'undefined',
+    apiKeys: Object.keys(api.promptGroups || {}),
+    hasListGroups: 'listGroups' in (api.promptGroups || {})
   });
   console.log('🔍 CLIENT - PromptGroupManager - groups:', {
     count: groups.length,
     data: groups,
-    groupNames: groups.map((g: any) => g.group_name)
+    groupNames: groups.map((g: any) => g.group_name),
+    isUndefined: groups === undefined,
+    isNull: groups === null
   });
   console.log('🔍 CLIENT - PromptGroupManager - prompts:', {
     count: prompts.length,
