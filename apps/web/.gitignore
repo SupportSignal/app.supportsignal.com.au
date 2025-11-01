@@ -1,2 +1,5 @@
 
 .env.local
+
+# Convex generated files (use ../convex/_generated instead)
+convex/_generated/
