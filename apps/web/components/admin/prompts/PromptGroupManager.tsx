@@ -69,10 +69,22 @@ export function PromptGroupManager({
   const groups = useQuery(api.promptGroups.listGroups) ?? [];
   const prompts = useQuery(api.promptGroups.listPrompts, { activeOnly: true }) ?? [];
 
-  // Debug logging
-  console.log('🔍 PromptGroupManager - Component mounted');
-  console.log('🔍 PromptGroupManager - groups:', groups);
-  console.log('🔍 PromptGroupManager - prompts:', prompts);
+  // Enhanced Debug logging
+  console.log('🔍 CLIENT - PromptGroupManager - Component mounted', {
+    timestamp: new Date().toISOString(),
+    buildTime: '2025-11-01T04:15:00Z',
+    apiAvailable: typeof api.promptGroups.listGroups !== 'undefined'
+  });
+  console.log('🔍 CLIENT - PromptGroupManager - groups:', {
+    count: groups.length,
+    data: groups,
+    groupNames: groups.map((g: any) => g.group_name)
+  });
+  console.log('🔍 CLIENT - PromptGroupManager - prompts:', {
+    count: prompts.length,
+    data: prompts,
+    promptNames: prompts.map((p: any) => p.prompt_name)
+  });
 
   // Mutations
   const reorderPrompts = useMutation(api.promptGroups.reorderPrompts);

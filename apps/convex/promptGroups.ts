@@ -101,10 +101,18 @@ export const deleteGroup = mutation({
 export const listGroups = query({
   args: {},
   handler: async (ctx) => {
+    console.log('🔍 SERVER - listGroups query called');
+
     const groups = await ctx.db
       .query("prompt_groups")
       .withIndex("by_display_order")
       .collect();
+
+    console.log(`🔍 SERVER - listGroups found ${groups.length} groups:`, {
+      groupCount: groups.length,
+      groupNames: groups.map(g => g.group_name),
+      timestamp: new Date().toISOString()
+    });
 
     return groups;
   },

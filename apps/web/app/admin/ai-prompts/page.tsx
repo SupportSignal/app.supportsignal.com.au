@@ -84,6 +84,17 @@ export default function AIPromptsAdminPage() {
 
   return (
     <div className="space-y-6">
+      {/* Version Banner - Red indicator to verify deployment changes */}
+      <div className="bg-red-600 text-white px-4 py-2 rounded text-sm font-mono flex items-center justify-between">
+        <div>
+          <strong>BUILD:</strong> 2025-11-01T04:15:00Z |
+          <strong className="ml-2">DEPLOY:</strong> v11.0.debug.3
+        </div>
+        <div className="text-xs opacity-75">
+          Hash will change when new build deploys
+        </div>
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
