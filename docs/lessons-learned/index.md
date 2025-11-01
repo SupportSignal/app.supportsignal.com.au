@@ -55,6 +55,12 @@ Essential debugging protocols and troubleshooting patterns:
 
 - **[Debugging Stale Generated Files KDD](./debugging-stale-generated-files-kdd.md)** - Critical protocol for identifying and fixing stale generated files that override fresh builds. Story 11.0 lesson: Server has data but browser shows empty due to 2-month-old generated API files. Includes 5-minute diagnostic protocol vs 3-hour complex theories. (Added: 2025-11-01)
 
+### Deployment & CI/CD
+
+Deployment pipeline issues, build configurations, and production update patterns:
+
+- **[Cloudflare Dual Deployment KDD](./cloudflare-dual-deployment-kdd.md)** - How to identify and fix dual deployment conflicts where GitHub Actions succeeds but Cloudflare auto-deploy fails. Story 11.0 lesson: Production stuck on old build despite successful CI due to npm vs bun conflicts. Solution: Disable Cloudflare auto-deploy, rely solely on GitHub Actions. (Added: 2025-11-01)
+
 ### [Anti-Patterns](anti-patterns/)
 
 Documented approaches that should be avoided, with explanations of why and alternatives:
