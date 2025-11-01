@@ -200,6 +200,12 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Wait for Convex deployment propagation
+        run: |
+          echo "⏳ Waiting 30 seconds for Convex deployment to fully propagate..."
+          sleep 30
+          echo "✅ Convex deployment should now be available for codegen"
+
       - name: Debug Environment Variables
         run: |
           echo "=== Checking if GitHub Secrets are configured ==="
