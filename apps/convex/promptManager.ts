@@ -1592,3 +1592,45 @@ export const getPromptsByGroup = query({
     };
   },
 });
+
+/**
+ * Internal helper functions for migrations
+ * These functions bypass authentication for system-level operations
+ */
+
+/**
+ * List all prompts (for migration purposes)
+ */
+export const _internal_listAllPrompts = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("ai_prompts").collect();
+  },
+});
+
+/**
+ * Update prompt (for migration purposes)
+ */
+export const _internal_updatePrompt = internalMutation({
+  args: {
+    promptId: v.id("ai_prompts"),
+    execution_mode: v.optional(v.union(
+      v.literal("single"),
+      v.literal("batch_analysis")
+    )),
+    prompt_type: v.optional(v.union(
+      v.literal("generation"),
+      v.literal("predicate"),
+      v.literal("classification"),
+      v.literal("observation")
+    )),
+  },
+  handler: async (ctx, args) => {
+    const updates: any = {};
+    if (args.execution_mode !== undefined) updates.execution_mode = args.execution_mode;
+    if (args.prompt_type !== undefined) updates.prompt_type = args.prompt_type;
+
+    await ctx.db.patch(args.promptId, updates);
+    return { success: true };
+  },
+});
