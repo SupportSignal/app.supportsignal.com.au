@@ -84,14 +84,14 @@ export default function AIPromptsAdminPage() {
 
   return (
     <div className="space-y-6">
-      {/* Version Banner - Green indicator showing successful deployment */}
-      <div className="bg-green-600 text-white px-4 py-2 rounded text-sm font-mono flex items-center justify-between">
+      {/* Version Banner - Verify CI deployment works */}
+      <div className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-mono flex items-center justify-between">
         <div>
-          <strong>BUILD:</strong> 2025-11-01T12:45:58Z |
-          <strong className="ml-2">DEPLOY:</strong> v11.0.PRODUCTION-WRANGLER-DIRECT
+          <strong>BUILD:</strong> 2025-11-01T13:15:00Z |
+          <strong className="ml-2">DEPLOY:</strong> v11.0.CI-TEST
         </div>
         <div className="text-xs opacity-75">
-          Checking if api.promptGroups.listGroups exists in generated API
+          Testing automated CI deployment with fresh Convex codegen
         </div>
       </div>
 
