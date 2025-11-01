@@ -463,6 +463,20 @@ export default defineSchema({
     group_id: v.optional(v.id("prompt_groups")), // Foreign key to prompt_groups
     display_order: v.optional(v.number()), // Order within group
 
+    // Story 11.1: Batch Analysis Mode
+    execution_mode: v.optional(v.union(
+      v.literal("single"),          // Traditional one-off prompt (default for existing prompts)
+      v.literal("batch_analysis")   // Parallel batch execution
+    )),
+    prompt_type: v.optional(v.union(
+      v.literal("generation"),      // Existing (questions, enhancement)
+      v.literal("predicate"),       // NEW: Yes/No decisions
+      v.literal("classification"),  // NEW: Category selection
+      v.literal("observation")      // NEW: Brief insights
+    )),
+    data_source_id: v.optional(v.id("data_source_profiles")), // Links batch prompts to data sources
+    output_format: v.optional(v.any()), // JSON schema defining expected output structure
+
     // Versioning
     is_active: v.optional(v.boolean()), // Whether this version is currently active
     created_at: v.number(),
@@ -480,7 +494,73 @@ export default defineSchema({
     .index("by_active", ["is_active"])
     .index("by_workflow", ["workflow_step"])
     .index("by_subsystem", ["subsystem"])
-    .index("by_group", ["group_id"]),
+    .index("by_group", ["group_id"])
+    .index("by_execution_mode", ["execution_mode"])
+    .index("by_data_source", ["data_source_id"]),
+
+  // Story 11.1: Data Source Profiles for batch analysis configuration
+  data_source_profiles: defineTable({
+    name: v.string(), // "Incident Analysis", "Event Observation"
+    description: v.optional(v.string()), // Human-readable description
+    entity_type: v.union( // Type of entity being analyzed
+      v.literal("incident"),
+      v.literal("narrative"),
+      v.literal("moment")
+    ),
+    config: v.any(), // JSON configuration (refresh intervals, filters, etc.)
+    status: v.union( // Operational status
+      v.literal("active"),
+      v.literal("inactive"),
+      v.literal("error")
+    ),
+    created_at: v.number(),
+    created_by: v.optional(v.id("users")),
+    last_run_at: v.optional(v.number()), // Last time analysis was executed
+  })
+    .index("by_entity_type", ["entity_type"])
+    .index("by_status", ["status"])
+    .index("by_entity_status", ["entity_type", "status"]),
+
+  // Story 11.1: Analysis Executions tracking batch analysis runs
+  analysis_executions: defineTable({
+    data_source_id: v.id("data_source_profiles"), // Which data source was analyzed
+    entity_id: v.string(), // ID of the incident/narrative/moment being analyzed
+    status: v.union( // Execution status
+      v.literal("pending"),
+      v.literal("running"),
+      v.literal("completed"),
+      v.literal("failed")
+    ),
+    started_at: v.number(),
+    completed_at: v.optional(v.number()),
+    prompt_count: v.number(), // How many prompts were executed
+    correlation_id: v.string(), // For tracing and debugging
+    created_at: v.number(),
+  })
+    .index("by_entity_id", ["entity_id"])
+    .index("by_status", ["status"])
+    .index("by_correlation_id", ["correlation_id"])
+    .index("by_data_source", ["data_source_id"])
+    .index("by_entity_status", ["entity_id", "status"]),
+
+  // Story 11.1: Analysis Results storing individual prompt results
+  analysis_results: defineTable({
+    execution_id: v.id("analysis_executions"), // Which execution this belongs to
+    prompt_id: v.id("ai_prompts"), // Which prompt was executed
+    output: v.any(), // JSON output from the prompt
+    tokens_used: v.number(), // Token consumption
+    processing_time_ms: v.number(), // How long the prompt took
+    status: v.union( // Result status
+      v.literal("success"),
+      v.literal("error")
+    ),
+    error_message: v.optional(v.string()), // Error details if failed
+    created_at: v.number(),
+  })
+    .index("by_execution_id", ["execution_id"])
+    .index("by_prompt_id", ["prompt_id"])
+    .index("by_execution_prompt", ["execution_id", "prompt_id"])
+    .index("by_status", ["status"]),
 
   // AI request/response logging for performance monitoring and debugging
   ai_request_logs: defineTable({
