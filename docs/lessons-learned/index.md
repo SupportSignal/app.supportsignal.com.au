@@ -53,7 +53,8 @@ Critical insights about environment management, deployment configuration, and OA
 
 Essential debugging protocols and troubleshooting patterns:
 
-- **[Debugging Stale Generated Files KDD](./debugging-stale-generated-files-kdd.md)** - Critical protocol for identifying and fixing stale generated files that override fresh builds. Story 11.0 lesson: Server has data but browser shows empty due to 2-month-old generated API files. Includes 5-minute diagnostic protocol vs 3-hour complex theories. (Added: 2025-11-01)
+- **[Debugging Stale Generated Files KDD](./debugging-stale-generated-files-kdd.md)** - Critical protocol for identifying and fixing stale generated files that override fresh builds. Symptom: Server has data but browser shows empty due to 2-month-old generated API files. Includes 5-minute diagnostic protocol vs 3-hour complex theories. (Added: 2025-11-01)
+- **[Deployment Debugging Session: Convex + Cloudflare Pages KDD](./deployment-debugging-session-convex-cloudflare-kdd.md)** - Comprehensive audit trail of 12-hour production deployment investigation. Documents 4 independent root causes: stale generated files, dual deployment conflicts, CI job ordering, and missing database migrations. 30 commits analyzed with systematic resolution patterns for multi-platform deployment coordination. (Added: 2025-11-01)
 
 ### Deployment & CI/CD
 
