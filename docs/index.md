@@ -60,6 +60,14 @@ Following BMAD methodology, these documents form the foundation:
 
 ## Documentation Structure
 
+### 📖 Quick Reference
+
+**[reference/](./reference/)** - Essential reference documentation for rapid lookup
+
+- **[Command Reference](./reference/commands.md)** - Complete command listing for development, testing, CI, and deployment
+- **[Navigation Conventions](./reference/navigation-conventions.md)** - Directory awareness and navigation best practices
+- **[Epic Management](./reference/epic-management.md)** - Epic numbering discovery protocol and Scrum Master integration
+
 ### 📚 Methodology
 
 **[methodology/](./methodology/)**

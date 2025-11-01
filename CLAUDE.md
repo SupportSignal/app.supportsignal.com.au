@@ -188,157 +188,43 @@ The project includes a comprehensive navigation system providing always-current,
 
 ## Development Workflow
 
-### AI-Assisted Development
+### BMAD Method (Before, Model, After, Document)
 
-This project follows the BMAD (Before, Model, After, Document) method with integrated CI verification:
+**Required Phases:**
+1. **Before**: Capture context, verify CI status with `bun run ci:status`
+2. **Model**: Implement with Claude, consider CI compatibility
+3. **After**: MANDATORY verification: `pwd && bun run typecheck && bun run lint && bun test && bun run ci:status`
+4. **Document**: Capture learnings, update docs (only after CI is green)
 
-#### BMAD Phase Integration with CI Verification
+**Critical Rules:**
+- ❌ Never skip CI verification in After phase
+- ❌ Never proceed to Document phase until CI is green
+- ✅ Use tester agent for complex CI debugging
 
-1. **Before Phase**:
-   - Capture context before starting tasks
-   - **CI Context Check**: Run `bun run ci:status` to verify starting state
-   - Document current CI status in planning
+### BMAD Agents
 
-2. **Model Phase**:
-   - Use Claude for implementation
-   - **Include CI Considerations**: Plan implementation with CI compatibility in mind
-   - Consider test requirements and CI pipeline impact
+**Location**: `.bmad-core/agents/` (11 specialized agents)
 
-3. **After Phase**:
-   - **MANDATORY CI Verification Suite**:
-     ```bash
-     pwd                    # Verify project root
-     bun run typecheck     # TypeScript validation
-     bun run lint          # ESLint compliance
-     bun test              # Local test execution
-     bun run build         # Production build test
-     bun run ci:status     # CI pipeline verification
-     ```
-   - **DO NOT PROCEED** to Document phase until CI is green
+**Key Agents**: bmad-master, architect, dev, pm, po, qa, sm, test-dev, analyst, ux-expert, bmad-orchestrator
 
-4. **Document Phase**:
-   - Document changes and learnings
-   - **Include CI Lessons**: Capture any CI-related insights
-   - Update testing documentation if CI patterns change
+**Usage**: Load agent files to adopt specialized personas. Agents execute tasks with `*` commands (`*help`, `*task`, `*create-doc`).
 
-#### BMAD-CI Integration Rules
+**Complete Guide**: See `.bmad-core/` directory and [BMAD Methodology](docs/methodology/bmad-context-engineering.md).
 
-- **Never skip CI verification** in After phase - it's non-negotiable
-- **CI failures block story completion** - fix before documenting
-- **Document CI lessons** - maintain institutional CI knowledge
-- **Use tester agent** for complex CI debugging during any phase
+### Worktree Workflow
 
-### BMAD Agent System
+**When to Use**: Simple UI changes, docs, isolated refactoring (no schema/testing/multi-service work)
 
-This project includes a comprehensive BMAD agent system located in `.bmad-core/`:
+**Workflow**:
+1. Invoke `*worktree-manager` to assess suitability
+2. Human executes scripts (AI provides instructions only): `./scripts/worktree-start.sh X.Y`
+3. Develop in worktree, document handoff with `*worktree-manager`
+4. Human merges: `./scripts/worktree-end.sh X.Y`
+5. Test in main branch before marking story complete
 
-#### Available BMAD Agents
+**Safety**: AI never executes worktree scripts, always `pwd`, story completion only after main branch testing.
 
-The system provides specialized agents for different development roles:
-
-- **bmad-master.md** - Universal task executor and BMAD method expert (🧙)
-- **architect.md** - Technical architecture and system design specialist
-- **dev.md** - Development implementation and coding expert
-- **pm.md** - Project management and coordination specialist
-- **po.md** - Product owner and requirements expert
-- **qa.md** - Quality assurance and testing specialist
-- **analyst.md** - Business analysis and requirements gathering
-- **ux-expert.md** - User experience and interface design
-- **sm.md** - Scrum master and agile process expert
-- **test-dev.md** - Test development and automation specialist
-- **bmad-orchestrator.md** - Multi-agent workflow orchestration
-
-#### BMAD Agent Usage
-
-To work with a specific BMAD agent persona:
-
-1. **Agent Selection**: Choose the appropriate agent based on the task domain
-2. **Agent Activation**: Load the agent file to adopt the specialized persona
-3. **Task Execution**: Use agent-specific commands and workflows
-4. **Resource Access**: Agents can access tasks, templates, checklists from `.bmad-core/`
-
-#### BMAD Commands and Resources
-
-Each agent can execute specialized commands with `*` prefix:
-- `*help` - Show available commands
-- `*task {task}` - Execute specific task workflow
-- `*create-doc {template}` - Generate documents from templates
-- `*execute-checklist {checklist}` - Run quality assurance checklists
-
-**Resource Structure**:
-```
-.bmad-core/
-├── agents/           # Specialized agent personas
-├── tasks/            # Executable task workflows
-├── templates/        # Document generation templates
-├── checklists/       # Quality assurance checklists
-├── workflows/        # Multi-step process definitions
-└── data/             # Knowledge base and reference materials
-```
-
-### Worktree Development Workflow
-
-**CRITICAL**: Worktree workflow is **human-driven** using the Worktree Manager agent (Willow) who provides instructions rather than executing commands.
-
-#### When to Use Worktrees
-
-**✅ Good Fit**:
-- Simple UI component changes (styling, layout, no logic)
-- Documentation updates (markdown files, guides)
-- Isolated refactoring (no dependencies, no testing required)
-- Code that doesn't require testing in worktree (can test in main after merge)
-
-**❌ Avoid Worktrees**:
-- Schema changes (Convex, database, migrations)
-- Features requiring full testing (need real data, complex scenarios)
-- Work involving multiple services (web + workers + backend)
-- Complex dependency changes (new packages, environment changes)
-
-#### Worktree Workflow Phases
-
-1. **Suitability Assessment**: Invoke Worktree Manager agent
-   ```
-   *worktree-manager
-   *start-worktree
-   ```
-   Agent analyzes story and recommends worktree vs main branch development.
-
-2. **Worktree Creation** (if suitable): Human executes (AI provides instructions only)
-   ```bash
-   cd /path/to/app.supportsignal.com.au
-   pwd  # Verify correct location
-   ./scripts/worktree-start.sh X.Y
-   cd ../story-X-Y
-   ```
-
-3. **Development in Worktree**: Work normally, but do NOT mark story "Completed"
-
-4. **Handoff Documentation**: Before merging, invoke Worktree Manager
-   ```
-   *worktree-manager
-   *end-worktree
-   ```
-   Agent guides handoff documentation (file list, testing plan, known issues).
-
-5. **Merge to Main**: Human executes after review
-   ```bash
-   cd /path/to/app.supportsignal.com.au
-   ./scripts/worktree-end.sh X.Y
-   ```
-
-6. **Testing in Main**: Verify features work in main branch environment
-
-7. **Story Completion**: Mark complete ONLY after main branch testing passes
-
-#### Safety Guardrails
-
-- **Human-Only Script Execution**: AI never executes worktree scripts (prevents directory confusion)
-- **Directory Verification**: Always `pwd` before operations
-- **Handoff Documentation Enforcement**: Cannot merge without complete documentation
-- **Testing in Main Branch**: Story not complete until tested in main
-- **Worktree Manager Agent (Willow)**: `*worktree-manager` guides workflow and enforces safety
-
-**Full Documentation**: [Worktree Development Pattern](docs/patterns/worktree-development-pattern.md)
+**Complete Guide**: [Worktree Pattern](docs/patterns/worktree-development-pattern.md)
 
 ### BMAD Documentation Structure
 
@@ -649,19 +535,18 @@ NEVER create files unless they're absolutely necessary for achieving your goal.
 ALWAYS prefer editing an existing file to creating a new one.
 NEVER proactively create documentation files (\*.md) or README files. Only create documentation files if explicitly requested by the User.
 
-## Quick Reference: Commonly Missed Patterns
+## Commonly Missed Patterns
 
-**Before troubleshooting, check if we already documented the solution:**
+**Documentation-First Protocol**: Before troubleshooting, check if we already documented the solution.
 
-1. **Testing Issues**: Check `docs/testing/technical/testing-infrastructure-lessons-learned.md`
-2. **Jest Configuration**: Use templates in `docs/testing/technical/test-migration-and-configuration-kdd.md`
-3. **TypeScript Errors in Tests**: Apply `@ts-nocheck` pragmatically - don't "fix" interface issues
-4. **Path Resolution**: Use configured aliases (`@/`) not relative paths (`../../../../`)
-5. **Directory Navigation**: ALWAYS `pwd` first, run commands from project root
-6. **Test Location**: ALL tests go in `tests/` directory (centralized), not app directories
-7. **Package.json Scripts**: Update scripts when moving tests to centralized location
+**Quick Fixes:**
+1. **Testing Issues**: `docs/testing/technical/testing-infrastructure-lessons-learned.md`
+2. **TypeScript Errors in Tests**: Use `@ts-nocheck` pragmatically - don't fight interface issues
+3. **Path Resolution**: Use `@/` aliases, not relative paths (`../../../../`)
+4. **Directory Navigation**: ALWAYS `pwd` first, work from project root
+5. **Test Location**: ALL tests in `tests/` directory (centralized)
 
-**Documentation-First Protocol**: Search existing docs before implementing new solutions.
+**Complete Patterns**: See [Testing Patterns](docs/testing/technical/testing-patterns.md) and [Command Reference](docs/reference/commands.md).
 
 ## Specialized Agent Delegation
 
@@ -812,366 +697,82 @@ Before creating ANY new files, Claude MUST follow this discovery protocol:
 
 This protocol prevents incorrect file placement and maintains project consistency.
 
-## Epic Numbering Discovery Protocol
+## Epic Management
 
-**MANDATORY BEFORE ANY EPIC CREATION OR SUGGESTION**
+**MANDATORY**: Before creating or suggesting epic numbers, ALWAYS verify existing epics with `ls docs/prd/epic-*.md | sort`.
 
-When creating a new epic OR when user asks "where should this go" regarding epic placement:
+**Critical Rules:**
+- ❌ Never trust `docs/prd/index.md` for availability (can be stale)
+- ❌ Never assume gaps in numbering are usable
+- ✅ Always run ls command to find highest epic number
+- ✅ Next available = HIGHEST + 1
+- ✅ Show user current epic list and get confirmation
 
-### Step 1: ALWAYS Check Existing Epics First
+**Complete Protocol**: See [Epic Management Guide](docs/reference/epic-management.md) for full discovery protocol, verification steps, and Scrum Master integration.
 
+## Navigation & Directory Awareness
+
+**🚨 CRITICAL: ALWAYS run `pwd` before ANY file operations!**
+
+**Essential Rules:**
+- ✅ ALWAYS verify directory with `pwd` first
+- ✅ ALWAYS work from project root: `/Users/davidcruwys/dev/clients/supportsignal/app.supportsignal.com.au/`
+- ✅ ALWAYS use paths relative to project root (not `../..`)
+- ❌ NEVER assume current directory
+- ❌ NEVER use relative navigation patterns (`../..`)
+
+**Common Locations:**
+- Project Root: `/Users/davidcruwys/dev/clients/supportsignal/app.supportsignal.com.au/`
+- Web App: `apps/web/`
+- Convex Backend: `apps/convex/`
+- BMAD Agents: `.bmad-core/` (11 specialized agents)
+
+**Complete Guide**: See [Navigation Conventions](docs/reference/navigation-conventions.md) for troubleshooting, directory locations, and best practices.
+
+## CI Verification & Monitoring
+
+**MANDATORY before story completion**: CI must be green before marking complete.
+
+**Key Commands:**
 ```bash
-# MANDATORY FIRST COMMAND - Never skip this
-ls docs/prd/epic-*.md | sort
-```
-
-**DO NOT:**
-- ❌ Trust `docs/prd/index.md` for epic availability (it can be stale)
-- ❌ Assume "RESERVED" slots are actually available
-- ❌ Assume gaps in numbering are usable
-- ❌ Suggest epic numbers without running the ls command first
-
-### Step 2: Find Next Available Number
-
-```bash
-# Pattern: epic-N.md where N is a number
-# Find HIGHEST N currently in use
-# Next available = HIGHEST + 1
-```
-
-**Example:**
-```bash
-$ ls docs/prd/epic-*.md | sort
-epic-0.md
-epic-1.md
-epic-2.md
-epic-3.md
-epic-4.md
-epic-5.md
-epic-6.md
-epic-7.md
-epic-8.md
-epic-9.md
-epic-10.md
-
-# HIGHEST = 10
-# NEXT AVAILABLE = 11
-```
-
-### Step 3: Verify Before Proceeding
-
-**BEFORE creating or renaming any epic files:**
-
-1. Show user the current epic list
-2. State explicitly: "I see epics 0-N exist, next available is Epic N+1"
-3. Ask user: "Should I use Epic N+1 for [feature name]?"
-4. WAIT for user confirmation
-
-**Example:**
-```
-I found these epic files:
-- epic-0.md through epic-10.md (11 epics total)
-
-Next available epic number is Epic 11.
-
-Should I create Epic 11 for Multi-Prompt Analysis System?
-```
-
-### Step 4: Check for Detailed PRD Files
-
-Some epics have both formats:
-- `epic-N.md` - Standard epic format (concise)
-- `epic-N-detailed-name.md` - Detailed PRD
-
-**ALWAYS check both patterns:**
-```bash
-ls docs/prd/epic-8*
-# May show: epic-8.md AND epic-8-multi-prompt-analysis-system.md
-```
-
-### Common Failure Patterns to Avoid
-
-**❌ WRONG - Trusting stale index:**
-```
-User: "Where should this epic go?"
-Claude: *Reads index.md*
-Claude: "Index says Epic 4 is RESERVED, let's use that"
-Result: Conflict with existing epic-4.md file
-```
-
-**✅ CORRECT - Verify files first:**
-```
-User: "Where should this epic go?"
-Claude: *Runs ls docs/prd/epic-*.md | sort*
-Claude: "I see epics 0-10 exist. Next available is Epic 11. Should I use that?"
-User: "Yes"
-Result: No conflicts
-```
-
-### Protocol Enforcement
-
-**This protocol is MANDATORY and takes precedence over:**
-- Any stale index.md content
-- Any "RESERVED" markings in documentation
-- Any assumptions about gaps in numbering
-- Any user requests that skip verification (politely verify anyway)
-
-**Scrum Master Agent (sm.md) Integration:**
-
-When the SM agent is active and creating epics, it MUST:
-1. Follow this exact protocol before suggesting epic numbers
-2. Show ls output to user
-3. Get explicit confirmation of epic number
-4. Never proceed without verification
-
-## Claude Navigation & Directory Awareness
-
-**CRITICAL**: Claude must maintain directory context awareness to prevent navigation errors.
-
-### Navigation Best Practices
-
-**🚨 CRITICAL: ALWAYS run `pwd` as your FIRST command before any file operations!**
-
-1. **MANDATORY directory verification before ANY commands:**
-
-   ```bash
-   pwd  # ALWAYS run this first - no exceptions!
-   ```
-
-2. **All commands must be run from project root:**
-
-   ```bash
-   # If not in project root, navigate immediately:
-   cd /Users/davidcruwys/dev/ad/appydave/appydave-templates/starter-nextjs-convex-ai
-
-   # Then verify you're in the right place:
-   pwd
-   ```
-
-3. **Use absolute paths when referencing project files:**
-
-   ```bash
-   # Good - paths from project root
-   docs/testing/index.md
-   apps/web/components/ui/button.tsx
-
-   # Avoid relative paths that lose context
-   ../../../.bmad-core/
-   ../../docs/testing/index.md
-   ```
-
-   **NEVER use `../..` patterns - always reference files from project root.**
-
-4. **Before running any bun/npm scripts, confirm location:**
-
-   ```bash
-   pwd && bun run ci:status    # Combine directory check with command
-   ```
-
-5. **When using LS tool, pay attention to the path context shown in output**
-
-6. **For hidden directories (starting with .), use explicit listing:**
-   ```bash
-   ls -la | grep "^\."  # List hidden files/directories
-   ```
-
-### Common Directory Locations
-
-- **Project Root**: `/Users/davidcruwys/dev/clients/supportsignal/app.supportsignal.com.au/`
-- **Template Reference**: `/Users/davidcruwys/dev/ad/appydave/appydave-templates/starter-nextjs-convex-ai/`
-- **Web App**: `apps/web/`
-- **Convex Backend**: `apps/convex/`
-- **Documentation**: `docs/`
-- **BMAD Agent System**: `.bmad-core/` (comprehensive agent system with 11 specialized agents)
-- **Claude Config**: `.claude/` (if exists)
-
-### Troubleshooting Navigation Issues
-
-If you get "file not found" or "script not found" errors:
-
-1. **IMMEDIATELY run `pwd` to check current location**
-2. **Navigate to project root:** `cd /Users/davidcruwys/dev/clients/supportsignal/app.supportsignal.com.au`
-3. **Verify you're in the right place:** `pwd` (should show the full project path)
-4. **Test with a known file:** `ls package.json` (should exist at root)
-5. **Then retry your original command**
-
-**Common failure pattern:** Running commands from subdirectories like `apps/web/` when scripts expect project root context.
-
-## CI Verification Scripts & Monitoring Tools
-
-### Available CI Monitoring Scripts
-
-The project includes comprehensive CI monitoring tools to support systematic verification:
-
-#### 1. **CI Status Check** (`scripts/ci-status.sh`)
-
-```bash
-# Usage: Check current CI status for branch
-bun run ci:status [branch-name]
-
-# Features:
-- Shows recent CI runs with status and timestamps
-- Displays current pipeline status (success/failure/running)
-- Provides direct GitHub Actions link
-- Exit codes: 0=success, 1=failure, others=various states
-```
-
-#### 2. **CI Monitor** (`scripts/ci-monitor.sh`)
-
-```bash
-# Usage: Monitor CI execution with timeout
-bun run ci:watch [branch-name] [timeout-seconds]
-
-# Features:
-- Real-time CI monitoring with status updates
-- Configurable timeout (default: 300 seconds)
-- Exit codes indicate final CI state
-- Automatic link to detailed logs on failure
-```
-
-### CI Integration Best Practices
-
-#### Systematic Use Pattern
-
-```bash
-# 1. Before starting work - verify baseline
-bun run ci:status
-
-# 2. During development - local validation
-bun run typecheck && bun run lint && bun test
-
-# 3. After implementation - push and monitor
-git push origin main
-bun run ci:watch      # Monitor CI execution
-
-# 4. Story completion - final verification
-bun run ci:status     # Confirm CI success before marking complete
-```
-
-#### Error Handling Workflow
-
-```bash
-# If CI fails after push:
+bun run ci:status     # Check CI pipeline status
+bun run ci:watch      # Monitor CI execution with updates
 bun run ci:logs       # View detailed failure logs
-bun run ci:status     # Check current status
-# Fix issues locally, commit, and push again
-git add . && git commit -m "fix: address CI failures" && git push origin main
-bun run ci:watch      # Monitor the fix
 ```
 
-### Integration with Development Tools
+**Systematic Workflow:**
+1. Local validation: `bun run typecheck && bun run lint && bun test`
+2. Push and monitor: `git push && bun run ci:watch`
+3. Story completion: `bun run ci:status` (must show SUCCESS)
 
-#### GitHub CLI Integration
-
-All CI scripts use GitHub CLI (`gh`) for authenticated API access:
-
-- Automatic authentication detection
-- Rich status reporting with timestamps
-- Direct links to GitHub Actions dashboard
-
-#### Exit Code Standards
-
-- **0**: Success/completion
-- **1**: Failure (CI failed, authentication issues)
-- **2**: Cancelled operations
-- **124**: Timeout reached
-- **3+**: Various warning states
-
-#### Monitoring Timeouts
-
-- **Default**: 300 seconds (5 minutes) for most pipelines
-- **Configurable**: Pass custom timeout as second argument
-- **Smart Timeout**: Scripts provide progress updates and remaining time
-
-### Documentation References
-
-For comprehensive CI setup and troubleshooting:
-
-- **[CI/CD Pipeline Setup Guide](docs/technical-guides/cicd-pipeline-setup.md)** - Complete setup instructions
-- **[Testing Infrastructure Lessons](docs/testing/technical/testing-infrastructure-lessons-learned.md)** - CI debugging patterns
-- **[Chat Component KDD](docs/testing/technical/chat-component-testing-lessons.md)** - Testing methodology improvements
+**Complete Reference**: See [Command Reference](docs/reference/commands.md#ci-verification--monitoring) for detailed CI workflows, error handling, and exit codes.
 
 ## Quick Reference
-*Last Updated: September 30, 2025*
 
-### Essential Development Commands
+### Most-Used Commands
 ```bash
-# Core Development (The Way You Always Do It)
-bun web:dev          # Start web development server
-bun convex:dev       # Start Convex backend development
-bun worker:dev       # Start Cloudflare Workers development
-bun build            # Build for production
+# Development
+bun web:dev && bun convex:dev    # Start development servers
+bun test:*:coverage:watch:all    # Run tests (convex/worker/web)
+bun run typecheck && bun run lint # Code quality checks
 
-# Testing (The Way You Always Do It)
-bun test:convex:coverage:watch:all    # Convex backend tests
-bun test:worker:coverage:watch:all    # Workers tests
-bun test:web:coverage:watch:all       # Web tests
+# CI & Deployment
+bun run ci:status                # Verify CI pipeline
+bunx convex deploy              # Deploy backend
+git push origin main            # Auto-deploy Cloudflare Pages
 
-# Code Quality
-bun run typecheck    # TypeScript validation
-bun run lint         # ESLint validation
-
-# CI Verification (MANDATORY before story completion)
-bun run ci:status    # Check CI status
-bun run ci:watch     # Monitor CI runs
-bun run push         # Smart push with CI monitoring
-
-# Convex Backend
-bunx convex dev      # Alternative: Start Convex dev server
-bunx convex deploy   # Deploy functions
-bunx convex data [table] --limit [n]  # Query development data
-bunx convex data --prod [table] --limit [n]  # Query production data
+# Environment
+bun run sync-env --mode=local   # Sync environment variables
+bunx convex data [table]        # Query database
 ```
 
-### Environment & Deployment
-```bash
-# Environment Sync
-bun run sync-env --mode=local        # Generate local .env files
-bun run sync-env --mode=deploy-dev   # Deploy to dev
-bun run sync-env --mode=deploy-prod  # Deploy to prod
+### Project Locations
+- **Root**: `/Users/davidcruwys/dev/clients/supportsignal/app.supportsignal.com.au/`
+- **Apps**: `apps/web/` (Next.js), `apps/convex/` (Backend), `apps/workers/` (Edge)
+- **Tests**: `tests/` (centralized)
+- **Docs**: `docs/` (all documentation)
 
-# Cloudflare Pages
-cd apps/web && bun run build:pages  # Build for Pages
-bun run pages:deploy                 # Manual deployment
-
-# Database Monitoring
-bunx convex run monitoring:usage    # Database usage stats
-bunx convex run cleanup:safe        # Clean expired logs
-```
-
-### Testing Commands (The Way You Always Do It)
-```bash
-# Unit Tests with Coverage and Watch Mode
-bun test:convex:coverage:watch:all    # Convex backend tests
-bun test:worker:coverage:watch:all    # Cloudflare Workers tests
-bun test:web:coverage:watch:all       # Web (React/Next.js) tests
-```
-
-### Project Structure Quick Guide
-```
-apps/web/           # Next.js application
-apps/convex/        # Convex backend functions
-apps/workers/       # Cloudflare Workers
-packages/ui/        # Shared UI components
-tests/              # Centralized test files
-```
-
-### Version Information
-```
-Node.js: 18+ required
-Bun: Latest (package manager)
-Next.js: 14.2.15
-React: 18.2.0
-Convex: 1.25.4+
-TypeScript: 5.4.5+
-```
-
-### Key Dependencies
-```
-UI Framework: ShadCN + Radix UI
-Styling: Tailwind CSS 3.4.14
-Authentication: BetterAuth 1.2.12
-State Management: Zustand
-Icons: Lucide React
-Testing: Jest + Playwright
-```
+### Complete References
+- **[Full Command Reference](docs/reference/commands.md)** - All commands, versions, dependencies
+- **[Navigation Guide](docs/reference/navigation-conventions.md)** - Directory awareness best practices
+- **[Epic Management](docs/reference/epic-management.md)** - Epic numbering protocol

@@ -87,11 +87,11 @@ export default function AIPromptsAdminPage() {
       {/* Version Banner - Red indicator to verify deployment changes */}
       <div className="bg-red-600 text-white px-4 py-2 rounded text-sm font-mono flex items-center justify-between">
         <div>
-          <strong>BUILD:</strong> 2025-11-01T04:15:00Z |
-          <strong className="ml-2">DEPLOY:</strong> v11.0.debug.3
+          <strong>BUILD:</strong> 2025-11-01T04:35:00Z |
+          <strong className="ml-2">DEPLOY:</strong> v11.0.debug.4-FORCE-REBUILD
         </div>
         <div className="text-xs opacity-75">
-          Hash will change when new build deploys
+          Forcing complete rebuild to clear stale API cache
         </div>
       </div>
 

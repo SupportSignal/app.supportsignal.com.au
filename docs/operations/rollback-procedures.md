@@ -1,642 +1,748 @@
-# Rollback Procedures
-
-**Last Updated**: October 1, 2025
-**Version**: 1.0
-**Maintainer**: DevOps Team
-
-## Table of Contents
-
-- [Overview](#overview)
-- [Cloudflare Pages Rollback](#cloudflare-pages-rollback)
-- [Convex Deployment Rollback](#convex-deployment-rollback)
-- [Cloudflare Worker Rollback](#cloudflare-worker-rollback)
-- [Configuration Rollback](#configuration-rollback)
-- [Incident Response Procedures](#incident-response-procedures)
-- [Testing Rollback Procedures](#testing-rollback-procedures)
+# Deployment Rollback Procedures
 
 ## Overview
 
-This guide provides step-by-step rollback procedures for recovering from failed deployments or configuration changes across all platforms.
+This document provides comprehensive rollback procedures for all deployment platforms used in the SupportSignal application. These procedures ensure quick recovery from deployment issues while maintaining data integrity and system stability.
 
-### When to Roll Back
+**Deployment Platforms:**
+- Cloudflare Pages (Next.js Web App)
+- Convex Backend
+- Cloudflare Workers (Log Ingestion)
 
-**Immediate Rollback Indicators:**
-- Critical functionality broken in production
-- Data corruption or loss detected
+**Last Updated:** 2025-10-01
+**Document Version:** 1.0
+
+---
+
+## Table of Contents
+
+1. [General Rollback Principles](#general-rollback-principles)
+2. [Cloudflare Pages Rollback](#cloudflare-pages-rollback)
+3. [Convex Backend Rollback](#convex-backend-rollback)
+4. [Cloudflare Worker Rollback](#cloudflare-worker-rollback)
+5. [Configuration Rollback](#configuration-rollback)
+6. [Incident Response Procedures](#incident-response-procedures)
+7. [Post-Rollback Verification](#post-rollback-verification)
+
+---
+
+## General Rollback Principles
+
+### When to Rollback
+
+**Immediate Rollback Required:**
+- Critical functionality broken (authentication, core features)
 - Security vulnerability introduced
+- Data corruption or loss occurring
+- Service completely unavailable
 - Performance degradation >50%
-- User-facing errors affecting >10% of users
 
-**Evaluation First:**
+**Investigate First, Rollback if Needed:**
 - Minor UI issues
 - Non-critical feature bugs
-- Performance degradation <20%
-- Issues affecting single user segment
+- Isolated user reports
+- Performance degradation <50%
 
 ### Rollback Decision Matrix
 
-```
-┌────────────────────────────────────────────────────┐
-│             Severity Assessment                     │
-├──────────────┬─────────────────────────────────────┤
-│   Critical   │  Immediate Rollback Required        │
-│    (P0)      │  • Data loss/corruption             │
-│              │  • Security breach                  │
-│              │  • Complete service outage          │
-├──────────────┼─────────────────────────────────────┤
-│     High     │  Rollback Within 15 Minutes         │
-│    (P1)      │  • Core feature broken              │
-│              │  • Authentication issues            │
-│              │  • Significant performance drop     │
-├──────────────┼─────────────────────────────────────┤
-│    Medium    │  Evaluate - May Forward Fix         │
-│    (P2)      │  • Secondary feature issues         │
-│              │  • UI glitches                      │
-│              │  • Minor performance issues         │
-├──────────────┼─────────────────────────────────────┤
-│     Low      │  Forward Fix - No Rollback          │
-│    (P3)      │  • Cosmetic issues                  │
-│              │  • Edge case bugs                   │
-│              │  • Documentation errors             │
-└──────────────┴─────────────────────────────────────┘
-```
+| Issue Severity | User Impact | Action | Timeline |
+|----------------|-------------|--------|----------|
+| Critical | All users | **Immediate rollback** | <5 minutes |
+| High | >50% users | **Quick rollback** | <15 minutes |
+| Medium | <50% users | Investigate, rollback if unfixable | <1 hour |
+| Low | <10% users | Forward fix preferred | Next deployment |
+
+### Pre-Rollback Checklist
+
+- [ ] Identify exact issue and deployment causing it
+- [ ] Determine last known good deployment
+- [ ] Alert team members of rollback action
+- [ ] Capture error logs and metrics
+- [ ] Document incident timeline
+- [ ] Verify rollback target is stable
+
+---
 
 ## Cloudflare Pages Rollback
 
-### Overview
+### Architecture Context
 
-- **Platform**: Cloudflare Pages (Next.js web app)
-- **Rollback Method**: Re-deploy previous version via dashboard
-- **Time to Rollback**: 2-5 minutes
-- **Data Impact**: None (stateless application)
+Cloudflare Pages maintains deployment history and supports instant rollbacks to previous builds. Each deployment is immutable and can be activated independently.
 
-### Procedure
+### Rollback Methods
 
-**1. Identify Previous Working Deployment:**
+#### Method 1: Dashboard Rollback (Recommended for Production)
 
+**Access:** [Cloudflare Pages Dashboard](https://dash.cloudflare.com/)
+
+**Steps:**
+
+1. **Navigate to Deployment History**
+   ```
+   Cloudflare Dashboard → Pages → app-supportsignal-com-au → Deployments
+   ```
+
+2. **Identify Last Known Good Deployment**
+   - Review deployment list with timestamps
+   - Look for deployment before issue was introduced
+   - Verify deployment status is "Success"
+
+3. **Activate Previous Deployment**
+   - Click on the target deployment
+   - Click "Manage deployment" → "Promote to production"
+   - **OR** click three-dot menu → "Rollback to this deployment"
+
+4. **Confirm Rollback**
+   - Review deployment preview URL first (optional but recommended)
+   - Click "Promote" to activate
+   - Deployment switches instantly (no rebuild required)
+
+**Expected Time:** 1-2 minutes
+
+**Verification:**
 ```bash
-# View recent deployments
-# Go to: Cloudflare Dashboard → Pages → app-supportsignal → Deployments
-
-# Or via GitHub:
-git log --oneline -10
-# Identify last known good commit
-```
-
-**2. Rollback via Cloudflare Dashboard (Recommended):**
-
-```
-1. Navigate to Cloudflare Dashboard
-2. Go to Pages → app-supportsignal
-3. Click "Deployments" tab
-4. Find last successful deployment (marked with green checkmark)
-5. Click "..." menu on that deployment
-6. Select "Rollback to this deployment"
-7. Confirm rollback
-
-Expected time: 2-3 minutes
-```
-
-**3. Alternative: Rollback via Git Revert:**
-
-```bash
-# 1. Identify problematic commit
-git log --oneline -10
-
-# 2. Revert the commit
-git revert [commit-hash]
-
-# 3. Push revert
-git push origin main
-
-# 4. Cloudflare automatically deploys the revert
-# Monitor: bun run ci:watch
-
-Expected time: 3-5 minutes (includes CI pipeline)
-```
-
-**4. Verification:**
-
-```bash
-# Verify homepage accessible
+# Check production URL
 curl -I https://app.supportsignal.com.au
 
-# Run health check
-./scripts/health-check.sh production
-
-# Test critical paths
-# - User login
-# - Dashboard access
-# - Core features
+# Verify expected content
+curl https://app.supportsignal.com.au | grep "version"  # If version tag exists
 ```
 
-### Post-Rollback Actions
+#### Method 2: Git-Based Rollback
 
-- [ ] Notify team of rollback
-- [ ] Document issue that caused rollback
-- [ ] Create incident report
-- [ ] Plan forward fix
-- [ ] Schedule deployment retry
+**Use When:** Dashboard unavailable or scripted rollback needed
 
-## Convex Deployment Rollback
+**Steps:**
 
-### Overview
+1. **Identify Good Commit**
+   ```bash
+   cd /path/to/app.supportsignal.com.au
+   git log --oneline --graph -n 20
+   ```
 
-- **Platform**: Convex backend
-- **Rollback Method**: Re-deploy previous functions
-- **Time to Rollback**: 1-2 minutes
-- **Data Impact**: Potentially significant (see schema rollback section)
+2. **Revert to Previous Commit**
 
-### Function Rollback Procedure
+   **Option A: Create Revert Commit (Preferred)**
+   ```bash
+   # Revert the problematic commit
+   git revert <bad-commit-hash>
+   git push origin main
+   ```
 
-**1. Identify Last Working Version:**
+   **Option B: Hard Reset (Use with Caution)**
+   ```bash
+   # Reset to known good commit
+   git reset --hard <good-commit-hash>
+   git push --force origin main
+   ```
 
-```bash
-# Check Convex deployment history
-cd apps/convex
-bunx convex logs --prod | head -50
+3. **Monitor Auto-Deployment**
+   ```bash
+   # Cloudflare Pages will auto-deploy from main branch
+   # Check deployment status
+   bun run ci:status
+   ```
 
-# Or check git history
-git log --oneline -- apps/convex/
-```
+**Expected Time:** 5-10 minutes (includes build time)
 
-**2. Rollback via Git Revert:**
+#### Method 3: Emergency Static Fallback
 
-```bash
-# 1. Checkout previous version
-git checkout [last-good-commit-hash] apps/convex/
+**Use When:** All deployments failing, emergency downtime prevention
 
-# 2. Deploy previous version
-cd apps/convex
-bunx convex deploy --prod
+**Steps:**
 
-# 3. Verify deployment
-bunx convex function-spec --prod
+1. **Prepare Minimal Static Page**
+   ```html
+   <!DOCTYPE html>
+   <html>
+     <head><title>SupportSignal - Maintenance</title></head>
+     <body>
+       <h1>We'll be back soon!</h1>
+       <p>We're performing maintenance. Please check back shortly.</p>
+     </body>
+   </html>
+   ```
 
-# 4. Commit the rollback
-cd ../..
-git add apps/convex/
-git commit -m "rollback: revert Convex to [commit-hash]"
-git push origin main
-```
+2. **Deploy Emergency Page**
+   ```bash
+   cd apps/web
+   echo "<html>...</html>" > public/index.html
+   bun run build:pages
+   # Upload to Cloudflare Pages manually if needed
+   ```
 
-**3. Alternative: Manual Function Restoration:**
+**Expected Time:** 10-15 minutes
 
-```bash
-# If specific functions broken, restore from backup
-cd apps/convex
+---
 
-# Copy backup files (if available)
-cp backup/[function-file].ts [function-file].ts
+## Convex Backend Rollback
 
-# Deploy
-bunx convex deploy --prod
-```
+### Architecture Context
 
-### Schema Rollback (CRITICAL)
+Convex maintains deployment snapshots but does not support instant rollback. Rollback requires redeploying previous code version. Database schema changes require careful handling.
 
-**⚠️ WARNING**: Schema changes with existing data require careful rollback.
+### Rollback Methods
 
-**Safe Schema Rollback:**
-```typescript
-// If schema change broke deployment:
+#### Method 1: Code Rollback (No Schema Changes)
 
-// 1. Check what data exists
-bunx convex data --prod [table-name] --limit 5
+**Use When:** Code changes only, no database schema modifications
 
-// 2. Make schema backward compatible (don't remove fields)
-// Instead of:
-// defineTable({ newField: v.string() })
+**Steps:**
 
-// Do:
-defineTable({
-  newField: v.string(),
-  // Keep old fields as optional for backward compatibility
-  oldField: v.optional(v.string()),
-})
+1. **Identify Last Known Good Version**
+   ```bash
+   cd /path/to/app.supportsignal.com.au
+   git log --oneline apps/convex/
+   ```
 
-// 3. Deploy schema fix
-bunx convex deploy --prod
+2. **Checkout Previous Code**
+   ```bash
+   # Option A: Create rollback branch
+   git checkout <good-commit-hash> -- apps/convex/
+   git commit -m "Rollback Convex to <commit-hash>"
 
-// 4. Migrate data gradually (not during rollback)
-```
+   # Option B: Full revert
+   git revert <bad-commit-hash>
+   ```
 
-**If Data Migration Required:**
-```bash
-# This is NOT a quick rollback - requires planning
+3. **Deploy Rollback**
+   ```bash
+   cd apps/convex
 
-# 1. Stop accepting new writes (if possible)
-# 2. Export current data
-bunx convex export --prod
+   # Development rollback
+   bunx convex deploy
 
-# 3. Rollback schema to previous version
-bunx convex deploy --prod
+   # Production rollback
+   bunx convex deploy --prod
+   ```
 
-# 4. Restore compatible data
-# (Manual process - contact team)
-```
+4. **Verify Deployment**
+   ```bash
+   # Check function spec
+   bunx convex function-spec --prod
 
-### Verification
+   # Test critical functions
+   bunx convex run healthCheck:status --prod
+   ```
 
-```bash
-# Verify functions deployed
-bunx convex function-spec --prod
+**Expected Time:** 5-10 minutes
 
-# Test critical functions
-bunx convex run --prod users:list '{"limit": 1}'
-bunx convex run --prod incidents:list '{"limit": 1}'
+#### Method 2: Rollback with Schema Changes
 
-# Check logs for errors
-bunx convex logs --prod
+**Use When:** Previous deployment included schema changes
 
-# Verify via web app
-# - Login flow
-# - Real-time updates
-# - Data queries
-```
+**⚠️ WARNING:** Schema rollbacks are complex and may cause data issues
+
+**Steps:**
+
+1. **Assess Schema Changes**
+   ```bash
+   # Review schema changes between versions
+   git diff <good-commit> <current-commit> apps/convex/schema.ts
+   ```
+
+2. **Determine Rollback Strategy**
+
+   **Option A: Backward Compatible Changes (Safe)**
+   - Field additions → Safe to rollback (new fields unused)
+   - Index additions → Safe to rollback
+   - Optional field changes → Safe if properly handled
+
+   **Option B: Breaking Changes (Dangerous)**
+   - Field removals → **Data loss risk**
+   - Type changes → **Data corruption risk**
+   - Required field additions → **Write failures**
+
+3. **Execute Rollback (Backward Compatible Only)**
+   ```bash
+   cd apps/convex
+   git checkout <good-commit-hash> -- schema.ts
+   git commit -m "Rollback schema to <commit-hash>"
+   bunx convex deploy --prod
+   ```
+
+4. **Handle Breaking Changes**
+
+   If rollback includes breaking schema changes:
+
+   ```bash
+   # DO NOT rollback automatically
+   # Instead, create migration function
+
+   # Example: apps/convex/migrations/rollbackSchema.ts
+   import { internalMutation } from "./_generated/server";
+
+   export const rollbackField = internalMutation(async (ctx) => {
+     const docs = await ctx.db.query("tableName").collect();
+     for (const doc of docs) {
+       // Handle data migration
+       await ctx.db.patch(doc._id, {
+         // Transform data to match previous schema
+       });
+     }
+   });
+
+   # Run migration before deploying rollback
+   bunx convex run migrations:rollbackField --prod
+   ```
+
+**Expected Time:** 15-60 minutes (depending on data migration complexity)
+
+**⚠️ CRITICAL:** For breaking schema changes, consider **forward fix** instead of rollback
+
+---
 
 ## Cloudflare Worker Rollback
 
-### Overview
+### Architecture Context
 
-- **Platform**: Cloudflare Workers (log-ingestion)
-- **Rollback Method**: Re-deploy previous version via Wrangler
-- **Time to Rollback**: 1-2 minutes
-- **Data Impact**: Durable Objects state may need consideration
+Cloudflare Workers support version rollback via Wrangler CLI. Worker deployments include Durable Objects and external dependencies (Redis) that require consideration during rollback.
 
-### Procedure
+### Rollback Methods
 
-**1. Identify Last Working Version:**
+#### Method 1: Wrangler Version Rollback
 
-```bash
-# Check deployment history
-cd apps/workers/log-ingestion
-npx wrangler deployments list --env production
+**Steps:**
 
-# Check git history
-git log --oneline -- apps/workers/log-ingestion/
-```
+1. **List Recent Deployments**
+   ```bash
+   cd apps/workers/log-ingestion
 
-**2. Rollback via Wrangler (Recommended):**
+   # Production deployments
+   wrangler deployments list --env production
 
-```bash
-cd apps/workers/log-ingestion
+   # Development deployments
+   wrangler deployments list
+   ```
 
-# Option A: Rollback to specific deployment (if recent)
-# Get deployment ID from: wrangler deployments list --env production
-npx wrangler rollback [deployment-id] --env production
+   **Output Example:**
+   ```
+   Deployment ID: abc123...
+   Created on:    2025-10-01 14:30:00
+   Author:        developer@example.com
+   Source:        Upload
+   ```
 
-# Option B: Re-deploy previous version from git
-git checkout [last-good-commit] -- apps/workers/log-ingestion/
-bunx convex deploy --env production
+2. **Identify Target Deployment**
+   - Note deployment ID from list
+   - Verify deployment timestamp matches known good state
+   - Check deployment author if uncertain
 
-# Verify
-curl https://log-ingestion-worker.workers.dev/health
-```
+3. **Rollback to Specific Version**
 
-**3. Wrangler Deployment Version Rollback:**
+   **⚠️ NOTE:** Wrangler does not have built-in rollback command. Must redeploy previous code.
 
-```bash
-# List recent deployments
-npx wrangler deployments list --env production
+   ```bash
+   # Option A: Git-based rollback
+   cd /path/to/app.supportsignal.com.au
+   git checkout <good-commit-hash> -- apps/workers/log-ingestion/src/
 
-# Example output:
-# Created:     Deployment ID:       Version ID:
-# 2025-10-01   abc123-456def        v1.2.3
+   cd apps/workers/log-ingestion
 
-# Rollback to specific deployment
-npx wrangler rollback [deployment-id] --env production
+   # Deploy rollback
+   bun run deploy:production  # Or wrangler deploy --env production
+   ```
 
-# Verify rollback
-curl https://log-ingestion-worker.workers.dev/health | jq '.'
-```
+   **Option B: Deploy from specific git tag/commit**
+   ```bash
+   # Create rollback branch
+   git checkout -b rollback-worker-<timestamp> <good-commit>
 
-### Durable Objects State Management
+   cd apps/workers/log-ingestion
+   bun run deploy:production
+   ```
 
-**⚠️ IMPORTANT**: Durable Objects maintain state across deployments.
+4. **Verify Rollback**
+   ```bash
+   # Test worker health
+   ./scripts/verify-worker-health.sh <worker-url> --verbose
+   ```
 
-**During Rollback:**
-```bash
-# Durable Objects state persists automatically
-# Rate limiter quotas will continue from current state
+**Expected Time:** 5-10 minutes
 
-# If state corruption suspected:
-# 1. Deploy rollback first
-# 2. Then reset Durable Objects state if needed
+#### Method 2: Durable Objects State Management
 
-# Check Durable Objects status
-curl https://log-ingestion-worker.workers.dev/health | \
-  jq '.components.rate_limiter'
-```
+**Use When:** Rollback affects Durable Objects logic
 
-**Reset Durable Objects (if needed):**
-```bash
-# This is destructive - only if absolutely necessary
+**Considerations:**
 
-# Option 1: Deploy new migration (preferred)
-# Update wrangler.toml:
-# [[migrations]]
-# tag = "v2"
-# renamed_classes = [{from = "RateLimiterDO", to = "RateLimiterDO_Old"}]
-# new_sqlite_classes = ["RateLimiterDO"]
+1. **Durable Objects State Persistence**
+   - Durable Objects maintain state across deployments
+   - Code rollback does NOT reset Durable Object state
+   - State created by newer code remains after rollback
 
-# Option 2: Manual reset via worker endpoint (if implemented)
-curl -X POST https://log-ingestion-worker.workers.dev/admin/reset \
-  -H "Authorization: Bearer [admin-token]"
-```
+2. **State Compatibility Check**
 
-### Redis State Cleanup
+   Before rollback, verify state compatibility:
 
-**When to Clean Redis:**
-- Corrupted log data detected
-- Rate limiter state incorrect
-- Test data in production
+   ```typescript
+   // Check if old code can handle new state structure
+   // Example: apps/workers/log-ingestion/src/rate-limiter.ts
 
-**Procedure:**
-```bash
-# Check Redis health first
-curl https://log-ingestion-worker.workers.dev/health | \
-  jq '.components.redis'
+   export class RateLimiterDO {
+     async fetch(request: Request): Promise<Response> {
+       // Handle state version compatibility
+       const state = await this.state.get("version");
 
-# If cleanup needed:
-curl -X DELETE https://log-ingestion-worker.workers.dev/logs/clear
+       if (state > EXPECTED_VERSION) {
+         // Newer state detected - handle or throw error
+       }
+     }
+   }
+   ```
 
-# This clears all logs from Redis (TTL-based cleanup automatic)
+3. **State Rollback Procedure** (if required)
 
-# Verify cleanup
-curl https://log-ingestion-worker.workers.dev/traces/recent
-```
+   ```bash
+   # Option A: Clear Durable Objects state (destructive)
+   # This requires custom mutation endpoint in Worker
 
-### Worker Secret Rollback
+   curl -X DELETE https://worker-url/admin/reset-durable-objects \
+     -H "Authorization: Bearer <admin-token>"
 
-**If Secrets Changed:**
-```bash
-cd apps/workers/log-ingestion
+   # Option B: Migrate state to compatible format
+   # Implement migration endpoint in Worker before rollback
+   ```
 
-# Restore previous secret value
-npx wrangler secret put UPSTASH_REDIS_REST_URL --env production
-# Enter previous value when prompted
+**Expected Time:** 10-30 minutes (depending on state complexity)
 
-npx wrangler secret put UPSTASH_REDIS_REST_TOKEN --env production
-# Enter previous value when prompted
+#### Method 3: Redis Backend Cleanup
 
-# Verify secrets updated
-npx wrangler secret list --env production
+**Use When:** Rollback changes Redis data structure or schema
 
-# Test connection
-curl https://log-ingestion-worker.workers.dev/health | \
-  jq '.components.redis'
-```
+**Steps:**
 
-### Verification
+1. **Assess Redis Data Impact**
+   ```bash
+   # Connect to Upstash Redis Console
+   # Check for data structure changes in deployment
+   ```
 
-```bash
-# Health check
-curl https://log-ingestion-worker.workers.dev/health
+2. **Data Cleanup Options**
 
-# Test log ingestion
-curl -X POST https://log-ingestion-worker.workers.dev/log \
-  -H "Content-Type: application/json" \
-  -d '{
-    "trace_id": "rollback-test-'$(date +%s)'",
-    "level": "info",
-    "message": "Rollback verification test",
-    "system": "browser"
-  }'
+   **Option A: Selective Key Deletion**
+   ```bash
+   # Use Worker admin endpoint (if implemented)
+   curl -X DELETE https://worker-url/logs/clear
 
-# Verify all components healthy
-./scripts/health-check.sh production
-```
+   # Or via Upstash console
+   # Filter and delete keys matching pattern
+   ```
+
+   **Option B: TTL Expiration** (Preferred for log data)
+   ```
+   # Log data has 1-hour TTL by default
+   # Wait for natural expiration (low risk)
+   # No action needed unless urgent
+   ```
+
+   **Option C: Full Redis Clear** (Emergency only)
+   ```bash
+   # ⚠️ DESTRUCTIVE - Only for emergencies
+   # Via Upstash console: Database → Data Browser → Flush All
+   ```
+
+3. **Verify Redis State**
+   ```bash
+   # Check Worker health after cleanup
+   curl https://worker-url/health | jq '.components.redis'
+   ```
+
+**Expected Time:** 5-15 minutes
+
+### Worker Secrets Rollback
+
+**Use When:** Rollback requires different secrets (Redis credentials, etc.)
+
+**Steps:**
+
+1. **List Current Secrets**
+   ```bash
+   cd apps/workers/log-ingestion
+   wrangler secret list --env production
+   ```
+
+2. **Update Secrets if Needed**
+   ```bash
+   # If rollback requires previous Redis instance
+   wrangler secret put UPSTASH_REDIS_REST_URL --env production
+   wrangler secret put UPSTASH_REDIS_REST_TOKEN --env production
+   ```
+
+3. **Verify Secret Application**
+   ```bash
+   # Secrets take effect immediately
+   # Test worker health
+   curl https://worker-url/health
+   ```
+
+**Expected Time:** 2-5 minutes
+
+---
 
 ## Configuration Rollback
 
-### Environment Variable Rollback
-
-**Convex Configuration:**
-```bash
-# Restore previous configuration value
-cd apps/convex
-
-# Development
-bunx convex env set VARIABLE_NAME previous-value
-
-# Production
-bunx convex env set --prod VARIABLE_NAME previous-value
-
-# Verify
-bunx convex env list --prod
-```
-
-**Cloudflare Pages Configuration:**
-```
-1. Go to Cloudflare Dashboard → Pages → app-supportsignal
-2. Navigate to Settings → Environment Variables
-3. Edit variable to previous value
-4. Save
-5. Trigger rebuild (if needed)
-```
-
-**Worker Configuration:**
-```bash
-cd apps/workers/log-ingestion
-
-# Update wrangler.toml to previous values
-git checkout [last-good-commit] -- wrangler.toml
-
-# For secrets:
-npx wrangler secret put SECRET_NAME --env production
-# Enter previous value
-
-# Redeploy worker
-bun run deploy:production
-```
-
 ### Source of Truth Rollback
 
-**If centralized config file corrupted:**
-```bash
-# Restore from backup
-cp ~/.env-configs/app.supportsignal.com.au.env.backup \
-   ~/.env-configs/app.supportsignal.com.au.env
+**File:** `~/.env-configs/app.supportsignal.com.au.env`
 
-# Or restore from git (if tracked)
-git checkout [last-good-commit] -- config/
+**Steps:**
 
-# Verify
-bun run env:validate
+1. **Backup Current Configuration**
+   ```bash
+   cp ~/.env-configs/app.supportsignal.com.au.env \
+      ~/.env-configs/app.supportsignal.com.au.env.backup-$(date +%Y%m%d-%H%M%S)
+   ```
 
-# Resync to all platforms
-bun run sync-env --mode=local
-bun run sync-env --mode=deploy-prod
-```
+2. **Restore Previous Configuration**
+
+   **Option A: From Git (if tracked)**
+   ```bash
+   # If configuration tracked in repository
+   git checkout <good-commit> ~/.env-configs/app.supportsignal.com.au.env
+   ```
+
+   **Option B: From Manual Backup**
+   ```bash
+   cp ~/.env-configs/app.supportsignal.com.au.env.backup-YYYYMMDD-HHMMSS \
+      ~/.env-configs/app.supportsignal.com.au.env
+   ```
+
+3. **Sync to All Platforms**
+   ```bash
+   # Development environment
+   bun run sync-env --mode=deploy-dev
+
+   # Production environment (careful!)
+   bun run sync-env --mode=deploy-prod
+
+   # Local files
+   bun run sync-env --mode=local
+   ```
+
+4. **Verify Configuration**
+   ```bash
+   ./scripts/verify-environment.sh production
+   ```
+
+**Expected Time:** 5-10 minutes
+
+### Environment Variable Rollback
+
+#### Convex Environment Variables
+
+**Steps:**
+
+1. **List Current Variables**
+   ```bash
+   cd apps/convex
+   bunx convex env list --prod
+   ```
+
+2. **Update Individual Variables**
+   ```bash
+   # Set to previous value
+   bunx convex env set VARIABLE_NAME "previous-value" --prod
+   ```
+
+3. **Verify Update**
+   ```bash
+   bunx convex env get VARIABLE_NAME --prod
+   ```
+
+#### Cloudflare Worker Secrets
+
+**Steps:**
+
+1. **Update Secrets**
+   ```bash
+   cd apps/workers/log-ingestion
+   wrangler secret put SECRET_NAME --env production
+   # Enter previous value when prompted
+   ```
+
+2. **Secrets take effect immediately** (no redeployment needed)
+
+---
 
 ## Incident Response Procedures
 
-### Rollback Checklist
-
-**Pre-Rollback:**
-- [ ] Severity assessed (P0-P3)
-- [ ] Rollback decision approved
-- [ ] Team notified
-- [ ] Last known good version identified
-- [ ] Backup of current state taken (if applicable)
-
-**During Rollback:**
-- [ ] Rollback procedure initiated
-- [ ] Progress communicated to team
-- [ ] Each platform verified after rollback
-- [ ] Health checks passing
-
-**Post-Rollback:**
-- [ ] All services verified operational
-- [ ] Users notified (if applicable)
-- [ ] Incident report created
-- [ ] Root cause analysis scheduled
-- [ ] Forward fix planned
-
-### Communication Template
-
-**Incident Start:**
-```
-🚨 INCIDENT: [Brief description]
-Severity: [P0/P1/P2/P3]
-Impact: [User impact description]
-Action: Initiating rollback to [version/commit]
-ETA: [X minutes]
-```
-
-**Rollback Complete:**
-```
-✅ RESOLVED: Rollback complete
-Platform: [Affected platform(s)]
-Previous Version: [version/commit]
-Current Status: All systems operational
-Next Steps: [Root cause analysis, forward fix planning]
-```
-
 ### Deployment Failure Response
 
-**Automated Response (CI/CD Failure):**
-```bash
-# CI pipeline failed - automatic prevention
-bun run ci:status
-# Review logs
-bun run ci:logs
+**Phase 1: Detection (0-2 minutes)**
 
-# Fix issues locally
-# Re-attempt deployment
-bun run push
-```
+1. **Automated Alerts** (if configured)
+   - CI/CD pipeline failure notifications
+   - Health check monitoring alerts
+   - Error rate spike alerts
 
-**Manual Response (Production Issue):**
-```bash
-# 1. Assess severity
-./scripts/health-check.sh production
+2. **Manual Detection**
+   ```bash
+   # Check deployment status
+   bun run ci:status
 
-# 2. If critical, initiate rollback immediately
-# See platform-specific rollback sections above
+   # Verify all platforms
+   ./scripts/verify-deployment.sh production
+   ```
 
-# 3. If non-critical, evaluate forward fix
-# Create hotfix branch
-git checkout -b hotfix/[issue-description]
+**Phase 2: Assessment (2-5 minutes)**
 
-# 4. Document incident
-# Create incident report in docs/incidents/
-```
+1. **Identify Scope**
+   - Which platform affected? (Pages / Convex / Worker)
+   - What percentage of users impacted?
+   - Is system partially or fully down?
 
-## Testing Rollback Procedures
+2. **Gather Data**
+   ```bash
+   # Collect error logs
+   bun run ci:logs > incident-logs-$(date +%Y%m%d-%H%M%S).txt
 
-### Development Environment Testing
+   # Check each platform
+   curl -I https://app.supportsignal.com.au
+   curl https://worker-url/health
+   bunx convex run healthCheck:status --prod
+   ```
 
-**Test Pages Rollback:**
-```bash
-# 1. Create test deployment
-git checkout -b test-rollback
-# Make intentional breaking change
-git commit -am "test: breaking change for rollback test"
-git push origin test-rollback
+3. **Determine Rollback Need**
+   - Use [Rollback Decision Matrix](#rollback-decision-matrix)
+   - Critical issues → Immediate rollback
+   - Non-critical → Attempt forward fix first
 
-# 2. Verify issue in preview deployment
+**Phase 3: Action (5-15 minutes)**
 
-# 3. Practice rollback via dashboard
-# Use preview deployment rollback
+1. **Execute Rollback** (if decided)
+   - Follow platform-specific rollback procedures above
+   - Document actions taken
 
-# 4. Cleanup
-git checkout main
-git branch -D test-rollback
-```
+2. **OR Attempt Forward Fix**
+   - Make minimal fix
+   - Test in development first
+   - Deploy cautiously
 
-**Test Convex Rollback:**
-```bash
-# Use development environment for testing
+3. **Communication**
+   - Alert team of actions
+   - Update status page (if applicable)
+   - Prepare user communication
 
-# 1. Deploy test version
-cd apps/convex
-bunx convex deploy  # Development
+**Phase 4: Verification (15-20 minutes)**
 
-# 2. Make breaking change
-# Edit a function intentionally
+1. **Run Verification Suite**
+   ```bash
+   # Full deployment verification
+   ./scripts/verify-deployment.sh production
 
-# 3. Deploy breaking change
-bunx convex deploy
+   # Worker-specific checks
+   ./scripts/verify-worker-health.sh <worker-url> --verbose
 
-# 4. Practice rollback
-git checkout HEAD~1 -- [function-file].ts
-bunx convex deploy
+   # Environment validation
+   ./scripts/verify-environment.sh production
+   ```
 
-# 5. Verify rollback worked
-bunx convex function-spec
-```
+2. **User Impact Check**
+   - Test critical user flows
+   - Verify authentication
+   - Check core functionality
 
-**Test Worker Rollback:**
-```bash
-cd apps/workers/log-ingestion
+**Phase 5: Post-Incident (20+ minutes)**
 
-# 1. Deploy test version
-bun run deploy  # Development
+1. **Document Incident**
+   - Timeline of events
+   - Root cause identified
+   - Actions taken
+   - Prevention measures
 
-# 2. Make breaking change and deploy
+2. **Team Review**
+   - Postmortem meeting
+   - Update procedures if needed
+   - Identify improvements
 
-# 3. Practice rollback
-npx wrangler rollback [previous-deployment-id]
+---
 
-# 4. Verify
-curl http://localhost:8787/health
-```
+## Post-Rollback Verification
 
-### Rollback Drills
+### Verification Checklist
 
-**Quarterly Rollback Drill:**
-```bash
-# Full rollback drill procedure
+After any rollback, perform complete verification:
 
-# 1. Schedule drill (non-production hours)
-# 2. Simulate incident scenario
-# 3. Execute rollback procedures
-# 4. Document time to recovery
-# 5. Identify improvement areas
-# 6. Update procedures based on learnings
-```
+- [ ] **Deployment Status**
+  ```bash
+  bun run ci:status
+  ```
 
-**Metrics to Track:**
-- Time to detect issue
-- Time to decision
-- Time to rollback completion
-- Time to verification
-- Total incident duration
+- [ ] **Platform Health**
+  ```bash
+  ./scripts/verify-deployment.sh production
+  ```
 
-## Related Documentation
+- [ ] **Worker Health**
+  ```bash
+  ./scripts/verify-worker-health.sh <worker-url>
+  ```
 
-- [Deployment Guide](./deployment-guide.md) - Deployment procedures
-- [Deployment Verification](./deployment-verification.md) - Post-deployment testing
-- [Configuration Management](./configuration-management.md) - Configuration procedures
-- [Incident Response Guide](./incident-response.md) - Complete incident response
+- [ ] **Environment Configuration**
+  ```bash
+  ./scripts/verify-environment.sh production
+  ```
+
+- [ ] **User Authentication**
+  - Test login flow
+  - Verify OAuth callback
+
+- [ ] **Core Functionality**
+  - Test critical user flows
+  - Verify data integrity
+  - Check real-time features
+
+- [ ] **Performance Metrics**
+  - Page load times acceptable
+  - API response times normal
+  - No error rate spikes
+
+### Monitoring After Rollback
+
+**First 30 minutes:**
+- Monitor error logs continuously
+- Watch user activity metrics
+- Check for new issue reports
+
+**First 24 hours:**
+- Regular health checks every hour
+- Review automated monitoring alerts
+- User feedback monitoring
+
+**Document Lessons Learned:**
+- Update rollback procedures if issues found
+- Improve deployment verification
+- Enhance automated testing
+
+---
 
 ## Emergency Contacts
 
-**For rollback assistance:**
-- DevOps On-Call: [Contact information]
-- Platform Support:
-  - Cloudflare: https://dash.cloudflare.com/support
-  - Convex: https://docs.convex.dev/support
-- Escalation Path: [Escalation procedure]
+**Deployment Issues:**
+- Platform Owner: [Contact Info]
+- DevOps Lead: [Contact Info]
+
+**Cloudflare Support:**
+- Dashboard: https://dash.cloudflare.com/
+- Support: https://support.cloudflare.com/
+
+**Convex Support:**
+- Dashboard: https://dashboard.convex.dev/
+- Discord: https://convex.dev/community
+
+---
+
+## Related Documentation
+
+- [Deployment Operations Guide](./deployment-operations-guide.md)
+- [Environment Configuration Management](./environment-configuration.md)
+- [CI/CD Pipeline Setup](../technical-guides/cicd-pipeline-setup.md)
+- [Testing Infrastructure](../testing/technical/test-strategy-and-standards.md)
+
+---
+
+**Document Maintenance:**
+- Review quarterly
+- Update after significant deployment changes
+- Incorporate lessons learned from incidents

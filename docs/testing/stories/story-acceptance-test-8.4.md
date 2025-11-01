@@ -339,14 +339,14 @@ echo $?  # Should be 0 for success
 **Steps**:
 ```bash
 # Check if rollback documentation exists
-ls -la docs/deployment/rollback-procedures.md
+ls -la docs/operations/rollback-procedures.md
 
 # View table of contents
-head -n 50 docs/deployment/rollback-procedures.md
+head -n 50 docs/operations/rollback-procedures.md
 ```
 
 **Expected Result**:
-- File exists at `docs/deployment/rollback-procedures.md`
+- File exists at `docs/operations/rollback-procedures.md`
 - File contains table of contents with sections:
   1. General Rollback Principles
   2. Cloudflare Pages Rollback
@@ -369,11 +369,11 @@ head -n 50 docs/deployment/rollback-procedures.md
 **Steps**:
 ```bash
 # Search for key sections
-grep -n "## Cloudflare Pages Rollback" docs/deployment/rollback-procedures.md
-grep -n "## Convex Backend Rollback" docs/deployment/rollback-procedures.md
-grep -n "## Cloudflare Worker Rollback" docs/deployment/rollback-procedures.md
-grep -n "## Configuration Rollback" docs/deployment/rollback-procedures.md
-grep -n "## Incident Response Procedures" docs/deployment/rollback-procedures.md
+grep -n "## Cloudflare Pages Rollback" docs/operations/rollback-procedures.md
+grep -n "## Convex Backend Rollback" docs/operations/rollback-procedures.md
+grep -n "## Cloudflare Worker Rollback" docs/operations/rollback-procedures.md
+grep -n "## Configuration Rollback" docs/operations/rollback-procedures.md
+grep -n "## Incident Response Procedures" docs/operations/rollback-procedures.md
 ```
 
 **Expected Result**:
@@ -383,7 +383,7 @@ grep -n "## Incident Response Procedures" docs/deployment/rollback-procedures.md
 **Review Cloudflare Pages Rollback section**:
 ```bash
 # View Cloudflare Pages section
-sed -n '/^## Cloudflare Pages Rollback/,/^## /p' docs/deployment/rollback-procedures.md | head -n 100
+sed -n '/^## Cloudflare Pages Rollback/,/^## /p' docs/operations/rollback-procedures.md | head -n 100
 ```
 
 **Expected Content**:
@@ -396,7 +396,7 @@ sed -n '/^## Cloudflare Pages Rollback/,/^## /p' docs/deployment/rollback-proced
 **Review Cloudflare Worker Rollback section**:
 ```bash
 # View Worker section
-sed -n '/^## Cloudflare Worker Rollback/,/^## /p' docs/deployment/rollback-procedures.md | head -n 100
+sed -n '/^## Cloudflare Worker Rollback/,/^## /p' docs/operations/rollback-procedures.md | head -n 100
 ```
 
 **Expected Content**:
@@ -418,7 +418,7 @@ sed -n '/^## Cloudflare Worker Rollback/,/^## /p' docs/deployment/rollback-proce
 **Steps**:
 ```bash
 # View General Rollback Principles section
-sed -n '/^## General Rollback Principles/,/^## /p' docs/deployment/rollback-procedures.md
+sed -n '/^## General Rollback Principles/,/^## /p' docs/operations/rollback-procedures.md
 ```
 
 **Expected Result**:
@@ -639,11 +639,11 @@ echo ""
 
 # Test 6: Verify rollback documentation
 echo "=== Test 6: Rollback Documentation Check ==="
-if [ -f docs/deployment/rollback-procedures.md ]; then
+if [ -f docs/operations/rollback-procedures.md ]; then
   echo "✅ Rollback documentation exists"
-  echo "Line count: $(wc -l < docs/deployment/rollback-procedures.md)"
+  echo "Line count: $(wc -l < docs/operations/rollback-procedures.md)"
   echo "Contains sections:"
-  grep "^## " docs/deployment/rollback-procedures.md | head -n 10
+  grep "^## " docs/operations/rollback-procedures.md | head -n 10
 else
   echo "❌ Rollback documentation not found"
 fi
@@ -724,7 +724,7 @@ echo "All verifications complete"
 ./scripts/verify-worker-health.sh $(grep "NEXT_PUBLIC_LOG_WORKER_URL" apps/web/.env.local | cut -d'=' -f2 | tr -d '"') --verbose
 
 # View rollback documentation sections
-grep "^## " docs/deployment/rollback-procedures.md
+grep "^## " docs/operations/rollback-procedures.md
 ```
 
 ### Troubleshooting
@@ -757,8 +757,8 @@ bun run sync-env --mode=local
 ## Related Documentation
 
 - **Story File**: [docs/stories/8.4.story.md](../../stories/8.4.story.md)
-- **Rollback Procedures**: [docs/deployment/rollback-procedures.md](../../deployment/rollback-procedures.md)
-- **Deployment Operations Guide**: [docs/deployment/deployment-operations-guide.md](../../deployment/deployment-operations-guide.md) _(if exists)_
+- **Rollback Procedures**: [docs/operations/rollback-procedures.md](../../deployment/rollback-procedures.md)
+- **Deployment Operations Guide**: [docs/operations/deployment-operations-guide.md](../../deployment/deployment-operations-guide.md) _(if exists)_
 - **CI/CD Pipeline Setup**: [docs/technical-guides/cicd-pipeline-setup.md](../../technical-guides/cicd-pipeline-setup.md)
 
 ---

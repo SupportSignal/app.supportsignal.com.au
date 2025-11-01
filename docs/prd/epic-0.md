@@ -295,7 +295,7 @@ Story 0.3's systematic code analysis discovered 10 major coding inconsistencies 
 - **TypeScript safety violations** via `(api as any)` type casts
 - **Inconsistent import patterns** making refactoring fragile
 
-The coding inconsistencies audit (`docs/auditing/coding-inconsistencies-audit.md`) provides detailed impact analysis and prioritized recommendations. This story implements the highest-impact improvements to establish consistent coding standards.
+The coding inconsistencies audit (`docs/analysis/coding-inconsistencies-audit.md`) provides detailed impact analysis and prioritized recommendations. This story implements the highest-impact improvements to establish consistent coding standards.
 
 #### Scope
 
