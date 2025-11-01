@@ -84,14 +84,14 @@ export default function AIPromptsAdminPage() {
 
   return (
     <div className="space-y-6">
-      {/* Version Banner - Verify CI deployment works */}
-      <div className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-mono flex items-center justify-between">
+      {/* Version Banner - Verify Cloudflare env vars fix */}
+      <div className="bg-green-600 text-white px-4 py-2 rounded text-sm font-mono flex items-center justify-between">
         <div>
-          <strong>BUILD:</strong> 2025-11-01T13:15:00Z |
-          <strong className="ml-2">DEPLOY:</strong> v11.0.CI-TEST
+          <strong>BUILD:</strong> 2025-11-01T13:48:00Z |
+          <strong className="ml-2">DEPLOY:</strong> v11.0.ENV-FIX
         </div>
         <div className="text-xs opacity-75">
-          Testing automated CI deployment with fresh Convex codegen
+          Testing CI with Cloudflare Pages environment variables configured
         </div>
       </div>
 
