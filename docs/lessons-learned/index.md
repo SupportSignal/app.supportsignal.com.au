@@ -49,6 +49,12 @@ Critical insights about environment management, deployment configuration, and OA
 - **[Dual Deployment and Environment Variable Troubleshooting KDD](./dual-deployment-and-environment-variable-troubleshooting-kdd.md)** - Lessons from environment variable configuration issues
 - **[Build Output Standardization KDD](./build-output-standardization-kdd.md)** - Standardizing build outputs for deployment consistency
 
+### Debugging & Troubleshooting
+
+Essential debugging protocols and troubleshooting patterns:
+
+- **[Debugging Stale Generated Files KDD](./debugging-stale-generated-files-kdd.md)** - Critical protocol for identifying and fixing stale generated files that override fresh builds. Story 11.0 lesson: Server has data but browser shows empty due to 2-month-old generated API files. Includes 5-minute diagnostic protocol vs 3-hour complex theories. (Added: 2025-11-01)
+
 ### [Anti-Patterns](anti-patterns/)
 
 Documented approaches that should be avoided, with explanations of why and alternatives:
