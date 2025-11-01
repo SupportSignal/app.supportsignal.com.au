@@ -1521,15 +1521,14 @@ export const getPromptsByGroup = query({
   },
   handler: async (ctx, args) => {
     // Get all prompts (filtered by execution_mode if provided)
-    let promptsQuery = ctx.db.query("ai_prompts");
-
-    if (args.execution_mode) {
-      promptsQuery = promptsQuery.withIndex("by_execution_mode", (q) =>
-        q.eq("execution_mode", args.execution_mode)
-      );
-    }
-
-    const prompts = await promptsQuery.collect();
+    const prompts = args.execution_mode
+      ? await ctx.db
+          .query("ai_prompts")
+          .withIndex("by_execution_mode", (q) =>
+            q.eq("execution_mode", args.execution_mode)
+          )
+          .collect()
+      : await ctx.db.query("ai_prompts").collect();
 
     // Get all groups
     const groups = await ctx.db

@@ -88,24 +88,32 @@ export const listDataSourceProfiles = query({
     )),
   },
   handler: async (ctx, args) => {
-    let query = ctx.db.query("data_source_profiles");
-
-    // Apply filters
+    // Apply filters using appropriate index
+    let profiles;
     if (args.entity_type && args.status) {
-      query = query.withIndex("by_entity_status", (q) =>
-        q.eq("entity_type", args.entity_type).eq("status", args.status)
-      );
+      profiles = await ctx.db
+        .query("data_source_profiles")
+        .withIndex("by_entity_status", (q) =>
+          q.eq("entity_type", args.entity_type!).eq("status", args.status!)
+        )
+        .collect();
     } else if (args.entity_type) {
-      query = query.withIndex("by_entity_type", (q) =>
-        q.eq("entity_type", args.entity_type)
-      );
+      profiles = await ctx.db
+        .query("data_source_profiles")
+        .withIndex("by_entity_type", (q) =>
+          q.eq("entity_type", args.entity_type!)
+        )
+        .collect();
     } else if (args.status) {
-      query = query.withIndex("by_status", (q) =>
-        q.eq("status", args.status)
-      );
+      profiles = await ctx.db
+        .query("data_source_profiles")
+        .withIndex("by_status", (q) =>
+          q.eq("status", args.status!)
+        )
+        .collect();
+    } else {
+      profiles = await ctx.db.query("data_source_profiles").collect();
     }
-
-    const profiles = await query.collect();
 
     // For each profile, count linked prompts
     const profilesWithCounts = await Promise.all(
