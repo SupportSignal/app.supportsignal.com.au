@@ -225,7 +225,19 @@ jobs:
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
         run: |
-          cd apps/convex && bun run build
+          cd apps/convex
+          echo "🔍 Verifying Convex deployment configuration..."
+          echo "CONVEX_DEPLOY_KEY is set: $([ -n "$CONVEX_DEPLOY_KEY" ] && echo 'YES' || echo 'NO')"
+          echo "Running convex codegen..."
+          bun run build
+          echo "✅ Convex codegen complete"
+          echo "🔍 Checking generated API for promptGroups..."
+          if grep -q "promptGroups" _generated/api.d.ts; then
+            echo "✅ promptGroups FOUND in generated API"
+          else
+            echo "❌ promptGroups NOT FOUND in generated API - BUILD WILL FAIL"
+            exit 1
+          fi
 
       - name: Build applications
         env:
