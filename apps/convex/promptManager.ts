@@ -1463,3 +1463,132 @@ export const acknowledgePromptAdjustment = mutation({
 });
 
 // Developer scope system removed - direct production prompt editing now supported
+
+/**
+ * Story 11.1: Analysis Prompt Functions
+ */
+
+/**
+ * Task 9: List prompts filtered by data source
+ */
+export const listPromptsByDataSource = query({
+  args: {
+    dataSourceId: v.id("data_source_profiles"),
+  },
+  handler: async (ctx, args) => {
+    const prompts = await ctx.db
+      .query("ai_prompts")
+      .withIndex("by_data_source", (q) => q.eq("data_source_id", args.dataSourceId))
+      .collect();
+
+    // Include prompt group information
+    const promptsWithGroups = await Promise.all(
+      prompts.map(async (prompt) => {
+        if (prompt.group_id) {
+          const group = await ctx.db.get(prompt.group_id);
+          return {
+            ...prompt,
+            group_name: group?.group_name,
+            group_display_order: group?.display_order,
+          };
+        }
+        return {
+          ...prompt,
+          group_name: undefined,
+          group_display_order: undefined,
+        };
+      })
+    );
+
+    // Order by display_order (nulls last)
+    return promptsWithGroups.sort((a, b) => {
+      const orderA = a.display_order ?? Number.MAX_SAFE_INTEGER;
+      const orderB = b.display_order ?? Number.MAX_SAFE_INTEGER;
+      return orderA - orderB;
+    });
+  },
+});
+
+/**
+ * Task 10: Get prompts grouped by group_id
+ */
+export const getPromptsByGroup = query({
+  args: {
+    execution_mode: v.optional(v.union(
+      v.literal("single"),
+      v.literal("batch_analysis")
+    )),
+  },
+  handler: async (ctx, args) => {
+    // Get all prompts (filtered by execution_mode if provided)
+    let promptsQuery = ctx.db.query("ai_prompts");
+
+    if (args.execution_mode) {
+      promptsQuery = promptsQuery.withIndex("by_execution_mode", (q) =>
+        q.eq("execution_mode", args.execution_mode)
+      );
+    }
+
+    const prompts = await promptsQuery.collect();
+
+    // Get all groups
+    const groups = await ctx.db
+      .query("prompt_groups")
+      .collect();
+
+    // Create group map
+    const groupMap = new Map(groups.map(g => [g._id, g]));
+
+    // Group prompts by group_id
+    const grouped = new Map<string, any>();
+    const ungrouped: any[] = [];
+
+    for (const prompt of prompts) {
+      if (prompt.group_id) {
+        const group = groupMap.get(prompt.group_id);
+        if (group) {
+          const groupId = group._id;
+          if (!grouped.has(groupId)) {
+            grouped.set(groupId, {
+              group: group,
+              prompts: [],
+            });
+          }
+          grouped.get(groupId)!.prompts.push(prompt);
+        } else {
+          ungrouped.push(prompt);
+        }
+      } else {
+        ungrouped.push(prompt);
+      }
+    }
+
+    // Sort groups by display_order
+    const sortedGroups = Array.from(grouped.values()).sort((a, b) => {
+      const orderA = a.group.display_order ?? Number.MAX_SAFE_INTEGER;
+      const orderB = b.group.display_order ?? Number.MAX_SAFE_INTEGER;
+      return orderA - orderB;
+    });
+
+    // Sort prompts within each group by display_order
+    sortedGroups.forEach(group => {
+      group.prompts.sort((a: any, b: any) => {
+        const orderA = a.display_order ?? Number.MAX_SAFE_INTEGER;
+        const orderB = b.display_order ?? Number.MAX_SAFE_INTEGER;
+        return orderA - orderB;
+      });
+    });
+
+    // Sort ungrouped prompts
+    ungrouped.sort((a, b) => {
+      const orderA = a.display_order ?? Number.MAX_SAFE_INTEGER;
+      const orderB = b.display_order ?? Number.MAX_SAFE_INTEGER;
+      return orderA - orderB;
+    });
+
+    return {
+      groups: sortedGroups,
+      ungrouped,
+    };
+  },
+});
