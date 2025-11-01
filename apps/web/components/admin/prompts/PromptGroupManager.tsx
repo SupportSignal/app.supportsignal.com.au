@@ -69,6 +69,11 @@ export function PromptGroupManager({
   const groups = useQuery(api.promptGroups.listGroups) ?? [];
   const prompts = useQuery(api.promptGroups.listPrompts, { activeOnly: true }) ?? [];
 
+  // Debug logging
+  console.log('🔍 PromptGroupManager - Component mounted');
+  console.log('🔍 PromptGroupManager - groups:', groups);
+  console.log('🔍 PromptGroupManager - prompts:', prompts);
+
   // Mutations
   const reorderPrompts = useMutation(api.promptGroups.reorderPrompts);
   const movePromptToGroup = useMutation(api.promptGroups.movePromptToGroup);

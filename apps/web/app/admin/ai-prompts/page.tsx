@@ -28,8 +28,13 @@ export default function AIPromptsAdminPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('groups');
   const [activeCategory, setActiveCategory] = useState<PromptCategory>('generation');
 
+  // Debug logging
+  console.log('🔍 AIPromptsAdminPage - User:', user);
+  console.log('🔍 AIPromptsAdminPage - hasDeveloperAccess:', hasDeveloperAccess(user));
+
   // Access control - developer access required
   if (!user || !hasDeveloperAccess(user)) {
+    console.log('❌ AIPromptsAdminPage - Access denied', { user, hasAccess: hasDeveloperAccess(user) });
     return (
       <div className="flex items-center justify-center min-h-96">
         <div className="text-center">
@@ -41,6 +46,8 @@ export default function AIPromptsAdminPage() {
       </div>
     );
   }
+
+  console.log('✅ AIPromptsAdminPage - Access granted, rendering PromptGroupManager');
 
   const handlePreview = (template: AIPromptTemplate) => {
     // TODO: Implement preview functionality
