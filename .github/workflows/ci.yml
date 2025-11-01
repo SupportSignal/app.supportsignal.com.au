@@ -260,16 +260,19 @@ jobs:
           name: build-files
           path: apps/web/dist
 
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/pages-action@v1
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: ${{ secrets.CLOUDFLARE_PROJECT_NAME }}
-          directory: apps/web/dist
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+      - name: Deploy to Cloudflare Pages (Direct Wrangler)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx wrangler pages deploy apps/web/dist \
+            --project-name=${{ secrets.CLOUDFLARE_PROJECT_NAME }} \
+            --commit-dirty=true
 
-      # Note: Required GitHub Secrets for Cloudflare Pages deployment:
+      # Note: Using wrangler CLI directly instead of cloudflare/pages-action
+      # because wrangler deploys directly to production while the action creates preview deployments.
+      #
+      # Required GitHub Secrets for Cloudflare Pages deployment:
       # - CLOUDFLARE_API_TOKEN: API token with Pages:Edit permission
       # - CLOUDFLARE_ACCOUNT_ID: Your Cloudflare account ID
       # - CLOUDFLARE_PROJECT_NAME: Name of your Cloudflare Pages project
